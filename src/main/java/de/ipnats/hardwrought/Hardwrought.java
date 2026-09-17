@@ -1,0 +1,50 @@
+package de.ipnats.hardwrought;
+
+import net.fabricmc.api.ModInitializer;
+import de.ipnats.hardwrought.core.config.HardwroughtConfig;
+import de.ipnats.hardwrought.core.registry.ModItems;
+import de.ipnats.hardwrought.core.registry.MaterialDefinitions;
+import de.ipnats.hardwrought.core.registry.ItemWeightDefinitions;
+import de.ipnats.hardwrought.core.registry.FoodNutritionDefinitions;
+import de.ipnats.hardwrought.core.networking.CoreNetworking;
+import de.ipnats.hardwrought.core.events.CoreLifecycle;
+import de.ipnats.hardwrought.core.debug.DebugCommands;
+import net.fabricmc.fabric.api.resource.v1.DataResourceLoader;
+
+import net.minecraft.resources.Identifier;
+import de.ipnats.hardwrought.survival.SurvivalSystem;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class Hardwrought implements ModInitializer {
+	private static HardwroughtConfig config;
+	public static final String MOD_ID = "hardwrought";
+
+	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+
+	@Override
+	public void onInitialize() {
+		config = HardwroughtConfig.load();
+		ModItems.initialize();
+		DataResourceLoader.get().registerReloadListener(id("materials"), new MaterialDefinitions());
+		DataResourceLoader.get().registerReloadListener(id("item_weights"), new ItemWeightDefinitions());
+		DataResourceLoader.get().registerReloadListener(id("food_nutrition"), new FoodNutritionDefinitions());
+		CoreNetworking.initialize();
+		SurvivalSystem.initializeEvents();
+		CoreLifecycle.initialize();
+		DebugCommands.initialize();
+		LOGGER.info("Hardwrought initialized (debug logging: {}).", config.debugLogging());
+	}
+
+	public static HardwroughtConfig config() {
+		if (config == null) {
+			throw new IllegalStateException("Hardwrought has not been initialized yet");
+		}
+		return config;
+	}
+
+	public static Identifier id(String path) {
+		return Identifier.fromNamespaceAndPath(MOD_ID, path);
+	}
+}

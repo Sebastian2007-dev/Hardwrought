@@ -1,0 +1,14 @@
+{
+  "item.hardwrought.flint_shard": "Feuersteinsplitter"
+  ,"item.hardwrought.filled_waterskin": "Gefüllter Wasserschlauch",
+  "key.hardwrought.sleep": "Schlafen / Aufwachen",
+  "key.hardwrought.vitals_hud": "M\u00fcdigkeit und Temperatur anzeigen",
+  "key.category.hardwrought.survival": "Hardwrought",
+  "hud.hardwrought.fatigue": "M\u00dcDIGKEIT",
+  "hud.hardwrought.temperature": "TEMPERATUR",
+  "hud.hardwrought.sleep_quality": "Schlafqualit\u00e4t",
+  "message.hardwrought.sleep_unsafe": "Hier kannst du nicht schlafen.",
+  "message.hardwrought.sleep_monsters": "In der Nähe lauern Monster."
+  ,"message.hardwrought.waterskin_refilled": "Der Wasserschlauch ist wieder gefüllt.",
+  "message.hardwrought.waterskin_empty": "Der Wasserschlauch ist leer. Schleiche und benutze ihn an einer Wasserquelle."
+}

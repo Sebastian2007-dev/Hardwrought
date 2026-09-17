@@ -1,0 +1,14 @@
+{
+  "item.hardwrought.flint_shard": "Flint Shard"
+  ,"item.hardwrought.filled_waterskin": "Filled Waterskin",
+  "key.hardwrought.sleep": "Sleep / Wake Up",
+  "key.hardwrought.vitals_hud": "Show fatigue and temperature",
+  "key.category.hardwrought.survival": "Hardwrought",
+  "hud.hardwrought.fatigue": "FATIGUE",
+  "hud.hardwrought.temperature": "TEMPERATURE",
+  "hud.hardwrought.sleep_quality": "Sleep quality",
+  "message.hardwrought.sleep_unsafe": "You cannot sleep here.",
+  "message.hardwrought.sleep_monsters": "Monsters are lurking nearby."
+  ,"message.hardwrought.waterskin_refilled": "The waterskin is full again.",
+  "message.hardwrought.waterskin_empty": "The waterskin is empty. Sneak and use it on a water source."
+}

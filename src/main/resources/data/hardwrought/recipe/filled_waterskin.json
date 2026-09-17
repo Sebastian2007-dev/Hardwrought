@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "L": "minecraft:leather",
+    "B": "minecraft:glass_bottle"
+  },
+  "pattern": [
+    " L ",
+    "LBL",
+    " L "
+  ],
+  "result": {
+    "id": "hardwrought:filled_waterskin"
+  }
+}

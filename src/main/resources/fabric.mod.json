@@ -1,0 +1,37 @@
+{
+	"schemaVersion": 1,
+	"id": "hardwrought",
+	"version": "${version}",
+	"name": "Hardwrought",
+	"description": "Hardcore survival, material progression and technology. Foundation for the Hardwrought total conversion.",
+	"authors": [
+		"ipnats"
+	],
+	"license": "CC0-1.0",
+	"icon": "assets/hardwrought/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"de.ipnats.hardwrought.Hardwrought"
+		],
+		"client": [
+			"de.ipnats.hardwrought.client.HardwroughtClient"
+		],
+		"fabric-datagen": [
+			"de.ipnats.hardwrought.client.HardwroughtDataGenerator"
+		]
+	},
+	"mixins": [
+		"hardwrought.mixins.json",
+		{
+			"config": "hardwrought.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
