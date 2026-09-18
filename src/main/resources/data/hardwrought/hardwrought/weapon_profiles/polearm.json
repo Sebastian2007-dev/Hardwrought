@@ -1,0 +1,17 @@
+{
+  "items": [
+    "hardwrought:iron_halberd"
+  ],
+  "damage": {
+    "slash": 0.4,
+    "pierce": 0.35,
+    "blunt": 0.25
+  },
+  "stamina_cost": 2.0,
+  "armor_penetration": 0.35,
+  "impact": 7.5,
+  "handling": 0.6,
+  "reach_bonus_blocks": 2.0,
+  "attack_speed_factor": 0.7,
+  "minimum_reach_blocks": 2.4
+}

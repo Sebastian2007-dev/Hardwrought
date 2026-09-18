@@ -1,0 +1,10 @@
+{
+  "weights": {
+    "hardwrought:flint_dagger": 0.4,
+    "hardwrought:iron_dagger": 0.5,
+    "hardwrought:iron_greatsword": 3.2,
+    "hardwrought:iron_halberd": 3.6,
+    "hardwrought:safety_lamp": 1.1,
+    "hardwrought:flint_shard": 0.15
+  }
+}

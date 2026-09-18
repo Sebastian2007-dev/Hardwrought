@@ -1,6 +1,9 @@
 package de.ipnats.hardwrought.core.debug;
 
+import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import de.ipnats.hardwrought.core.events.CoreLifecycle;
+import de.ipnats.hardwrought.environment.GasMixture;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
@@ -8,6 +11,7 @@ import net.minecraft.server.permissions.Permissions;
 
 import java.util.Locale;
 
+import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
 public final class DebugCommands {
@@ -19,6 +23,13 @@ public final class DebugCommands {
                         .requires(source -> source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
                         .then(literal("status").executes(context -> status(context.getSource())))
                         .then(literal("materials").executes(context -> materials(context.getSource())))
+                        .then(literal("combat").executes(context -> combat(context.getSource())))
+                        .then(literal("air").executes(context -> air(context.getSource()))
+                                .then(literal("set")
+                                        .then(gas("oxygen", GasMixture.MAX_OXYGEN))
+                                        .then(gas("carbon_dioxide", GasMixture.MAX_CARBON_DIOXIDE))
+                                        .then(gas("methane", GasMixture.MAX_METHANE))
+                                        .then(gas("smoke", 1.0))))
                         .then(literal("profile").then(literal("reset").executes(context -> {
                             CoreLifecycle.require(context.getSource().getServer()).scheduler().resetProfiles();
                             context.getSource().sendSuccess(() -> Component.literal("Hardwrought: Profiling zurueckgesetzt."), false);
@@ -47,6 +58,65 @@ public final class DebugCommands {
         runtime.scheduler().profiles().forEach(profile -> source.sendSuccess(() -> Component.literal(
                 String.format(Locale.ROOT, "%s: avg=%.2fus max=%.2fus disabled=%s", profile.id(),
                         profile.meanMicros(), profile.maxNanos() / 1_000.0, profile.disabled())), false));
+        return 1;
+    }
+
+    /**
+     * Balancing and testing tool: the interesting states of the air model otherwise take minutes of
+     * standing in a sealed room to reach.
+     */
+    private static LiteralArgumentBuilder<CommandSourceStack> gas(String component, double maximum) {
+        return literal(component).then(argument("value", DoubleArgumentType.doubleArg(0, maximum))
+                .executes(context -> setGas(context.getSource(), component,
+                        DoubleArgumentType.getDouble(context, "value"))));
+    }
+
+    private static int setGas(CommandSourceStack source, String component, double value)
+            throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        var player = source.getPlayerOrException();
+        var environment = CoreLifecycle.require(source.getServer()).environment();
+        GasMixture updated = environment.reading(player).gases().with(component, value);
+        if (!environment.overrideAtmosphere(player, updated)) {
+            source.sendFailure(Component.literal("Hardwrought: nur in einem geschlossenen Raum moeglich."));
+            return 0;
+        }
+        source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "Hardwrought: %s auf %.4f gesetzt.", component, value)), false);
+        return 1;
+    }
+
+    private static int air(CommandSourceStack source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        var player = source.getPlayerOrException();
+        var reading = CoreLifecycle.require(source.getServer()).environment().reading(player);
+        var gases = reading.gases();
+        source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "%s, %d Bloecke | O2=%.3f%% CO2=%.3f%% CH4=%.3f%% Rauch=%.2f",
+                reading.sealed() ? "Geschlossener Raum" : "Im Freien", reading.volume(),
+                gases.oxygen() * 100, gases.carbonDioxide() * 100, gases.methane() * 100, gases.smoke())), false);
+        source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "Raumtemperatur %.1f C | Wind %.2f | Isolierung %.2f",
+                reading.temperature(), reading.wind(), reading.insulation())), false);
+        return 1;
+    }
+
+    private static int combat(CommandSourceStack source) {
+        var runtime = CoreLifecycle.require(source.getServer());
+        source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "Profile: %d Waffen, %d Ruestungsteile, %d Schilde", runtime.weaponProfiles().size(),
+                runtime.armorProfiles().size(), runtime.shieldProfiles().size())), false);
+        var player = source.getPlayer();
+        if (player != null) {
+            var coverage = runtime.combat().armorCoverage(player);
+            source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                    "Getragen: Schnitt %.0f%% Stich %.0f%% Wucht %.0f%% | Ausdauerlast %.2f",
+                    coverage.slashResistance() * 100, coverage.pierceResistance() * 100,
+                    coverage.bluntResistance() * 100, coverage.staminaDrain())), false);
+            var weapon = runtime.combat().weaponProfile(player.getMainHandItem());
+            source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                    "Hand: Schnitt %.0f%% Stich %.0f%% Wucht %.0f%% | Durchschlag %.0f%% Wucht-Impuls %.1f Ausdauer %.2f",
+                    weapon.damage().slash() * 100, weapon.damage().pierce() * 100, weapon.damage().blunt() * 100,
+                    weapon.armorPenetration() * 100, weapon.impact(), weapon.staminaCost())), false);
+        }
         return 1;
     }
 

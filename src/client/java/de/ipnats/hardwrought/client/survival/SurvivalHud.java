@@ -115,7 +115,7 @@ public final class SurvivalHud {
         int x = 10;
         int y = 10;
         int width = 122;
-        graphics.fill(x - 4, y - 4, x + width + 4, y + 73, 0xA6080B0E);
+        graphics.fill(x - 4, y - 4, x + width + 4, y + 99, 0xA6080B0E);
         graphics.fill(x - 3, y - 3, x + width + 3, y - 2, 0x805D6972);
 
         graphics.text(client.font, I18n.get("hud.hardwrought.fatigue"), x, y, 0xFFE8EDF0, true);
@@ -131,6 +131,12 @@ public final class SurvivalHud {
         String temperature = String.format(Locale.ROOT, "%.1f °C", values.bodyTemperature());
         graphics.text(client.font, temperature, x + (width - client.font.width(temperature)) / 2,
                 y + 56, temperatureTextColor(values.bodyTemperature()), false);
+
+        graphics.text(client.font, I18n.get("hud.hardwrought.stress"), x, y + 68, 0xFFE8EDF0, true);
+        thinBar(graphics, x, y + 80, width, values.stress(), 100, fatigueColor(values.stress()));
+        String stress = String.format(Locale.ROOT, "%.0f / 100", values.stress());
+        graphics.text(client.font, stress, x + (width - client.font.width(stress)) / 2,
+                y + 87, 0xFFC9D0D4, false);
     }
 
     private static void thinBar(net.minecraft.client.gui.GuiGraphicsExtractor graphics, int x, int y,

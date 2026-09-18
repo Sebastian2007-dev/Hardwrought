@@ -1,7 +1,7 @@
 # Abgleich mit der vollständigen Mechanik-Spezifikation
 
 Stand: 17.09.2026. Grundlage ist
-[Hardwrought_Full_Mechanics_Specification.md](../Hardwrought_Full_Mechanics_Specification.md).
+[Hardwrought_Full_Mechanics_Specification_v3.md](../Hardwrought_Full_Mechanics_Specification_v3.md).
 Für die weitere Arbeit dient sie als detaillierte Mechanik- und Meilensteinbeschreibung;
 der ursprüngliche Entwicklungsplan bleibt die übergeordnete Designreferenz.
 Beispiele und als „possible/suggested“ bezeichnete Optionen sind keine endgültigen
@@ -25,6 +25,7 @@ Die tatsächlichen Wärme- und Statiksimulationen sind damit noch nicht implemen
 
 | Spezifikationsabschnitte | Konsequenz für die Implementierung |
 | --- | --- |
+| 27–36 | Kampf schichtet auf Vanilla auf: Grundschaden, Rüstungspunkte und Frontprüfung bleiben bei Vanilla, Hardwrought besitzt Schadensart, Materialantwort, Durchschlag, Block, Parade und Deckungsbruch. Trefferzonen (35) sind keine Slot-Abdeckung und brauchen ein eigenes System. Waffen ohne Profil bleiben nutzbar. |
 | 3–6, 25–26 | Survival und Hardcore teilen das Balancing. Wissen, reale Spielerfertigkeit und körperliche Anpassung bleiben getrennt. Keine gemeinsame XP-/Level-Sperre; Material-`tier` ist nur Metadaten. |
 | 7–10, 14–16, 43 | Ausdauer bekommt serverseitige Einflüsse für Flüssigkeit, Ernährung, Schlaf, Verletzung, Körpertemperatur, Sauerstoff, Kondition und Last. Fehlende Systeme liefern zunächst klar bezeichnete neutrale Eingänge, keine erfundenen Simulationen. |
 | 11 | Schlaf beschleunigt reale Spiel-/Simulationstakte. Ein bloßes Setzen der Tageszeit lässt Pflanzen, Feuer, Maschinen und Verderb nicht korrekt fortschreiten. Die Kopplung an Vanilla-Weltticks muss beim Schlafsystem umgesetzt und getestet werden. |
@@ -41,13 +42,14 @@ Die tatsächlichen Wärme- und Statiksimulationen sind damit noch nicht implemen
 
 Die detaillierte Reihenfolge aus Abschnitt 110 gilt als Arbeitsgrundlage:
 
-1. **Milestone 1:** Ausdauer, Hydration, Ernährung, Traglast, Schlaf, Basistemperatur.
-2. **Milestone 2:** Kampf mit Schadensarten, Blocken, Parieren und Rüstungsinteraktion.
-3. **Milestone 3–6:** Umwelt, endliches Wasser, Vertikalwelt, Geologie.
-4. **Milestone 7–9:** Frühe Progression, Wissen, Schmieden.
-5. **Milestone 10–15:** Mechanik, Öl/Chemie, Dampf, Strom, Jahreszeiten/Ökologie, Anpassung.
-6. **Milestone 16–20:** Magie, Bauphysik, Multiplayer-Balance, Industrie, Arcane Engineering.
-7. **Milestone 21:** Endgame, dessen genaue Ausgestaltung ausdrücklich noch offen ist.
+1. **Milestone 1:** Ausdauer, Hydration, Ernährung, Traglast, Schlaf, Basistemperatur. Umgesetzt.
+2. **Milestone 2:** Kampf mit Schadensarten, Blocken, Parieren und Rüstungsinteraktion. Umgesetzt.
+3. **Milestone 3:** Umwelt mit Gasen, Feuer, Raumtemperatur und getragenem Licht. Umgesetzt.
+4. **Milestone 4–6:** endliches Wasser, Vertikalwelt, Geologie.
+5. **Milestone 7–9:** Frühe Progression, Wissen, Schmieden.
+6. **Milestone 10–15:** Mechanik, Öl/Chemie, Dampf, Strom, Jahreszeiten/Ökologie, Anpassung.
+7. **Milestone 16–20:** Magie, Bauphysik, Multiplayer-Balance, Industrie, Arcane Engineering.
+8. **Milestone 21:** Endgame, dessen genaue Ausgestaltung ausdrücklich noch offen ist.
 
 Milestone 1 ist inzwischen als spielbarer Grundstand umgesetzt. Die Überlebenswerte werden
 getrennt pro Spieler gespeichert und ausschließlich auf dem Server verändert. Gewicht und
@@ -55,11 +57,33 @@ Nährwerte besitzen Datapack-Definitionen; fehlende spätere Systeme wie Sauerst
 Kondition und Wind bleiben ausdrücklich neutrale Eingänge. Das Schlafsystem beschleunigt echte
 Weltticks proportional zum Anteil schlafender Spieler und setzt keine Tageszeit direkt.
 
+Milestone 2 ist als spielbarer Grundstand umgesetzt und in [milestone-2.md](milestone-2.md)
+beschrieben. Schadensarten, Waffenklassen, Rüstungsmaterialien und Schilde sind
+Datapack-Definitionen; die Auflösung eines Treffers passiert ausschließlich auf dem Server.
+Nicht enthaltene Teile der Abschnitte 30 bis 37 – Messer, Zweihänder, Stangenwaffen, Angriffsarten,
+Brace, Trefferzonen und Fertigungsqualität – sind in der Milestone-Dokumentation benannt statt
+durch erfundene Werte vorweggenommen.
+
+Milestone 3 ist umgesetzt und in [milestone-3.md](milestone-3.md) beschrieben. Das Umweltmodell
+arbeitet mit abgegrenzten Zellen, begrenzten Flutfüllungen und zwischengespeicherten periodischen
+Aktualisierungen; es gibt keinen Vollwelt- oder Luftblock-Scan und kein Tickjob lädt Chunks nach.
+Die Gas- und Temperaturkanäle der Diagnose liefern jetzt echte Messwerte, während Statik und
+Erzregionen weiterhin ausdrücklich `unavailable` melden. Andere Systeme lesen den typisierten
+`EnvironmentReading`, nicht die Diagnose-Strings. Feuchte, Luftbewegung als eigene Felder, Rauch
+zwischen Räumen sowie echte Dunkelheit, Mondphasen und Dunkeladaption bleiben offen und sind in der
+Milestone-Dokumentation benannt.
+
 ## Prüfung der Anpassung
 
-`gradlew.bat runGameTest` und `gradlew.bat runClientGameTest` sind erfolgreich. Alle 14
-Server-GameTests bestanden. Zusätzlich zu den Fundamenttests werden Überlebens-Persistenz,
+`gradlew.bat runGameTest` und `gradlew.bat runClientGameTest` sind erfolgreich. Alle 54
+Server-GameTests bestanden: 16 für den Kampf einschließlich Parade, Block und Deckungsbruch an einem
+real erhobenen Schild, 21 für die Umwelt einschließlich Raumerkennung an tatsächlich gebauten
+Gehäusen: dichte Wände, durchlässige Öffnungen, echte Löcher, große geschlossene Räume, die
+Kalibrierung der Atmung gegen Raumgröße und Lüftung sowie die Höhenschichtung der Gase nach
+ihrem Gewicht. Zusätzlich zu den Fundamenttests werden Überlebens-Persistenz,
 ungültige Speicherwerte, Nährwert- und Gewichtsdefinitionen sowie das HUD-Protokoll geprüft.
-Der Clienttest sendet die reale Schlafanfrage, bestätigt Schlafzustand und 100 TPS im
+Der Clienttest mauert den Spieler zusätzlich in einen echten dichten Steinraum ein und prüft die
+gesamte Umweltkette bis zur getragenen Fackel. Er hebt außerdem ein echtes Schild und prüft Deckungszustand und Paradefenster
+über das reale Netzwerk. Er sendet die reale Schlafanfrage, bestätigt Schlafzustand und 100 TPS im
 Einzelspieler, weckt den Spieler, bestätigt die Rückkehr auf 20 TPS und prüft weiterhin
 Datapack-Reload, HUD, Tick-Pause sowie Speichern/Neuladen der Testwelt.

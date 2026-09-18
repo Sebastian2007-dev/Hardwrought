@@ -13,9 +13,9 @@ Benötigt wird ein **JDK ab Version 25**, Zielbytecode ist Java 25.
 In IntelliJ diesen Ordner als Gradle-Projekt oeffnen. Unter
 Settings > Build, Execution, Deployment > Build Tools > Gradle die Gradle JVM
 auf JDK 25 oder neuer setzen und das Gradle-Projekt neu laden.
-Auf diesem Rechner ist `C:\Users\ErnstGuenther\.jdks\openjdk-26` vorhanden.
 Die Java-Toolchain in `build.gradle` verwendet bei einer aelteren Gradle-JVM
-automatisch JDK 26 fuer Compiler und Spielstart. Laeuft Gradle bereits unter
+automatisch JDK 26 fuer Compiler und Spielstart; ein installiertes JDK 26 wird
+ueber die Windows-Registry bzw. `~/.jdks` gefunden. Laeuft Gradle bereits unter
 Java 25 oder neuer, wird dessen Java-Hauptversion verwendet.
 Nach Aenderungen an `build.gradle` in IntelliJ das Gradle-Projekt neu laden.
 
@@ -58,7 +58,8 @@ Milestone 1 ist spielbar: Gruene Ausdauertropfen stehen ueber den Herzen, blaue
 Wassertropfen ueber der Hungerleiste; unter Wasser verschwinden sie zugunsten der
 Vanilla-Atemblasen. `H` blendet oben links die duenne
 Muedigkeitsleiste und die Temperaturanzeige ein oder aus. Mit `V` schlaeft der Spieler auf
-einer sicheren, trockenen Flaeche oder wacht wieder auf. Der Wasserschlauch ist
+einer sicheren, trockenen Flaeche oder wacht wieder auf; das geht zu jeder Tageszeit, auch im Bett.
+Niemand wird geweckt: wer nach dem Ausruhen liegen bleibt, sammelt Unruhe an. Der Wasserschlauch ist
 herstellbar oder direkt testbar:
 
 ```mcfunction
@@ -70,6 +71,8 @@ den Wasserschlauch benutzen. Getrunkene Wasserflaschen erhoehen ebenfalls den Wa
 
 Beim ersten Start entsteht `run/config/hardwrought.properties`.
 `debugLogging=true` aktiviert zusaetzliche Registrierungsausgaben nach einem Neustart.
+`dynamicLight=false` schaltet das getragene Licht ab; es wird ausschliesslich in der
+clienteigenen Weltkopie erzeugt und nie gespeichert.
 In normalen Installationen liegt die Datei im jeweiligen `config`-Ordner.
 
 ## Wo programmieren?
@@ -80,6 +83,8 @@ Alle gemeinsamen Java-Pfade beginnen mit `src/main/java/de/ipnats/hardwrought/`.
 | --- | --- |
 | Mod-Start | `Hardwrought.java` |
 | Neue Items | `core/registry/ModItems.java` |
+| Kampf, Waffen- und Ruestungswerte | `combat/CombatSystem.java` |
+| Luft, Gase, Raumtemperatur | `environment/EnvironmentSystem.java` |
 | Konfiguration | `core/config/HardwroughtConfig.java` |
 | Rendering und HUD | `src/client/java/de/ipnats/hardwrought/client/HardwroughtClient.java` |
 | Datagen-Provider | `src/client/java/de/ipnats/hardwrought/client/HardwroughtDataGenerator.java` |
@@ -121,16 +126,72 @@ Ausdauer, Hydration, Ernaehrung, Traglast, Schlaf und Basistemperatur sind als
 serverseitige, gespeicherte Systeme umgesetzt. Formeln, Bedienung und
 Erweiterungspunkte stehen in [docs/milestone-1.md](docs/milestone-1.md).
 
+## Milestone 2: Kampf
+
+Schadensarten (Schnitt/Stich/Wucht), Waffenklassen, Ruestungsmaterial, Blocken,
+Parieren und Ausdauer im Kampf sind umgesetzt. Formeln, Werte und Grenzen stehen
+in [docs/milestone-2.md](docs/milestone-2.md).
+
+Zum Ausprobieren in einer Welt mit Cheats:
+
+```mcfunction
+/give @s minecraft:iron_sword
+/give @s minecraft:mace
+/give @s minecraft:shield
+/give @s minecraft:iron_chestplate
+/hardwrought combat
+```
+
+Gegen Plattenruestung richtet die Keule deutlich mehr aus als das Schwert, weil
+Platte einen Schnitt weit besser beantwortet als einen Wuchtschlag. Mit erhobenem
+Schild zeigt eine Leiste unter dem Fadenkreuz das Paradefenster: trifft der Gegner
+in den ersten sechs aktiven Ticks, wird pariert und der Angreifer taumelt. Spaeter
+ist es ein normaler Block, der Ausdauer kostet. Eine Axt bricht die Deckung.
+
+## Milestone 3: Umwelt
+
+Sauerstoff, Kohlendioxid, Methan, Rauch, sauerstoffabhaengiges Feuer, Raumtemperatur
+und getragenes Licht sind umgesetzt. Formeln, Grenzwerte und Grenzen des Modells
+stehen in [docs/milestone-3.md](docs/milestone-3.md).
+
+Zum Ausprobieren in einer Welt mit Cheats: sich in einen dichten Raum einmauern.
+
+```mcfunction
+/give @s hardwrought:safety_lamp
+/give @s minecraft:torch
+/hardwrought debug on
+/hardwrought status
+/hardwrought air
+/hardwrought air set oxygen 0.05
+```
+
+Ohne Wetterlampe gibt es nur Symptome: das Bild wird enger, Ausdauer und Muedigkeit
+verhalten sich ohne sichtbaren Grund schlecht. Mit Wetterlampe im Inventar zeigt die
+Anzeige (Taste `H`) Sauerstoff, Kohlendioxid und Methan als Zahlen. Eine Fackel in der
+Hand leuchtet jetzt wirklich; sie verbraucht dabei Luft. Unter Y 8 an freiliegender
+Kohle sammelt sich Methan und entzuendet sich an offener Flamme.
+
+Neu hinzugekommen sind ausserdem die drei Waffenklassen aus Meilenstein 2, fuer die
+Vanilla kein passendes Item hat:
+
+```mcfunction
+/give @s hardwrought:flint_dagger
+/give @s hardwrought:iron_greatsword
+/give @s hardwrought:iron_halberd
+```
+
+Diese Items sind spielbar, verwenden aber noch Platzhaltertexturen. Was an Grafik
+fehlt, steht in [textureRequirements.md](textureRequirements.md).
+
 ## Naechste Schritte
 
 Die detaillierte Arbeitsgrundlage ist jetzt die
-[vollstaendige Mechanik-Spezifikation](Hardwrought_Full_Mechanics_Specification.md).
+[vollstaendige Mechanik-Spezifikation](Hardwrought_Full_Mechanics_Specification_v3.md).
 Der [Abgleich mit dem Fundament](docs/specification-review.md) dokumentiert die
 Anpassungen und Vorgaben fuer kommende Module.
 
-1. Milestone 2: Kampf, Blocken, Parieren und Ruestungsinteraktion.
-2. Milestone 3–6: Umwelt, endliches Wasser, Vertikalwelt und Geologie.
-3. Weitere Schritte gemaess Abschnitt 110 der Mechanik-Spezifikation.
+1. Milestone 4–6: endliches Wasser, Vertikalwelt und Geologie.
+2. Weitere Schritte gemaess Abschnitt 118 der Mechanik-Spezifikation.
 
 Der vorhandene GitHub-Workflow baut und startet die Server-GameTests bei Pushes und Pull Requests.
 Im aktuellen Ordner ist noch kein Git-Repository initialisiert.

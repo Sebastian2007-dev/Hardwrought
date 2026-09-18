@@ -1,0 +1,13 @@
+{
+  "items": [
+    "minecraft:leather_helmet",
+    "minecraft:leather_chestplate",
+    "minecraft:leather_leggings",
+    "minecraft:leather_boots"
+  ],
+  "slash_resistance": 0.25,
+  "pierce_resistance": 0.15,
+  "blunt_resistance": 0.1,
+  "stamina_drain": 0.05,
+  "insulation": 0.16
+}

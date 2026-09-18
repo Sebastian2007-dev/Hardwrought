@@ -25,8 +25,11 @@ public final class ItemWeightDefinitions extends SimpleReloadListener<Map<Identi
                         ItemWeightDefinition definition = ItemWeightDefinition.CODEC.parse(JsonOps.INSTANCE,
                                 JsonParser.parseReader(reader)).getOrThrow(message ->
                                 new IllegalArgumentException(path + ": " + message));
-                        Double previous = result.put(definition.item(), definition.kilograms());
-                        if (previous != null) throw new IllegalArgumentException("Duplicate item weight for " + definition.item());
+                        definition.weights().forEach((item, mass) -> {
+                            if (result.put(item, mass) != null) {
+                                throw new IllegalArgumentException("Duplicate item weight for " + item);
+                            }
+                        });
                     } catch (IOException | RuntimeException exception) {
                         throw new IllegalStateException("Invalid item weight definition " + path, exception);
                     }

@@ -1,0 +1,17 @@
+{
+  "items": [
+    "hardwrought:flint_dagger",
+    "hardwrought:iron_dagger"
+  ],
+  "damage": {
+    "slash": 0.35,
+    "pierce": 0.6,
+    "blunt": 0.05
+  },
+  "stamina_cost": 0.35,
+  "armor_penetration": 0.1,
+  "impact": 1.0,
+  "handling": 2.0,
+  "reach_bonus_blocks": -0.5,
+  "attack_speed_factor": 1.35
+}

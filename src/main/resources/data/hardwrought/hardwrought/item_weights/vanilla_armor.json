@@ -1,0 +1,30 @@
+{
+  "weights": {
+    "minecraft:leather_helmet": 0.4,
+    "minecraft:leather_chestplate": 1.6,
+    "minecraft:leather_leggings": 1.2,
+    "minecraft:leather_boots": 0.6,
+    "minecraft:chainmail_helmet": 1.8,
+    "minecraft:chainmail_chestplate": 6.5,
+    "minecraft:chainmail_leggings": 4.5,
+    "minecraft:chainmail_boots": 1.6,
+    "minecraft:iron_helmet": 2.5,
+    "minecraft:iron_chestplate": 9.0,
+    "minecraft:iron_leggings": 6.5,
+    "minecraft:iron_boots": 2.2,
+    "minecraft:golden_helmet": 3.2,
+    "minecraft:golden_chestplate": 11.5,
+    "minecraft:golden_leggings": 8.5,
+    "minecraft:golden_boots": 2.8,
+    "minecraft:diamond_helmet": 2.2,
+    "minecraft:diamond_chestplate": 8.0,
+    "minecraft:diamond_leggings": 6.0,
+    "minecraft:diamond_boots": 2.0,
+    "minecraft:netherite_helmet": 3.0,
+    "minecraft:netherite_chestplate": 10.5,
+    "minecraft:netherite_leggings": 7.5,
+    "minecraft:netherite_boots": 2.6,
+    "minecraft:turtle_helmet": 1.5,
+    "minecraft:shield": 3.0
+  }
+}

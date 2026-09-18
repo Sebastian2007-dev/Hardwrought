@@ -1,0 +1,13 @@
+{
+  "items": [
+    "minecraft:bow"
+  ],
+  "damage": {
+    "pierce": 1.0
+  },
+  "stamina_cost": 0.3,
+  "armor_penetration": 0.2,
+  "impact": 1.5,
+  "handling": 1.2,
+  "attack_speed_factor": 1.0
+}

@@ -1,0 +1,15 @@
+{
+  "items": [
+    "minecraft:mace"
+  ],
+  "damage": {
+    "pierce": 0.05,
+    "blunt": 0.95
+  },
+  "stamina_cost": 2.0,
+  "armor_penetration": 0.45,
+  "impact": 9.0,
+  "handling": 0.8,
+  "reach_bonus_blocks": -0.1,
+  "attack_speed_factor": 0.75
+}

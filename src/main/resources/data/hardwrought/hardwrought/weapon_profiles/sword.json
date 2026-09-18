@@ -1,0 +1,21 @@
+{
+  "items": [
+    "minecraft:wooden_sword",
+    "minecraft:stone_sword",
+    "minecraft:golden_sword",
+    "minecraft:iron_sword",
+    "minecraft:diamond_sword",
+    "minecraft:netherite_sword"
+  ],
+  "damage": {
+    "slash": 0.65,
+    "pierce": 0.3,
+    "blunt": 0.05
+  },
+  "stamina_cost": 0.9,
+  "armor_penetration": 0.15,
+  "impact": 2.5,
+  "handling": 1.6,
+  "reach_bonus_blocks": 0.3,
+  "attack_speed_factor": 1.0
+}

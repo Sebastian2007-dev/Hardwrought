@@ -1,0 +1,17 @@
+{
+  "items": [
+    "minecraft:trident"
+  ],
+  "damage": {
+    "slash": 0.15,
+    "pierce": 0.8,
+    "blunt": 0.05
+  },
+  "stamina_cost": 0.8,
+  "armor_penetration": 0.3,
+  "impact": 3.0,
+  "handling": 1.1,
+  "reach_bonus_blocks": 1.5,
+  "attack_speed_factor": 0.95,
+  "minimum_reach_blocks": 2.0
+}

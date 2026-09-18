@@ -21,15 +21,31 @@ second. Disconnecting or restarting a world does not reset the values.
   demand. Energy and dietary quality remain separate server-authoritative values.
 - **Carry weight:** all 41 player inventory slots are weighed. The base capacity is 45 kg; excess
   weight slows movement and jumping and raises stamina cost.
-- **Sleep:** `V` toggles sleeping on a safe, dry surface. Vanilla beds work too. Sleep quality uses
-  surface, shelter, bed, safety, nearby noise, ambient temperature and wetness. Time never jumps:
-  the server accelerates real ticks according to the percentage of sleeping players, reaching 100
-  TPS when everyone sleeps. Weather, crops, fire and every later simulation system therefore
-  advance normally.
+- **Fatigue:** a day-scale value. Staying awake through one full Minecraft day and night costs about
+  30 of 100, so a whole cycle can always be seen through without being forced to sleep, and one night
+  of good sleep clears more than a day of being awake builds up. Bad air adds to it but stays in the
+  same order of magnitude as normal waking.
+- **Sleep:** `V` toggles sleeping on a safe, dry surface. Vanilla beds work too, **at any hour** —
+  section 11 asks that a player be able to sleep almost anywhere, and since Hardwrought sleep never
+  skips the night there is nothing to protect against by refusing a bed at noon. A night shift is a
+  legitimate way to live. The bed rule itself is changed rather than the two places that read it,
+  because vanilla re-checks it on every tick of `Player#tick` and would otherwise throw a daytime
+  sleeper straight back out. Only `when_dark` becomes `always`: a bed whose rule is `never` keeps it,
+  so beds in the Nether and the End still explode. Sleep quality uses surface, shelter, bed, safety, nearby noise, ambient
+  temperature, wetness and restlessness. Time never jumps: the server accelerates real ticks
+  according to the percentage of sleeping players, reaching 100 TPS when everyone sleeps. Weather,
+  crops, fire and every later simulation system therefore advance normally.
+- **Restlessness:** nothing forces a sleeper awake. Once fatigue reaches zero the player is told
+  once that they are rested, and sleeping on from there stops being rest: it turns into
+  restlessness, a 0–100 value of its own. Restlessness halves stamina recovery at its maximum and
+  makes the next sleep worse, and it works itself off over an ordinary waking day — far more slowly
+  than it builds up. Oversleeping is a real mistake with a real cost, and staying in bed is still
+  the player's decision to make.
 - **Basic temperature:** biome temperature, altitude, night, rain, water, nearby fire, activity,
   sunlight, clothing and wetness determine ambient and body temperature. Thermal stress reduces
-  stamina recovery, cold raises calorie demand and extreme core temperatures inflict damage. Wind
-  remains a neutral input until the environmental simulation supplies a real value.
+  stamina recovery, cold raises calorie demand and extreme core temperatures inflict damage. Wind was
+  a declared neutral input here and is supplied for real by the Milestone-3 environment model, which
+  also took over the ambient temperature; this system now only adds what is local to one player.
 
 ## Content and assets
 
@@ -43,8 +59,8 @@ Ten green stamina drops sit directly above the vanilla hearts and ten blue hydra
 above the hunger bar. The hydration row disappears underwater so Minecraft's air bubbles stay clear.
 Empty and partially filled drops make both values readable without a large status
 panel. `H` toggles a compact panel in the upper-left corner. It contains a thin 0–100 fatigue bar
-with its number underneath, followed by a blue-to-red body-temperature scale with a position
-marker and the exact Celsius value. `V` remains the sleep/wake key.
+with its number underneath, a blue-to-red body-temperature scale with a position marker and the exact
+Celsius value, and a 0–100 restlessness bar. `V` remains the sleep/wake key.
 
 Generated texture prompt:
 
@@ -70,7 +86,7 @@ player schema or network authority model. Reloads reject duplicate or invalid en
 
 ## Verification
 
-The 14 server GameTests cover persistence, validation, registry loading, item-mass overrides,
+The server GameTests cover persistence, validation, registry loading, item-mass overrides,
 the eight reusable waterskin drinks and the HUD protocol. The client integration test sends the real sleep packet, verifies that the player
 enters sleep, observes 100 TPS in single-player, wakes the player again, confirms restoration to 20
 TPS, checks save/reopen behavior and records the rendered HUD screenshot.

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "G": "minecraft:glass_pane",
+    "T": "minecraft:torch"
+  },
+  "pattern": [
+    " I ",
+    "GTG",
+    " I "
+  ],
+  "result": {
+    "id": "hardwrought:safety_lamp"
+  }
+}

@@ -34,6 +34,8 @@ public final class CoreLifecycle {
             if (runtime != null) {
                 runtime.removeViewer(handler.player.getUUID());
                 runtime.survival().disconnect(handler.player.getUUID());
+                runtime.combat().disconnect(handler.player.getUUID());
+                runtime.environment().disconnect(handler.player.getUUID());
             }
         });
     }

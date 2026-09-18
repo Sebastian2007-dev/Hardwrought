@@ -1,0 +1,16 @@
+{
+  "items": [
+    "hardwrought:iron_greatsword"
+  ],
+  "damage": {
+    "slash": 0.75,
+    "pierce": 0.15,
+    "blunt": 0.1
+  },
+  "stamina_cost": 2.2,
+  "armor_penetration": 0.25,
+  "impact": 8.0,
+  "handling": 0.7,
+  "reach_bonus_blocks": 0.9,
+  "attack_speed_factor": 0.7
+}

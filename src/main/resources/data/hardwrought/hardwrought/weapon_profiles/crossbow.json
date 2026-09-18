@@ -1,0 +1,13 @@
+{
+  "items": [
+    "minecraft:crossbow"
+  ],
+  "damage": {
+    "pierce": 1.0
+  },
+  "stamina_cost": 0.3,
+  "armor_penetration": 0.45,
+  "impact": 2.0,
+  "handling": 1.0,
+  "attack_speed_factor": 0.9
+}

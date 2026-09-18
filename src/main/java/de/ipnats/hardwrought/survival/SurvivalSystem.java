@@ -1,15 +1,20 @@
 package de.ipnats.hardwrought.survival;
 
 import de.ipnats.hardwrought.Hardwrought;
+import de.ipnats.hardwrought.combat.ArmorCoverage;
+import de.ipnats.hardwrought.environment.EnvironmentReading;
+import de.ipnats.hardwrought.environment.EnvironmentSystem;
+import de.ipnats.hardwrought.environment.GasMixture;
+import de.ipnats.hardwrought.combat.ArmorProfiles;
 import de.ipnats.hardwrought.core.networking.SurvivalSnapshotPayload;
 import de.ipnats.hardwrought.core.registry.FoodNutritionDefinition;
 import de.ipnats.hardwrought.core.registry.FoodNutritionDefinitions;
 import de.ipnats.hardwrought.core.registry.ItemWeightDefinitions;
+import de.ipnats.hardwrought.core.registry.ModDamageTypes;
 import de.ipnats.hardwrought.core.save.CoreSaveData;
 import de.ipnats.hardwrought.core.simulation.SimulationScheduler;
 import de.ipnats.hardwrought.core.simulation.SimulationTier;
 import net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents;
-import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.util.EventResult;
@@ -21,7 +26,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -36,6 +40,10 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.AbstractBedBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.phys.AABB;
 
 import java.util.HashMap;
@@ -55,24 +63,57 @@ public final class SurvivalSystem {
     private static final double CLIMB_STAMINA_PER_TICK = 0.006;
     private static final double OVERLOAD_STAMINA_PER_TICK = 0.002;
     private static final double JUMP_STAMINA = 0.30;
-    private static final double ATTACK_STAMINA = 0.50;
     private static final double MINED_BLOCK_STAMINA = 0.10;
+    /** Section 36: heavy armor is paid for with stamina while moving, not only with carried mass. */
+    private static final double ARMOR_STAMINA_PER_TICK = 0.005;
+    private static final EquipmentSlot[] ARMOR_SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST,
+            EquipmentSlot.LEGS, EquipmentSlot.FEET};
     private static final double IDLE_RECOVERY_PER_TICK = 0.012;
+    /**
+     * Fatigue is a day-scale value, so it is expressed against the day it is meant to cover: staying
+     * awake through one full Minecraft day and night costs about 30 of 100. A player can therefore
+     * always see a whole cycle through without being forced to sleep, and one night of good sleep
+     * clears more than a day of being awake builds up.
+     */
+    public static final double FATIGUE_PER_SECOND_AWAKE = 0.025;
+    /** Bad air is tiring, but it must not outrun the day-scale budget by an order of magnitude. */
+    public static final double FATIGUE_PER_SECOND_CARBON_DIOXIDE = 0.035;
+    /** One metabolism pass is one second, so these are the intervals of the periodic hazards. */
+    private static final int AIR_DAMAGE_PASSES = 2;
+    private static final int THERMAL_DAMAGE_PASSES = 10;
     private static final double SLEEP_RECOVERY_PER_TICK = 0.025;
+    /**
+     * Section 11: a player may sleep at any hour, so nothing forces them awake again. Lying down
+     * once the body has nothing left to recover is its own mistake: the rest turns into restlessness.
+     * Counted per tick, and sleep accelerates ticks, so it is the time spent oversleeping that costs.
+     */
+    private static final double OVERSLEEP_STRESS_PER_TICK = 0.0015;
+    /** Stress works itself off over an ordinary waking day, far more slowly than it builds up. */
+    private static final double STRESS_RECOVERY_PER_SECOND = 0.030;
     private static boolean eventsInitialized;
 
     private final MinecraftServer server;
     private final CoreSaveData save;
+    private final EnvironmentSystem environment;
     private final Set<UUID> outdoorSleepers = new HashSet<>();
     private final Map<UUID, Boolean> lastOnGround = new HashMap<>();
     private final Map<UUID, Double> sleepQuality = new HashMap<>();
+    private final Set<UUID> restedNotice = new HashSet<>();
     private final Map<UUID, ActivityLoad> activity = new HashMap<>();
     private float normalTickRate = 20.0f;
     private boolean acceleratingSleep;
+    /**
+     * Counts metabolism passes rather than reading the saved clock. The save is only written after
+     * the scheduler has run, so inside a pass the saved tick is always one behind and a test like
+     * {@code savedTicks % 40 == 0} can never be true. Counting passes here is independent of that.
+     */
+    private long metabolismPasses;
 
-    public SurvivalSystem(MinecraftServer server, CoreSaveData save, SimulationScheduler scheduler) {
+    public SurvivalSystem(MinecraftServer server, CoreSaveData save, SimulationScheduler scheduler,
+                          EnvironmentSystem environment) {
         this.server = server;
         this.save = save;
+        this.environment = environment;
         scheduler.register("hardwrought:survival_movement", SimulationTier.CRITICAL, this::tickMovement);
         scheduler.register("hardwrought:survival_metabolism", SimulationTier.MEDIUM, this::tickMetabolism);
     }
@@ -100,15 +141,6 @@ public final class SurvivalSystem {
             }
             return EventResult.PASS;
         });
-        AttackEntityCallback.EVENT.register((player, level, hand, target, hit) -> {
-            if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
-                var runtime = de.ipnats.hardwrought.core.events.CoreLifecycle.find(serverPlayer.level().getServer());
-                if (runtime != null && !runtime.survival().spendStamina(serverPlayer, ATTACK_STAMINA)) {
-                    return InteractionResult.FAIL;
-                }
-            }
-            return InteractionResult.PASS;
-        });
         PlayerBlockBreakEvents.AFTER.register((level, player, pos, state, entity) -> {
             if (player instanceof ServerPlayer serverPlayer) {
                 var runtime = de.ipnats.hardwrought.core.events.CoreLifecycle.find(serverPlayer.level().getServer());
@@ -118,6 +150,17 @@ public final class SurvivalSystem {
     }
 
     public PlayerVitals vitals(ServerPlayer player) { return save.vitals(player.getUUID()); }
+
+    public double stamina(ServerPlayer player) { return vitals(player).stamina(); }
+
+    /** Operator and test entry point; ordinary gameplay changes these values through the ticks. */
+    public void setVitalsForTesting(ServerPlayer player, PlayerVitals vitals) {
+        save.setVitals(player.getUUID(), vitals);
+    }
+
+    private double armorStaminaDrain(ServerPlayer player) {
+        return ArmorCoverage.of(player, server.getOrThrow(ArmorProfiles.KEY)).staminaDrain();
+    }
 
     public boolean spendStamina(ServerPlayer player, double amount) {
         PlayerVitals current = vitals(player);
@@ -185,12 +228,14 @@ public final class SurvivalSystem {
     }
 
     private void endSleep(UUID id) {
+        restedNotice.remove(id);
         outdoorSleepers.remove(id);
         sleepQuality.remove(id);
         updateSleepAcceleration();
     }
 
     public void disconnect(UUID id) {
+        restedNotice.remove(id);
         outdoorSleepers.remove(id);
         lastOnGround.remove(id);
         sleepQuality.remove(id);
@@ -200,6 +245,7 @@ public final class SurvivalSystem {
 
     public void shutdown() {
         if (acceleratingSleep) server.tickRateManager().setTickRate(normalTickRate);
+        restedNotice.clear();
         outdoorSleepers.clear();
         sleepQuality.clear();
         acceleratingSleep = false;
@@ -226,23 +272,29 @@ public final class SurvivalSystem {
             double carried = carriedWeight(player);
             double load = Math.max(0, carried / CarryWeight.BASE_CAPACITY_KG - 1.0);
             if (active && load > 0) delta -= OVERLOAD_STAMINA_PER_TICK * load;
+            if (active) delta -= ARMOR_STAMINA_PER_TICK * armorStaminaDrain(player);
             if (!active && !player.isSleeping()) {
-                double recovery = IDLE_RECOVERY_PER_TICK * recoveryFactor(value, load);
+                double recovery = IDLE_RECOVERY_PER_TICK
+                        * recoveryFactor(value, load, environment.reading(player).gases());
                 delta += recovery;
             }
             if (player.isSleeping()) {
                 double quality = quality(player);
-                double newFatigue = value.fatigue() - 0.006 * quality;
+                boolean rested = value.fatigue() <= 0.05;
+                double newFatigue = rested ? 0 : value.fatigue() - 0.006 * quality;
+                // Sleeping on past the point of being rested is what turns into stress. Nobody is
+                // woken up for it: the player is told once and can decide to stay in bed.
+                double newStress = rested
+                        ? value.stress() + OVERSLEEP_STRESS_PER_TICK : value.stress();
                 value = new PlayerVitals(value.stamina() + SLEEP_RECOVERY_PER_TICK * quality,
                         value.hydration(), value.calories(),
                         value.protein(), value.carbohydrates(), value.fat(), value.micronutrients(),
-                        newFatigue, value.bodyTemperature(), value.wetness()).normalized();
-                if (value.fatigue() <= 0.05) {
-                    boolean outdoor = outdoorSleepers.remove(player.getUUID());
-                    if (outdoor) player.stopSleeping();
-                    else player.stopSleepInBed(true, true);
-                    updateSleepAcceleration();
+                        newFatigue, value.bodyTemperature(), value.wetness(), newStress).normalized();
+                if (rested && restedNotice.add(player.getUUID())) {
+                    player.sendSystemMessage(Component.translatable("message.hardwrought.sleep_rested"));
                 }
+            } else {
+                restedNotice.remove(player.getUUID());
             }
             if (delta != 0) value = value.withStamina(value.stamina() + delta);
             if (value.stamina() <= 0.1) player.setSprinting(false);
@@ -251,6 +303,7 @@ public final class SurvivalSystem {
     }
 
     private void tickMetabolism() {
+        metabolismPasses++;
         outdoorSleepers.removeIf(id -> {
             ServerPlayer player = server.getPlayerList().getPlayer(id);
             return player == null || !player.isSleeping();
@@ -263,15 +316,18 @@ public final class SurvivalSystem {
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             PlayerVitals v = vitals(player);
             double carried = carriedWeight(player);
-            double ambient = ambientTemperature(player);
+            EnvironmentReading air = environment.reading(player);
+            GasMixture gases = air.gases();
+            double oxygenStress = gases.oxygenStress();
+            double carbonDioxideStress = gases.carbonDioxideStress();
+            double smokeStress = gases.smokeStress();
+            double ambient = ambientTemperature(player, air);
             double wetness = player.isInWaterOrRain() ? Math.min(1, v.wetness() + 0.12) : Math.max(0, v.wetness() - 0.025);
-            double insulation = 0;
+            double insulation = ArmorCoverage.of(player, server.getOrThrow(ArmorProfiles.KEY)).insulation();
             double armorMass = 0;
-            for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST,
-                    EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
+            for (EquipmentSlot slot : ARMOR_SLOTS) {
                 ItemStack armor = player.getItemBySlot(slot);
                 if (!armor.isEmpty()) {
-                    insulation += 0.12;
                     armorMass += CarryWeight.perItem(armor, server.getOrThrow(ItemWeightDefinitions.KEY));
                 }
             }
@@ -279,7 +335,11 @@ public final class SurvivalSystem {
             double exposure = environmentDelta < 0 ? Math.max(0.35, 1.0 - insulation * 1.8)
                     : 1.0 + armorMass * 0.025;
             double targetBody = 37.0 + environmentDelta * 0.055 * exposure;
-            if (ambient < 20) targetBody -= wetness * 1.2;
+            if (ambient < 20) {
+                // Sections 14 and 15: wind and wet clothing both accelerate heat loss.
+                targetBody -= wetness * 1.2;
+                targetBody -= air.wind() * (1.0 - Math.min(0.9, insulation)) * 1.4;
+            }
             if (player.isSprinting() || player.isSwimming()) targetBody += 0.45 + armorMass * 0.015;
             double body = v.bodyTemperature() + (targetBody - v.bodyTemperature()) * 0.020;
             ActivityLoad work = activity.remove(player.getUUID());
@@ -293,16 +353,28 @@ public final class SurvivalSystem {
             double energyUse = 0.65 + workEnergy + coldEnergy + excessLoad * 0.8;
             if (player.isSprinting()) energyUse += 1.15;
             else if (player.isSwimming()) energyUse += 0.9;
-            double fatigue = v.fatigue() + (player.isSleeping() ? 0 : 0.035 + workEnergy * 0.002);
+            // Section 18.1: thin air makes every breath harder work.
+            energyUse += oxygenStress * 0.55;
+            // Section 18.2: carbon dioxide is felt as fatigue long before it becomes lethal.
+            double fatigue = v.fatigue() + (player.isSleeping() ? 0
+                    : FATIGUE_PER_SECOND_AWAKE + workEnergy * 0.002
+                    + carbonDioxideStress * FATIGUE_PER_SECOND_CARBON_DIOXIDE);
+            double stress = player.isSleeping() ? v.stress()
+                    : Math.max(0, v.stress() - STRESS_RECOVERY_PER_SECOND);
             PlayerVitals next = new PlayerVitals(v.stamina(), v.hydration() - 0.035 - activityWater - heatWater,
                     v.calories() - energyUse, v.protein() - 0.006,
                     v.carbohydrates() - 0.012 - energyUse * 0.012, v.fat() - 0.006 - coldEnergy * 0.004,
-                    v.micronutrients() - 0.002, fatigue, body, wetness).normalized();
+                    v.micronutrients() - 0.002, fatigue, body, wetness, stress).normalized();
             next = new PlayerVitals(next.stamina(), next.hydration() - workWater - armorWater,
                     next.calories(), next.protein(), next.carbohydrates(), next.fat(), next.micronutrients(),
-                    next.fatigue(), next.bodyTemperature(), next.wetness()).normalized();
+                    next.fatigue(), next.bodyTemperature(), next.wetness(), next.stress()).normalized();
+            // Bad air drains the reserve directly; resting cannot out-recover it.
+            double airDrain = oxygenStress * 0.45 + carbonDioxideStress * 0.30 + smokeStress * 0.20;
+            if (airDrain > 0) next = next.withStamina(next.stamina() - airDrain);
             save.setVitals(player.getUUID(), next);
-            if (save.ticks() % 200 == 0 && (next.bodyTemperature() < 34.0 || next.bodyTemperature() > 40.5)) {
+            applyAirDamage(player, gases);
+            if (metabolismPasses % THERMAL_DAMAGE_PASSES == 0
+                    && (next.bodyTemperature() < 34.0 || next.bodyTemperature() > 40.5)) {
                 player.hurtServer(player.level(), next.bodyTemperature() < 34.0
                         ? player.level().damageSources().freeze() : player.level().damageSources().hotFloor(), 1.0f);
             }
@@ -311,12 +383,35 @@ public final class SurvivalSystem {
         }
     }
 
-    private double recoveryFactor(PlayerVitals v, double load) {
+    private double recoveryFactor(PlayerVitals v, double load, GasMixture gases) {
         double hydration = 0.25 + 0.75 * v.hydration() / 100.0;
         double energy = 0.25 + 0.75 * v.calories() / PlayerVitals.MAX_CALORIES;
         double rest = 1.0 - 0.65 * v.fatigue() / 100.0;
         double thermal = Math.max(0.25, 1.0 - Math.abs(v.bodyTemperature() - 37.0) * 0.3);
-        return hydration * energy * rest * thermal / (1.0 + load);
+        // A restless body recovers worse, which is what makes oversleeping cost something.
+        double calm = 1.0 - 0.5 * v.stress() / 100.0;
+        // Section 7 listed oxygen as an input from the start; Milestone 3 supplies the real value.
+        double air = Math.max(0.05, 1.0 - gases.oxygenStress() * 0.85 - gases.carbonDioxideStress() * 0.55);
+        return hydration * energy * rest * thermal * air * calm / (1.0 + load);
+    }
+
+    /**
+     * Section 18: suffocation and smoke inhalation get their own damage types, so a death message
+     * names the real cause and armor cannot protect against a gas.
+     */
+    private void applyAirDamage(ServerPlayer player, GasMixture gases) {
+        if (metabolismPasses % AIR_DAMAGE_PASSES != 0) return;
+        ServerLevel level = player.level();
+        if (gases.oxygen() < GasMixture.OXYGEN_LETHAL || gases.carbonDioxide() > GasMixture.CARBON_DIOXIDE_LETHAL) {
+            player.hurtServer(level, damageSource(level, ModDamageTypes.BAD_AIR), 2.0f);
+        }
+        if (gases.smoke() >= GasMixture.SMOKE_CHOKING) {
+            player.hurtServer(level, damageSource(level, ModDamageTypes.SMOKE), (float) (1.0 + gases.smoke()));
+        }
+    }
+
+    private static DamageSource damageSource(ServerLevel level, ResourceKey<DamageType> type) {
+        return new DamageSource(level.registryAccess().lookupOrThrow(Registries.DAMAGE_TYPE).getOrThrow(type));
     }
 
     private void applyPenalties(ServerPlayer player, PlayerVitals v, double carried) {
@@ -337,19 +432,28 @@ public final class SurvivalSystem {
                 new AttributeModifier(id, amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
     }
 
+    /**
+     * Room temperature from the environment model plus whatever is local to this player. Section 17
+     * asks for radiant heat before the whole room warms up, so a nearby flame still counts by itself.
+     */
+    private double ambientTemperature(ServerPlayer player, EnvironmentReading air) {
+        double temperature = air.temperature();
+        if (player.isInWater()) temperature -= 6.0;
+        if (radiantHeatNearby(player)) temperature += 8.0;
+        return PlayerVitals.clamp(temperature, -35, 55);
+    }
+
     private double ambientTemperature(ServerPlayer player) {
+        return ambientTemperature(player, environment.reading(player));
+    }
+
+    /** A bounded 7x5x7 look-around, never a world scan and never a chunk load. */
+    private static boolean radiantHeatNearby(ServerPlayer player) {
         ServerLevel level = player.level();
         BlockPos pos = player.blockPosition();
-        double temperature = 14.0 + (level.getBiome(pos).value().getBaseTemperature() - 0.8) * 18.0;
-        temperature -= Math.max(0, pos.getY() - 64) * 0.0065;
-        if (level.isDarkOutside()) temperature -= 4.0;
-        else if (level.isBrightOutside() && level.canSeeSky(pos.above()) && !level.isRainingAt(pos)) temperature += 3.0;
-        if (level.isRainingAt(pos)) temperature -= 3.0;
-        if (player.isInWater()) temperature -= 6.0;
-        boolean heat = BlockPos.betweenClosedStream(pos.offset(-3, -2, -3), pos.offset(3, 2, 3))
+        if (!level.hasChunkAt(pos)) return false;
+        return BlockPos.betweenClosedStream(pos.offset(-3, -2, -3), pos.offset(3, 2, 3))
                 .map(level::getBlockState).anyMatch(SurvivalSystem::isHeatSource);
-        if (heat) temperature += 12.0;
-        return PlayerVitals.clamp(temperature, -35, 55);
     }
 
     private static boolean isHeatSource(BlockState state) {
@@ -370,6 +474,8 @@ public final class SurvivalSystem {
         double ambient = ambientTemperature(player);
         quality -= Math.min(0.25, Math.abs(ambient - 18) / 80.0);
         quality -= vitals(player).wetness() * 0.20;
+        // Section 11 lists poor sleep as a cause of poor recovery; restlessness feeds back into it.
+        quality -= vitals(player).stress() / 100.0 * 0.30;
         AABB safetyArea = player.getBoundingBox().inflate(16, 8, 16);
         long hostiles = player.level().getEntities(player, safetyArea, entity -> entity instanceof Monster).size();
         quality -= Math.min(0.25, hostiles * 0.06);
@@ -422,6 +528,6 @@ public final class SurvivalSystem {
                 + (v.fat() / 120.0) + (v.micronutrients() / 100.0)) * 25.0;
         ServerPlayNetworking.send(player, new SurvivalSnapshotPayload(v.stamina(), v.hydration(), v.calories(),
                 PlayerVitals.clamp(nutrition, 0, 100), v.fatigue(), v.bodyTemperature(), ambient,
-                carried, CarryWeight.BASE_CAPACITY_KG, player.isSleeping(), quality));
+                carried, CarryWeight.BASE_CAPACITY_KG, player.isSleeping(), quality, v.stress()));
     }
 }

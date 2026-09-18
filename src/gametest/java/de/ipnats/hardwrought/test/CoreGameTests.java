@@ -97,7 +97,11 @@ public final class CoreGameTests {
                 "Invalid balancing data rejected");
         expectFailure(() -> new MaterialDefinition(1, Double.NaN, 10));
         var lines = runtime.snapshot(helper.getLevel(), helper.absolutePos(net.minecraft.core.BlockPos.ZERO));
-        helper.assertTrue(lines.stream().anyMatch(line -> line.startsWith("GAS | unavailable")), "Unimplemented gas model must not invent data");
+        // Milestone 3 supplies the gas channel; the channels without a system must still say so.
+        helper.assertTrue(lines.stream().anyMatch(line -> line.startsWith("STRUCTURE | unavailable")),
+                "Unimplemented models must not invent data");
+        helper.assertTrue(lines.stream().anyMatch(line -> line.startsWith("ORE | unavailable")),
+                "Unimplemented ore regions must not invent data");
         helper.assertTrue(lines.stream().anyMatch(line -> line.contains("not Celsius")), "Biome temperature must be labelled accurately");
         helper.succeed();
     }
@@ -257,13 +261,77 @@ public final class CoreGameTests {
     @GameTest
     public void survivalProtocolRoundTrip(GameTestHelper helper) {
         var payload = new SurvivalSnapshotPayload(75, 60, 1800, 82, 31, 36.8,
-                12.5, 24, 45, true, 0.7);
+                12.5, 24, 45, true, 0.7, 12.5);
         var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), helper.getLevel().registryAccess());
         try {
             SurvivalSnapshotPayload.CODEC.encode(buffer, payload);
             helper.assertTrue(payload.equals(SurvivalSnapshotPayload.CODEC.decode(buffer)),
                     "Survival HUD snapshot must round trip without client-side reconstruction");
         } finally { buffer.release(); }
+        helper.succeed();
+    }
+
+    @GameTest
+    public void bedsAcceptASleeperAtAnyHour(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var pos = helper.absolutePos(new net.minecraft.core.BlockPos(0, 0, 0)).above(20);
+        var block = net.minecraft.world.level.block.Blocks.BED
+                .pick(net.minecraft.world.item.DyeColor.RED);
+        try {
+            level.setBlockAndUpdate(pos, block.defaultBlockState());
+            var rule = ((net.minecraft.world.level.block.AbstractBedBlock) block).getBedRule(level, pos);
+            helper.assertTrue(rule.canSleep() == net.minecraft.world.attribute.BedRule.Rule.ALWAYS,
+                    "Section 11: a bed accepts a sleeper regardless of the hour");
+            helper.assertFalse(rule.destroyOnUse(),
+                    "and an overworld bed is still not the kind that explodes");
+            helper.assertTrue(rule.canSetSpawn() == net.minecraft.world.attribute.BedRule.Rule.ALWAYS,
+                    "while what a bed does for the respawn point is left to the dimension");
+
+            // The rule that forbids sleeping entirely must survive untouched, or beds in the Nether
+            // and the End would quietly become safe.
+            helper.assertTrue(net.minecraft.world.attribute.BedRule.DESTROY_ON_USE.canSleep()
+                            == net.minecraft.world.attribute.BedRule.Rule.NEVER,
+                    "A bed that must never be slept in keeps that rule");
+        } finally {
+            level.setBlockAndUpdate(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+        }
+        helper.succeed();
+    }
+
+    @GameTest
+    public void oversleepingTurnsIntoRestlessness(GameTestHelper helper) {
+        var rested = PlayerVitals.defaults().withStress(0);
+        helper.assertTrue(rested.stress() == 0, "A new player carries no restlessness");
+        helper.assertTrue(rested.withStress(-5).stress() == 0
+                        && rested.withStress(500).stress() == 100,
+                "Restlessness stays inside its bounds like every other value");
+
+        // Saved before the value existed: such a world has to keep loading, at zero.
+        var legacy = PlayerVitals.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString("""
+                {"stamina":50,"hydration":100,"calories":2000,"protein":70,"carbohydrates":260,
+                 "fat":70,"micronutrients":100,"fatigue":15,"body_temperature":37,"wetness":0}
+                """)).getOrThrow();
+        helper.assertTrue(legacy.stress() == 0, "A world saved before Milestone 3 still loads");
+        helper.assertTrue(PlayerVitals.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString("""
+                {"stamina":50,"hydration":100,"calories":2000,"protein":70,"carbohydrates":260,
+                 "fat":70,"micronutrients":100,"fatigue":15,"body_temperature":37,"wetness":0,
+                 "stress":-1}
+                """)).error().isPresent(), "A corrupt value is rejected on load");
+
+        var data = CoreSaveData.TYPE.constructor().get();
+        var id = java.util.UUID.randomUUID();
+        data.setVitals(id, PlayerVitals.defaults().withStress(42));
+        var encoded = CoreSaveData.CODEC.encodeStart(JsonOps.INSTANCE, data).getOrThrow();
+        helper.assertTrue(CoreSaveData.CODEC.parse(JsonOps.INSTANCE, encoded).getOrThrow()
+                        .vitals(id).stress() == 42,
+                "Restlessness survives a restart like the other survival values");
+
+        // Every other value has to be carried through untouched when only stress changes.
+        var full = PlayerVitals.defaults();
+        var stressed = full.withStress(30);
+        helper.assertTrue(stressed.stamina() == full.stamina() && stressed.fatigue() == full.fatigue()
+                        && stressed.hydration() == full.hydration() && stressed.calories() == full.calories(),
+                "Setting restlessness changes nothing else");
         helper.succeed();
     }
 

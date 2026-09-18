@@ -1,0 +1,11 @@
+{
+  "items": [
+    "minecraft:shield"
+  ],
+  "block_fraction": 0.65,
+  "parry_fraction": 0.95,
+  "parry_window_ticks": 6,
+  "stamina_per_damage": 1.2,
+  "guard_break_impact": 6.0,
+  "stagger_ticks": 30
+}

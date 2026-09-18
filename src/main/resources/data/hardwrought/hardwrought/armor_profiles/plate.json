@@ -1,0 +1,26 @@
+{
+  "items": [
+    "minecraft:iron_helmet",
+    "minecraft:iron_chestplate",
+    "minecraft:iron_leggings",
+    "minecraft:iron_boots",
+    "minecraft:golden_helmet",
+    "minecraft:golden_chestplate",
+    "minecraft:golden_leggings",
+    "minecraft:golden_boots",
+    "minecraft:diamond_helmet",
+    "minecraft:diamond_chestplate",
+    "minecraft:diamond_leggings",
+    "minecraft:diamond_boots",
+    "minecraft:netherite_helmet",
+    "minecraft:netherite_chestplate",
+    "minecraft:netherite_leggings",
+    "minecraft:netherite_boots",
+    "minecraft:turtle_helmet"
+  ],
+  "slash_resistance": 0.7,
+  "pierce_resistance": 0.5,
+  "blunt_resistance": 0.3,
+  "stamina_drain": 0.22,
+  "insulation": 0.2
+}

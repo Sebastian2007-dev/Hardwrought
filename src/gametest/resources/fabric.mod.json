@@ -5,7 +5,13 @@
   "name": "Hardwrought Core Tests",
   "environment": "*",
   "entrypoints": {
-    "fabric-gametest": ["de.ipnats.hardwrought.test.CoreGameTests"],
-    "fabric-client-gametest": ["de.ipnats.hardwrought.test.CoreClientGameTest"]
+    "fabric-gametest": [
+      "de.ipnats.hardwrought.test.CoreGameTests",
+      "de.ipnats.hardwrought.test.CombatGameTests",
+      "de.ipnats.hardwrought.test.EnvironmentGameTests"
+    ],
+    "fabric-client-gametest": [
+      "de.ipnats.hardwrought.test.CoreClientGameTest"
+    ]
   }
 }

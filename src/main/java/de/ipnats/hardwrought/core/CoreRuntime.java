@@ -1,7 +1,15 @@
 package de.ipnats.hardwrought.core;
 
 import de.ipnats.hardwrought.Hardwrought;
+import de.ipnats.hardwrought.combat.ArmorProfile;
+import de.ipnats.hardwrought.combat.ArmorProfiles;
+import de.ipnats.hardwrought.combat.CombatSystem;
+import de.ipnats.hardwrought.combat.ShieldProfile;
+import de.ipnats.hardwrought.combat.ShieldProfiles;
+import de.ipnats.hardwrought.combat.WeaponProfile;
+import de.ipnats.hardwrought.combat.WeaponProfiles;
 import de.ipnats.hardwrought.core.debug.DiagnosticRegistry;
+import de.ipnats.hardwrought.environment.EnvironmentSystem;
 import de.ipnats.hardwrought.core.debug.VanillaDiagnostics;
 import de.ipnats.hardwrought.core.networking.DebugSnapshotPayload;
 import de.ipnats.hardwrought.core.registry.MaterialDefinition;
@@ -36,7 +44,9 @@ public final class CoreRuntime {
     private final CoreSaveData save;
     private final SimulationScheduler scheduler;
     private final DiagnosticRegistry diagnostics = new DiagnosticRegistry();
+    private final EnvironmentSystem environment;
     private final SurvivalSystem survival;
+    private final CombatSystem combat;
     private final Set<UUID> debugViewers = new HashSet<>();
 
     public CoreRuntime(MinecraftServer server) {
@@ -46,7 +56,10 @@ public final class CoreRuntime {
         scheduler = new SimulationScheduler(save.ticks(), System::nanoTime,
                 (id, exception) -> Hardwrought.LOGGER.error("Simulation task {} disabled until restart", id, exception));
         VanillaDiagnostics.register(diagnostics);
-        survival = new SurvivalSystem(server, save, scheduler);
+        environment = new EnvironmentSystem(server, save, scheduler);
+        environment.registerDiagnostics(diagnostics);
+        survival = new SurvivalSystem(server, save, scheduler, environment);
+        combat = new CombatSystem(server, survival, scheduler);
         scheduler.register("hardwrought:debug_sync", SimulationTier.MEDIUM, this::syncDebugViewers);
     }
 
@@ -70,6 +83,31 @@ public final class CoreRuntime {
     public SurvivalSystem survival() {
         ServerThread.require(server);
         return survival;
+    }
+
+    public EnvironmentSystem environment() {
+        ServerThread.require(server);
+        return environment;
+    }
+
+    public CombatSystem combat() {
+        ServerThread.require(server);
+        return combat;
+    }
+
+    public Map<Identifier, WeaponProfile> weaponProfiles() {
+        ServerThread.require(server);
+        return server.getOrThrow(WeaponProfiles.KEY);
+    }
+
+    public Map<Identifier, ArmorProfile> armorProfiles() {
+        ServerThread.require(server);
+        return server.getOrThrow(ArmorProfiles.KEY);
+    }
+
+    public Map<Identifier, ShieldProfile> shieldProfiles() {
+        ServerThread.require(server);
+        return server.getOrThrow(ShieldProfiles.KEY);
     }
 
     public Map<Identifier, MaterialDefinition> materials() {
@@ -134,7 +172,8 @@ public final class CoreRuntime {
         lines.add("Hardwrought | server tick=" + scheduler.ticks());
         lines.add(level.dimension().identifier() + " @ " + pos.toShortString());
         lines.addAll(diagnostics.inspect(level, pos));
-        lines.add("Materials=" + materials().size());
+        lines.add("Materials=" + materials().size() + " weapons=" + weaponProfiles().size()
+                + " armor=" + armorProfiles().size() + " shields=" + shieldProfiles().size());
         for (var tier : SimulationTier.values()) {
             var profiles = scheduler.profiles().stream().filter(profile -> profile.tier() == tier).toList();
             long calls = profiles.stream().mapToLong(SimulationScheduler.Profile::calls).sum();
