@@ -10,6 +10,10 @@ import de.ipnats.hardwrought.combat.ArmorProfiles;
 import de.ipnats.hardwrought.combat.CombatSystem;
 import de.ipnats.hardwrought.combat.ShieldProfiles;
 import de.ipnats.hardwrought.combat.WeaponProfiles;
+import de.ipnats.hardwrought.core.registry.ModDataComponents;
+import de.ipnats.hardwrought.water.WaterEvents;
+import de.ipnats.hardwrought.water.WaterQualityProfiles;
+import de.ipnats.hardwrought.water.WaterStorage;
 import de.ipnats.hardwrought.core.networking.CoreNetworking;
 import de.ipnats.hardwrought.core.events.CoreLifecycle;
 import de.ipnats.hardwrought.core.debug.DebugCommands;
@@ -30,6 +34,8 @@ public class Hardwrought implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		config = HardwroughtConfig.load();
+		ModDataComponents.initialize();
+		WaterStorage.initialize();
 		ModItems.initialize();
 		DataResourceLoader.get().registerReloadListener(id("materials"), new MaterialDefinitions());
 		DataResourceLoader.get().registerReloadListener(id("item_weights"), new ItemWeightDefinitions());
@@ -37,9 +43,11 @@ public class Hardwrought implements ModInitializer {
 		DataResourceLoader.get().registerReloadListener(id("weapon_profiles"), new WeaponProfiles());
 		DataResourceLoader.get().registerReloadListener(id("armor_profiles"), new ArmorProfiles());
 		DataResourceLoader.get().registerReloadListener(id("shield_profiles"), new ShieldProfiles());
+		DataResourceLoader.get().registerReloadListener(id("water_quality"), new WaterQualityProfiles());
 		CoreNetworking.initialize();
 		SurvivalSystem.initializeEvents();
 		CombatSystem.initializeEvents();
+		WaterEvents.initialize();
 		CoreLifecycle.initialize();
 		DebugCommands.initialize();
 		LOGGER.info("Hardwrought initialized (debug logging: {}).", config.debugLogging());

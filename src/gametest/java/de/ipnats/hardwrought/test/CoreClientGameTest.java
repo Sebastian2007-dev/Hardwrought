@@ -21,6 +21,7 @@ public final class CoreClientGameTest implements FabricClientGameTest {
     public void runTest(ClientGameTestContext context) {
         TestWorldSave save;
         long beforeClose;
+        net.minecraft.core.BlockPos waterMark;
         try (var world = context.worldBuilder().adjustSettings(settings -> settings.setAllowCommands(true)).create()) {
             save = world.getWorldSave();
             world.getConnection().waitForChunksRender();
@@ -36,6 +37,7 @@ public final class CoreClientGameTest implements FabricClientGameTest {
             verifyAcceleratedSleep(context, world);
             verifyDaytimeBedSleep(context, world);
             verifyCombatFeedback(context, world);
+            verifyFiniteWater(context, world);
             verifySealedRoomAndCarriedLight(context, world);
             context.runOnClient(client -> client.player.connection.sendCommand("hardwrought debug on"));
             context.waitFor(client -> !DebugHud.snapshot().isEmpty());
@@ -60,6 +62,21 @@ public final class CoreClientGameTest implements FabricClientGameTest {
             // Leave enabled to verify disconnect clears all client diagnostics.
             context.runOnClient(client -> client.player.connection.sendCommand("hardwrought debug on"));
             context.waitFor(client -> !DebugHud.snapshot().isEmpty());
+            // An exact partial amount, parked in the world to be looked for again after a reload.
+            // It lives in a chunk attachment, and an attachment registered too late is unknown while
+            // chunks are read, so everything stored in them is silently discarded on load.
+            waterMark = world.getServer().computeOnServer(server -> {
+                var player = server.getPlayerList().getPlayers().getFirst();
+                var level = player.level();
+                var pos = player.blockPosition().above(8);
+                level.setBlockAndUpdate(pos.below(), net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+                for (net.minecraft.core.Direction side : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+                    level.setBlockAndUpdate(pos.relative(side),
+                            net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+                }
+                de.ipnats.hardwrought.water.WaterStorage.setAmount(level, pos, 340);
+                return pos;
+            });
             beforeClose = world.getServer().computeOnServer(server -> CoreLifecycle.require(server).scheduler().ticks());
         }
         context.runOnClient(client -> {
@@ -69,6 +86,14 @@ public final class CoreClientGameTest implements FabricClientGameTest {
         try (var reopened = save.open()) {
             long afterOpen = reopened.getServer().computeOnServer(server -> CoreLifecycle.require(server).scheduler().ticks());
             if (afterOpen < beforeClose) throw new AssertionError("Simulation clock lost during save/reopen");
+            reopened.getServer().runOnServer(server -> {
+                var level = server.getPlayerList().getPlayers().getFirst().level();
+                int amount = de.ipnats.hardwrought.water.WaterStorage.amount(level, waterMark);
+                if (amount != 340) {
+                    throw new AssertionError("An exact water amount must survive save and reload, "
+                            + "found " + amount + " mB instead of 340");
+                }
+            });
             context.runOnClient(client -> {
                 if (!DebugHud.snapshot().isEmpty()) throw new AssertionError("Debug subscription leaked into reopened world");
             });
@@ -192,6 +217,68 @@ public final class CoreClientGameTest implements FabricClientGameTest {
      * numbers it has no instrument for, a safety lamp turns those numbers on, and a carried torch
      * lights the room.
      */
+    /**
+     * Section 23.1 in a live world: two sources with a gap between them used to fill that gap with a
+     * third. They must not any more, or every other part of the water system has nothing to stand on.
+     */
+    private static void verifyFiniteWater(ClientGameTestContext context,
+                                          net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
+        world.getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            var level = player.level();
+            var base = player.blockPosition().above(6);
+            // A closed stone trough three blocks long, with a source at each end and a gap between.
+            for (int x = -2; x <= 2; x++) {
+                for (int y = -1; y <= 1; y++) {
+                    for (int z = -1; z <= 1; z++) {
+                        boolean hull = Math.abs(x) == 2 || Math.abs(z) == 1 || y != 0;
+                        level.setBlockAndUpdate(base.offset(x, y, z), hull
+                                ? net.minecraft.world.level.block.Blocks.STONE.defaultBlockState()
+                                : net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+                    }
+                }
+            }
+            level.setBlockAndUpdate(base.offset(-1, 0, 0),
+                    net.minecraft.world.level.block.Blocks.WATER.defaultBlockState());
+            level.setBlockAndUpdate(base.offset(1, 0, 0),
+                    net.minecraft.world.level.block.Blocks.WATER.defaultBlockState());
+        });
+        context.waitTicks(120);
+        world.getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            var level = player.level();
+            var middle = player.blockPosition().above(6);
+            // Two full blocks went in. Whatever the water did with itself, that is what is left.
+            int total = 0;
+            for (int x = -1; x <= 1; x++) {
+                total += de.ipnats.hardwrought.water.WaterStorage.amount(level, middle.offset(x, 0, 0));
+            }
+            if (total != 2 * de.ipnats.hardwrought.water.WaterAmounts.BLOCK) {
+                throw new AssertionError("Water is not conserved: expected 2000 mB, found " + total);
+            }
+            if (de.ipnats.hardwrought.water.WaterStorage.amount(level, middle) <= 0) {
+                throw new AssertionError("Water did not spread into the gap at all");
+            }
+            if (level.getFluidState(middle).isSource()) {
+                throw new AssertionError("The gap became a full block out of nothing");
+            }
+            var runtime = CoreLifecycle.require(server);
+            int table = runtime.water().groundwaterLevel(level, middle);
+            if (table >= level.getSeaLevel()) {
+                throw new AssertionError("The water table must lie below sea level");
+            }
+            // Clean the trough up again.
+            for (int x = -2; x <= 2; x++) {
+                for (int y = -1; y <= 1; y++) {
+                    for (int z = -1; z <= 1; z++) {
+                        level.setBlockAndUpdate(middle.offset(x, y, z),
+                                net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+                    }
+                }
+            }
+        });
+    }
+
     private static void verifySealedRoomAndCarriedLight(ClientGameTestContext context,
                                                         net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
         world.getServer().runOnServer(server -> shell(server, net.minecraft.world.level.block.Blocks.STONE));

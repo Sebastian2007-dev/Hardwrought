@@ -45,11 +45,12 @@ Die detaillierte Reihenfolge aus Abschnitt 110 gilt als Arbeitsgrundlage:
 1. **Milestone 1:** Ausdauer, Hydration, Ernährung, Traglast, Schlaf, Basistemperatur. Umgesetzt.
 2. **Milestone 2:** Kampf mit Schadensarten, Blocken, Parieren und Rüstungsinteraktion. Umgesetzt.
 3. **Milestone 3:** Umwelt mit Gasen, Feuer, Raumtemperatur und getragenem Licht. Umgesetzt.
-4. **Milestone 4–6:** endliches Wasser, Vertikalwelt, Geologie.
-5. **Milestone 7–9:** Frühe Progression, Wissen, Schmieden.
-6. **Milestone 10–15:** Mechanik, Öl/Chemie, Dampf, Strom, Jahreszeiten/Ökologie, Anpassung.
-7. **Milestone 16–20:** Magie, Bauphysik, Multiplayer-Balance, Industrie, Arcane Engineering.
-8. **Milestone 21:** Endgame, dessen genaue Ausgestaltung ausdrücklich noch offen ist.
+4. **Milestone 4:** endliches Wasser, Qualität, Grundwasser und Verdunstung. Umgesetzt.
+5. **Milestone 5–6:** Vertikalwelt, Geologie.
+6. **Milestone 7–9:** Frühe Progression, Wissen, Schmieden.
+7. **Milestone 10–15:** Mechanik, Öl/Chemie, Dampf, Strom, Jahreszeiten/Ökologie, Anpassung.
+8. **Milestone 16–20:** Magie, Bauphysik, Multiplayer-Balance, Industrie, Arcane Engineering.
+9. **Milestone 21:** Endgame, dessen genaue Ausgestaltung ausdrücklich noch offen ist.
 
 Milestone 1 ist inzwischen als spielbarer Grundstand umgesetzt. Die Überlebenswerte werden
 getrennt pro Spieler gespeichert und ausschließlich auf dem Server verändert. Gewicht und
@@ -73,14 +74,24 @@ Erzregionen weiterhin ausdrücklich `unavailable` melden. Andere Systeme lesen d
 zwischen Räumen sowie echte Dunkelheit, Mondphasen und Dunkeladaption bleiben offen und sind in der
 Milestone-Dokumentation benannt.
 
+Milestone 4 ist umgesetzt und in [milestone-4.md](milestone-4.md) beschrieben. Die Leitplanke zu den
+Abschnitten 23 und 68 verlangte, das Vanilla-Fluidlevel nicht als vollständige Wassersimulation
+weiterzuverwenden. Genau das passiert auch nicht: die Quellenverdopplung ist entfernt, Wasserkörper
+werden über begrenzte Flutfüllungen gemessen, Qualität ist eine eigene, datengetriebene Größe am
+Behälter, und der Grundwasserspiegel ist regional aus dem Weltseed abgeleitet statt gespeichert.
+Das Vanilla-Ausbreiten ist vollständig ersetzt: Wasser ist eine Menge in Millibucket, die fällt und
+sich ausgleicht, und keine Zelle erzeugt neue. Wasserdurchtränkte Blöcke, der geschlossene
+Wasserkreislauf, Bodenfeuchte, Filter und Pumpen bleiben offen.
+
 ## Prüfung der Anpassung
 
-`gradlew.bat runGameTest` und `gradlew.bat runClientGameTest` sind erfolgreich. Alle 54
+`gradlew.bat runGameTest` und `gradlew.bat runClientGameTest` sind erfolgreich. Alle 74
 Server-GameTests bestanden: 16 für den Kampf einschließlich Parade, Block und Deckungsbruch an einem
 real erhobenen Schild, 21 für die Umwelt einschließlich Raumerkennung an tatsächlich gebauten
 Gehäusen: dichte Wände, durchlässige Öffnungen, echte Löcher, große geschlossene Räume, die
 Kalibrierung der Atmung gegen Raumgröße und Lüftung sowie die Höhenschichtung der Gase nach
-ihrem Gewicht. Zusätzlich zu den Fundamenttests werden Überlebens-Persistenz,
+ihrem Gewicht. Dreizehn weitere prüfen Wasserqualität, Wasserkörper, Grundwasser, Behälterzustand und vor allem
+die Mengenerhaltung der Wassersimulation. Zusätzlich zu den Fundamenttests werden Überlebens-Persistenz,
 ungültige Speicherwerte, Nährwert- und Gewichtsdefinitionen sowie das HUD-Protokoll geprüft.
 Der Clienttest mauert den Spieler zusätzlich in einen echten dichten Steinraum ein und prüft die
 gesamte Umweltkette bis zur getragenen Fackel. Er hebt außerdem ein echtes Schild und prüft Deckungszustand und Paradefenster

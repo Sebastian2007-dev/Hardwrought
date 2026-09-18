@@ -24,6 +24,7 @@ public final class DebugCommands {
                         .then(literal("status").executes(context -> status(context.getSource())))
                         .then(literal("materials").executes(context -> materials(context.getSource())))
                         .then(literal("combat").executes(context -> combat(context.getSource())))
+                        .then(literal("water").executes(context -> water(context.getSource())))
                         .then(literal("air").executes(context -> air(context.getSource()))
                                 .then(literal("set")
                                         .then(gas("oxygen", GasMixture.MAX_OXYGEN))
@@ -82,6 +83,45 @@ public final class DebugCommands {
         }
         source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
                 "Hardwrought: %s auf %.4f gesetzt.", component, value)), false);
+        return 1;
+    }
+
+    /**
+     * What the simulation actually thinks about the water being looked at. "It does not flow" and
+     * "it flows but there is less of it than it looks" are very different problems, and only the
+     * exact amount in a cell tells them apart.
+     */
+    private static int water(CommandSourceStack source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        var player = source.getPlayerOrException();
+        var runtime = CoreLifecycle.require(source.getServer());
+        var level = player.level();
+        var eye = player.getEyePosition();
+        var reach = eye.add(player.getViewVector(1.0f).scale(6.0));
+        var hit = level.clip(new net.minecraft.world.level.ClipContext(eye, reach,
+                net.minecraft.world.level.ClipContext.Block.OUTLINE,
+                net.minecraft.world.level.ClipContext.Fluid.ANY, player));
+        var pos = hit instanceof net.minecraft.world.phys.BlockHitResult block
+                ? block.getBlockPos() : player.blockPosition();
+
+        var job = runtime.scheduler().profiles().stream()
+                .filter(profile -> profile.id().equals("hardwrought:water_flow")).findFirst();
+        source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "Simulation: %s | wartende Zellen %d | Durchlaeufe %d",
+                job.map(profile -> profile.disabled() ? "ABGESCHALTET" : "laeuft").orElse("fehlt"),
+                runtime.waterFlow().activeCells(), job.map(profile -> profile.calls()).orElse(0L))), false);
+
+        var body = de.ipnats.hardwrought.water.WaterBody.scan(level, pos);
+        source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "%s: %d mB (Stufe %s) | darueber %d mB | darunter %d mB",
+                pos.toShortString(),
+                de.ipnats.hardwrought.water.WaterStorage.amount(level, pos),
+                level.getBlockState(pos).hasProperty(net.minecraft.world.level.block.LiquidBlock.LEVEL)
+                        ? level.getBlockState(pos).getValue(net.minecraft.world.level.block.LiquidBlock.LEVEL)
+                        : "kein Wasser",
+                de.ipnats.hardwrought.water.WaterStorage.amount(level, pos.above()),
+                de.ipnats.hardwrought.water.WaterStorage.amount(level, pos.below()))), false);
+        source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "Koerper: %s, %d Bloecke, %d mB gesamt", body.size(), body.volume(), body.millibuckets())), false);
         return 1;
     }
 

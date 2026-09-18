@@ -5,6 +5,7 @@ import de.ipnats.hardwrought.combat.ArmorCoverage;
 import de.ipnats.hardwrought.environment.EnvironmentReading;
 import de.ipnats.hardwrought.environment.EnvironmentSystem;
 import de.ipnats.hardwrought.environment.GasMixture;
+import de.ipnats.hardwrought.water.WaterQuality;
 import de.ipnats.hardwrought.combat.ArmorProfiles;
 import de.ipnats.hardwrought.core.networking.SurvivalSnapshotPayload;
 import de.ipnats.hardwrought.core.registry.FoodNutritionDefinition;
@@ -151,7 +152,9 @@ public final class SurvivalSystem {
 
     public PlayerVitals vitals(ServerPlayer player) { return save.vitals(player.getUUID()); }
 
-    public double stamina(ServerPlayer player) { return vitals(player).stamina(); }
+    public double stamina(ServerPlayer player) {
+        return player.isCreative() ? PlayerVitals.MAX_STAMINA : vitals(player).stamina();
+    }
 
     /** Operator and test entry point; ordinary gameplay changes these values through the ticks. */
     public void setVitalsForTesting(ServerPlayer player, PlayerVitals vitals) {
@@ -163,6 +166,7 @@ public final class SurvivalSystem {
     }
 
     public boolean spendStamina(ServerPlayer player, double amount) {
+        if (player.isCreative()) return true;
         PlayerVitals current = vitals(player);
         if (current.stamina() < Math.min(2.0, amount)) {
             player.setSprinting(false);
@@ -174,6 +178,7 @@ public final class SurvivalSystem {
     }
 
     public void consumeFood(ServerPlayer player, ItemStack stack) {
+        if (player.isCreative()) return;
         FoodProperties food = stack.get(DataComponents.FOOD);
         if (food != null) {
             Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
@@ -183,11 +188,29 @@ public final class SurvivalSystem {
                     : vitals(player).eat(profile));
         }
         PotionContents potion = stack.get(DataComponents.POTION_CONTENTS);
-        if (potion != null && potion.is(Potions.WATER)) drink(player, 22.0);
+        if (potion != null && potion.is(Potions.WATER)) {
+            drink(player, 22.0, de.ipnats.hardwrought.water.WaterEvents.qualityOf(stack));
+        }
     }
 
     public void drink(ServerPlayer player, double amount) {
-        save.setVitals(player.getUUID(), vitals(player).drink(amount));
+        drink(player, amount, WaterQuality.FRESH);
+    }
+
+    /**
+     * Section 23.2: what a drink is worth depends on what was in it. Salt water is worse than
+     * nothing, and anything unboiled off the surface can make the drinker ill. Illness is a vanilla
+     * effect for now; the disease system of section 12 replaces it when it exists.
+     */
+    public void drink(ServerPlayer player, double amount, WaterQuality quality) {
+        if (player.isCreative()) return;
+        save.setVitals(player.getUUID(), vitals(player).drink(amount * quality.hydrationFactor()));
+        if (quality.illnessRisk() > 0 && player.level().getRandom().nextDouble() < quality.illnessRisk()) {
+            player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    net.minecraft.world.effect.MobEffects.POISON, 200, 0));
+            player.sendSystemMessage(Component.translatable("message.hardwrought.water_made_you_ill")
+                    .withStyle(net.minecraft.ChatFormatting.DARK_GREEN));
+        }
         sync(player, carriedWeight(player), ambientTemperature(player), quality(player));
     }
 
@@ -253,6 +276,12 @@ public final class SurvivalSystem {
 
     private void tickMovement() {
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            if (player.isCreative()) {
+                lastOnGround.put(player.getUUID(), player.onGround());
+                activity.remove(player.getUUID());
+                clearPenalties(player);
+                continue;
+            }
             PlayerVitals value = vitals(player);
             double horizontalSpeed = player.getDeltaMovement().horizontalDistance();
             boolean active = horizontalSpeed > 0.02;
@@ -314,6 +343,11 @@ public final class SurvivalSystem {
         });
         updateSleepAcceleration();
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            if (player.isCreative()) {
+                activity.remove(player.getUUID());
+                clearPenalties(player);
+                continue;
+            }
             PlayerVitals v = vitals(player);
             double carried = carriedWeight(player);
             EnvironmentReading air = environment.reading(player);
@@ -423,6 +457,12 @@ public final class SurvivalSystem {
         updateModifier(player.getAttribute(Attributes.MOVEMENT_SPEED), MOVEMENT_MODIFIER, speedPenalty);
         updateModifier(player.getAttribute(Attributes.JUMP_STRENGTH), JUMP_MODIFIER, jumpPenalty);
         updateModifier(player.getAttribute(Attributes.BLOCK_BREAK_SPEED), MINING_MODIFIER, miningPenalty);
+    }
+
+    private static void clearPenalties(ServerPlayer player) {
+        updateModifier(player.getAttribute(Attributes.MOVEMENT_SPEED), MOVEMENT_MODIFIER, 0);
+        updateModifier(player.getAttribute(Attributes.JUMP_STRENGTH), JUMP_MODIFIER, 0);
+        updateModifier(player.getAttribute(Attributes.BLOCK_BREAK_SPEED), MINING_MODIFIER, 0);
     }
 
     private static void updateModifier(AttributeInstance attribute, Identifier id, double amount) {

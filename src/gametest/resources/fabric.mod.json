@@ -8,7 +8,9 @@
     "fabric-gametest": [
       "de.ipnats.hardwrought.test.CoreGameTests",
       "de.ipnats.hardwrought.test.CombatGameTests",
-      "de.ipnats.hardwrought.test.EnvironmentGameTests"
+      "de.ipnats.hardwrought.test.EnvironmentGameTests",
+      "de.ipnats.hardwrought.test.WaterGameTests",
+      "de.ipnats.hardwrought.test.WaterFlowGameTests"
     ],
     "fabric-client-gametest": [
       "de.ipnats.hardwrought.test.CoreClientGameTest"

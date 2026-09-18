@@ -58,10 +58,12 @@ public final class SurvivalHud {
         if (client.player == null || snapshot == null) return;
 
         int center = graphics.guiWidth() / 2;
-        int dropY = graphics.guiHeight() - 49;
-        renderDrops(graphics, center - 91, dropY, snapshot.stamina(), STAMINA_COLOR);
-        if (!client.player.isUnderWater()) {
-            renderDrops(graphics, center + 11, dropY, snapshot.hydration(), WATER_COLOR);
+        if (!client.player.isCreative()) {
+            int dropY = graphics.guiHeight() - 49;
+            renderDrops(graphics, center - 91, dropY, snapshot.stamina(), STAMINA_COLOR);
+            if (!client.player.isUnderWater()) {
+                renderDrops(graphics, center + 11, dropY, snapshot.hydration(), WATER_COLOR);
+            }
         }
 
         if (detailsVisible) renderDetails(graphics, snapshot);

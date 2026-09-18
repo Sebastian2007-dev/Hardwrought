@@ -10,6 +10,10 @@ import de.ipnats.hardwrought.combat.WeaponProfile;
 import de.ipnats.hardwrought.combat.WeaponProfiles;
 import de.ipnats.hardwrought.core.debug.DiagnosticRegistry;
 import de.ipnats.hardwrought.environment.EnvironmentSystem;
+import de.ipnats.hardwrought.water.WaterFlow;
+import de.ipnats.hardwrought.water.WaterQualityProfile;
+import de.ipnats.hardwrought.water.WaterQualityProfiles;
+import de.ipnats.hardwrought.water.WaterSystem;
 import de.ipnats.hardwrought.core.debug.VanillaDiagnostics;
 import de.ipnats.hardwrought.core.networking.DebugSnapshotPayload;
 import de.ipnats.hardwrought.core.registry.MaterialDefinition;
@@ -47,6 +51,8 @@ public final class CoreRuntime {
     private final EnvironmentSystem environment;
     private final SurvivalSystem survival;
     private final CombatSystem combat;
+    private final WaterSystem water;
+    private final WaterFlow waterFlow;
     private final Set<UUID> debugViewers = new HashSet<>();
 
     public CoreRuntime(MinecraftServer server) {
@@ -60,6 +66,9 @@ public final class CoreRuntime {
         environment.registerDiagnostics(diagnostics);
         survival = new SurvivalSystem(server, save, scheduler, environment);
         combat = new CombatSystem(server, survival, scheduler);
+        waterFlow = new WaterFlow(server, scheduler);
+        water = new WaterSystem(server, environment, scheduler);
+        water.registerDiagnostics(diagnostics);
         scheduler.register("hardwrought:debug_sync", SimulationTier.MEDIUM, this::syncDebugViewers);
     }
 
@@ -88,6 +97,21 @@ public final class CoreRuntime {
     public EnvironmentSystem environment() {
         ServerThread.require(server);
         return environment;
+    }
+
+    public WaterSystem water() {
+        ServerThread.require(server);
+        return water;
+    }
+
+    public WaterFlow waterFlow() {
+        ServerThread.require(server);
+        return waterFlow;
+    }
+
+    public Map<Identifier, WaterQualityProfile> waterQualityProfiles() {
+        ServerThread.require(server);
+        return server.getOrThrow(WaterQualityProfiles.KEY);
     }
 
     public CombatSystem combat() {

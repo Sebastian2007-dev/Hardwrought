@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "minecraft:block/lantern"
+    "layer0": "hardwrought:item/safety_lamp"
   }
 }

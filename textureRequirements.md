@@ -18,8 +18,8 @@ have to start from nothing.
 
 ## Shared rules for every sprite
 
-- Square canvas, authored large and downscaled cleanly to **32x32**; crisp hard pixel edges, no
-  anti-aliased blur, no resampling softness.
+- Native **16x16** square canvas so the inventory renderer does not discard detail while scaling;
+  crisp hard pixel edges, no anti-aliased blur, no resampling softness.
 - Transparent background, object centred, no text, no border, no drop shadow outside the sprite.
 - Minecraft inventory item style: a strong, immediately readable silhouette that still works at
   16x16 in a hotbar.
@@ -31,12 +31,12 @@ have to start from nothing.
 
 | Item | Texture path (`assets/hardwrought/textures/item/`) | Status | Currently shows |
 | --- | --- | --- | --- |
-| Flint dagger | `flint_dagger.png` | placeholder | `minecraft:item/flint` |
-| Iron dagger | `iron_dagger.png` | placeholder | `minecraft:item/iron_sword` |
-| Iron greatsword | `iron_greatsword.png` | placeholder | `minecraft:item/iron_sword` |
-| Iron halberd | `iron_halberd.png` | placeholder | `minecraft:item/iron_axe` |
-| Safety lamp | `safety_lamp.png` | placeholder | `minecraft:block/lantern` |
-| Flint shard | `flint_shard.png` | placeholder | `minecraft:item/flint` |
+| Flint dagger | `flint_dagger.png` | **done** | own texture |
+| Iron dagger | `iron_dagger.png` | **done** | own texture |
+| Iron greatsword | `iron_greatsword.png` | **done** | own texture |
+| Iron halberd | `iron_halberd.png` | **done** | own texture |
+| Safety lamp | `safety_lamp.png` | **done** | own texture |
+| Flint shard | `flint_shard.png` | **done** | own texture |
 | Filled waterskin | `filled_waterskin.png` | **done** | own texture |
 
 The greatsword and the halberd should read as clearly **larger** than a vanilla iron sword at a
@@ -55,8 +55,8 @@ from two flint shards and a stick.
 > conchoidal flake facets, lashed with dark sinew cord to a stubby worn wooden handle, crude
 > handmade look, muted earthy palette, clearly smaller and cruder than a metal sword, strong
 > readable silhouette, blade pointing to the upper right. Transparent background, object centred, no
-> text, no border, no shadow outside the sprite, square canvas, crisp hard pixel edges, suitable to
-> downscale to 32x32 pixels.
+> text, no border, no shadow outside the sprite, square canvas, crisp hard pixel edges, designed
+> natively for 16x16 pixels.
 
 ### Iron dagger
 
@@ -67,7 +67,7 @@ A short, fast side arm. Narrow blade, simple crossguard, wrapped grip.
 > small plain crossguard, dark leather-wrapped grip, small round pommel, cool desaturated steel grey
 > with muted brown leather, clearly shorter than a sword, strong readable silhouette, blade pointing
 > to the upper right. Transparent background, object centred, no text, no border, no shadow outside
-> the sprite, square canvas, crisp hard pixel edges, suitable to downscale to 32x32 pixels.
+> the sprite, square canvas, crisp hard pixel edges, designed natively for 16x16 pixels.
 
 ### Iron greatsword
 
@@ -79,7 +79,7 @@ A two-handed sword. It must fill the sprite corner to corner so its size is obvi
 > disc pommel, cool desaturated steel grey with muted brown leather, visibly far larger and heavier
 > than an ordinary sword, strong readable silhouette, blade pointing to the upper right. Transparent
 > background, object centred, no text, no border, no shadow outside the sprite, square canvas, crisp
-> hard pixel edges, suitable to downscale to 32x32 pixels.
+> hard pixel edges, designed natively for 16x16 pixels.
 
 ### Iron halberd
 
@@ -91,7 +91,7 @@ A polearm: a long shaft with a combined axe blade, spike and rear hook at the he
 > spike and a small rear hook, iron langets running down the shaft, cool desaturated steel grey with
 > dark weathered wood, clearly the longest weapon in the set, strong readable silhouette. Transparent
 > background, object centred, no text, no border, no shadow outside the sprite, square canvas, crisp
-> hard pixel edges, suitable to downscale to 32x32 pixels.
+> hard pixel edges, designed natively for 16x16 pixels.
 
 ### Safety lamp
 
@@ -104,7 +104,7 @@ around the flame is the feature that has to read at a glance.
 > glass, a protective iron cage of vertical bars and a curved carrying hook on top, aged brass and
 > dark iron with a single small warm flame highlight, muted earthy palette, sooty and used, strong
 > readable silhouette. Transparent background, object centred, no text, no border, no shadow outside
-> the sprite, square canvas, crisp hard pixel edges, suitable to downscale to 32x32 pixels.
+> the sprite, square canvas, crisp hard pixel edges, designed natively for 16x16 pixels.
 
 ### Flint shard
 
@@ -116,7 +116,7 @@ a rounded lump, so it is distinguishable from vanilla flint in the inventory.
 > visible conchoidal fracture facets, dark grey-brown with a paler fractured face, clearly flatter
 > and sharper than a rounded flint nodule, muted earthy palette, strong readable silhouette.
 > Transparent background, object centred, no text, no border, no shadow outside the sprite, square
-> canvas, crisp hard pixel edges, suitable to downscale to 32x32 pixels.
+> canvas, crisp hard pixel edges, designed natively for 16x16 pixels.
 
 ## Not yet required
 

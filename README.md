@@ -85,6 +85,7 @@ Alle gemeinsamen Java-Pfade beginnen mit `src/main/java/de/ipnats/hardwrought/`.
 | Neue Items | `core/registry/ModItems.java` |
 | Kampf, Waffen- und Ruestungswerte | `combat/CombatSystem.java` |
 | Luft, Gase, Raumtemperatur | `environment/EnvironmentSystem.java` |
+| Wasser, Qualitaet, Grundwasser | `water/WaterSystem.java` |
 | Konfiguration | `core/config/HardwroughtConfig.java` |
 | Rendering und HUD | `src/client/java/de/ipnats/hardwrought/client/HardwroughtClient.java` |
 | Datagen-Provider | `src/client/java/de/ipnats/hardwrought/client/HardwroughtDataGenerator.java` |
@@ -183,6 +184,29 @@ Vanilla kein passendes Item hat:
 Diese Items sind spielbar, verwenden aber noch Platzhaltertexturen. Was an Grafik
 fehlt, steht in [textureRequirements.md](textureRequirements.md).
 
+## Milestone 4: Wasser
+
+Wasserquellen gibt es nicht mehr. Wasser ist eine Menge in Millibucket, die faellt und sich
+ausgleicht, und nichts erzeugt neues Wasser: ein voller Block sind 1000 mB, ein Eimer 1000 mB, eine
+Glasflasche 100 mB, ein Wasserschlauch 800 mB. Dazu kommen Wasserqualitaet, ein regionaler
+Grundwasserspiegel und Verdunstung. Einzelheiten stehen in
+[docs/milestone-4.md](docs/milestone-4.md).
+
+```mcfunction
+/give @s hardwrought:filled_waterskin
+/hardwrought debug on
+/hardwrought status
+```
+
+Schleichen und den Wasserschlauch an einer Quelle benutzen fuellt ihn und merkt sich, **was** darin
+ist. Meerwasser entzieht dem Koerper mehr Wasser als es bringt, Sumpfwasser macht krank. Den
+Wasserschlauch auf ein brennendes Lagerfeuer anwenden kocht das Wasser ab und macht es trinkbar;
+bei Salzwasser hilft das nicht.
+
+Sauberes Wasser kommt sonst aus dem Boden: unterhalb des regionalen Grundwasserspiegels sickert
+Wasser in ausgehobene Raeume mit natuerlichen Waenden. Das ist ein Brunnen, wenn man ihn wollte, und
+ein absaufender Stollen, wenn nicht. Waende aus Brettern oder Ziegeln bleiben dicht.
+
 ## Naechste Schritte
 
 Die detaillierte Arbeitsgrundlage ist jetzt die
@@ -190,7 +214,7 @@ Die detaillierte Arbeitsgrundlage ist jetzt die
 Der [Abgleich mit dem Fundament](docs/specification-review.md) dokumentiert die
 Anpassungen und Vorgaben fuer kommende Module.
 
-1. Milestone 4–6: endliches Wasser, Vertikalwelt und Geologie.
+1. Milestone 5–6: Vertikalwelt und Geologie.
 2. Weitere Schritte gemaess Abschnitt 118 der Mechanik-Spezifikation.
 
 Der vorhandene GitHub-Workflow baut und startet die Server-GameTests bei Pushes und Pull Requests.

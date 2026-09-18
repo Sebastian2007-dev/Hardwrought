@@ -9,7 +9,7 @@
   "hud.hardwrought.sleep_quality": "Sleep quality",
   "message.hardwrought.sleep_unsafe": "You cannot sleep here.",
   "message.hardwrought.sleep_monsters": "Monsters are lurking nearby.",
-  "message.hardwrought.waterskin_refilled": "The waterskin is full again.",
+  "message.hardwrought.waterskin_refilled": "The waterskin is filled with %s.",
   "message.hardwrought.waterskin_empty": "The waterskin is empty. Sneak and use it on a water source.",
   "hud.hardwrought.combat.blocked": "BLOCKED",
   "hud.hardwrought.combat.parried": "PARRIED",
@@ -47,5 +47,14 @@
   "hud.hardwrought.damage_type.suffocation": "Suffocation",
   "hud.hardwrought.air.large": "Large enclosed space",
   "message.hardwrought.sleep_rested": "You are rested. Lying here any longer only makes you restless.",
-  "hud.hardwrought.stress": "RESTLESSNESS"
+  "hud.hardwrought.stress": "RESTLESSNESS",
+  "water_quality.hardwrought.fresh": "fresh water",
+  "water_quality.hardwrought.river": "river water",
+  "water_quality.hardwrought.swamp": "swamp water",
+  "water_quality.hardwrought.salt": "salt water",
+  "message.hardwrought.waterskin_boiled": "The water has been boiled and is drinkable now.",
+  "message.hardwrought.waterskin_boil_useless": "Boiling does not make seawater drinkable.",
+  "message.hardwrought.water_made_you_ill": "That water is making you ill.",
+  "message.hardwrought.waterskin_too_little": "There is too little water here to fill the skin.",
+  "message.hardwrought.water_no_room": "There is no room here for a whole bucket of water."
 }

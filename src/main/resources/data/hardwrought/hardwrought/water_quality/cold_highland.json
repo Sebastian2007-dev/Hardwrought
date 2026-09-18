@@ -1,0 +1,11 @@
+{
+  "biomes": [
+    "minecraft:frozen_river",
+    "minecraft:snowy_slopes",
+    "minecraft:jagged_peaks",
+    "minecraft:frozen_peaks",
+    "minecraft:stony_peaks"
+  ],
+  "standing": "river",
+  "flowing": "fresh"
+}

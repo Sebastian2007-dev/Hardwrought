@@ -9,7 +9,7 @@
   "hud.hardwrought.sleep_quality": "Schlafqualität",
   "message.hardwrought.sleep_unsafe": "Hier kannst du nicht schlafen.",
   "message.hardwrought.sleep_monsters": "In der Nähe lauern Monster.",
-  "message.hardwrought.waterskin_refilled": "Der Wasserschlauch ist wieder gefüllt.",
+  "message.hardwrought.waterskin_refilled": "Der Wasserschlauch ist gefuellt: %s.",
   "message.hardwrought.waterskin_empty": "Der Wasserschlauch ist leer. Schleiche und benutze ihn an einer Wasserquelle.",
   "hud.hardwrought.combat.blocked": "GEBLOCKT",
   "hud.hardwrought.combat.parried": "PARIERT",
@@ -47,5 +47,14 @@
   "hud.hardwrought.damage_type.suffocation": "Erstickung",
   "hud.hardwrought.air.large": "Grosser geschlossener Raum",
   "message.hardwrought.sleep_rested": "Du bist ausgeruht. Laenger liegen bleiben macht unruhig.",
-  "hud.hardwrought.stress": "UNRUHE"
+  "hud.hardwrought.stress": "UNRUHE",
+  "water_quality.hardwrought.fresh": "frisches Wasser",
+  "water_quality.hardwrought.river": "Flusswasser",
+  "water_quality.hardwrought.swamp": "Sumpfwasser",
+  "water_quality.hardwrought.salt": "Salzwasser",
+  "message.hardwrought.waterskin_boiled": "Das Wasser ist abgekocht und jetzt trinkbar.",
+  "message.hardwrought.waterskin_boil_useless": "Abkochen macht Salzwasser nicht trinkbar.",
+  "message.hardwrought.water_made_you_ill": "Von dem Wasser wird dir schlecht.",
+  "message.hardwrought.waterskin_too_little": "Hier steht zu wenig Wasser, um den Schlauch zu fuellen.",
+  "message.hardwrought.water_no_room": "Hier ist kein Platz mehr fuer einen ganzen Eimer Wasser."
 }

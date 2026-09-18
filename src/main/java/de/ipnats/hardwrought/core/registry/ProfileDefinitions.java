@@ -16,19 +16,20 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Loads datapack files that describe one profile for a group of items and indexes them per item.
- * A profile with an empty item list or an item claimed twice aborts the whole reload, so the server
- * never runs with a partially updated table.
+ * Loads datapack files that describe one profile for a group of registry entries and indexes them
+ * per entry — items for the combat profiles, biomes for the water ones. A profile with an empty list
+ * or an entry claimed twice aborts the whole reload, so the server never runs with a partially
+ * updated table.
  */
-public abstract class ItemProfileDefinitions<T> extends SimpleReloadListener<Map<Identifier, T>> {
+public abstract class ProfileDefinitions<T> extends SimpleReloadListener<Map<Identifier, T>> {
     private final String directory;
     private final Codec<T> codec;
-    private final Function<T, List<Identifier>> items;
+    private final Function<T, List<Identifier>> entries;
 
-    protected ItemProfileDefinitions(String directory, Codec<T> codec, Function<T, List<Identifier>> items) {
+    protected ProfileDefinitions(String directory, Codec<T> codec, Function<T, List<Identifier>> entries) {
         this.directory = directory;
         this.codec = codec;
-        this.items = items;
+        this.entries = entries;
     }
 
     protected abstract DataResourceStore.Key<Map<Identifier, T>> key();
@@ -41,11 +42,11 @@ public abstract class ItemProfileDefinitions<T> extends SimpleReloadListener<Map
                     try (var reader = resource.openAsReader()) {
                         T value = codec.parse(JsonOps.INSTANCE, JsonParser.parseReader(reader))
                                 .getOrThrow(message -> new IllegalArgumentException(path + ": " + message));
-                        List<Identifier> claimed = items.apply(value);
-                        if (claimed.isEmpty()) throw new IllegalArgumentException("Profile lists no items");
-                        for (Identifier item : claimed) {
-                            if (result.put(item, value) != null) {
-                                throw new IllegalArgumentException("Duplicate profile for " + item);
+                        List<Identifier> claimed = entries.apply(value);
+                        if (claimed.isEmpty()) throw new IllegalArgumentException("Profile lists no entries");
+                        for (Identifier entry : claimed) {
+                            if (result.put(entry, value) != null) {
+                                throw new IllegalArgumentException("Duplicate profile for " + entry);
                             }
                         }
                     } catch (IOException | RuntimeException exception) {

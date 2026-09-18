@@ -27,7 +27,10 @@ public final class CoreLifecycle {
         ServerTickEvents.END_SERVER_TICK.register(server -> require(server).tick());
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             CoreRuntime runtime = RUNTIMES.remove(server);
-            if (runtime != null) runtime.survival().shutdown();
+            if (runtime != null) {
+                runtime.survival().shutdown();
+                runtime.waterFlow().shutdown();
+            }
         });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             CoreRuntime runtime = RUNTIMES.get(server);
