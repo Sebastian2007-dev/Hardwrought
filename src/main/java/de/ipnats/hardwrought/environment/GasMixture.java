@@ -51,13 +51,25 @@ public record GasMixture(double oxygen, double carbonDioxide, double methane, do
                 methane + methaneDelta, smoke + smokeDelta);
     }
 
-    /** Ventilation: the mixture moves toward the outside air by the given fraction per step. */
+    /** Ventilation against sea-level air, which is what a room at an ordinary height breathes. */
     public GasMixture ventilate(double rate) {
+        return ventilate(rate, OUTDOOR);
+    }
+
+    /**
+     * Ventilation: the mixture moves toward the air outside by the given fraction per step.
+     *
+     * <p>Which air that is depends on where the room stands. Section 43 makes the outside thin at
+     * altitude, and a room can only ever be aired out with what is outside it — opening a window at
+     * Y 800 does not produce sea-level air.
+     */
+    public GasMixture ventilate(double rate, GasMixture outside) {
         double amount = clamp(rate, 0, 1);
+        if (outside == null) throw new IllegalArgumentException("Ventilation needs air to exchange with");
         return new GasMixture(
-                oxygen + (OUTDOOR.oxygen - oxygen) * amount,
-                carbonDioxide + (OUTDOOR.carbonDioxide - carbonDioxide) * amount,
-                methane + (OUTDOOR.methane - methane) * amount,
+                oxygen + (outside.oxygen - oxygen) * amount,
+                carbonDioxide + (outside.carbonDioxide - carbonDioxide) * amount,
+                methane + (outside.methane - methane) * amount,
                 smoke + (OUTDOOR.smoke - smoke) * amount);
     }
 

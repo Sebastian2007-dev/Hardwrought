@@ -1,0 +1,28 @@
+{
+  "values": [
+    {
+      "id": "hardwrought:flint_pickaxe",
+      "required": false
+    },
+    {
+      "id": "hardwrought:stone_pickaxe",
+      "required": false
+    },
+    {
+      "id": "minecraft:wooden_pickaxe",
+      "required": false
+    },
+    {
+      "id": "minecraft:stone_pickaxe",
+      "required": false
+    },
+    {
+      "id": "minecraft:golden_pickaxe",
+      "required": false
+    },
+    {
+      "id": "#hardwrought:precise_prospecting_tools",
+      "required": false
+    }
+  ]
+}

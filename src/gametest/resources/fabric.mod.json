@@ -12,7 +12,9 @@
       "de.ipnats.hardwrought.test.WaterGameTests",
       "de.ipnats.hardwrought.test.WaterFlowGameTests",
       "de.ipnats.hardwrought.test.GroundwaterGameTests",
-      "de.ipnats.hardwrought.test.RainfallGameTests"
+      "de.ipnats.hardwrought.test.RainfallGameTests",
+      "de.ipnats.hardwrought.test.VerticalWorldGameTests",
+      "de.ipnats.hardwrought.test.GeologyGameTests"
     ],
     "fabric-client-gametest": [
       "de.ipnats.hardwrought.test.CoreClientGameTest"

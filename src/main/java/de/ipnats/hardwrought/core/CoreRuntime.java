@@ -10,6 +10,9 @@ import de.ipnats.hardwrought.combat.WeaponProfile;
 import de.ipnats.hardwrought.combat.WeaponProfiles;
 import de.ipnats.hardwrought.core.debug.DiagnosticRegistry;
 import de.ipnats.hardwrought.environment.EnvironmentSystem;
+import de.ipnats.hardwrought.geology.Geology;
+import de.ipnats.hardwrought.geology.RockProfile;
+import de.ipnats.hardwrought.geology.RockProfiles;
 import de.ipnats.hardwrought.water.AquiferProfile;
 import de.ipnats.hardwrought.water.AquiferProfiles;
 import de.ipnats.hardwrought.water.Groundwater;
@@ -78,6 +81,7 @@ public final class CoreRuntime {
         water = new WaterSystem(server, environment, scheduler);
         water.registerDiagnostics(diagnostics);
         groundwater.registerDiagnostics(diagnostics);
+        Geology.registerDiagnostics(diagnostics);
         scheduler.register("hardwrought:debug_sync", SimulationTier.MEDIUM, this::syncDebugViewers);
     }
 
@@ -131,6 +135,11 @@ public final class CoreRuntime {
     public Map<Identifier, AquiferProfile> aquiferProfiles() {
         ServerThread.require(server);
         return server.getOrThrow(AquiferProfiles.KEY);
+    }
+
+    public Map<Identifier, RockProfile> rockProfiles() {
+        ServerThread.require(server);
+        return server.getOrThrow(RockProfiles.KEY);
     }
 
     public Map<Identifier, WaterQualityProfile> waterQualityProfiles() {

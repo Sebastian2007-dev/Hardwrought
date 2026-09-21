@@ -366,7 +366,7 @@ high look identical from the outside and only the reserve of the region tells th
 
 ## Verification
 
-`gradlew.bat runGameTest` runs 89 server tests, including the millibucket
+`gradlew.bat runGameTest` runs 104 server tests, including the millibucket
 arithmetic and how it maps onto the eight steps vanilla can draw, water falling down a shaft and
 arriving with exactly the volume it started with, water levelling out along a trough without ever
 making more, a bucket pressed into the bottom of a full shaft coming out at the top with nothing lost — once

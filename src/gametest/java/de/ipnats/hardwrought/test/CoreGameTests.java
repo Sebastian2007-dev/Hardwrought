@@ -100,8 +100,8 @@ public final class CoreGameTests {
         // Milestone 3 supplies the gas channel; the channels without a system must still say so.
         helper.assertTrue(lines.stream().anyMatch(line -> line.startsWith("STRUCTURE | unavailable")),
                 "Unimplemented models must not invent data");
-        helper.assertTrue(lines.stream().anyMatch(line -> line.startsWith("ORE | unavailable")),
-                "Unimplemented ore regions must not invent data");
+        helper.assertTrue(lines.stream().noneMatch(line -> line.startsWith("ORE | unavailable")),
+                "while the ore channel reports the real geology of Milestone 6");
         helper.assertTrue(lines.stream().anyMatch(line -> line.contains("not Celsius")), "Biome temperature must be labelled accurately");
         helper.succeed();
     }

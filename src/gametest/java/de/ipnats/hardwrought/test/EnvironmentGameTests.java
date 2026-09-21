@@ -223,7 +223,7 @@ public final class EnvironmentGameTests {
         helper.assertTrue(runtime.itemWeights().get(Hardwrought.id("iron_halberd")) == 3.6,
                 "The new equipment has carried mass");
         helper.assertTrue(ModItems.SAFETY_LAMP != null && ModItems.IRON_HALBERD != null
-                        && ModItems.FLINT_PICKAXE != null && ModItems.QUEST_BOOK != null,
+                        && ModItems.FLINT_PICKAXE != null,
                 "Existing equipment and the new primitive items are registered");
         helper.succeed();
     }

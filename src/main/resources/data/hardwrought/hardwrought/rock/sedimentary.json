@@ -1,0 +1,40 @@
+{
+  "rocks": [
+    "hardwrought:sedimentary"
+  ],
+  "deposits": [
+    {
+      "ore": "minecraft:coal_ore",
+      "weight": 5,
+      "min_y": -20,
+      "max_y": 120,
+      "min_radius": 40,
+      "max_radius": 64,
+      "min_grade": 0.1,
+      "max_grade": 0.35,
+      "drill_tier": 1
+    },
+    {
+      "ore": "minecraft:copper_ore",
+      "weight": 3,
+      "min_y": -30,
+      "max_y": 70,
+      "min_radius": 30,
+      "max_radius": 52,
+      "min_grade": 0.04,
+      "max_grade": 0.18,
+      "drill_tier": 1
+    },
+    {
+      "ore": "minecraft:lapis_ore",
+      "weight": 2,
+      "min_y": -60,
+      "max_y": 20,
+      "min_radius": 16,
+      "max_radius": 30,
+      "min_grade": 0.02,
+      "max_grade": 0.14,
+      "drill_tier": 2
+    }
+  ]
+}

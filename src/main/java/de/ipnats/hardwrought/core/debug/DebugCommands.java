@@ -167,6 +167,18 @@ public final class DebugCommands {
         source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
                 "Raumtemperatur %.1f C | Wind %.2f | Isolierung %.2f",
                 reading.temperature(), reading.wind(), reading.insulation())), false);
+        // Abschnitt 43: duenne Luft sieht im Raum genauso aus wie verbrauchte Luft. Nur die Hoehe
+        // sagt, ob geluftet werden kann oder ob draussen auch nicht mehr drin ist.
+        int y = player.blockPosition().getY();
+        source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "Zone %s (Y=%d) | Luftdruck %.2f | O2 draussen %.2f%% | Geothermie +%.1f C | Hoehenwind %.2f%s",
+                de.ipnats.hardwrought.environment.VerticalZone.at(y).serializedName(), y,
+                de.ipnats.hardwrought.environment.Altitude.pressure(y),
+                de.ipnats.hardwrought.environment.Altitude.outsideAir(y).oxygen() * 100,
+                de.ipnats.hardwrought.environment.Altitude.geothermal(y),
+                de.ipnats.hardwrought.environment.Altitude.gale(y),
+                de.ipnats.hardwrought.environment.Altitude.tooThinToBurn(y)
+                        ? " | zu duenn fuer offenes Feuer" : "")), false);
         return 1;
     }
 

@@ -222,7 +222,9 @@ public final class EnvironmentSystem {
     public double outdoorTemperature(ServerLevel level, BlockPos pos, Season season) {
         double temperature = 14.0 + (level.getBiome(pos).value().getBaseTemperature() - 0.8) * 18.0;
         temperature += season.temperatureOffset();
-        temperature -= Math.max(0, pos.getY() - 64) * 0.0065;
+        // Sections 43 and 47: the air cools going up and the rock warms going down.
+        temperature -= Altitude.lapse(pos.getY());
+        temperature += Altitude.geothermal(pos.getY());
         if (level.isDarkOutside()) temperature -= 4.0;
         else if (level.isBrightOutside() && RoomScan.openToSky(level, pos.above()) && !level.isRainingAt(pos)) {
             temperature += 3.0;
@@ -443,6 +445,15 @@ public final class EnvironmentSystem {
      * been simulated yet says so instead of showing the outdoor baseline as if it were measured.
      */
     public void registerDiagnostics(DiagnosticRegistry registry) {
+        registry.register("hardwrought:vertical_zone", DiagnosticRegistry.Channel.ENVIRONMENT, (level, pos) -> {
+            int y = pos.getY();
+            return String.format(Locale.ROOT,
+                    "%s Y=%d (world %d..%d) | pressure=%.2f outside O2=%.2f%% | lapse=-%.1fC geothermal=+%.1fC gale=%.2f%s",
+                    VerticalZone.at(y).serializedName(), y, level.getMinY(), level.getMaxY(),
+                    Altitude.pressure(y), Altitude.outsideAir(y).oxygen() * 100,
+                    Altitude.lapse(y), Altitude.geothermal(y), Altitude.gale(y),
+                    Altitude.tooThinToBurn(y) ? " | too thin for an open fire" : "");
+        });
         registry.register("hardwrought:atmosphere", DiagnosticRegistry.Channel.GAS, (level, pos) -> {
             RoomScan scan = RoomScan.scan(level, pos);
             if (!scan.sealed()) return "open air, outside baseline applies";

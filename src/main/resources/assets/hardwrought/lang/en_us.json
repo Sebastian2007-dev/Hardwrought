@@ -5,7 +5,6 @@
   "item.hardwrought.dirt_blob": "Dirt Clod",
   "item.hardwrought.leaf_string": "Leaf Cord",
   "item.hardwrought.lighting_sticks": "Fire-lighting Sticks",
-  "item.hardwrought.quest_book": "Quest Book",
   "item.hardwrought.flint_hatchet": "Flint Hatchet",
   "item.hardwrought.flint_hoe": "Flint Hoe",
   "item.hardwrought.flint_pickaxe": "Flint Pickaxe",
@@ -72,5 +71,17 @@
   "message.hardwrought.water_made_you_ill": "That water is making you ill.",
   "message.hardwrought.waterskin_too_little": "There is too little water here to fill the skin.",
   "message.hardwrought.water_no_room": "There is no room here for a whole bucket of water.",
-  "message.hardwrought.water_too_little": "There is too little water here to fill a bucket."
+  "message.hardwrought.water_too_little": "There is too little water here to fill a bucket.",
+  "rock.hardwrought.granite": "granite",
+  "rock.hardwrought.volcanic": "volcanic rock",
+  "rock.hardwrought.sedimentary": "sedimentary rock",
+  "direction.hardwrought.north": "north",
+  "direction.hardwrought.south": "south",
+  "direction.hardwrought.east": "east",
+  "direction.hardwrought.west": "west",
+  "message.hardwrought.prospect_rock": "The rock here is %s.",
+  "message.hardwrought.prospect_in_body": "This rock is rich in %s — grade %s %%.",
+  "message.hardwrought.prospect_traces": "There are traces of %s in the rock.",
+  "message.hardwrought.prospect_bearing": "Rich %s ground: about %s blocks to the %s, around Y %s.",
+  "message.hardwrought.prospect_nothing": "Nothing but ordinary rock within reach."
 }

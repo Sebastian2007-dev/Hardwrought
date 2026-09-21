@@ -1,0 +1,20 @@
+{
+  "values": [
+    {
+      "id": "hardwrought:iron_pickaxe",
+      "required": false
+    },
+    {
+      "id": "minecraft:iron_pickaxe",
+      "required": false
+    },
+    {
+      "id": "minecraft:diamond_pickaxe",
+      "required": false
+    },
+    {
+      "id": "minecraft:netherite_pickaxe",
+      "required": false
+    }
+  ]
+}

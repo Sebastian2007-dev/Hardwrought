@@ -226,6 +226,62 @@ und tief liegendes Gelaende laeuft voll. Ein Dach oder ein Vordach haelt den Reg
 in kalten Biomen faellt Schnee statt Regen, und Schnee taut im Modell noch nicht. Regenwasser ist
 sauberes Wasser, mischt sich aber mit dem, worein es faellt.
 
+## Milestone 5: Vertikalwelt
+
+Die Welt reicht jetzt von **Y −256 bis Y +1023** (1280 Bloecke). Das Gelaende ist ganz normales
+Vanilla-Gelaende mit normalen Gebirgen — neu ist nur der Raum darueber und darunter. Einzelheiten
+stehen in [docs/milestone-5.md](docs/milestone-5.md).
+
+> **Bestehende Welten lassen sich nicht umstellen.** Wer vor diesem Milestone eine Welt angefangen
+> hat, muss eine neue erzeugen — die Hoehe einer Dimension zu aendern aendert jeden Chunk darin.
+
+Die Hoehe ist kein reiner Koordinatenwert, sondern Spielmechanik:
+
+- **Duenne Luft.** Der Luftdruck halbiert sich alle 960 Bloecke ueber dem Meeresspiegel, und der
+  Sauerstoff draussen sinkt mit ihm: Y 300 leicht, Y 600 deutlich (unter der Schwelle, ab der es
+  einen beeintraechtigt), Y 900 stark. Eine Huette, die oben gebaut wird, enthaelt von Anfang an
+  duenne Luft, und Lueften bringt nur das, was draussen auch da ist. Ueber etwa **Y 720 haelt kein
+  offenes Feuer mehr**.
+- **Geothermie.** Nach unten wird es heiss: +7 °C bei Y −100, +20 °C bei Y −200, +30 °C am Grund.
+  Zusammen mit schlechter Belueftung und CO2 ist die Tiefe damit von sich aus gefaehrlich.
+- **Wind.** Ab Y 320 kommt Hoehenwind dazu, bei Y 720 ist es ein voller Sturm — unabhaengig vom
+  Wetter.
+- **Tiefe Hoehlen.** Die Vanilla-Carver setzen ihre Untergrenze relativ zum Weltboden an, karsten
+  also jetzt bis Y −248. Unter Y −64 gibt es dafuer noch keine Erze; das ist Milestone 6.
+
+```mcfunction
+/hardwrought air
+/hardwrought status
+```
+
+## Milestone 6: Geologie
+
+Erz liegt nicht mehr ueberall. Die Vanilla-Adern sind aus allen Oberwelt-Biomen entfernt und durch
+**wenige grosse Lagerstaetten** ersetzt. Einzelheiten stehen in [docs/milestone-6.md](docs/milestone-6.md).
+
+> Bereits erzeugte Chunks bleiben, wie sie sind — Lagerstaetten entstehen nur in neuem Gelaende.
+
+- **Gesteinsregionen.** Jede Region von 256 Bloecken besteht aus einem Gestein (Granit, Vulkan- oder
+  Sedimentgestein), abgeleitet aus dem Weltseed und unabhaengig vom Biom. Was ein Gestein fuehrt,
+  steht in `data/hardwrought/hardwrought/rock/*.json`: Kohle nur im Sediment, Diamant im Vulkangestein,
+  Smaragd im Granit.
+- **Lagerstaetten.** Ein bis drei pro Region, 20–48 Bloecke breit und flach wie ein Floez. Nichts
+  davon wird gespeichert; alles ergibt sich aus Seed und Koordinate.
+- **Erzgehalt.** In der Mitte am reichsten, am Rand noch etwa ein Drittel davon. Der Gehalt zahlt
+  sich direkt aus: bis zu vier zusaetzliche Drops pro Block im reichen Kern, im tauben Randbereich
+  keiner.
+- **Prospektion.** Schleichen und eine Spitzhacke auf natuerliches Gestein benutzen. Jede Spitzhacke
+  nennt das Gestein und Spuren im Umkreis von 48 Bloecken; ab Eisen kommen Richtung, Entfernung und
+  Tiefe dazu (160 Bloecke). Wer drinsteht, bekommt den Gehalt genau an dieser Stelle.
+
+```mcfunction
+/hardwrought debug on
+/hardwrought status
+```
+
+Der ORE-Kanal sagt, wo die naechste Lagerstaette liegt — der schnellste Weg, die Erzeugung im Spiel
+selbst nachzupruefen.
+
 ## Naechste Schritte
 
 Die detaillierte Arbeitsgrundlage ist jetzt die
@@ -233,8 +289,11 @@ Die detaillierte Arbeitsgrundlage ist jetzt die
 Der [Abgleich mit dem Fundament](docs/specification-review.md) dokumentiert die
 Anpassungen und Vorgaben fuer kommende Module.
 
-1. Milestone 5–6: Vertikalwelt und Geologie.
-2. Weitere Schritte gemaess Abschnitt 118 der Mechanik-Spezifikation.
+1. Milestone 7: Fruehe Progression — primitive Werkzeuge und Abbauregeln, Stein, Kupfer, Bronze,
+   fruehe Metallurgie.
+2. Offen aus Milestone 6: Aufbereitung (Brechen, Sieben, Waschen), die spaeteren
+   Prospektionsmethoden und Erz unterhalb von Y -64.
+3. Weitere Schritte gemaess Abschnitt 118 der Mechanik-Spezifikation.
 
 Der vorhandene GitHub-Workflow baut und startet die Server-GameTests bei Pushes und Pull Requests.
 Im aktuellen Ordner ist noch kein Git-Repository initialisiert.

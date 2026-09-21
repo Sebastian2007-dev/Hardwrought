@@ -20,6 +20,11 @@ public record EnvironmentReading(GasMixture gases, double temperature, double wi
     }
 
     public static EnvironmentReading outdoor(double temperature, double wind) {
-        return new EnvironmentReading(GasMixture.OUTDOOR, temperature, wind, false, RoomScan.MAX_VOLUME, 0);
+        return outdoor(GasMixture.OUTDOOR, temperature, wind);
+    }
+
+    /** Open air at a stated height: section 43 makes what is outside depend on how high it is. */
+    public static EnvironmentReading outdoor(GasMixture air, double temperature, double wind) {
+        return new EnvironmentReading(air, temperature, wind, false, RoomScan.MAX_VOLUME, 0);
     }
 }

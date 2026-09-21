@@ -5,7 +5,6 @@
   "item.hardwrought.dirt_blob": "Erdklumpen",
   "item.hardwrought.leaf_string": "Blattschnur",
   "item.hardwrought.lighting_sticks": "Feuerstäbe",
-  "item.hardwrought.quest_book": "Questbuch",
   "item.hardwrought.flint_hatchet": "Feuersteinbeil",
   "item.hardwrought.flint_hoe": "Feuersteinhacke",
   "item.hardwrought.flint_pickaxe": "Feuersteinspitzhacke",
@@ -72,5 +71,17 @@
   "message.hardwrought.water_made_you_ill": "Von dem Wasser wird dir schlecht.",
   "message.hardwrought.waterskin_too_little": "Hier steht zu wenig Wasser, um den Schlauch zu fuellen.",
   "message.hardwrought.water_no_room": "Hier ist kein Platz mehr fuer einen ganzen Eimer Wasser.",
-  "message.hardwrought.water_too_little": "Hier steht zu wenig Wasser fuer einen ganzen Eimer."
+  "message.hardwrought.water_too_little": "Hier steht zu wenig Wasser fuer einen ganzen Eimer.",
+  "rock.hardwrought.granite": "Granit",
+  "rock.hardwrought.volcanic": "Vulkangestein",
+  "rock.hardwrought.sedimentary": "Sedimentgestein",
+  "direction.hardwrought.north": "Norden",
+  "direction.hardwrought.south": "Sueden",
+  "direction.hardwrought.east": "Osten",
+  "direction.hardwrought.west": "Westen",
+  "message.hardwrought.prospect_rock": "Das Gestein hier ist %s.",
+  "message.hardwrought.prospect_in_body": "Dieser Fels ist reich an %s — Gehalt %s %%.",
+  "message.hardwrought.prospect_traces": "Im Gestein sind Spuren von %s.",
+  "message.hardwrought.prospect_bearing": "Reicher %s-Fels: etwa %s Bloecke nach %s, bei rund Y %s.",
+  "message.hardwrought.prospect_nothing": "In Reichweite ist nur gewoehnlicher Fels."
 }
