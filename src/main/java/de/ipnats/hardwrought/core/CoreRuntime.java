@@ -11,6 +11,7 @@ import de.ipnats.hardwrought.combat.WeaponProfiles;
 import de.ipnats.hardwrought.core.debug.DiagnosticRegistry;
 import de.ipnats.hardwrought.environment.EnvironmentSystem;
 import de.ipnats.hardwrought.geology.Geology;
+import de.ipnats.hardwrought.knowledge.KnowledgeSystem;
 import de.ipnats.hardwrought.geology.RockProfile;
 import de.ipnats.hardwrought.geology.RockProfiles;
 import de.ipnats.hardwrought.water.AquiferProfile;
@@ -61,6 +62,7 @@ public final class CoreRuntime {
     private final WaterSystem water;
     private final WaterFlow waterFlow;
     private final Groundwater groundwater;
+    private final KnowledgeSystem knowledge;
     private final Rainfall rainfall;
     private final Set<UUID> debugViewers = new HashSet<>();
 
@@ -82,6 +84,8 @@ public final class CoreRuntime {
         water.registerDiagnostics(diagnostics);
         groundwater.registerDiagnostics(diagnostics);
         Geology.registerDiagnostics(diagnostics);
+        knowledge = new KnowledgeSystem(server, save, scheduler);
+        knowledge.registerDiagnostics(diagnostics);
         scheduler.register("hardwrought:debug_sync", SimulationTier.MEDIUM, this::syncDebugViewers);
     }
 
@@ -130,6 +134,11 @@ public final class CoreRuntime {
     public Rainfall rainfall() {
         ServerThread.require(server);
         return rainfall;
+    }
+
+    public KnowledgeSystem knowledge() {
+        ServerThread.require(server);
+        return knowledge;
     }
 
     public Map<Identifier, AquiferProfile> aquiferProfiles() {

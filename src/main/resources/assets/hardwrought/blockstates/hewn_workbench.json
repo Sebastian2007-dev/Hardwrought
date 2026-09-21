@@ -1,0 +1,43 @@
+{
+  "variants": {
+    "wood=oak": {
+      "model": "hardwrought:block/hewn_workbench_oak"
+    },
+    "wood=spruce": {
+      "model": "hardwrought:block/hewn_workbench_spruce"
+    },
+    "wood=birch": {
+      "model": "hardwrought:block/hewn_workbench_birch"
+    },
+    "wood=jungle": {
+      "model": "hardwrought:block/hewn_workbench_jungle"
+    },
+    "wood=acacia": {
+      "model": "hardwrought:block/hewn_workbench_acacia"
+    },
+    "wood=dark_oak": {
+      "model": "hardwrought:block/hewn_workbench_dark_oak"
+    },
+    "wood=pale_oak": {
+      "model": "hardwrought:block/hewn_workbench_pale_oak"
+    },
+    "wood=poplar": {
+      "model": "hardwrought:block/hewn_workbench_poplar"
+    },
+    "wood=mangrove": {
+      "model": "hardwrought:block/hewn_workbench_mangrove"
+    },
+    "wood=cherry": {
+      "model": "hardwrought:block/hewn_workbench_cherry"
+    },
+    "wood=bamboo": {
+      "model": "hardwrought:block/hewn_workbench_bamboo"
+    },
+    "wood=crimson": {
+      "model": "hardwrought:block/hewn_workbench_crimson"
+    },
+    "wood=warped": {
+      "model": "hardwrought:block/hewn_workbench_warped"
+    }
+  }
+}

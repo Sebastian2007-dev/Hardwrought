@@ -1,0 +1,60 @@
+{
+  "values": [
+    {
+      "id": "hardwrought:nickel_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_nickel_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:cobalt_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_cobalt_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:chromium_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_chromium_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:mercury_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_mercury_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:titanium_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_titanium_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:uranium_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_uranium_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:thorium_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_thorium_ore",
+      "required": false
+    }
+  ]
+}

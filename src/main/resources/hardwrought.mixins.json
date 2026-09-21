@@ -4,9 +4,13 @@
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
 		"AbstractBedBlockMixin",
+		"AbstractContainerMenuMixin",
+		"CraftingRecipeMixin",
 		"FlowingFluidMixin",
+		"ItemStackCraftedMixin",
 		"ItemStackMixin",
 		"LivingEntityMixin",
+		"PlayerMixin",
 		"WaterFluidMixin"
 	],
 	"injectors": {

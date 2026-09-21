@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "D": "hardwrought:dirt_blob"
+  },
+  "pattern": [
+    "DD",
+    "DD"
+  ],
+  "result": {
+    "id": "minecraft:dirt"
+  }
+}

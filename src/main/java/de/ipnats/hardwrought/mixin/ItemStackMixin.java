@@ -21,7 +21,11 @@ public abstract class ItemStackMixin {
         if (!level.isClientSide() && entity instanceof ServerPlayer player
                 && (stack.has(DataComponents.FOOD) || stack.has(DataComponents.POTION_CONTENTS))) {
             var runtime = CoreLifecycle.find(player.level().getServer());
-            if (runtime != null) runtime.survival().consumeFood(player, stack);
+            if (runtime != null) {
+                runtime.survival().consumeFood(player, stack);
+                // Section 82: eating a thing is one of the ways of finding out what it is.
+                runtime.knowledge().study(player, stack.getItem());
+            }
         }
     }
 }

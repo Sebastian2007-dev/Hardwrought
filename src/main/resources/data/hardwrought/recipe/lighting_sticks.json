@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:stick",
+    "minecraft:stick",
+    "hardwrought:leaf_string"
+  ],
+  "result": {
+    "id": "hardwrought:lighting_sticks"
+  }
+}

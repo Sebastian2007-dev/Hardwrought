@@ -35,6 +35,61 @@
       "min_grade": 0.01,
       "max_grade": 0.07,
       "drill_tier": 3
+    },
+    {
+      "ore": "hardwrought:nickel_ore",
+      "weight": 1,
+      "min_y": -80,
+      "max_y": 20,
+      "min_radius": 12,
+      "max_radius": 28,
+      "min_grade": 0.02,
+      "max_grade": 0.16,
+      "drill_tier": 2
+    },
+    {
+      "ore": "hardwrought:cobalt_ore",
+      "weight": 1,
+      "min_y": -100,
+      "max_y": 0,
+      "min_radius": 12,
+      "max_radius": 28,
+      "min_grade": 0.02,
+      "max_grade": 0.16,
+      "drill_tier": 2
+    },
+    {
+      "ore": "hardwrought:chromium_ore",
+      "weight": 1,
+      "min_y": -120,
+      "max_y": -20,
+      "min_radius": 12,
+      "max_radius": 28,
+      "min_grade": 0.02,
+      "max_grade": 0.16,
+      "drill_tier": 2
+    },
+    {
+      "ore": "hardwrought:mercury_ore",
+      "weight": 1,
+      "min_y": -120,
+      "max_y": 0,
+      "min_radius": 12,
+      "max_radius": 28,
+      "min_grade": 0.02,
+      "max_grade": 0.16,
+      "drill_tier": 3
+    },
+    {
+      "ore": "hardwrought:platinum_ore",
+      "weight": 1,
+      "min_y": -220,
+      "max_y": -100,
+      "min_radius": 12,
+      "max_radius": 28,
+      "min_grade": 0.02,
+      "max_grade": 0.16,
+      "drill_tier": 3
     }
   ]
 }

@@ -1,0 +1,23 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "bark_top": "minecraft:block/bamboo_block_top",
+    "worked": "hardwrought:block/hewn_workbench_side_bamboo",
+    "top": "hardwrought:block/hewn_workbench_top_bamboo",
+    "particle": "minecraft:block/bamboo_block"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "north": { "texture": "#worked", "cullface": "north" },
+        "south": { "texture": "#worked", "cullface": "south" },
+        "east":  { "texture": "#worked", "cullface": "east" },
+        "west":  { "texture": "#worked", "cullface": "west" },
+        "up":    { "texture": "#top", "cullface": "up" },
+        "down":  { "texture": "#bark_top", "cullface": "down" }
+      }
+    }
+  ]
+}

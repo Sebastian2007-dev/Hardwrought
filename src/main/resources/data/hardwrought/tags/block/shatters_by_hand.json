@@ -1,0 +1,25 @@
+{
+  "values": [
+    "#minecraft:impermeable",
+    {
+      "id": "minecraft:glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:glass_pane",
+      "required": false
+    },
+    {
+      "id": "minecraft:tinted_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:ice",
+      "required": false
+    },
+    {
+      "id": "minecraft:frosted_ice",
+      "required": false
+    }
+  ]
+}

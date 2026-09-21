@@ -14,7 +14,9 @@
       "de.ipnats.hardwrought.test.GroundwaterGameTests",
       "de.ipnats.hardwrought.test.RainfallGameTests",
       "de.ipnats.hardwrought.test.VerticalWorldGameTests",
-      "de.ipnats.hardwrought.test.GeologyGameTests"
+      "de.ipnats.hardwrought.test.GeologyGameTests",
+      "de.ipnats.hardwrought.test.ProgressionGameTests",
+      "de.ipnats.hardwrought.test.MetalGameTests"
     ],
     "fabric-client-gametest": [
       "de.ipnats.hardwrought.test.CoreClientGameTest"

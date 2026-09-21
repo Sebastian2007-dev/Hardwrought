@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "B": "hardwrought:bronze_ingot",
+    "S": "minecraft:stick",
+    "T": "minecraft:string"
+  },
+  "pattern": [
+    "BB",
+    "TS"
+  ],
+  "result": {
+    "id": "hardwrought:bronze_pickaxe"
+  }
+}

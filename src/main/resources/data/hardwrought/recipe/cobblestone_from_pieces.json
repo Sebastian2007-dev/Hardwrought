@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "C": "hardwrought:cobblestone_piece"
+  },
+  "pattern": [
+    "CC",
+    "CC"
+  ],
+  "result": {
+    "id": "minecraft:cobblestone"
+  }
+}

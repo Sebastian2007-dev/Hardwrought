@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "F": "hardwrought:flint_shard",
+    "T": "hardwrought:leaf_string"
+  },
+  "pattern": [
+    "FT",
+    "F "
+  ],
+  "result": {
+    "id": "hardwrought:flint_sword"
+  }
+}

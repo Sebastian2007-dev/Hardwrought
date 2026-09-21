@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:flint"
+  ],
+  "result": {
+    "id": "hardwrought:flint_shard",
+    "count": 2
+  }
+}

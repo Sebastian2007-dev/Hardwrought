@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:cobblestone"
+  ],
+  "result": {
+    "id": "hardwrought:cobblestone_piece",
+    "count": 4
+  }
+}

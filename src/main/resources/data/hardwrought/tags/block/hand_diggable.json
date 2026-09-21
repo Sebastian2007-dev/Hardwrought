@@ -1,0 +1,33 @@
+{
+  "values": [
+    "#minecraft:dirt",
+    {
+      "id": "minecraft:gravel",
+      "required": false
+    },
+    {
+      "id": "minecraft:clay",
+      "required": false
+    },
+    {
+      "id": "minecraft:mud",
+      "required": false
+    },
+    {
+      "id": "minecraft:soul_sand",
+      "required": false
+    },
+    {
+      "id": "minecraft:soul_soil",
+      "required": false
+    },
+    {
+      "id": "minecraft:snow_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:powder_snow",
+      "required": false
+    }
+  ]
+}

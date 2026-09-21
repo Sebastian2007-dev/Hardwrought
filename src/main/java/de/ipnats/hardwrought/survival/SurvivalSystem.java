@@ -65,6 +65,12 @@ public final class SurvivalSystem {
     private static final double OVERLOAD_STAMINA_PER_TICK = 0.002;
     private static final double JUMP_STAMINA = 0.30;
     private static final double MINED_BLOCK_STAMINA = 0.10;
+    /**
+     * Stamina left before being worn out starts to cost a player anything. Four of the ten drops
+     * the bar is drawn in: above that the reserve is there to be spent, and spending it is the
+     * point of having it.
+     */
+    public static final double EXHAUSTION_THRESHOLD = 40.0;
     /** Section 36: heavy armor is paid for with stamina while moving, not only with carried mass. */
     private static final double ARMOR_STAMINA_PER_TICK = 0.005;
     private static final EquipmentSlot[] ARMOR_SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST,
@@ -450,13 +456,26 @@ public final class SurvivalSystem {
 
     private void applyPenalties(ServerPlayer player, PlayerVitals v, double carried) {
         double load = Math.max(0, carried / CarryWeight.BASE_CAPACITY_KG - 1.0);
-        double exhaustion = (100.0 - v.stamina()) / 100.0;
+        double exhaustion = exhaustion(v.stamina());
         double speedPenalty = -Math.min(0.55, load * 0.35 + exhaustion * 0.18);
         double jumpPenalty = -Math.min(0.65, load * 0.45 + exhaustion * 0.22);
         double miningPenalty = -Math.min(0.75, exhaustion * 0.45 + v.fatigue() / 300.0);
         updateModifier(player.getAttribute(Attributes.MOVEMENT_SPEED), MOVEMENT_MODIFIER, speedPenalty);
         updateModifier(player.getAttribute(Attributes.JUMP_STRENGTH), JUMP_MODIFIER, jumpPenalty);
         updateModifier(player.getAttribute(Attributes.BLOCK_BREAK_SPEED), MINING_MODIFIER, miningPenalty);
+    }
+
+    /**
+     * How worn out a player is, 0 while they still have reserves and 1 when they are empty.
+     *
+     * <p>Fatigue only starts being felt once the last four drops of the bar are all that is left.
+     * Above that a player is working, not struggling: a penalty that begins at the first missing
+     * point of stamina means every player is permanently slightly slowed for no reason they can see,
+     * and a bar that is never full reads as a broken game rather than as a warning.
+     */
+    public static double exhaustion(double stamina) {
+        if (stamina >= EXHAUSTION_THRESHOLD) return 0;
+        return Math.min(1.0, (EXHAUSTION_THRESHOLD - Math.max(0, stamina)) / EXHAUSTION_THRESHOLD);
     }
 
     private static void clearPenalties(ServerPlayer player) {

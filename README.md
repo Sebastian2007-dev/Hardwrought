@@ -282,6 +282,30 @@ Erz liegt nicht mehr ueberall. Die Vanilla-Adern sind aus allen Oberwelt-Biomen 
 Der ORE-Kanal sagt, wo die naechste Lagerstaette liegt — der schnellste Weg, die Erzeugung im Spiel
 selbst nachzupruefen.
 
+## Milestone 7: Fruehe Progression
+
+Die Welt gibt Faeusten nicht mehr nach. Was man aus Boden, Holz und Stein bekommt, haengt daran, was
+man in der Hand haelt. Einzelheiten stehen in [docs/milestone-7.md](docs/milestone-7.md).
+
+- **Werkzeugpflicht.** Stein, Erz, Holz und alles daraus Gebaute bewegt sich mit blossen Haenden
+  **gar nicht** — die Aktionsleiste sagt auch, warum. Falsches Werkzeug geht, aber langsam, teuer und
+  auf Kosten des Werkzeugs; oft ist der Block danach hin.
+- **Erde und Stein zerfallen in Brocken.** Dirt gibt 4 Dirt-Blobs, Stein 4 Cobblestone-Stuecke; vier
+  davon ergeben den Block zurueck, zwei einen Dirt-Slab. Von Hand gegraben noch weniger. Behutsamkeit
+  (Silk Touch) hebt den ganzen Block.
+- **Der Einstieg bleibt offen.** Laub gibt Stoecke und Fasern, Kies gibt Feuerstein — daraus das
+  erste Beil, **im 2x2-Raster**, ganz ohne Werkbank.
+- **Holz wird bearbeitet.** Rechtsklick auf einen Stamm gedrueckt halten: jeder Schlag zaehlt, nach
+  einer Weile faellt der Stamm in **6 Bretter** auseinander. Ein besseres Beil braucht weniger
+  Schlaege, jeder Schlag kostet Ausdauer.
+- **Feuerstein ist ein Anfang, keine Abkuerzung**: langsamer als Holz und so zerbrechlich wie Gold.
+- **Werkzeuggestuetztes Crafting.** Eine **Werkbank braucht ein Eisenbeil** im Raster. Das Beil wird
+  dabei nicht verbraucht, sondern kommt um einen Haltbarkeitspunkt aermer zurueck.
+
+> **Achtung, die Kette ist noch nicht geschlossen:** Werkbank braucht Eisen, Eisen braucht einen
+> Ofen, der Ofen braucht ein 3x3-Raster — also eine Werkbank. Es fehlt ein primitiver Schmelzschritt
+> im 2x2-Raster (Feuerstelle/Rennofen). Das ist die Metallurgie-Haelfte von Milestone 7.
+
 ## Naechste Schritte
 
 Die detaillierte Arbeitsgrundlage ist jetzt die
@@ -289,8 +313,8 @@ Die detaillierte Arbeitsgrundlage ist jetzt die
 Der [Abgleich mit dem Fundament](docs/specification-review.md) dokumentiert die
 Anpassungen und Vorgaben fuer kommende Module.
 
-1. Milestone 7: Fruehe Progression — primitive Werkzeuge und Abbauregeln, Stein, Kupfer, Bronze,
-   fruehe Metallurgie.
+1. Milestone 7, zweite Haelfte: primitives Schmelzen im 2x2-Raster (Feuerstelle/Rennofen) — das
+   schliesst die Kette zur Werkbank — dann Stein, Kupfer, Bronze und fruehe Metallurgie.
 2. Offen aus Milestone 6: Aufbereitung (Brechen, Sieben, Waschen), die spaeteren
    Prospektionsmethoden und Erz unterhalb von Y -64.
 3. Weitere Schritte gemaess Abschnitt 118 der Mechanik-Spezifikation.

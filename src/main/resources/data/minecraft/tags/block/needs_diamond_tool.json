@@ -1,0 +1,20 @@
+{
+  "values": [
+    {
+      "id": "hardwrought:tungsten_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_tungsten_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:platinum_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_platinum_ore",
+      "required": false
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "hardwrought:block/dirt_slab"
+    },
+    "type=double": {
+      "model": "hardwrought:block/dirt_slab_double"
+    },
+    "type=top": {
+      "model": "hardwrought:block/dirt_slab_top"
+    }
+  }
+}

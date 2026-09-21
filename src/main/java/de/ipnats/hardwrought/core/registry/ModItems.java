@@ -5,6 +5,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import de.ipnats.hardwrought.environment.SafetyLampItem;
 import de.ipnats.hardwrought.survival.WaterskinItem;
@@ -17,7 +18,17 @@ public final class ModItems {
     public static final Item FLINT_SHARD = register("flint_shard", Item::new, new Item.Properties());
     public static final Item COBBLESTONE_PIECE = register("cobblestone_piece", Item::new, new Item.Properties());
     public static final Item DIRT_BLOB = register("dirt_blob", Item::new, new Item.Properties());
+    public static final Item DIRT_SLAB = register("dirt_slab", properties -> new BlockItem(ModBlocks.DIRT_SLAB,
+            properties), new Item.Properties().useBlockDescriptionPrefix());
     public static final Item LEAF_STRING = register("leaf_string", Item::new, new Item.Properties());
+    public static final Item HEWN_WORKBENCH = register("hewn_workbench",
+            properties -> new BlockItem(ModBlocks.HEWN_WORKBENCH, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    // Milestone 7, section 56: three parts copper to one of tin is bronze, and the mixture is what
+    // goes back into the fire. The metals themselves, tin included, are registered from the table
+    // in de.ipnats.hardwrought.metallurgy.Metal rather than one by one here.
+    public static final Item BRONZE_MIXTURE = register("bronze_mixture", Item::new, new Item.Properties());
+    public static final Item BRONZE_INGOT = register("bronze_ingot", Item::new, new Item.Properties());
     public static final Item LIGHTING_STICKS = register("lighting_sticks", Item::new, new Item.Properties());
     public static final Item FILLED_WATERSKIN = register("filled_waterskin", WaterskinItem::new,
             new Item.Properties().durability(9).stacksTo(1));
@@ -49,6 +60,11 @@ public final class ModItems {
             new Item.Properties().sword(ToolMaterial.IRON, 6.0F, -3.2F));
     public static final Item IRON_HALBERD = register("iron_halberd", Item::new,
             new Item.Properties().sword(ToolMaterial.IRON, 5.0F, -3.1F));
+    public static final Item BRONZE_HATCHET = register("bronze_hatchet", Item::new,
+            new Item.Properties().axe(ModToolMaterials.BRONZE, 5.5F, -3.1F));
+    public static final Item BRONZE_PICKAXE = register("bronze_pickaxe", Item::new,
+            new Item.Properties().pickaxe(ModToolMaterials.BRONZE, 1.0F, -2.8F));
+
     /** Milestone 3, section 18.3: the primitive instrument that makes bad air readable. */
     public static final Item SAFETY_LAMP = register("safety_lamp", SafetyLampItem::new,
             new Item.Properties().stacksTo(1));
@@ -60,6 +76,7 @@ public final class ModItems {
                                               Item.Properties properties) {
         ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, Hardwrought.id(name));
         T item = factory.apply(properties.setId(key));
+        if (item instanceof BlockItem blockItem) blockItem.registerBlocks(Item.BY_BLOCK, item);
         return Registry.register(BuiltInRegistries.ITEM, key, item);
     }
 

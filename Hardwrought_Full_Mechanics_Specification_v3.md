@@ -4874,19 +4874,17 @@ hardwrought/
 
 ** Milestone 7 – Early Progression**
 
-- primitive tools and block breaking rooles
+- primitive tools and block breaking rules
 
-- stone
+- (new metals: tin, zinc, lead, nickel, chromium, aluminum, titanium, tungsten, cobalt, manganese, magnesium, platinum, mercury, uranium, thorium) and the ore generation of these ores.
 
-- copper
-
-- bronze
+- bronze (alloys)
 
 - early metallurgy
 
 ** Milestone 8 – Knowledge System**
 
-- custom recipe browser
+- custom recipe browser (JEI but not as easy and dont just use JEI as the mod)
 
 - materials
 

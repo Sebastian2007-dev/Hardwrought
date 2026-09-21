@@ -1,0 +1,52 @@
+{
+  "values": [
+    {
+      "id": "hardwrought:tin_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_tin_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:zinc_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_zinc_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:lead_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_lead_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:manganese_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_manganese_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:magnesium_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_magnesium_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:aluminum_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_aluminum_ore",
+      "required": false
+    }
+  ]
+}

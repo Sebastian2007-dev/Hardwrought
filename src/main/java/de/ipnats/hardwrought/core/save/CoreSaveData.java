@@ -5,6 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.ipnats.hardwrought.Hardwrought;
 import de.ipnats.hardwrought.environment.CellAtmosphere;
 import de.ipnats.hardwrought.survival.PlayerVitals;
+import de.ipnats.hardwrought.knowledge.PlayerKnowledge;
 import de.ipnats.hardwrought.water.AquiferState;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
@@ -24,12 +25,16 @@ public final class CoreSaveData extends SavedData {
                     .forGetter(data -> java.util.Map.copyOf(data.cellAtmospheres)),
             Codec.unboundedMap(Codec.STRING, AquiferState.CODEC)
                     .optionalFieldOf("aquifers", java.util.Map.of())
-                    .forGetter(data -> java.util.Map.copyOf(data.aquifers))
-    ).apply(instance, (version, ticks, vitals, cells, aquifers) ->
-            new CoreSaveData(ticks, vitals, cells, aquifers)));
+                    .forGetter(data -> java.util.Map.copyOf(data.aquifers)),
+            Codec.unboundedMap(Codec.STRING, PlayerKnowledge.CODEC)
+                    .optionalFieldOf("knowledge", java.util.Map.of())
+                    .forGetter(data -> java.util.Map.copyOf(data.knowledge))
+    ).apply(instance, (version, ticks, vitals, cells, aquifers, knowledge) ->
+            new CoreSaveData(ticks, vitals, cells, aquifers, knowledge)));
     public static final SavedDataType<CoreSaveData> TYPE = new SavedDataType<>(
             Hardwrought.id("core"),
-            () -> new CoreSaveData(0, java.util.Map.of(), java.util.Map.of(), java.util.Map.of()), CODEC, null);
+            () -> new CoreSaveData(0, java.util.Map.of(), java.util.Map.of(), java.util.Map.of(),
+                    java.util.Map.of()), CODEC, null);
     /** Bounded so a long-lived world cannot grow an unlimited room table in its save file. */
     public static final int MAX_SAVED_CELLS = 256;
     /**
@@ -42,14 +47,17 @@ public final class CoreSaveData extends SavedData {
     private final java.util.Map<String, PlayerVitals> playerVitals;
     private final java.util.Map<String, CellAtmosphere> cellAtmospheres;
     private final java.util.Map<String, AquiferState> aquifers;
+    private final java.util.Map<String, PlayerKnowledge> knowledge;
 
     private CoreSaveData(long ticks, java.util.Map<String, PlayerVitals> playerVitals,
                          java.util.Map<String, CellAtmosphere> cellAtmospheres,
-                         java.util.Map<String, AquiferState> aquifers) {
+                         java.util.Map<String, AquiferState> aquifers,
+                         java.util.Map<String, PlayerKnowledge> knowledge) {
         this.ticks = ticks;
         this.playerVitals = new java.util.HashMap<>(playerVitals);
         this.cellAtmospheres = new java.util.HashMap<>(cellAtmospheres);
         this.aquifers = new java.util.HashMap<>(aquifers);
+        this.knowledge = new java.util.HashMap<>(knowledge);
     }
 
     public long ticks() {
@@ -121,5 +129,16 @@ public final class CoreSaveData extends SavedData {
 
     public int savedAquiferCount() {
         return aquifers.size();
+    }
+
+    /** Section 79: what one player has found out. A player nobody has tracked yet knows nothing. */
+    public PlayerKnowledge knowledge(java.util.UUID playerId) {
+        return knowledge.computeIfAbsent(playerId.toString(), ignored -> PlayerKnowledge.empty());
+    }
+
+    public void setKnowledge(java.util.UUID playerId, PlayerKnowledge value) {
+        if (playerId == null || value == null) throw new IllegalArgumentException("Invalid knowledge");
+        knowledge.put(playerId.toString(), value);
+        setDirty();
     }
 }

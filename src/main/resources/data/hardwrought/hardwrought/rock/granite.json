@@ -35,6 +35,50 @@
       "min_grade": 0.01,
       "max_grade": 0.08,
       "drill_tier": 3
+    },
+    {
+      "ore": "hardwrought:titanium_ore",
+      "weight": 1,
+      "min_y": -140,
+      "max_y": -20,
+      "min_radius": 12,
+      "max_radius": 28,
+      "min_grade": 0.02,
+      "max_grade": 0.16,
+      "drill_tier": 3
+    },
+    {
+      "ore": "hardwrought:tungsten_ore",
+      "weight": 1,
+      "min_y": -200,
+      "max_y": -60,
+      "min_radius": 12,
+      "max_radius": 28,
+      "min_grade": 0.02,
+      "max_grade": 0.16,
+      "drill_tier": 3
+    },
+    {
+      "ore": "hardwrought:uranium_ore",
+      "weight": 1,
+      "min_y": -200,
+      "max_y": -40,
+      "min_radius": 12,
+      "max_radius": 28,
+      "min_grade": 0.02,
+      "max_grade": 0.16,
+      "drill_tier": 3
+    },
+    {
+      "ore": "hardwrought:thorium_ore",
+      "weight": 1,
+      "min_y": -220,
+      "max_y": -80,
+      "min_radius": 12,
+      "max_radius": 28,
+      "min_grade": 0.02,
+      "max_grade": 0.16,
+      "drill_tier": 3
     }
   ]
 }

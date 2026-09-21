@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "F": "hardwrought:flint_shard",
+    "S": "minecraft:stick",
+    "T": "hardwrought:leaf_string"
+  },
+  "pattern": [
+    "FF",
+    "ST"
+  ],
+  "result": {
+    "id": "hardwrought:flint_hatchet"
+  }
+}
