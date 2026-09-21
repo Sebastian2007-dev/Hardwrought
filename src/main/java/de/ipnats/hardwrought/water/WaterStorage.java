@@ -7,11 +7,15 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.LevelChunk;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,11 +31,12 @@ import java.util.Map;
  * grows into a world-sized structure.
  */
 public final class WaterStorage {
-    private static final Codec<Map<String, Integer>> TABLE_CODEC =
-            Codec.unboundedMap(Codec.STRING, Codec.INT);
-    public static final AttachmentType<Map<String, Integer>> PARTIAL_WATER =
-            AttachmentRegistry.<Map<String, Integer>>create(Hardwrought.id("partial_water"), builder ->
-                    builder.persistent(TABLE_CODEC).initializer(HashMap::new));
+    private static final Codec<WaterChunkData> TABLE_CODEC =
+            Codec.unboundedMap(Codec.STRING, Codec.INT).xmap(
+                    WaterChunkData::fromSerialized, WaterChunkData::serialized);
+    public static final AttachmentType<WaterChunkData> PARTIAL_WATER =
+            AttachmentRegistry.<WaterChunkData>create(Hardwrought.id("partial_water"), builder ->
+                    builder.persistent(TABLE_CODEC).initializer(WaterChunkData::new));
 
     private WaterStorage() { }
 
@@ -48,13 +53,21 @@ public final class WaterStorage {
     /** How much water stands in this block, in millibuckets. Zero when there is none. */
     public static int amount(ServerLevel level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
-        if (!isFreeWater(state)) return 0;
+        if (!containsWater(state)) return 0;
         // The table is asked first even for a block that looks full: a cell under pressure holds
         // more than a block and is drawn exactly the same way.
-        Integer stored = table(level, pos).get(key(pos));
-        if (stored != null) return WaterAmounts.clamp(stored);
-        return state.getValue(LiquidBlock.LEVEL) == 0
-                ? WaterAmounts.BLOCK : WaterAmounts.nominalAmount(state);
+        // Reading a full lake must stay read-only. getAttachedOrCreate used to attach an empty map
+        // to every inspected chunk, marking it dirty even though no precise amount existed there.
+        WaterChunkData table = level.getChunkAt(pos).getAttached(PARTIAL_WATER);
+        int stored = table == null ? WaterChunkData.MISSING : table.get(pos.asLong());
+        if (stored != WaterChunkData.MISSING) return WaterAmounts.clamp(stored);
+        if (isFreeWater(state)) {
+            return state.getValue(LiquidBlock.LEVEL) == 0
+                    ? WaterAmounts.BLOCK : WaterAmounts.nominalAmount(state);
+        }
+        // A newly placed waterlogged block, bubble column or water plant starts with one finite
+        // block. Partial amounts are kept in the table and therefore returned above.
+        return WaterAmounts.BLOCK;
     }
 
     /**
@@ -65,8 +78,23 @@ public final class WaterStorage {
         int amount = WaterAmounts.clamp(millibuckets);
         BlockState state = level.getBlockState(pos);
         if (amount <= 0) {
-            forget(level, pos);
-            if (isFreeWater(state)) level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+            removeWater(level, pos, state);
+            store(level.getChunkAt(pos), pos, amount);
+            // Water that is no longer there cannot still be salt water.
+            WaterQualityStorage.clear(level, pos);
+            return;
+        }
+        if (isWaterloggable(state)) {
+            if (!isWaterlogged(state)) {
+                level.setBlock(pos, state.setValue(BlockStateProperties.WATERLOGGED, true), Block.UPDATE_ALL);
+            }
+            store(level.getChunkAt(pos), pos, amount);
+            return;
+        }
+        if (containsWater(state) && !isFreeWater(state)) {
+            // Bubble columns and water plants keep their block while some water remains. Their exact
+            // partial amount lives in the attachment even though vanilla can only draw them full.
+            store(level.getChunkAt(pos), pos, amount);
             return;
         }
         if (!isFreeWater(state) && !state.isAir()) {
@@ -76,16 +104,54 @@ public final class WaterStorage {
         }
         int display = WaterAmounts.displayLevel(amount);
         BlockState target = Blocks.WATER.defaultBlockState().setValue(LiquidBlock.LEVEL, display);
-        if (!target.equals(state)) level.setBlock(pos, target, Block.UPDATE_ALL);
-        // Exactly full needs nothing stored; anything else, including a cell under pressure
-        // holding more than a block, is only known from the table.
-        if (amount == WaterAmounts.BLOCK) forget(level, pos);
-        else remember(level, pos, amount);
+        setWaterDisplay(level, pos, state, target);
+        store(level.getChunkAt(pos), pos, amount);
+    }
+
+    /**
+     * Updates both ends of one transfer together. Neighbouring cells are normally in the same
+     * chunk, so this copies and replaces their persistent amount table once instead of twice.
+     */
+    public static void setAmounts(ServerLevel level, BlockPos firstPos, int firstMillibuckets,
+                                  BlockPos secondPos, int secondMillibuckets) {
+        int first = WaterAmounts.clamp(firstMillibuckets);
+        int second = WaterAmounts.clamp(secondMillibuckets);
+        updateDisplay(level, firstPos, first);
+        updateDisplay(level, secondPos, second);
+
+        LevelChunk firstChunk = level.getChunkAt(firstPos);
+        boolean sameChunkPosition = firstPos.getX() >> 4 == secondPos.getX() >> 4
+                && firstPos.getZ() >> 4 == secondPos.getZ() >> 4;
+        LevelChunk secondChunk = sameChunkPosition ? firstChunk : level.getChunkAt(secondPos);
+        if (firstChunk != secondChunk) {
+            store(firstChunk, firstPos, first);
+            store(secondChunk, secondPos, second);
+            return;
+        }
+
+        WaterChunkData table = writableTable(firstChunk, first, second);
+        if (table == null) return;
+        boolean changed = updateEntry(table, firstPos, first);
+        changed |= updateEntry(table, secondPos, second);
+        if (changed) markChanged(firstChunk, table);
     }
 
     /** Free water is water that can move: a plain water block, not a waterlogged stair or a kelp. */
     public static boolean isFreeWater(BlockState state) {
         return state.is(Blocks.WATER) && state.hasProperty(LiquidBlock.LEVEL);
+    }
+
+    /** Any finite water carrier: plain water, waterlogged blocks, bubble columns or water plants. */
+    public static boolean containsWater(BlockState state) {
+        return state.getFluidState().is(FluidTags.WATER);
+    }
+
+    private static boolean isWaterloggable(BlockState state) {
+        return state.hasProperty(BlockStateProperties.WATERLOGGED);
+    }
+
+    private static boolean isWaterlogged(BlockState state) {
+        return state.getOptionalValue(BlockStateProperties.WATERLOGGED).orElse(false);
     }
 
     /**
@@ -97,37 +163,143 @@ public final class WaterStorage {
      * direction it could have gone was occupied by a plant. Vanilla keeps the list of what a fluid
      * removes in a tag, and that same tag is used here.
      *
-     * <p>Anything else — a solid block, a waterlogged one, lava — is not free space for water.
+     * <p>Waterloggable blocks can receive a finite amount without being replaced. Lava and other
+     * solid blocks remain barriers.
      */
     public static boolean canHold(ServerLevel level, BlockPos pos) {
         if (!level.hasChunkAt(pos)) return false;
         BlockState state = level.getBlockState(pos);
         if (state.isAir()) return true;
-        if (isFreeWater(state)) return true;
+        if (containsWater(state) || isWaterloggable(state)) return true;
         return state.is(BlockTags.WASHED_AWAY_BY_FLUIDS);
     }
 
-    private static void remember(ServerLevel level, BlockPos pos, int millibuckets) {
-        LevelChunk chunk = level.getChunkAt(pos);
-        Map<String, Integer> table = new HashMap<>(chunk.getAttachedOrCreate(PARTIAL_WATER));
-        table.put(key(pos), millibuckets);
+    private static void updateDisplay(ServerLevel level, BlockPos pos, int amount) {
+        BlockState state = level.getBlockState(pos);
+        if (amount <= 0) {
+            removeWater(level, pos, state);
+            WaterQualityStorage.clear(level, pos);
+            return;
+        }
+        if (isWaterloggable(state)) {
+            if (!isWaterlogged(state)) {
+                level.setBlock(pos, state.setValue(BlockStateProperties.WATERLOGGED, true), Block.UPDATE_ALL);
+            }
+            return;
+        }
+        if (containsWater(state) && !isFreeWater(state)) return;
+        if (!isFreeWater(state) && !state.isAir()) {
+            if (!state.is(BlockTags.WASHED_AWAY_BY_FLUIDS)) return;
+            Block.dropResources(state, level, pos);
+        }
+        BlockState target = Blocks.WATER.defaultBlockState().setValue(
+                LiquidBlock.LEVEL, WaterAmounts.displayLevel(amount));
+        setWaterDisplay(level, pos, state, target);
+    }
+
+    /**
+     * A change between two visible levels of the same water block is rendering data, not a new
+     * physical block. Sending it to clients is sufficient; notifying every neighbouring block would
+     * schedule another ring of fluid ticks and block-shape work. Entering or leaving a cell still
+     * uses full updates so plants, falling blocks and waterlogging retain normal behaviour.
+     */
+    private static void setWaterDisplay(ServerLevel level, BlockPos pos, BlockState current,
+                                        BlockState target) {
+        if (target.equals(current)) return;
+        int flags = isFreeWater(current) ? Block.UPDATE_CLIENTS : Block.UPDATE_ALL;
+        level.setBlock(pos, target, flags);
+    }
+
+    private static void removeWater(ServerLevel level, BlockPos pos, BlockState state) {
+        if (isWaterlogged(state)) {
+            level.setBlock(pos, state.setValue(BlockStateProperties.WATERLOGGED, false), Block.UPDATE_ALL);
+            return;
+        }
+        if (!containsWater(state)) return;
+        // A bubble column has no item to drop. Kelp, seagrass and similar water carriers break when
+        // the water supporting them is gone and retain their normal drops.
+        if (!isFreeWater(state) && !state.is(Blocks.BUBBLE_COLUMN)) {
+            Block.dropResources(state, level, pos);
+        }
+        level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+    }
+
+    private static void store(LevelChunk chunk, BlockPos pos, int amount) {
+        WaterChunkData table = chunk.getAttached(PARTIAL_WATER);
+        if (table == null) {
+            if (!isStored(amount)) return;
+            table = new WaterChunkData();
+            table.put(pos.asLong(), amount);
+            chunk.setAttached(PARTIAL_WATER, table);
+            return;
+        }
+        if (updateEntry(table, pos, amount)) markChanged(chunk, table);
+    }
+
+    private static WaterChunkData writableTable(LevelChunk chunk, int first, int second) {
+        WaterChunkData table = chunk.getAttached(PARTIAL_WATER);
+        if (table != null) return table;
+        if (!isStored(first) && !isStored(second)) return null;
+        table = new WaterChunkData();
         chunk.setAttached(PARTIAL_WATER, table);
+        return table;
     }
 
-    private static void forget(ServerLevel level, BlockPos pos) {
-        LevelChunk chunk = level.getChunkAt(pos);
-        Map<String, Integer> existing = chunk.getAttachedOrCreate(PARTIAL_WATER);
-        if (!existing.containsKey(key(pos))) return;
-        Map<String, Integer> table = new HashMap<>(existing);
-        table.remove(key(pos));
-        chunk.setAttached(PARTIAL_WATER, table);
+    private static boolean updateEntry(WaterChunkData table, BlockPos pos, int amount) {
+        // Empty cells and exactly full cells are represented completely by their block state.
+        long key = pos.asLong();
+        if (!isStored(amount)) return table.remove(key) != WaterChunkData.MISSING;
+        return table.put(key, amount) != amount;
     }
 
-    private static Map<String, Integer> table(ServerLevel level, BlockPos pos) {
-        return level.getChunkAt(pos).getAttachedOrCreate(PARTIAL_WATER);
+    private static boolean isStored(int amount) {
+        return amount > 0 && amount != WaterAmounts.BLOCK;
     }
 
-    private static String key(BlockPos pos) {
-        return Long.toString(pos.asLong());
+    private static void markChanged(LevelChunk chunk, WaterChunkData table) {
+        // Once every precise amount has settled back to an implicit full/empty block, discard the
+        // attachment entirely instead of saving empty bookkeeping forever.
+        if (table.isEmpty()) chunk.removeAttached(PARTIAL_WATER);
+        else chunk.markUnsaved();
+    }
+
+    /** Primitive runtime representation; its codec keeps the existing string-keyed save format. */
+    public static final class WaterChunkData {
+        private static final int MISSING = -1;
+        private final Long2IntOpenHashMap amounts = new Long2IntOpenHashMap();
+
+        private WaterChunkData() {
+            amounts.defaultReturnValue(MISSING);
+        }
+
+        public static WaterChunkData fromSerialized(Map<String, Integer> serialized) {
+            WaterChunkData data = new WaterChunkData();
+            serialized.forEach((key, value) -> data.amounts.put(Long.parseLong(key), value.intValue()));
+            return data;
+        }
+
+        private Map<String, Integer> serialized() {
+            Map<String, Integer> result = new HashMap<>(amounts.size());
+            for (Long2IntMap.Entry entry : amounts.long2IntEntrySet()) {
+                result.put(Long.toString(entry.getLongKey()), entry.getIntValue());
+            }
+            return result;
+        }
+
+        private int get(long key) {
+            return amounts.get(key);
+        }
+
+        private int put(long key, int value) {
+            return amounts.put(key, value);
+        }
+
+        private int remove(long key) {
+            return amounts.remove(key);
+        }
+
+        private boolean isEmpty() {
+            return amounts.isEmpty();
+        }
     }
 }

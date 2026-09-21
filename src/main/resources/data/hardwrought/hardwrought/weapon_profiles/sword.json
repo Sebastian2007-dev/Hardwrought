@@ -5,7 +5,8 @@
     "minecraft:golden_sword",
     "minecraft:iron_sword",
     "minecraft:diamond_sword",
-    "minecraft:netherite_sword"
+    "minecraft:netherite_sword",
+    "hardwrought:flint_sword"
   ],
   "damage": {
     "slash": 0.65,

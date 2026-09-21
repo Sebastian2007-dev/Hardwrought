@@ -5,11 +5,15 @@ import com.mojang.serialization.JsonOps;
 import de.ipnats.hardwrought.core.events.CoreLifecycle;
 import de.ipnats.hardwrought.core.registry.ModDataComponents;
 import de.ipnats.hardwrought.core.registry.ModItems;
+import de.ipnats.hardwrought.environment.BiomeClimate;
+import de.ipnats.hardwrought.environment.Season;
+import de.ipnats.hardwrought.environment.SeasonCycle;
 import de.ipnats.hardwrought.survival.WaterskinItem;
 import de.ipnats.hardwrought.water.WaterBody;
 import de.ipnats.hardwrought.water.WaterEvents;
 import de.ipnats.hardwrought.water.WaterQuality;
 import de.ipnats.hardwrought.water.WaterQualityProfile;
+import de.ipnats.hardwrought.water.WaterSystem;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -200,6 +204,39 @@ public final class WaterGameTests {
                         .filter(profile -> profile.id().startsWith("hardwrought:water"))
                         .noneMatch(profile -> profile.disabled()),
                 "No water job has failed and been disabled");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void evaporationFollowsBiomeAndSeason(GameTestHelper helper) {
+        double coldSummer = WaterSystem.evaporationChance(30, 0.5, BiomeClimate.COLD, Season.SUMMER);
+        double neutralSummer = WaterSystem.evaporationChance(30, 0.5, BiomeClimate.NEUTRAL, Season.SUMMER);
+        double warmSummer = WaterSystem.evaporationChance(30, 0.5, BiomeClimate.WARM, Season.SUMMER);
+        helper.assertTrue(coldSummer < neutralSummer && neutralSummer < warmSummer,
+                "At equal weather, warm biomes evaporate more water than neutral and cold biomes");
+
+        double warmSpring = WaterSystem.evaporationChance(30, 0.5, BiomeClimate.WARM, Season.SPRING);
+        double warmAutumn = WaterSystem.evaporationChance(30, 0.5, BiomeClimate.WARM, Season.AUTUMN);
+        double warmWinter = WaterSystem.evaporationChance(30, 0.5, BiomeClimate.WARM, Season.WINTER);
+        helper.assertTrue(warmSummer > warmSpring && warmSpring > warmAutumn && warmAutumn > warmWinter,
+                "Summer is the strongest drying season and winter the weakest");
+        helper.assertTrue(WaterSystem.evaporationChance(4, 1, BiomeClimate.WARM, Season.SUMMER) == 0,
+                "Cold water does not disappear merely because its biome is normally warm");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void seasonCalendarIsStableAtItsBoundaries(GameTestHelper helper) {
+        long length = SeasonCycle.TICKS_PER_SEASON;
+        helper.assertTrue(SeasonCycle.at(0) == Season.SPRING
+                        && SeasonCycle.at(length) == Season.SUMMER
+                        && SeasonCycle.at(length * 2) == Season.AUTUMN
+                        && SeasonCycle.at(length * 3) == Season.WINTER
+                        && SeasonCycle.at(SeasonCycle.TICKS_PER_YEAR) == Season.SPRING,
+                "The persisted world clock advances through all four seasons and wraps to spring");
+        helper.assertTrue(SeasonCycle.dayInSeason(0) == 1
+                        && SeasonCycle.dayInSeason(length - SeasonCycle.TICKS_PER_DAY) == 12,
+                "Each season contains exactly twelve numbered days");
         helper.succeed();
     }
 

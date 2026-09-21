@@ -106,9 +106,18 @@ public final class DebugCommands {
         var job = runtime.scheduler().profiles().stream()
                 .filter(profile -> profile.id().equals("hardwrought:water_flow")).findFirst();
         source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
-                "Simulation: %s | wartende Zellen %d | Durchlaeufe %d",
+                "Simulation: %s | wartende Zellen %d | Zellfehler %d | Durchlaeufe %d | mittel %.1f us | max %.1f us",
                 job.map(profile -> profile.disabled() ? "ABGESCHALTET" : "laeuft").orElse("fehlt"),
-                runtime.waterFlow().activeCells(), job.map(profile -> profile.calls()).orElse(0L))), false);
+                runtime.waterFlow().activeCells(), runtime.waterFlow().failedCells(),
+                job.map(profile -> profile.calls()).orElse(0L),
+                job.map(de.ipnats.hardwrought.core.simulation.SimulationScheduler.Profile::meanMicros)
+                        .orElse(0.0),
+                job.map(profile -> profile.maxNanos() / 1_000.0).orElse(0.0))), false);
+        source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "Letzter Tick: %d Zellen in %.3f ms (Budget %.3f ms) | Servermittel %.3f ms",
+                runtime.waterFlow().lastProcessedCells(), runtime.waterFlow().lastWorkNanos() / 1_000_000.0,
+                runtime.waterFlow().lastBudgetNanos() / 1_000_000.0,
+                source.getServer().getAverageTickTimeNanos() / 1_000_000.0)), false);
 
         var body = de.ipnats.hardwrought.water.WaterBody.scan(level, pos);
         source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
@@ -122,6 +131,28 @@ public final class DebugCommands {
                 de.ipnats.hardwrought.water.WaterStorage.amount(level, pos.below()))), false);
         source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
                 "Koerper: %s, %d Bloecke, %d mB gesamt", body.size(), body.volume(), body.millibuckets())), false);
+        // Ein trockener Brunnen und ein zu hoch gegrabener Brunnen sehen gleich aus. Nur der
+        // Vorrat der Region sagt, welches von beiden es ist.
+        var groundwater = runtime.groundwater();
+        source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "Grundwasser %s: Spiegel Y=%d (natuerlich %d) | Vorrat %d/%d L (%.0f%%) | Aquifer %s | Wasser hier %s",
+                de.ipnats.hardwrought.water.Groundwater.regionKey(level, pos),
+                groundwater.table(level, pos),
+                de.ipnats.hardwrought.water.Groundwater.naturalTable(level, pos),
+                groundwater.reserve(level, pos) / 1000, groundwater.capacity(level, pos) / 1000,
+                groundwater.fill(level, pos) * 100,
+                de.ipnats.hardwrought.water.Groundwater.qualityOf(level, pos).serializedName(),
+                runtime.water().qualityAt(level, pos).serializedName())), false);
+        // "Warum fuellt sich mein Feld nicht?" ist fast immer ein Dach, ein Biom ohne Regen oder
+        // Schnee statt Regen. Was die Simulation darueber denkt, steht hier.
+        var rainTarget = de.ipnats.hardwrought.water.Rainfall.target(level, pos.getX(), pos.getZ());
+        source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "Niederschlag: %s | Ziel %s | %d mB pro Durchgang%s",
+                de.ipnats.hardwrought.water.Rainfall.rainsOn(level, pos.getX(), pos.getZ())
+                        ? "faellt hier" : "kommt hier nicht an",
+                rainTarget == null ? "keines" : rainTarget.toShortString(),
+                de.ipnats.hardwrought.water.Rainfall.drop(level.isThundering()),
+                level.isThundering() ? " (Gewitter)" : "")), false);
         return 1;
     }
 

@@ -1,0 +1,11 @@
+{
+  "biomes": [
+    "minecraft:desert",
+    "minecraft:badlands",
+    "minecraft:eroded_badlands",
+    "minecraft:wooded_badlands"
+  ],
+  "richness": 0.3,
+  "table_offset": -24,
+  "quality": "fresh"
+}

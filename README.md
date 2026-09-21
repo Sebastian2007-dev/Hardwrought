@@ -205,7 +205,26 @@ bei Salzwasser hilft das nicht.
 
 Sauberes Wasser kommt sonst aus dem Boden: unterhalb des regionalen Grundwasserspiegels sickert
 Wasser in ausgehobene Raeume mit natuerlichen Waenden. Das ist ein Brunnen, wenn man ihn wollte, und
-ein absaufender Stollen, wenn nicht. Waende aus Brettern oder Ziegeln bleiben dicht.
+ein absaufender Stollen, wenn nicht. Waende aus Brettern oder Ziegeln bleiben dicht, und je tiefer
+unter dem Spiegel gegraben wird, desto schneller drueckt das Wasser nach.
+
+Jede Region hat dabei einen **endlichen Vorrat**. Was Quellen und absaufende Stollen entnehmen, fehlt
+der Region: der Grundwasserspiegel sinkt um bis zu zwoelf Bloecke, Brunnen fallen trocken, und der
+Stollen hoert irgendwann von selbst auf vollzulaufen. Regen, Schneeschmelze und die Jahreszeit
+fuellen den Vorrat wieder auf. Wie ergiebig der Boden ist, wie tief sein Spiegel liegt und was darin
+geloest ist, steht pro Biom in `data/hardwrought/hardwrought/aquifer/*.json` — ein Brunnen am Strand
+foerdert Salzwasser, die Wueste haelt wenig Wasser und haelt es tief.
+
+Wasser traegt ausserdem mit, was darin ist: Meerwasser bleibt Meerwasser, wenn es weggetragen,
+ausgegossen oder weitergeflossen ist, und ein Eimer merkt sich jetzt ebenfalls, wo er gefuellt wurde.
+`/hardwrought water` zeigt Spiegel, Vorrat und Qualitaet der Region an.
+
+**Regen bringt Wasser.** Er fuellt nicht nur den Grundwasservorrat, sondern faellt als echtes Wasser
+auf den Boden: in Senken bilden sich Pfuetzen, ein verdunsteter Bewaesserungsgraben fuellt sich
+wieder, und bei einem Gewitter faellt ein Mehrfaches davon — dann steigt das Wasser in Flusslaeufen
+und tief liegendes Gelaende laeuft voll. Ein Dach oder ein Vordach haelt den Regen ab, Laub nicht;
+in kalten Biomen faellt Schnee statt Regen, und Schnee taut im Modell noch nicht. Regenwasser ist
+sauberes Wasser, mischt sich aber mit dem, worein es faellt.
 
 ## Naechste Schritte
 

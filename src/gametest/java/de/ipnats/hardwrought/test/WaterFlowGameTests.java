@@ -10,6 +10,9 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LiquidBlock;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+
+import java.util.Map;
 
 public final class WaterFlowGameTests {
     private static final int WORKSPACE_OFFSET = 40;
@@ -82,7 +85,9 @@ public final class WaterFlowGameTests {
             int before = troughTotal(level, base);
             helper.assertTrue(before == WaterAmounts.BLOCK, "One full block to start with");
 
-            for (int pass = 0; pass < 40; pass++) {
+            // Pairwise equilibration now moves half the difference, so a short run is enough even
+            // across the whole trough. This guards against accidentally restoring sluggish flow.
+            for (int pass = 0; pass < 12; pass++) {
                 for (int x = 0; x <= 4; x++) flow.step(level, base.offset(x, 0, 0));
             }
             int after = troughTotal(level, base);
@@ -128,6 +133,17 @@ public final class WaterFlowGameTests {
             helper.assertTrue(level.getBlockState(base).isAir() && WaterStorage.amount(level, base) == 0,
                     "and emptying it removes the water entirely");
 
+            // Persistent map codecs may return immutable maps after loading a real saved chunk.
+            // The simulation must make that data writable once instead of disabling itself.
+            level.setBlockAndUpdate(base, Blocks.WATER.defaultBlockState());
+            level.getChunkAt(base).setAttached(WaterStorage.PARTIAL_WATER,
+                    WaterStorage.WaterChunkData.fromSerialized(
+                            Map.of(Long.toString(base.asLong()), 340)));
+            WaterStorage.setAmount(level, base, 500);
+            helper.assertTrue(WaterStorage.amount(level, base) == 500,
+                    "Water loaded from an immutable attachment remains writable");
+            WaterStorage.setAmount(level, base, 0);
+
             helper.assertFalse(WaterStorage.canHold(level, base.below()), "Stone holds no water");
             helper.assertTrue(WaterStorage.canHold(level, base), "Empty space does");
         } finally {
@@ -135,6 +151,94 @@ public final class WaterFlowGameTests {
             level.setBlockAndUpdate(base.below(), Blocks.AIR.defaultBlockState());
         }
         helper.succeed();
+    }
+
+    @GameTest
+    public void waterloggedBlocksAndBubbleColumnsHoldFiniteWater(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos base = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE_OFFSET);
+        var flow = CoreLifecycle.require(level.getServer()).waterFlow();
+        try {
+            // Leave only the eastern neighbour open so the exact thousand millibuckets have one
+            // route out of each carrier.
+            for (int x = 0; x <= 3; x++) {
+                level.setBlockAndUpdate(base.offset(x, -1, 0), Blocks.STONE.defaultBlockState());
+                level.setBlockAndUpdate(base.offset(x, 0, -1), Blocks.STONE.defaultBlockState());
+                level.setBlockAndUpdate(base.offset(x, 0, 1), Blocks.STONE.defaultBlockState());
+            }
+            level.setBlockAndUpdate(base.west(), Blocks.STONE.defaultBlockState());
+            level.setBlockAndUpdate(base.offset(1, 0, 0), Blocks.AIR.defaultBlockState());
+            level.setBlockAndUpdate(base, Blocks.OAK_SLAB.defaultBlockState()
+                    .setValue(BlockStateProperties.WATERLOGGED, true));
+
+            helper.assertTrue(WaterStorage.amount(level, base) == WaterAmounts.BLOCK,
+                    "A newly waterlogged slab starts with one finite block of water");
+            flow.step(level, base);
+            helper.assertTrue(WaterStorage.amount(level, base) + WaterStorage.amount(level, base.east())
+                            == WaterAmounts.BLOCK,
+                    "Water leaves the slab without being created");
+            WaterStorage.setAmount(level, base, 0);
+            helper.assertTrue(level.getBlockState(base).is(Blocks.OAK_SLAB)
+                            && !level.getBlockState(base).getValue(BlockStateProperties.WATERLOGGED),
+                    "An empty waterlogged block remains in place but becomes dry");
+
+            BlockPos bubble = base.offset(2, 0, 0);
+            WaterStorage.setAmount(level, base.east(), 0);
+            level.setBlockAndUpdate(bubble.west(), Blocks.STONE.defaultBlockState());
+            level.setBlockAndUpdate(bubble, Blocks.BUBBLE_COLUMN.defaultBlockState());
+            level.setBlockAndUpdate(bubble.east(), Blocks.AIR.defaultBlockState());
+            helper.assertTrue(WaterStorage.amount(level, bubble) == WaterAmounts.BLOCK,
+                    "A bubble column also contains one finite block of water");
+            flow.step(level, bubble);
+            helper.assertTrue(WaterStorage.amount(level, bubble)
+                            + WaterStorage.amount(level, bubble.east()) == WaterAmounts.BLOCK,
+                    "A bubble column can drain without creating a source");
+            WaterStorage.setAmount(level, bubble, 0);
+            helper.assertTrue(level.getBlockState(bubble).isAir(),
+                    "An empty bubble column disappears");
+        } finally {
+            for (int x = -1; x <= 4; x++) {
+                for (int y = -1; y <= 1; y++) {
+                    for (int z = -1; z <= 1; z++) {
+                        level.setBlockAndUpdate(base.offset(x, y, z), Blocks.AIR.defaultBlockState());
+                    }
+                }
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(maxTicks = 120)
+    public void lakeInteriorKeepsFeedingADrainingEdge(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos base = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE_OFFSET);
+        for (int x = -1; x <= 6; x++) {
+            level.setBlockAndUpdate(base.offset(x, -1, 0), Blocks.STONE.defaultBlockState());
+            level.setBlockAndUpdate(base.offset(x, 0, -1), Blocks.STONE.defaultBlockState());
+            level.setBlockAndUpdate(base.offset(x, 0, 1), Blocks.STONE.defaultBlockState());
+        }
+        level.setBlockAndUpdate(base.west(), Blocks.STONE.defaultBlockState());
+        level.setBlockAndUpdate(base.offset(6, 0, 0), Blocks.STONE.defaultBlockState());
+        for (int x = 0; x <= 4; x++) WaterStorage.setAmount(level, base.offset(x, 0, 0), WaterAmounts.BLOCK);
+        level.setBlockAndUpdate(base.offset(5, 0, 0), Blocks.AIR.defaultBlockState());
+        WaterFlow.disturb(level, base.offset(4, 0, 0));
+
+        helper.runAfterDelay(60, () -> {
+            int total = 0;
+            for (int x = 0; x <= 5; x++) total += WaterStorage.amount(level, base.offset(x, 0, 0));
+            helper.assertTrue(total == 5 * WaterAmounts.BLOCK,
+                    "A draining lake edge conserves all water: " + total + " of 5000 mB");
+            helper.assertTrue(WaterStorage.amount(level, base.offset(3, 0, 0)) < WaterAmounts.BLOCK,
+                    "The lake interior must keep feeding its disturbed shoreline");
+            for (int x = -1; x <= 6; x++) {
+                for (int y = -1; y <= 0; y++) {
+                    for (int z = -1; z <= 1; z++) {
+                        level.setBlockAndUpdate(base.offset(x, y, z), Blocks.AIR.defaultBlockState());
+                    }
+                }
+            }
+            helper.succeed();
+        });
     }
 
     /**
@@ -147,11 +251,14 @@ public final class WaterFlowGameTests {
     public void waterPutOnALedgeRunsOffIt(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos base = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE_OFFSET);
-        // A single stone block to stand the water on, nothing else: everything around is open air.
-        for (int x = -3; x <= 3; x++) {
-            for (int y = -4; y <= 2; y++) {
-                for (int z = -3; z <= 3; z++) {
-                    level.setBlockAndUpdate(base.offset(x, y, z), Blocks.AIR.defaultBlockState());
+        // A single stone block to stand the water on. A basin far below catches fast-moving water,
+        // so the conservation assertion does not mistake leaving the old scan box for water loss.
+        for (int x = -4; x <= 4; x++) {
+            for (int y = -5; y <= 2; y++) {
+                for (int z = -4; z <= 4; z++) {
+                    boolean basin = y == -5 || (Math.abs(x) == 4 || Math.abs(z) == 4) && y <= 0;
+                    level.setBlockAndUpdate(base.offset(x, y, z), basin
+                            ? Blocks.STONE.defaultBlockState() : Blocks.AIR.defaultBlockState());
                 }
             }
         }
@@ -205,9 +312,9 @@ public final class WaterFlowGameTests {
                             + total + " mB of the thousand that went in");
             helper.assertFalse(level.getBlockState(base.north()).is(Blocks.SHORT_GRASS),
                     "and the growth the water ran through is gone");
-            for (int x = -3; x <= 3; x++) {
-                for (int y = -4; y <= 2; y++) {
-                    for (int z = -3; z <= 3; z++) {
+            for (int x = -4; x <= 4; x++) {
+                for (int y = -5; y <= 2; y++) {
+                    for (int z = -4; z <= 4; z++) {
                         level.setBlockAndUpdate(base.offset(x, y, z), Blocks.AIR.defaultBlockState());
                     }
                 }
@@ -404,10 +511,17 @@ public final class WaterFlowGameTests {
         var scheduler = CoreLifecycle.require(helper.getLevel().getServer()).scheduler();
         helper.assertTrue(scheduler.profiles().stream()
                         .anyMatch(profile -> profile.id().equals("hardwrought:water_flow")
+                                && profile.tier() == de.ipnats.hardwrought.core.simulation.SimulationTier.CRITICAL
                                 && !profile.disabled()),
-                "The water simulation runs as a registered job and has not failed");
-        helper.assertTrue(WaterFlow.BUDGET_PER_PASS > 0 && WaterFlow.MAX_ACTIVE > 0,
-                "Both the work per pass and the queue of disturbed water are capped");
+                "The water simulation runs every tick and has not failed");
+        helper.assertTrue(WaterFlow.BUDGET_PER_PASS > 0 && WaterFlow.MAX_ACTIVE > 0
+                        && WaterFlow.MAX_NANOS_PER_TICK > 0,
+                "Cell count, wall-clock time and the queue of disturbed water are capped");
+        helper.assertTrue(WaterFlow.NEAR_PLAYER_RADIUS > 0
+                        && WaterFlow.MID_PLAYER_RADIUS > WaterFlow.NEAR_PLAYER_RADIUS,
+                "Water close to a player has a smaller, higher-priority distance band");
+        helper.assertTrue(CoreLifecycle.require(helper.getLevel().getServer()).waterFlow().failedCells() == 0,
+                "No water cell may have failed silently during the complete test run");
         helper.succeed();
     }
 

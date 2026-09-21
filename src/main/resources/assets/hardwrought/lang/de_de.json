@@ -1,5 +1,20 @@
 {
+  "itemGroup.hardwrought": "Hardwrought",
   "item.hardwrought.flint_shard": "Feuersteinsplitter",
+  "item.hardwrought.cobblestone_piece": "Bruchsteinstück",
+  "item.hardwrought.dirt_blob": "Erdklumpen",
+  "item.hardwrought.leaf_string": "Blattschnur",
+  "item.hardwrought.lighting_sticks": "Feuerstäbe",
+  "item.hardwrought.quest_book": "Questbuch",
+  "item.hardwrought.flint_hatchet": "Feuersteinbeil",
+  "item.hardwrought.flint_hoe": "Feuersteinhacke",
+  "item.hardwrought.flint_pickaxe": "Feuersteinspitzhacke",
+  "item.hardwrought.flint_shovel": "Feuersteinschaufel",
+  "item.hardwrought.flint_sword": "Feuersteinschwert",
+  "item.hardwrought.stone_hatchet": "Steinbeil",
+  "item.hardwrought.stone_pickaxe": "Steinspitzhacke",
+  "item.hardwrought.iron_hatchet": "Eisenbeil",
+  "item.hardwrought.iron_pickaxe": "Eisenspitzhacke",
   "item.hardwrought.filled_waterskin": "Gefüllter Wasserschlauch",
   "key.hardwrought.sleep": "Schlafen / Aufwachen",
   "key.hardwrought.vitals_hud": "Müdigkeit und Temperatur anzeigen",
@@ -56,5 +71,6 @@
   "message.hardwrought.waterskin_boil_useless": "Abkochen macht Salzwasser nicht trinkbar.",
   "message.hardwrought.water_made_you_ill": "Von dem Wasser wird dir schlecht.",
   "message.hardwrought.waterskin_too_little": "Hier steht zu wenig Wasser, um den Schlauch zu fuellen.",
-  "message.hardwrought.water_no_room": "Hier ist kein Platz mehr fuer einen ganzen Eimer Wasser."
+  "message.hardwrought.water_no_room": "Hier ist kein Platz mehr fuer einen ganzen Eimer Wasser.",
+  "message.hardwrought.water_too_little": "Hier steht zu wenig Wasser fuer einen ganzen Eimer."
 }

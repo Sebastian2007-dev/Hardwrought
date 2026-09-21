@@ -209,6 +209,11 @@ public final class EnvironmentGameTests {
         helper.assertTrue(dagger != null && greatsword != null && halberd != null,
                 "The knife, two-handed and polearm classes of section 30 now have items");
         helper.assertTrue(weapons.get(Hardwrought.id("flint_dagger")) != null, "The primitive knife exists too");
+        helper.assertTrue(weapons.get(Hardwrought.id("flint_sword")) != null
+                        && weapons.get(Hardwrought.id("flint_hatchet")) != null
+                        && weapons.get(Hardwrought.id("stone_hatchet")) != null
+                        && weapons.get(Hardwrought.id("iron_hatchet")) != null,
+                "The new sword and hatchets use the combat profiles matching their shapes");
         helper.assertTrue(dagger.staminaCost() < greatsword.staminaCost(),
                 "Section 30: a dagger costs very little stamina, a two-hander a lot");
         helper.assertTrue(greatsword.impact() > dagger.impact(), "A two-hander breaks guards, a dagger does not");
@@ -217,7 +222,9 @@ public final class EnvironmentGameTests {
                 "A polearm reaches furthest and is weak at close quarters");
         helper.assertTrue(runtime.itemWeights().get(Hardwrought.id("iron_halberd")) == 3.6,
                 "The new equipment has carried mass");
-        helper.assertTrue(ModItems.SAFETY_LAMP != null && ModItems.IRON_HALBERD != null, "Items are registered");
+        helper.assertTrue(ModItems.SAFETY_LAMP != null && ModItems.IRON_HALBERD != null
+                        && ModItems.FLINT_PICKAXE != null && ModItems.QUEST_BOOK != null,
+                "Existing equipment and the new primitive items are registered");
         helper.succeed();
     }
 

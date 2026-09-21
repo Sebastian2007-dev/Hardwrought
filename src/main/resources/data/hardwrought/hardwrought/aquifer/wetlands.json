@@ -1,0 +1,9 @@
+{
+  "biomes": [
+    "minecraft:swamp",
+    "minecraft:mangrove_swamp"
+  ],
+  "richness": 1.8,
+  "table_offset": 10,
+  "quality": "swamp"
+}

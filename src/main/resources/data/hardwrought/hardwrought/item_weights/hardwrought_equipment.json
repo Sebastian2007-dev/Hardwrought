@@ -5,6 +5,20 @@
     "hardwrought:iron_greatsword": 3.2,
     "hardwrought:iron_halberd": 3.6,
     "hardwrought:safety_lamp": 1.1,
-    "hardwrought:flint_shard": 0.15
+    "hardwrought:flint_shard": 0.15,
+    "hardwrought:cobblestone_piece": 0.3,
+    "hardwrought:dirt_blob": 0.25,
+    "hardwrought:leaf_string": 0.05,
+    "hardwrought:lighting_sticks": 0.2,
+    "hardwrought:quest_book": 0.4,
+    "hardwrought:flint_hatchet": 0.8,
+    "hardwrought:flint_hoe": 0.7,
+    "hardwrought:flint_pickaxe": 1.0,
+    "hardwrought:flint_shovel": 0.8,
+    "hardwrought:flint_sword": 0.7,
+    "hardwrought:stone_hatchet": 1.1,
+    "hardwrought:stone_pickaxe": 1.4,
+    "hardwrought:iron_hatchet": 1.2,
+    "hardwrought:iron_pickaxe": 1.6
   }
 }

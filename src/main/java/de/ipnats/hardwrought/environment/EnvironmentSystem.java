@@ -215,7 +215,13 @@ public final class EnvironmentSystem {
      * player, such as being in water.
      */
     public double outdoorTemperature(ServerLevel level, BlockPos pos) {
+        return outdoorTemperature(level, pos, SeasonCycle.current(level));
+    }
+
+    /** Variant for systems that already sampled the shared calendar during their simulation pass. */
+    public double outdoorTemperature(ServerLevel level, BlockPos pos, Season season) {
         double temperature = 14.0 + (level.getBiome(pos).value().getBaseTemperature() - 0.8) * 18.0;
+        temperature += season.temperatureOffset();
         temperature -= Math.max(0, pos.getY() - 64) * 0.0065;
         if (level.isDarkOutside()) temperature -= 4.0;
         else if (level.isBrightOutside() && RoomScan.openToSky(level, pos.above()) && !level.isRainingAt(pos)) {
@@ -223,6 +229,11 @@ public final class EnvironmentSystem {
         }
         if (level.isRainingAt(pos)) temperature -= 3.0;
         return clamp(temperature, -35, 55);
+    }
+
+    /** Stable warm/neutral/cold grouping shared by every climate-driven subsystem. */
+    public BiomeClimate biomeClimate(ServerLevel level, BlockPos pos) {
+        return BiomeClimate.fromBaseTemperature(level.getBiome(pos).value().getBaseTemperature());
     }
 
     /**
@@ -450,8 +461,10 @@ public final class EnvironmentSystem {
             RoomScan scan = RoomScan.scan(level, pos);
             double outdoor = outdoorTemperature(level, pos);
             if (!scan.sealed()) {
-                return String.format(Locale.ROOT, "outdoor=%.1fC wind=%.2f (open air)",
-                        outdoor, wind(level, pos));
+                Season season = SeasonCycle.current(level);
+                return String.format(Locale.ROOT, "outdoor=%.1fC wind=%.2f climate=%s season=%s day=%d (open air)",
+                        outdoor, wind(level, pos), biomeClimate(level, pos).serializedName(),
+                        season.serializedName(), SeasonCycle.dayInSeason(level.getOverworldClockTime()));
             }
             EnvironmentCell cell = cells.get(cellKey(level, scan));
             if (cell == null) {

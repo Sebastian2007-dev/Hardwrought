@@ -5,6 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.ipnats.hardwrought.Hardwrought;
 import de.ipnats.hardwrought.environment.CellAtmosphere;
 import de.ipnats.hardwrought.survival.PlayerVitals;
+import de.ipnats.hardwrought.water.AquiferState;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
@@ -20,22 +21,35 @@ public final class CoreSaveData extends SavedData {
                     .forGetter(data -> java.util.Map.copyOf(data.playerVitals)),
             Codec.unboundedMap(Codec.STRING, CellAtmosphere.CODEC)
                     .optionalFieldOf("environment_cells", java.util.Map.of())
-                    .forGetter(data -> java.util.Map.copyOf(data.cellAtmospheres))
-    ).apply(instance, (version, ticks, vitals, cells) -> new CoreSaveData(ticks, vitals, cells)));
+                    .forGetter(data -> java.util.Map.copyOf(data.cellAtmospheres)),
+            Codec.unboundedMap(Codec.STRING, AquiferState.CODEC)
+                    .optionalFieldOf("aquifers", java.util.Map.of())
+                    .forGetter(data -> java.util.Map.copyOf(data.aquifers))
+    ).apply(instance, (version, ticks, vitals, cells, aquifers) ->
+            new CoreSaveData(ticks, vitals, cells, aquifers)));
     public static final SavedDataType<CoreSaveData> TYPE = new SavedDataType<>(
-            Hardwrought.id("core"), () -> new CoreSaveData(0, java.util.Map.of(), java.util.Map.of()), CODEC, null);
+            Hardwrought.id("core"),
+            () -> new CoreSaveData(0, java.util.Map.of(), java.util.Map.of(), java.util.Map.of()), CODEC, null);
     /** Bounded so a long-lived world cannot grow an unlimited room table in its save file. */
     public static final int MAX_SAVED_CELLS = 256;
+    /**
+     * The same bound for the water in the ground. Only regions that have been drawn on are stored;
+     * a forgotten one counts as full again, which is what an untouched aquifer is.
+     */
+    public static final int MAX_SAVED_AQUIFERS = 256;
 
     private long ticks;
     private final java.util.Map<String, PlayerVitals> playerVitals;
     private final java.util.Map<String, CellAtmosphere> cellAtmospheres;
+    private final java.util.Map<String, AquiferState> aquifers;
 
     private CoreSaveData(long ticks, java.util.Map<String, PlayerVitals> playerVitals,
-                         java.util.Map<String, CellAtmosphere> cellAtmospheres) {
+                         java.util.Map<String, CellAtmosphere> cellAtmospheres,
+                         java.util.Map<String, AquiferState> aquifers) {
         this.ticks = ticks;
         this.playerVitals = new java.util.HashMap<>(playerVitals);
         this.cellAtmospheres = new java.util.HashMap<>(cellAtmospheres);
+        this.aquifers = new java.util.HashMap<>(aquifers);
     }
 
     public long ticks() {
@@ -79,5 +93,33 @@ public final class CoreSaveData extends SavedData {
 
     public int savedCellCount() {
         return cellAtmospheres.size();
+    }
+
+    /** Null means nothing has ever been taken out of this region, so its aquifer is full. */
+    public AquiferState aquifer(String regionKey) {
+        return aquifers.get(regionKey);
+    }
+
+    public void setAquifer(String regionKey, AquiferState state) {
+        if (regionKey == null || state == null) throw new IllegalArgumentException("Invalid aquifer state");
+        if (state.equals(aquifers.put(regionKey, state))) return;
+        if (aquifers.size() > MAX_SAVED_AQUIFERS) {
+            // Forget the region that has gone longest without being visited. It reverts to full,
+            // which is where an aquifer nobody draws on ends up anyway.
+            aquifers.entrySet().stream()
+                    .min(java.util.Comparator.comparingLong(entry -> entry.getValue().updatedTick()))
+                    .map(java.util.Map.Entry::getKey)
+                    .ifPresent(aquifers::remove);
+        }
+        setDirty();
+    }
+
+    /** A region that has filled back up is forgotten rather than saved forever as "full". */
+    public void clearAquifer(String regionKey) {
+        if (aquifers.remove(regionKey) != null) setDirty();
+    }
+
+    public int savedAquiferCount() {
+        return aquifers.size();
     }
 }

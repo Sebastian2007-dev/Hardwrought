@@ -1,0 +1,10 @@
+{
+  "biomes": [
+    "minecraft:jungle",
+    "minecraft:sparse_jungle",
+    "minecraft:bamboo_jungle"
+  ],
+  "richness": 1.6,
+  "table_offset": 8,
+  "quality": "fresh"
+}

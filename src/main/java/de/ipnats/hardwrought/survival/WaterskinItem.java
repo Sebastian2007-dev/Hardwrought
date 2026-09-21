@@ -118,7 +118,7 @@ public final class WaterskinItem extends Item {
         var hit = getPlayerPOVHitResult(level, player, ClipContext.Fluid.ANY);
         if (hit.getType() != HitResult.Type.BLOCK) return InteractionResult.PASS;
         BlockPos pos = hit.getBlockPos();
-        if (!WaterStorage.isFreeWater(level.getBlockState(pos))) return InteractionResult.PASS;
+        if (!WaterStorage.containsWater(level.getBlockState(pos))) return InteractionResult.PASS;
         if (!(level instanceof ServerLevel serverLevel)) return InteractionResult.SUCCESS;
 
         int available = WaterStorage.amount(serverLevel, pos);

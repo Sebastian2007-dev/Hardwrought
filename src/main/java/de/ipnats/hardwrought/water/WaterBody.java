@@ -7,7 +7,10 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.tags.FluidTags;
 
-import java.util.ArrayDeque;
+import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+
+import java.util.function.LongConsumer;
 
 /**
  * One bounded flood fill over connected water, the counterpart of the environmental cell of
@@ -68,11 +71,16 @@ public record WaterBody(Size size, int volume, int millibuckets, int sources, in
     }
 
     public static WaterBody scan(ServerLevel level, BlockPos start) {
+        return scan(level, start, ignored -> { });
+    }
+
+    /** Package-private visitor lets nearby callers avoid measuring one connected body repeatedly. */
+    static WaterBody scan(ServerLevel level, BlockPos start, LongConsumer waterVisitor) {
         if (!level.hasChunkAt(start) || !isWater(level, start)) return NONE;
 
-        var queue = new ArrayDeque<BlockPos>();
-        var visited = new java.util.HashSet<Long>();
-        queue.add(start.immutable());
+        var queue = new LongArrayFIFOQueue();
+        var visited = new LongOpenHashSet();
+        queue.enqueue(start.asLong());
         visited.add(start.asLong());
 
         int volume = 0;
@@ -83,7 +91,8 @@ public record WaterBody(Size size, int volume, int millibuckets, int sources, in
         int highestY = start.getY();
 
         while (!queue.isEmpty()) {
-            BlockPos pos = queue.poll();
+            BlockPos pos = BlockPos.of(queue.dequeueLong());
+            waterVisitor.accept(pos.asLong());
             volume++;
             if (volume > MAX_VOLUME) {
                 return new WaterBody(Size.LARGE, MAX_VOLUME, millibuckets, sources, skyExposed, lowestY, highestY);
@@ -103,7 +112,7 @@ public record WaterBody(Size size, int volume, int millibuckets, int sources, in
                     return new WaterBody(Size.LARGE, MAX_VOLUME, millibuckets, sources, skyExposed, lowestY, highestY);
                 }
                 if (!visited.add(next.asLong())) continue;
-                if (isWater(level, next)) queue.add(next.immutable());
+                if (isWater(level, next)) queue.enqueue(next.asLong());
             }
         }
         return new WaterBody(Size.MEASURED, volume, millibuckets, sources, skyExposed, lowestY, highestY);

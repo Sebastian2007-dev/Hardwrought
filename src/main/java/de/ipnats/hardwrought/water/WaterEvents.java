@@ -67,7 +67,46 @@ public final class WaterEvents {
             }
             return InteractionResult.SUCCESS;
         });
+        UseItemCallback.EVENT.register(WaterEvents::fillBucket);
         UseItemCallback.EVENT.register(WaterEvents::emptyBucket);
+    }
+
+    /**
+     * Filling a bucket is taken over from vanilla for the same two reasons the bottle was. Vanilla
+     * takes the whole block whatever is in it, which destroys the surplus a cell under pressure
+     * carries; and it records nothing, so seawater carried inland used to become clean on the way.
+     * A bucket takes exactly one block of water and remembers where it was dipped.
+     */
+    private static InteractionResult fillBucket(Player player, Level level, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (level.isClientSide() || !stack.is(Items.BUCKET)
+                || !(player instanceof ServerPlayer serverPlayer)
+                || !(level instanceof ServerLevel serverLevel)) {
+            return InteractionResult.PASS;
+        }
+        BlockPos pos = lookedAtWater(level, player);
+        if (pos == null) return InteractionResult.PASS;
+        int available = WaterStorage.amount(serverLevel, pos);
+        if (available < WaterAmounts.BUCKET) {
+            player.sendSystemMessage(Component.translatable("message.hardwrought.water_too_little"));
+            return InteractionResult.FAIL;
+        }
+        var runtime = CoreLifecycle.find(serverLevel.getServer());
+        WaterQuality quality = runtime == null
+                ? WaterQuality.FRESH : runtime.water().qualityAt(serverLevel, pos);
+        ItemStack filled = new ItemStack(Items.WATER_BUCKET);
+        filled.set(ModDataComponents.WATER_QUALITY, quality);
+        WaterStorage.setAmount(serverLevel, pos, available - WaterAmounts.BUCKET);
+        WaterFlow.disturb(serverLevel, pos);
+        level.playSound(null, pos, SoundEvents.BUCKET_FILL, SoundSource.BLOCKS, 1.0f, 1.0f);
+        serverPlayer.awardStat(Stats.ITEM_USED.get(Items.BUCKET));
+        if (stack.getCount() == 1) {
+            player.setItemInHand(hand, filled);
+        } else {
+            stack.shrink(1);
+            if (!serverPlayer.getInventory().add(filled)) serverPlayer.spawnAtLocation(serverLevel, filled);
+        }
+        return InteractionResult.SUCCESS;
     }
 
     /**
@@ -91,7 +130,13 @@ public final class WaterEvents {
             return InteractionResult.FAIL;
         }
         WaterStorage.setAmount(serverLevel, target, present + WaterAmounts.BUCKET);
-        WaterFlow.disturb(serverLevel, target);
+        // What was in the bucket goes into the world with it. An unmarked bucket — a creative one,
+        // or one from another mod — pours ordinary water rather than claiming to be clean.
+        WaterQuality carried = stack.get(ModDataComponents.WATER_QUALITY);
+        if (carried != null) {
+            WaterQualityStorage.add(serverLevel, target, carried, present, WaterAmounts.BUCKET);
+        }
+        WaterFlow.disturbImmediately(serverLevel, target);
         level.playSound(null, target, SoundEvents.BUCKET_EMPTY, SoundSource.BLOCKS, 1.0f, 1.0f);
         if (!serverPlayer.isCreative()) {
             player.setItemInHand(hand, new ItemStack(Items.BUCKET));
@@ -123,7 +168,7 @@ public final class WaterEvents {
                 ClipContext.Fluid.ANY, player));
         if (!(hit instanceof BlockHitResult blockHit) || hit.getType() != HitResult.Type.BLOCK) return null;
         BlockPos pos = blockHit.getBlockPos();
-        return WaterStorage.isFreeWater(level.getBlockState(pos)) ? pos : null;
+        return WaterStorage.containsWater(level.getBlockState(pos)) ? pos : null;
     }
 
     /** What a drink from this container is worth; anything unmarked counts as clean. */

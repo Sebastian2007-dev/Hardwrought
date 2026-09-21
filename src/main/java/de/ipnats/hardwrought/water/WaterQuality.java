@@ -61,6 +61,40 @@ public enum WaterQuality {
         return this == SALT ? SALT : FRESH;
     }
 
+    /**
+     * How much of a mixture the worse water has to make up before the whole of it counts as spoiled.
+     * A quarter: a bucket of seawater ruins a barrel, and a cup of it does not.
+     */
+    public static final double CONTAMINATION_SHARE = 0.25;
+
+    /** The less useful of two waters. The declaration order is the order of usefulness. */
+    public static WaterQuality worse(WaterQuality first, WaterQuality second) {
+        if (first == null || second == null) throw new IllegalArgumentException("Nothing to compare");
+        return first.ordinal() >= second.ordinal() ? first : second;
+    }
+
+    /**
+     * What comes out when water is poured into water. Contamination travels the easy way and
+     * cleanliness the hard way: the worse of the two decides as soon as it makes up a quarter of the
+     * mixture, so a pool is spoiled by far less than it takes to clean it again.
+     *
+     * <p>Pure arithmetic on two amounts, which is what makes the rule checkable without a world.
+     */
+    public static WaterQuality mix(WaterQuality present, int presentAmount,
+                                   WaterQuality incoming, int incomingAmount) {
+        if (present == null || incoming == null) throw new IllegalArgumentException("Nothing to mix");
+        if (presentAmount < 0 || incomingAmount < 0) {
+            throw new IllegalArgumentException("Cannot mix a negative amount of water");
+        }
+        if (presentAmount == 0) return incoming;
+        if (incomingAmount == 0 || present == incoming) return present;
+        WaterQuality worse = worse(present, incoming);
+        int worseAmount = worse == present ? presentAmount : incomingAmount;
+        long total = (long) presentAmount + incomingAmount;
+        if (worseAmount >= total * CONTAMINATION_SHARE) return worse;
+        return worse == present ? incoming : present;
+    }
+
     public static WaterQuality byName(String name) {
         if (name == null) return null;
         for (WaterQuality value : values()) {

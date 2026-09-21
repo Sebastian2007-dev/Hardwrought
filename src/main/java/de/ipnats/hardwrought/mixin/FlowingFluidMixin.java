@@ -32,6 +32,9 @@ public abstract class FlowingFluidMixin {
                                            FluidState fluid, CallbackInfo callback) {
         if (!fluid.is(FluidTags.WATER)) return;
         callback.cancel();
+        // A fluid tick is only a wake-up signal. Moving water here would bypass WaterFlow's
+        // per-tick time budget, and every resulting block update schedules more fluid ticks. That
+        // feedback loop can freeze the entire server for seconds or minutes around a large lake.
         WaterFlow.disturb(level, pos);
     }
 }

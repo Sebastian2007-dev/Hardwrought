@@ -10,6 +10,10 @@ import de.ipnats.hardwrought.combat.WeaponProfile;
 import de.ipnats.hardwrought.combat.WeaponProfiles;
 import de.ipnats.hardwrought.core.debug.DiagnosticRegistry;
 import de.ipnats.hardwrought.environment.EnvironmentSystem;
+import de.ipnats.hardwrought.water.AquiferProfile;
+import de.ipnats.hardwrought.water.AquiferProfiles;
+import de.ipnats.hardwrought.water.Groundwater;
+import de.ipnats.hardwrought.water.Rainfall;
 import de.ipnats.hardwrought.water.WaterFlow;
 import de.ipnats.hardwrought.water.WaterQualityProfile;
 import de.ipnats.hardwrought.water.WaterQualityProfiles;
@@ -53,6 +57,8 @@ public final class CoreRuntime {
     private final CombatSystem combat;
     private final WaterSystem water;
     private final WaterFlow waterFlow;
+    private final Groundwater groundwater;
+    private final Rainfall rainfall;
     private final Set<UUID> debugViewers = new HashSet<>();
 
     public CoreRuntime(MinecraftServer server) {
@@ -67,8 +73,11 @@ public final class CoreRuntime {
         survival = new SurvivalSystem(server, save, scheduler, environment);
         combat = new CombatSystem(server, survival, scheduler);
         waterFlow = new WaterFlow(server, scheduler);
+        groundwater = new Groundwater(server, save, scheduler);
+        rainfall = new Rainfall(server, scheduler);
         water = new WaterSystem(server, environment, scheduler);
         water.registerDiagnostics(diagnostics);
+        groundwater.registerDiagnostics(diagnostics);
         scheduler.register("hardwrought:debug_sync", SimulationTier.MEDIUM, this::syncDebugViewers);
     }
 
@@ -107,6 +116,21 @@ public final class CoreRuntime {
     public WaterFlow waterFlow() {
         ServerThread.require(server);
         return waterFlow;
+    }
+
+    public Groundwater groundwater() {
+        ServerThread.require(server);
+        return groundwater;
+    }
+
+    public Rainfall rainfall() {
+        ServerThread.require(server);
+        return rainfall;
+    }
+
+    public Map<Identifier, AquiferProfile> aquiferProfiles() {
+        ServerThread.require(server);
+        return server.getOrThrow(AquiferProfiles.KEY);
     }
 
     public Map<Identifier, WaterQualityProfile> waterQualityProfiles() {

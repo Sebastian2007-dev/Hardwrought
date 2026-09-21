@@ -15,12 +15,34 @@ import java.util.function.Function;
 /** Central registration point for Hardwrought items. */
 public final class ModItems {
     public static final Item FLINT_SHARD = register("flint_shard", Item::new, new Item.Properties());
+    public static final Item COBBLESTONE_PIECE = register("cobblestone_piece", Item::new, new Item.Properties());
+    public static final Item DIRT_BLOB = register("dirt_blob", Item::new, new Item.Properties());
+    public static final Item LEAF_STRING = register("leaf_string", Item::new, new Item.Properties());
+    public static final Item LIGHTING_STICKS = register("lighting_sticks", Item::new, new Item.Properties());
     public static final Item FILLED_WATERSKIN = register("filled_waterskin", WaterskinItem::new,
             new Item.Properties().durability(9).stacksTo(1));
     // Milestone 2 weapon classes that vanilla has no item for. Values follow the class profiles in
     // data/hardwrought/hardwrought/weapon_profiles; vanilla still supplies the base attack damage.
     public static final Item FLINT_DAGGER = register("flint_dagger", Item::new,
             new Item.Properties().sword(ModToolMaterials.FLINT, 0.5F, -1.4F));
+    public static final Item FLINT_HATCHET = register("flint_hatchet", Item::new,
+            new Item.Properties().axe(ModToolMaterials.FLINT, 5.0F, -3.1F));
+    public static final Item FLINT_HOE = register("flint_hoe", Item::new,
+            new Item.Properties().hoe(ModToolMaterials.FLINT, -1.0F, -1.8F));
+    public static final Item FLINT_PICKAXE = register("flint_pickaxe", Item::new,
+            new Item.Properties().pickaxe(ModToolMaterials.FLINT, 1.0F, -2.8F));
+    public static final Item FLINT_SHOVEL = register("flint_shovel", Item::new,
+            new Item.Properties().shovel(ModToolMaterials.FLINT, 1.5F, -3.0F));
+    public static final Item FLINT_SWORD = register("flint_sword", Item::new,
+            new Item.Properties().sword(ModToolMaterials.FLINT, 3.0F, -2.4F));
+    public static final Item STONE_HATCHET = register("stone_hatchet", Item::new,
+            new Item.Properties().axe(ToolMaterial.STONE, 6.0F, -3.2F));
+    public static final Item STONE_PICKAXE = register("stone_pickaxe", Item::new,
+            new Item.Properties().pickaxe(ToolMaterial.STONE, 1.0F, -2.8F));
+    public static final Item IRON_HATCHET = register("iron_hatchet", Item::new,
+            new Item.Properties().axe(ToolMaterial.IRON, 6.0F, -3.1F));
+    public static final Item IRON_PICKAXE = register("iron_pickaxe", Item::new,
+            new Item.Properties().pickaxe(ToolMaterial.IRON, 1.0F, -2.8F));
     public static final Item IRON_DAGGER = register("iron_dagger", Item::new,
             new Item.Properties().sword(ToolMaterial.IRON, 1.0F, -1.5F));
     public static final Item IRON_GREATSWORD = register("iron_greatsword", Item::new,

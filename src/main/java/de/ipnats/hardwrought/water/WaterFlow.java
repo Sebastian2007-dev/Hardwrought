@@ -1,5 +1,6 @@
 package de.ipnats.hardwrought.water;
 
+import de.ipnats.hardwrought.Hardwrought;
 import de.ipnats.hardwrought.core.events.CoreLifecycle;
 import de.ipnats.hardwrought.core.simulation.SimulationScheduler;
 import de.ipnats.hardwrought.core.simulation.SimulationTier;
@@ -9,13 +10,12 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * The water simulation itself: water is a quantity that moves, and no block creates it.
@@ -38,8 +38,20 @@ import java.util.Set;
  * rather than expensive — draining an ocean would take an ocean's worth of time, as it should.
  */
 public final class WaterFlow {
-    /** Cells moved per pass. The pass runs every five ticks, so this is the ceiling on the work. */
+    /** Cells moved per tick, so this remains a hard ceiling on the simulation work. */
     public static final int BUDGET_PER_PASS = 1024;
+    /**
+     * Wall-clock guard for one server tick. A cell count alone is not enough because changing a
+     * visible block is much more expensive than inspecting a settled one.
+    */
+    public static final long MAX_NANOS_PER_TICK = 1_500_000L;
+    /** Back off before water competes with entities, falling blocks and networking for a 50 ms tick. */
+    private static final long CONGESTED_TICK_NANOS = 35_000_000L;
+    private static final long OVERLOADED_TICK_NANOS = 45_000_000L;
+    private static final long CONGESTED_WATER_NANOS = 500_000L;
+    private static final long OVERLOADED_WATER_NANOS = 100_000L;
+    public static final int NEAR_PLAYER_RADIUS = 32;
+    public static final int MID_PLAYER_RADIUS = 96;
     /**
      * How many disturbed cells are remembered at once. Past this the oldest are dropped: water then
      * settles where the action is instead of the server growing a world-sized queue.
@@ -48,46 +60,142 @@ public final class WaterFlow {
     private static final Direction[] SIDES = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
 
     private final MinecraftServer server;
-    private final Map<ResourceKey<Level>, LinkedHashSet<Long>> active = new LinkedHashMap<>();
+    private final Map<ResourceKey<Level>, ActiveQueue> active = new LinkedHashMap<>();
+    private int nextLevel;
+    private long failedCells;
+    private int lastProcessedCells;
+    private long lastWorkNanos;
+    private long lastBudgetNanos;
 
     public WaterFlow(MinecraftServer server, SimulationScheduler scheduler) {
         this.server = server;
-        scheduler.register("hardwrought:water_flow", SimulationTier.FAST, this::tickFlow);
+        // Hydraulic pressure feels unresponsive when a wave may advance by only one cell every five
+        // ticks. Keep the bounded queue and budget, but let an active wave advance every game tick.
+        scheduler.register("hardwrought:water_flow", SimulationTier.CRITICAL, this::tickFlow);
     }
 
     /** Wakes a cell. Called from the fluid tick vanilla already schedules on disturbed water. */
     public static void disturb(ServerLevel level, BlockPos pos) {
         var runtime = CoreLifecycle.find(level.getServer());
         if (runtime == null) return;
-        runtime.waterFlow().activate(level, pos);
+        runtime.waterFlow().signal(level, pos);
+    }
+
+    /**
+     * Advances a cell once right away. Only direct player actions use this path, so a newly poured
+     * bucket reacts immediately. Vanilla fluid ticks must use {@link #disturb}; otherwise block
+     * updates recursively schedule unbudgeted work outside the normal solver.
+     */
+    public static void disturbImmediately(ServerLevel level, BlockPos pos) {
+        var runtime = CoreLifecycle.find(level.getServer());
+        if (runtime == null) return;
+        WaterFlow flow = runtime.waterFlow();
+        flow.stepSafely(level, pos);
     }
 
     public void activate(ServerLevel level, BlockPos pos) {
-        Set<Long> queue = active.computeIfAbsent(level.dimension(), key -> new LinkedHashSet<>());
-        if (queue.size() >= MAX_ACTIVE) return;
-        queue.add(pos.asLong());
+        // Only water can move. Avoid the much more expensive six-neighbour equilibrium scan here:
+        // transfers signal the same cells repeatedly, and the queue can deduplicate a cheap signal
+        // before the bounded solver examines each surviving cell once.
+        if (!level.hasChunkAt(pos) || !WaterStorage.containsWater(level.getBlockState(pos))) return;
+        enqueue(level, pos);
+    }
+
+    /**
+     * Cheap wake-up path for vanilla's scheduled fluid ticks. Their only job is to remember the
+     * cell; the bounded solver decides later whether it really needs work. In particular this avoids
+     * scanning six neighbours for every overdue fluid tick after loading a busy chunk.
+     */
+    private void signal(ServerLevel level, BlockPos pos) {
+        if (!level.hasChunkAt(pos) || !WaterStorage.containsWater(level.getBlockState(pos))) return;
+        enqueue(level, pos);
+    }
+
+    private void enqueue(ServerLevel level, BlockPos pos) {
+        active.computeIfAbsent(level.dimension(), key -> new ActiveQueue()).activate(level, pos);
     }
 
     public int activeCells() {
-        return active.values().stream().mapToInt(Set::size).sum();
+        return active.values().stream().mapToInt(ActiveQueue::size).sum();
+    }
+
+    public long failedCells() {
+        return failedCells;
+    }
+
+    public int lastProcessedCells() {
+        return lastProcessedCells;
+    }
+
+    public long lastWorkNanos() {
+        return lastWorkNanos;
+    }
+
+    public long lastBudgetNanos() {
+        return lastBudgetNanos;
     }
 
     private void tickFlow() {
         int budget = BUDGET_PER_PASS;
-        for (ServerLevel level : server.getAllLevels()) {
-            LinkedHashSet<Long> queue = active.get(level.dimension());
+        long started = System.nanoTime();
+        long timeBudget = timeBudget();
+        int processed = 0;
+        List<ServerLevel> levels = new ArrayList<>();
+        server.getAllLevels().forEach(levels::add);
+        if (levels.isEmpty()) {
+            finishTick(started, timeBudget, processed);
+            return;
+        }
+
+        int startLevel = Math.floorMod(nextLevel, levels.size());
+        for (int offset = 0; offset < levels.size(); offset++) {
+            int levelIndex = (startLevel + offset) % levels.size();
+            ServerLevel level = levels.get(levelIndex);
+            ActiveQueue queue = active.get(level.dimension());
             if (queue == null || queue.isEmpty()) continue;
-            // Take the batch out first. Moving water wakes its neighbours, which writes back into
-            // this very queue, so it must not be under an open iterator while that happens.
-            List<Long> batch = new ArrayList<>(Math.min(budget, queue.size()));
-            var iterator = queue.iterator();
-            while (iterator.hasNext() && batch.size() < budget) {
-                batch.add(iterator.next());
-                iterator.remove();
+
+            // Moving water writes newly disturbed neighbours back into this queue. Polling a single
+            // primitive position avoids allocating and boxing a new batch on every wave.
+            while (!queue.isEmpty() && budget > 0) {
+                stepSafely(level, BlockPos.of(queue.poll()));
+                budget--;
+                processed++;
+                if (budget <= 0 || System.nanoTime() - started >= timeBudget) {
+                    nextLevel = (levelIndex + 1) % levels.size();
+                    finishTick(started, timeBudget, processed);
+                    return;
+                }
             }
-            budget -= batch.size();
-            for (long packed : batch) step(level, BlockPos.of(packed));
-            if (budget <= 0) return;
+        }
+        nextLevel = (startLevel + 1) % levels.size();
+        finishTick(started, timeBudget, processed);
+    }
+
+    private void finishTick(long started, long budget, int processed) {
+        lastProcessedCells = processed;
+        lastWorkNanos = Math.max(0, System.nanoTime() - started);
+        lastBudgetNanos = budget;
+    }
+
+    private long timeBudget() {
+        long averageTick = server.getAverageTickTimeNanos();
+        if (averageTick >= OVERLOADED_TICK_NANOS) return OVERLOADED_WATER_NANOS;
+        if (averageTick >= CONGESTED_TICK_NANOS) return CONGESTED_WATER_NANOS;
+        return MAX_NANOS_PER_TICK;
+    }
+
+    /** A malformed cell must never disable water for the entire server session. */
+    private void stepSafely(ServerLevel level, BlockPos pos) {
+        try {
+            step(level, pos);
+        } catch (RuntimeException exception) {
+            failedCells++;
+            // Full traces for the first few failures diagnose the cause. Afterwards powers of two
+            // provide evidence that it continues without flooding the log or stealing server time.
+            if (failedCells <= 3 || (failedCells & (failedCells - 1)) == 0) {
+                Hardwrought.LOGGER.error("Water cell {} in {} failed (failure #{}) and was skipped",
+                        pos.toShortString(), level.dimension().identifier(), failedCells, exception);
+            }
         }
     }
 
@@ -117,8 +225,7 @@ public final class WaterFlow {
         // Keep only what a cell at this depth should carry; the rest is pressed upward.
         int move = amount - WaterAmounts.stableState(amount + overhead);
         if (move <= 0) return amount;
-        transfer(level, pos, above, move);
-        return amount - move;
+        return transfer(level, pos, amount, above, overhead, move);
     }
 
     /**
@@ -132,42 +239,137 @@ public final class WaterFlow {
         int beneath = WaterStorage.amount(level, below);
         int move = Math.min(amount, WaterAmounts.stableState(amount + beneath) - beneath);
         if (move <= 0) return amount;
-        transfer(level, pos, below, move);
-        return amount - move;
+        return transfer(level, pos, amount, below, beneath, move);
     }
 
     /** Rule three: water levels out. Each neighbour with less gets a share of the difference. */
     private void level(ServerLevel level, BlockPos pos, int amount) {
+        int mine = amount;
         for (Direction side : SIDES) {
             BlockPos next = pos.relative(side);
             if (!WaterStorage.canHold(level, next)) continue;
-            int mine = WaterStorage.amount(level, pos);
             int theirs = WaterStorage.amount(level, next);
             int difference = mine - theirs;
             if (difference < WaterAmounts.LEVELLING_THRESHOLD) continue;
-            // A third of the difference per pass converges without the two cells trading it back.
-            int move = Math.min(difference / 3 + 1, Math.min(mine, WaterAmounts.pressureRoom(theirs)));
+            // Half the difference is the exact equilibrium of this pair. Rounding up is safe: an
+            // odd difference can only reverse the pair by one millibucket, far below the threshold.
+            int move = Math.min((difference + 1) / 2,
+                    Math.min(mine, WaterAmounts.pressureRoom(theirs)));
             if (move <= 0) continue;
-            transfer(level, pos, next, move);
+            mine = transfer(level, pos, mine, next, theirs, move);
         }
     }
 
-    private void transfer(ServerLevel level, BlockPos from, BlockPos to, int millibuckets) {
-        int source = WaterStorage.amount(level, from);
-        int destination = WaterStorage.amount(level, to);
+    /** Commits a transfer using the quantities the caller has already read. */
+    private int transfer(ServerLevel level, BlockPos from, int source,
+                         BlockPos to, int destination, int millibuckets) {
         int move = Math.min(millibuckets, Math.min(source, WaterAmounts.pressureRoom(destination)));
-        if (move <= 0) return;
-        WaterStorage.setAmount(level, to, destination + move);
-        WaterStorage.setAmount(level, from, source - move);
+        if (move <= 0) return source;
+        // Water takes what is dissolved in it with it. Ordinary water moving into ordinary water
+        // costs two map lookups here and nothing else; only marked water is mixed.
+        WaterQualityStorage.carry(level, from, source, to, destination, move);
+        WaterStorage.setAmounts(level, from, source - move, to, destination + move);
         activate(level, from);
         activate(level, to);
         activate(level, from.above());
         activate(level, to.above());
-        for (Direction side : SIDES) activate(level, to.relative(side));
+        // Wake both sides of the transfer. This lets the interior of a lake feed a draining edge;
+        // waking only around the destination made the first shoreline cell empty and then stall.
+        for (Direction side : SIDES) {
+            activate(level, from.relative(side));
+            activate(level, to.relative(side));
+        }
         activate(level, to.below());
+        return source - move;
     }
 
     public void shutdown() {
         active.clear();
+    }
+
+    /** Three insertion-ordered queues avoid sorting a world-sized backlog every server tick. */
+    private static final class ActiveQueue {
+        private final LongLinkedOpenHashSet near = new LongLinkedOpenHashSet();
+        private final LongLinkedOpenHashSet mid = new LongLinkedOpenHashSet();
+        private final LongLinkedOpenHashSet far = new LongLinkedOpenHashSet();
+        private int priorityTurn;
+
+        int size() {
+            return near.size() + mid.size() + far.size();
+        }
+
+        boolean isEmpty() {
+            return near.isEmpty() && mid.isEmpty() && far.isEmpty();
+        }
+
+        void activate(ServerLevel level, BlockPos pos) {
+            long packed = pos.asLong();
+            if (near.contains(packed)) return;
+            int priority = priority(level, pos);
+            if (mid.contains(packed)) {
+                if (priority == 0) {
+                    mid.remove(packed);
+                    near.add(packed);
+                }
+                return;
+            }
+            if (far.contains(packed)) {
+                if (priority < 2) {
+                    far.remove(packed);
+                    bucket(priority).add(packed);
+                }
+                return;
+            }
+            if (size() >= MAX_ACTIVE && !makeRoomFor(priority)) return;
+            bucket(priority).add(packed);
+        }
+
+        long poll() {
+            // Eight near, two middle-distance and one far slot. Empty bands fall through to the
+            // closest available work, so proximity stays dominant without freezing the far side of
+            // a large connected lake forever.
+            int slot = Math.floorMod(priorityTurn++, 11);
+            if (slot < 8 && !near.isEmpty()) return near.removeFirstLong();
+            if (slot < 10 && !mid.isEmpty()) return mid.removeFirstLong();
+            if (slot == 10 && !far.isEmpty()) return far.removeFirstLong();
+            if (!near.isEmpty()) return near.removeFirstLong();
+            if (!mid.isEmpty()) return mid.removeFirstLong();
+            return far.removeFirstLong();
+        }
+
+        private boolean makeRoomFor(int priority) {
+            if (priority == 0) {
+                if (!far.isEmpty()) far.removeFirstLong();
+                else if (!mid.isEmpty()) mid.removeFirstLong();
+                else return false;
+                return true;
+            }
+            if (priority == 1 && !far.isEmpty()) {
+                far.removeFirstLong();
+                return true;
+            }
+            return false;
+        }
+
+        private LongLinkedOpenHashSet bucket(int priority) {
+            return priority == 0 ? near : priority == 1 ? mid : far;
+        }
+
+        private static int priority(ServerLevel level, BlockPos pos) {
+            if (level.players().isEmpty()) return 2;
+            double nearest = Double.MAX_VALUE;
+            double x = pos.getX() + 0.5;
+            double y = pos.getY() + 0.5;
+            double z = pos.getZ() + 0.5;
+            for (var player : level.players()) {
+                double dx = player.getX() - x;
+                double dy = player.getY() - y;
+                double dz = player.getZ() - z;
+                nearest = Math.min(nearest, dx * dx + dy * dy + dz * dz);
+            }
+            if (nearest <= NEAR_PLAYER_RADIUS * NEAR_PLAYER_RADIUS) return 0;
+            if (nearest <= MID_PLAYER_RADIUS * MID_PLAYER_RADIUS) return 1;
+            return 2;
+        }
     }
 }
