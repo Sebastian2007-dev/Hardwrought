@@ -63,6 +63,7 @@ public final class CoreRuntime {
     private final WaterFlow waterFlow;
     private final Groundwater groundwater;
     private final KnowledgeSystem knowledge;
+    private final de.ipnats.hardwrought.equipment.EquipmentSystem equipment;
     private final Rainfall rainfall;
     private final Set<UUID> debugViewers = new HashSet<>();
 
@@ -86,6 +87,7 @@ public final class CoreRuntime {
         Geology.registerDiagnostics(diagnostics);
         knowledge = new KnowledgeSystem(server, save, scheduler);
         knowledge.registerDiagnostics(diagnostics);
+        equipment = new de.ipnats.hardwrought.equipment.EquipmentSystem(server, save);
         scheduler.register("hardwrought:debug_sync", SimulationTier.MEDIUM, this::syncDebugViewers);
     }
 
@@ -139,6 +141,11 @@ public final class CoreRuntime {
     public KnowledgeSystem knowledge() {
         ServerThread.require(server);
         return knowledge;
+    }
+
+    public de.ipnats.hardwrought.equipment.EquipmentSystem equipment() {
+        ServerThread.require(server);
+        return equipment;
     }
 
     public Map<Identifier, AquiferProfile> aquiferProfiles() {

@@ -45,18 +45,19 @@ public class CompendiumScreen extends Screen {
      */
     public static final int MODE_HOME = -1;
 
-    private static final int PANEL_WIDTH = 338;
-    private static final int PANEL_HEIGHT = 226;
-    private static final int TAB_WIDTH = 132;
-    private static final int TAB_HEIGHT = 16;
+    private static final int PANEL_WIDTH = 344;
+    private static final int PANEL_HEIGHT = 204;
+    private static final int TAB_WIDTH = 130;
+    private static final int TAB_HEIGHT = 14;
     private static final int SLOT = 18;
-    private static final int GRID_COLUMNS = 7;
-    private static final int GRID_ROWS = 8;
+    private static final int GRID_STEP = 21;
+    private static final int GRID_COLUMNS = 6;
+    private static final int GRID_ROWS = 6;
     private static final int PER_PAGE = GRID_COLUMNS * GRID_ROWS;
-    private static final int CARD_HEIGHT = 62;
-    private static final int SOURCE_HEIGHT = 20;
+    private static final int CARD_HEIGHT = 56;
+    private static final int SOURCE_HEIGHT = 18;
     private static final int PAGE_EDGE = 8;
-    private static final int PAGE_GUTTER = 14;
+    private static final int PAGE_GUTTER = 16;
     private static final int PAGE_WIDTH = (PANEL_WIDTH - PAGE_EDGE * 2 - PAGE_GUTTER) / 2;
     private static final int CONTENT_MARGIN = 10;
     private static final int CONTENT_WIDTH = PAGE_WIDTH - CONTENT_MARGIN * 2;
@@ -66,15 +67,12 @@ public class CompendiumScreen extends Screen {
     private static final long CYCLE_MILLIS = 1000L;
 
     /** The two halves on the front page, side by side with a gutter between them. */
-    private static final int HALF_WIDTH = 140;
-    private static final int HALF_HEIGHT = 122;
-    private static final int HALF_TOP = 52;
-    private static final int HALF_GAP = 18;
+    private static final int HALF_WIDTH = 130;
+    private static final int HALF_HEIGHT = 110;
+    private static final int HALF_TOP = 45;
+    private static final int HALF_GAP = 16;
 
-    private static final Identifier COVER_SPRITE = sprite("cover");
-    private static final Identifier LEFT_PAGE_SPRITE = sprite("page_left");
-    private static final Identifier RIGHT_PAGE_SPRITE = sprite("page_right");
-    private static final Identifier BINDING_SPRITE = sprite("binding");
+    private static final Identifier BOOK_SPRITE = sprite("book");
     private static final Identifier SLOT_SPRITE = sprite("slot");
     private static final Identifier HALF_SPRITE = sprite("half");
     private static final Identifier HALF_HOVERED_SPRITE = sprite("half_hovered");
@@ -92,9 +90,9 @@ public class CompendiumScreen extends Screen {
             sprite("method_smithing"), sprite("method_smelting"), sprite("method_in_world")
     };
 
-    private static final int TEXT_COLOR = 0xFF241D16;
-    private static final int FADED_COLOR = 0xFF514331;
-    private static final int RULE_COLOR = 0x80524130;
+    private static final int TEXT_COLOR = 0xFF1B120B;
+    private static final int FADED_COLOR = 0xFF4A3522;
+    private static final int RULE_COLOR = 0x906D5131;
     /** Muted enough to mark a note as followed without turning the page into a checklist. */
     private static final int DONE_COLOR = 0xFF445128;
     /** Dark enough to read as ink on the page rather than as a second paragraph. */
@@ -194,7 +192,7 @@ public class CompendiumScreen extends Screen {
         if (mode == MODE_HOME) return;
 
         if (mode == CompendiumPagePayload.MODE_SHELF) {
-            search = new EditBox(font, rightContentX() + 4, top + 12, CONTENT_WIDTH - 8, 16,
+            search = new EditBox(font, rightContentX() + 4, top + 10, CONTENT_WIDTH - 8, 14,
                     Component.translatable("gui.hardwrought.compendium.search"));
             search.setMaxLength(48);
             search.setBordered(false);
@@ -273,6 +271,16 @@ public class CompendiumScreen extends Screen {
                 ? !current.sources().isEmpty() : !recipesFor(current, method).isEmpty();
     }
 
+    /** A bookmark is useful only when there is something behind it. */
+    private List<Integer> availableMethods(CompendiumPagePayload current) {
+        if (current == null) return List.of();
+        List<Integer> methods = new ArrayList<>();
+        for (int method = 0; method < METHOD_COUNT; method++) {
+            if (methodAvailable(current, method)) methods.add(method);
+        }
+        return methods;
+    }
+
     private int effectiveMethod(CompendiumPagePayload current) {
         if (methodChosen) return selectedMethod;
         if (methodAvailable(current, selectedMethod)) return selectedMethod;
@@ -287,17 +295,12 @@ public class CompendiumScreen extends Screen {
     @Override
     public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         super.extractBackground(graphics, mouseX, mouseY, delta);
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, COVER_SPRITE,
-                left - 4, top - 5, PANEL_WIDTH + 8, PANEL_HEIGHT + 10);
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, LEFT_PAGE_SPRITE,
-                leftPageX(), top, PAGE_WIDTH, PANEL_HEIGHT);
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, RIGHT_PAGE_SPRITE,
-                rightPageX(), top, PAGE_WIDTH, PANEL_HEIGHT);
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, BINDING_SPRITE,
-                left + PANEL_WIDTH / 2 - 4, top + 5, 8, PANEL_HEIGHT - 10);
+        // Authored at its actual screen size: no repeated or squeezed paper pattern.
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, BOOK_SPRITE,
+                left, top, PANEL_WIDTH, PANEL_HEIGHT);
         if (mode == CompendiumPagePayload.MODE_SHELF) {
             graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SEARCH_SPRITE,
-                    rightContentX(), top + 9, CONTENT_WIDTH, 20);
+                    rightContentX(), top + 7, CONTENT_WIDTH, 20);
         }
     }
 
@@ -326,32 +329,36 @@ public class CompendiumScreen extends Screen {
             drawTabs(graphics, mouseX, mouseY);
             if (mode != CompendiumPagePayload.MODE_SHELF) drawMethodTabs(graphics, current, mouseX, mouseY);
             int headingX = mode == CompendiumPagePayload.MODE_SHELF ? rightContentX() : leftContentX();
-            int headingY = mode == CompendiumPagePayload.MODE_SHELF ? top + 34 : top + 28;
+            int headingY = mode == CompendiumPagePayload.MODE_SHELF ? top + 30 : top + 24;
             graphics.textWithWordWrap(font, heading(), headingX, headingY, CONTENT_WIDTH, TEXT_COLOR);
             if (current == null) {
                 graphics.text(font, Component.translatable("gui.hardwrought.compendium.loading"),
-                        headingX, top + 56, FADED_COLOR);
+                        headingX, top + 48, FADED_COLOR);
             } else if (mode == CompendiumPagePayload.MODE_SHELF) {
                 drawShelf(graphics, current);
             } else {
                 drawRecipes(graphics, current);
             }
         }
-        graphics.centeredText(font, Component.translatable(
-                        mode == CompendiumPagePayload.MODE_JOURNAL
-                                ? "gui.hardwrought.compendium.note" : "gui.hardwrought.compendium.page",
-                        page + 1, pageCount()),
-                rightPageX() + PAGE_WIDTH / 2, top + PANEL_HEIGHT - 17, FADED_COLOR);
+        if (pageCount() > 1) {
+            graphics.centeredText(font, Component.translatable(
+                            mode == CompendiumPagePayload.MODE_JOURNAL
+                                    ? "gui.hardwrought.compendium.note" : "gui.hardwrought.compendium.page",
+                            page + 1, pageCount()),
+                    rightPageX() + PAGE_WIDTH / 2, top + PANEL_HEIGHT - 15, FADED_COLOR);
+        }
         drawTooltip(graphics, mouseX, mouseY);
     }
 
     private void drawBookControls(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         drawBookButton(graphics, leftContentX(), top + PANEL_HEIGHT - 27, 54, 18,
                 Component.translatable("gui.hardwrought.compendium.back"), mouseX, mouseY);
-        drawBookButton(graphics, leftContentX() + 62, top + PANEL_HEIGHT - 27, 22, 18,
-                Component.literal("‹"), mouseX, mouseY);
-        drawBookButton(graphics, rightPageX() + PAGE_WIDTH - CONTENT_MARGIN - 22,
-                top + PANEL_HEIGHT - 27, 22, 18, Component.literal("›"), mouseX, mouseY);
+        if (pageCount() > 1) {
+            drawBookButton(graphics, rightContentX(), top + PANEL_HEIGHT - 27, 22, 18,
+                    Component.literal("‹"), mouseX, mouseY);
+            drawBookButton(graphics, rightContentX() + CONTENT_WIDTH - 22,
+                    top + PANEL_HEIGHT - 27, 22, 18, Component.literal("›"), mouseX, mouseY);
+        }
     }
 
     private void drawBookButton(GuiGraphicsExtractor graphics, int x, int y, int width, int height,
@@ -364,11 +371,14 @@ public class CompendiumScreen extends Screen {
 
     private void drawMethodTabs(GuiGraphicsExtractor graphics, CompendiumPagePayload current,
                                 int mouseX, int mouseY) {
-        int start = left + (PANEL_WIDTH - METHOD_TAB_SIZE * METHOD_COUNT) / 2;
+        List<Integer> methods = availableMethods(current);
+        if (methods.isEmpty()) return;
+        int start = rightPageX() + (PAGE_WIDTH - METHOD_TAB_SIZE * methods.size()) / 2;
         int active = current == null ? selectedMethod : effectiveMethod(current);
-        for (int method = 0; method < METHOD_COUNT; method++) {
-            int x = start + method * METHOD_TAB_SIZE;
-            int y = top - (method == active ? 8 : 13);
+        for (int index = 0; index < methods.size(); index++) {
+            int method = methods.get(index);
+            int x = start + index * METHOD_TAB_SIZE;
+            int y = top + (method == active ? 8 : 10);
             graphics.blitSprite(RenderPipelines.GUI_TEXTURED, METHOD_SPRITES[method],
                     x, y, METHOD_TAB_SIZE, METHOD_TAB_SIZE);
             if (inside(mouseX, mouseY, x, y, METHOD_TAB_SIZE, METHOD_TAB_SIZE)) {
@@ -396,13 +406,11 @@ public class CompendiumScreen extends Screen {
      */
     private void drawHome(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         graphics.centeredText(font, Component.translatable("gui.hardwrought.compendium"),
-                leftPageX() + PAGE_WIDTH / 2, top + 24, TEXT_COLOR);
-        graphics.centeredText(font, Component.translatable("gui.hardwrought.compendium.subtitle"),
-                rightPageX() + PAGE_WIDTH / 2, top + 24, FADED_COLOR);
+                leftPageX() + PAGE_WIDTH / 2, top + 20, TEXT_COLOR);
+        graphics.textWithWordWrap(font, Component.translatable("gui.hardwrought.compendium.subtitle"),
+                rightContentX(), top + 16, CONTENT_WIDTH, FADED_COLOR);
         drawHalf(graphics, mouseX, mouseY, homeLeft(0), "knowledge", false);
         drawHalf(graphics, mouseX, mouseY, homeLeft(1), "journal", true);
-        graphics.centeredText(font, Component.translatable("gui.hardwrought.compendium.keys"),
-                rightPageX() + PAGE_WIDTH / 2, top + PANEL_HEIGHT - 20, FADED_COLOR);
     }
 
     /** Where one of the two halves starts. Both together are centred in the panel. */
@@ -421,10 +429,10 @@ public class CompendiumScreen extends Screen {
                 written ? THOUGHTS_EMBLEM_SPRITE : KNOWLEDGE_EMBLEM_SPRITE,
                 x + HALF_WIDTH / 2 - 16, y + 16, 32, 32);
         graphics.centeredText(font, Component.translatable("gui.hardwrought.compendium." + name),
-                x + HALF_WIDTH / 2, y + 56, TEXT_COLOR);
+                x + HALF_WIDTH / 2, y + 54, TEXT_COLOR);
         graphics.textWithWordWrap(font,
                 Component.translatable("gui.hardwrought.compendium." + name + ".about"),
-                x + 10, y + 72, HALF_WIDTH - 20, FADED_COLOR);
+                x + 10, y + 68, HALF_WIDTH - 20, FADED_COLOR);
     }
 
     private boolean overHalf(int x, double mouseX, double mouseY) {
@@ -479,7 +487,7 @@ public class CompendiumScreen extends Screen {
             return;
         }
         List<FormattedCharSequence> lines = font.split(Component.translatable(textKey(note.id())), wrap);
-        int linesPerPage = 13;
+        int linesPerPage = 11;
         for (int index = 0; index < Math.min(lines.size(), linesPerPage * 2); index++) {
             int x = index < linesPerPage ? leftContentX() : rightContentX();
             graphics.text(font, lines.get(index), x, top + 60 + index % linesPerPage * 10, TEXT_COLOR);
@@ -544,7 +552,7 @@ public class CompendiumScreen extends Screen {
 
     private void drawTabs(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         if (mode != CompendiumPagePayload.MODE_SHELF) return;
-        int y = top + 36;
+        int y = top + 31;
         for (KnowledgeCategory category : KnowledgeCategory.values()) {
             boolean selected = mode == CompendiumPagePayload.MODE_SHELF
                     && category == CompendiumClient.shelf();
@@ -553,7 +561,7 @@ public class CompendiumScreen extends Screen {
             graphics.blitSprite(RenderPipelines.GUI_TEXTURED,
                     selected ? TAB_SELECTED_SPRITE : TAB_SPRITE,
                     leftContentX(), y, TAB_WIDTH + (selected ? 3 : 0), TAB_HEIGHT);
-            graphics.text(font, Component.translatable(category.translationKey()), leftContentX() + 6, y + 4,
+            graphics.text(font, Component.translatable(category.translationKey()), leftContentX() + 6, y + 3,
                     selected || hovered ? TEXT_COLOR : FADED_COLOR, false);
             y += TAB_HEIGHT;
         }
@@ -563,13 +571,13 @@ public class CompendiumScreen extends Screen {
         List<CompendiumPagePayload.Entry> entries = current.entries();
         int first = page * PER_PAGE;
         int originX = rightContentX();
-        int originY = top + 55;
+        int originY = top + 49;
         for (int index = 0; index < PER_PAGE && first + index < entries.size(); index++) {
             CompendiumPagePayload.Entry entry = entries.get(first + index);
             Item item = BuiltInRegistries.ITEM.getValue(entry.id());
             if (item == null) continue;
-            int x = originX + (index % GRID_COLUMNS) * SLOT;
-            int y = originY + (index / GRID_COLUMNS) * SLOT;
+            int x = originX + (index % GRID_COLUMNS) * GRID_STEP;
+            int y = originY + (index / GRID_COLUMNS) * GRID_STEP;
             slot(graphics, x, y, new ItemStack(item), entry.level() > 0);
         }
         if (entries.isEmpty()) {
@@ -585,7 +593,7 @@ public class CompendiumScreen extends Screen {
             return;
         }
         List<CompendiumPagePayload.Recipe> recipes = recipesFor(current, method);
-        int originY = top + 48;
+        int originY = top + 44;
         if (recipes.isEmpty()) {
             // A feather has no recipe, and saying so is still worth a line — just not the only one.
             graphics.text(font, Component.translatable(current.sources().isEmpty()
@@ -605,16 +613,14 @@ public class CompendiumScreen extends Screen {
         List<CompendiumPagePayload.Source> sources = current.sources();
         if (sources.isEmpty()) {
             graphics.textWithWordWrap(font, Component.translatable("gui.hardwrought.compendium.no_recipes"),
-                    rightContentX(), top + 54, CONTENT_WIDTH, FADED_COLOR);
+                    rightContentX(), top + 48, CONTENT_WIDTH, FADED_COLOR);
             return;
         }
-        graphics.text(font, Component.translatable("gui.hardwrought.compendium.sources"),
-                rightContentX(), top + 30, FADED_COLOR);
         int first = page * 14;
         for (int index = 0; index < 14 && first + index < sources.size(); index++) {
             CompendiumPagePayload.Source source = sources.get(first + index);
             int originX = index < 7 ? leftContentX() : rightContentX();
-            int y = top + 50 + index % 7 * SOURCE_HEIGHT;
+            int y = top + 45 + index % 7 * SOURCE_HEIGHT;
             ItemStack icon = LootSourceLabels.icon(source);
             boolean known = source.kind() != LootSources.KIND_BLOCK || source.level() > 0;
             Component label = LootSourceLabels.label(source, known);
@@ -651,7 +657,7 @@ public class CompendiumScreen extends Screen {
             graphics.textWithWordWrap(font,
                     Component.translatable("recipe." + recipe.id().getNamespace() + "."
                             + recipe.id().getPath() + ".instruction"),
-                    x + 5, y + 42, CONTENT_WIDTH - 10, FADED_COLOR);
+                    x + 5, y + 38, CONTENT_WIDTH - 10, FADED_COLOR);
         }
     }
 
@@ -706,22 +712,26 @@ public class CompendiumScreen extends Screen {
             goBack();
             return true;
         }
-        if (inside(event.x(), event.y(), leftContentX() + 62, top + PANEL_HEIGHT - 27, 22, 18)) {
-            turnPage(-1);
-            return true;
-        }
-        if (inside(event.x(), event.y(), rightPageX() + PAGE_WIDTH - CONTENT_MARGIN - 22,
-                top + PANEL_HEIGHT - 27, 22, 18)) {
-            turnPage(1);
-            return true;
+        if (pageCount() > 1) {
+            if (inside(event.x(), event.y(), rightContentX(), top + PANEL_HEIGHT - 27, 22, 18)) {
+                turnPage(-1);
+                return true;
+            }
+            if (inside(event.x(), event.y(), rightContentX() + CONTENT_WIDTH - 22,
+                    top + PANEL_HEIGHT - 27, 22, 18)) {
+                turnPage(1);
+                return true;
+            }
         }
         if (mode == CompendiumPagePayload.MODE_RECIPES || mode == CompendiumPagePayload.MODE_USAGES) {
-            int start = left + (PANEL_WIDTH - METHOD_TAB_SIZE * METHOD_COUNT) / 2;
             CompendiumPagePayload current = CompendiumClient.page();
+            List<Integer> methods = availableMethods(current);
+            int start = rightPageX() + (PAGE_WIDTH - METHOD_TAB_SIZE * methods.size()) / 2;
             int active = current == null ? selectedMethod : effectiveMethod(current);
-            for (int method = 0; method < METHOD_COUNT; method++) {
-                int y = top - (method == active ? 8 : 13);
-                if (inside(event.x(), event.y(), start + method * METHOD_TAB_SIZE, y,
+            for (int index = 0; index < methods.size(); index++) {
+                int method = methods.get(index);
+                int y = top + (method == active ? 8 : 10);
+                if (inside(event.x(), event.y(), start + index * METHOD_TAB_SIZE, y,
                         METHOD_TAB_SIZE, METHOD_TAB_SIZE)) {
                     selectedMethod = method;
                     methodChosen = true;
@@ -731,7 +741,7 @@ public class CompendiumScreen extends Screen {
             }
         }
         if (mode == CompendiumPagePayload.MODE_SHELF) {
-            int y = top + 36;
+            int y = top + 31;
             for (KnowledgeCategory category : KnowledgeCategory.values()) {
                 if (event.x() >= leftContentX() && event.x() < leftContentX() + TAB_WIDTH
                         && event.y() >= y && event.y() < y + TAB_HEIGHT) {

@@ -10,18 +10,18 @@ import java.util.Map;
 /** Exports the deliberately authored native-scale pixel art for the compendium and thirst effect. */
 public final class CompendiumTextureExporter {
     private static final int TRANSPARENT = 0x00000000;
-    private static final int PAGE_DEEP = rgb(48, 38, 29);
-    private static final int PAGE = rgb(111, 94, 67);
-    private static final int PAGE_WARM = rgb(126, 108, 78);
-    private static final int PAGE_EDGE = rgb(82, 66, 46);
-    private static final int PAGE_WEAR = rgb(151, 129, 91);
+    private static final int PAGE_DEEP = rgb(67, 45, 29);
+    private static final int PAGE = rgb(184, 157, 105);
+    private static final int PAGE_WARM = rgb(199, 174, 121);
+    private static final int PAGE_EDGE = rgb(116, 82, 50);
+    private static final int PAGE_WEAR = rgb(221, 196, 139);
     private static final int INK = rgb(30, 24, 18);
     private static final int INK_SOFT = rgb(61, 50, 37);
     private static final int CORD_DARK = rgb(65, 53, 35);
     private static final int CORD = rgb(122, 101, 63);
     private static final int CORD_LIGHT = rgb(158, 134, 84);
-    private static final int SLOT = rgb(151, 141, 121);
-    private static final int SLOT_LIGHT = rgb(177, 164, 137);
+    private static final int SLOT = rgb(194, 179, 148);
+    private static final int SLOT_LIGHT = rgb(222, 206, 171);
 
     public static void main(String[] args) throws Exception {
         Path root = args.length == 0 ? Path.of(".") : Path.of(args[0]);
@@ -31,12 +31,14 @@ public final class CompendiumTextureExporter {
         Path source = root.resolve("art_source/compendium");
 
         Map<String, BufferedImage> sprites = new LinkedHashMap<>();
+        sprites.put("book", book());
         sprites.put("cover", cover());
         sprites.put("page_left", bookPage(false));
         sprites.put("page_right", bookPage(true));
         sprites.put("page", page());
         sprites.put("binding", binding());
         sprites.put("slot", slot());
+        sprites.put("unknown_block", unknownBlock());
         sprites.put("half", panel(false));
         sprites.put("half_hovered", panel(true));
         sprites.put("tab", tab(false));
@@ -88,6 +90,70 @@ public final class CompendiumTextureExporter {
         set(image, 2, 6, CORD_LIGHT); set(image, 4, 7, CORD_LIGHT);
         set(image, 1, 9, CORD_DARK); set(image, 4, 9, CORD_DARK);
         set(image, 5, 8, CORD); set(image, 5, 9, CORD_DARK);
+        return image;
+    }
+
+    /**
+     * The complete open book at its actual GUI size. Keeping the page, deckled edges, shadows and
+     * stitching in one authored image prevents the repeating noise and distorted borders produced
+     * by stretching tiny tiles over the whole screen.
+     */
+    private static BufferedImage book() {
+        int width = 344;
+        int height = 204;
+        BufferedImage image = image(width, height, rgb(38, 22, 16));
+
+        // Rough bark cover, visible as a narrow frame around the paper.
+        fill(image, 3, 3, width - 4, height - 4, rgb(64, 35, 23));
+        fill(image, 6, 6, width - 7, height - 7, rgb(82, 45, 27));
+        for (int x = 8; x < width - 8; x++) {
+            if (x % 11 != 3) set(image, x, 7, rgb(124, 70, 38));
+            if (x % 13 != 5) set(image, x, height - 8, rgb(45, 27, 20));
+        }
+
+        // Two broad, calm sheets. Sparse flecks preserve the handmade material without fighting text.
+        fill(image, 8, 8, 163, height - 9, PAGE);
+        fill(image, 180, 8, 335, height - 9, PAGE);
+        for (int y = 11; y < height - 11; y++) {
+            for (int x = 11; x < width - 11; x++) {
+                if (x >= 164 && x <= 179) continue;
+                int grain = Math.floorMod(x * 17 + y * 31 + x * y, 211);
+                if (grain == 0) set(image, x, y, rgb(151, 124, 81));
+                else if (grain == 1) set(image, x, y, PAGE_WARM);
+            }
+        }
+
+        // Deckled outer edges and a gentle shadow toward the fold.
+        for (int y = 8; y < height - 8; y++) {
+            set(image, 8, y, y % 9 == 2 ? PAGE_WEAR : PAGE_EDGE);
+            set(image, 335, y, y % 8 == 3 ? PAGE_WEAR : PAGE_EDGE);
+            set(image, 162, y, rgb(135, 102, 65));
+            set(image, 163, y, rgb(91, 61, 40));
+            set(image, 180, y, rgb(94, 63, 41));
+            set(image, 181, y, rgb(139, 106, 68));
+        }
+        for (int x = 8; x <= 163; x++) {
+            set(image, x, 8, x % 10 == 4 ? PAGE_WEAR : PAGE_EDGE);
+            set(image, x, height - 9, x % 12 == 7 ? PAGE_WEAR : PAGE_EDGE);
+        }
+        for (int x = 180; x <= 335; x++) {
+            set(image, x, 8, x % 11 == 5 ? PAGE_WEAR : PAGE_EDGE);
+            set(image, x, height - 9, x % 13 == 2 ? PAGE_WEAR : PAGE_EDGE);
+        }
+
+        // Recessed spine and visible plant-cord sewing.
+        fill(image, 164, 6, 179, height - 7, rgb(49, 30, 22));
+        fill(image, 167, 8, 176, height - 9, rgb(68, 39, 25));
+        for (int y = 13; y < height - 12; y++) {
+            set(image, 171, y, CORD_DARK);
+            set(image, 172, y, y % 4 == 0 ? CORD_LIGHT : CORD);
+        }
+        for (int y = 18; y < height - 14; y += 22) {
+            fill(image, 168, y, 175, y + 1, CORD_DARK);
+            fill(image, 169, y - 1, 174, y, CORD);
+            set(image, 171, y - 2, CORD_LIGHT);
+            set(image, 173, y + 2, CORD_DARK);
+        }
         return image;
     }
 
@@ -172,9 +238,36 @@ public final class CompendiumTextureExporter {
         return image;
     }
 
+    /** A readable placeholder for blocks; their particle texture would otherwise be a black square. */
+    private static BufferedImage unknownBlock() {
+        BufferedImage image = image(16, 16, TRANSPARENT);
+        Graphics2D graphics = image.createGraphics();
+        graphics.setColor(new java.awt.Color(rgb(82, 65, 47), true));
+        graphics.fillPolygon(new int[]{2, 8, 14, 8}, new int[]{5, 2, 5, 9}, 4);
+        graphics.setColor(new java.awt.Color(rgb(61, 47, 36), true));
+        graphics.fillPolygon(new int[]{2, 8, 8, 2}, new int[]{5, 9, 15, 11}, 4);
+        graphics.setColor(new java.awt.Color(rgb(43, 34, 28), true));
+        graphics.fillPolygon(new int[]{8, 14, 14, 8}, new int[]{9, 5, 11, 15}, 4);
+        graphics.dispose();
+        int edge = rgb(31, 24, 20);
+        brokenLine(image, 2, 5, 8, 2, edge, 17);
+        brokenLine(image, 8, 2, 14, 5, edge, 17);
+        brokenLine(image, 2, 5, 8, 9, edge, 17);
+        brokenLine(image, 14, 5, 8, 9, edge, 17);
+        brokenLine(image, 8, 9, 8, 15, edge, 17);
+        brokenLine(image, 2, 5, 2, 11, edge, 17);
+        brokenLine(image, 14, 5, 14, 11, edge, 17);
+        set(image, 11, 7, PAGE_WEAR);
+        set(image, 12, 7, PAGE_WEAR);
+        set(image, 12, 8, PAGE_WEAR);
+        set(image, 11, 9, PAGE_WEAR);
+        set(image, 11, 11, PAGE_WEAR);
+        return image;
+    }
+
     private static BufferedImage panel(boolean hovered) {
-        int base = hovered ? rgb(143, 117, 76) : rgb(111, 94, 67);
-        int fiber = hovered ? rgb(163, 137, 94) : rgb(128, 109, 78);
+        int base = hovered ? rgb(211, 178, 116) : rgb(193, 161, 106);
+        int fiber = hovered ? rgb(224, 197, 143) : rgb(207, 180, 127);
         BufferedImage image = textured(32, 32, base, fiber, hovered ? 5 : 8);
         int edge = hovered ? rgb(103, 82, 58) : rgb(66, 56, 45);
         brokenLine(image, 0, 1, 31, 1, edge, 7);
@@ -187,13 +280,13 @@ public final class CompendiumTextureExporter {
     }
 
     private static BufferedImage tab(boolean selected) {
-        int base = selected ? rgb(78, 61, 45) : rgb(47, 40, 34);
+        int base = selected ? rgb(205, 163, 96) : rgb(158, 121, 76);
         BufferedImage image = textured(16, 18, base,
-                selected ? rgb(93, 73, 52) : rgb(57, 48, 39), 5);
-        int edge = selected ? rgb(126, 101, 70) : rgb(70, 59, 47);
+                selected ? rgb(224, 188, 123) : rgb(177, 143, 94), 8);
+        int edge = selected ? rgb(112, 77, 45) : rgb(91, 64, 43);
         fill(image, 0, 0, 15, 0, edge);
-        fill(image, 0, 17, 15, 17, rgb(29, 25, 22));
-        fill(image, 0, 1, 0, 16, rgb(29, 25, 22));
+        fill(image, 0, 17, 15, 17, rgb(69, 46, 32));
+        fill(image, 0, 1, 0, 16, rgb(69, 46, 32));
         fill(image, 15, 2, 15, 15, edge);
         set(image, 15, 0, PAGE); set(image, 15, 17, PAGE);
         if (selected) {
@@ -252,9 +345,9 @@ public final class CompendiumTextureExporter {
     }
 
     private static BufferedImage button(boolean hovered) {
-        int base = hovered ? rgb(151, 126, 84) : rgb(119, 99, 69);
+        int base = hovered ? rgb(220, 184, 119) : rgb(190, 154, 98);
         BufferedImage image = textured(32, 20, base,
-                hovered ? rgb(172, 145, 99) : rgb(135, 114, 80), 6);
+                hovered ? rgb(235, 207, 151) : rgb(209, 180, 124), 10);
         brokenLine(image, 1, 1, 30, 1, hovered ? PAGE_WEAR : PAGE_EDGE, 6);
         brokenLine(image, 1, 18, 30, 18, rgb(55, 43, 32), 5);
         brokenLine(image, 1, 2, 1, 17, PAGE_EDGE, 7);
@@ -263,7 +356,7 @@ public final class CompendiumTextureExporter {
     }
 
     private static BufferedImage search() {
-        BufferedImage image = textured(32, 20, rgb(91, 77, 58), rgb(105, 89, 65), 8);
+        BufferedImage image = textured(32, 20, rgb(213, 192, 151), rgb(229, 210, 170), 12);
         brokenLine(image, 1, 1, 30, 1, rgb(49, 39, 30), 5);
         brokenLine(image, 1, 18, 30, 18, PAGE_WEAR, 7);
         brokenLine(image, 1, 2, 1, 17, rgb(49, 39, 30), 6);
@@ -348,9 +441,11 @@ public final class CompendiumTextureExporter {
         Graphics2D graphics = atlas.createGraphics();
         int index = 0;
         for (BufferedImage sprite : sprites.values()) {
-            int scale = Math.max(1, Math.min(2, 52 / Math.max(sprite.getWidth(), sprite.getHeight())));
+            double scale = Math.min(2.0, 52.0 / Math.max(sprite.getWidth(), sprite.getHeight()));
+            int drawnWidth = Math.max(1, (int) Math.round(sprite.getWidth() * scale));
+            int drawnHeight = Math.max(1, (int) Math.round(sprite.getHeight() * scale));
             graphics.drawImage(sprite, index % columns * cell + 6, index / columns * cell + 6,
-                    sprite.getWidth() * scale, sprite.getHeight() * scale, null);
+                    drawnWidth, drawnHeight, null);
             index++;
         }
         graphics.dispose();

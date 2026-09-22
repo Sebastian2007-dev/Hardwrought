@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "T": "hardwrought:leaf_string"
+  },
+  "pattern": [
+    "TT",
+    "TT"
+  ],
+  "result": {
+    "id": "hardwrought:starter_backpack"
+  }
+}

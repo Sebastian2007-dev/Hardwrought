@@ -56,12 +56,12 @@ herausgefunden hat. Es hat seit Milestone 8 zwei Hälften, zwischen denen die St
 Wenn die Textur fertig ist, in `src/main/resources/assets/hardwrought/models/item/compendium.json`
 die Zeile `"layer0"` von `minecraft:item/book` auf `hardwrought:item/compendium` ändern.
 
-### Die Oberfläche (noch ganz ohne Texturen)
+### Die Oberfläche
 
-`CompendiumScreen` zeichnet heute jede Fläche mit `fill` und `outline`: ein fast schwarzes Rechteck,
-hellgraue Kästchen, ein blauer Balken für das ausgewählte Regal. Das ist lesbar und funktioniert,
-aber es sieht aus wie ein Debug-Fenster und nicht wie das Buch, das der Spieler sich selbst gebunden
-hat. Das ist der größte einzelne optische Gewinn, der im Mod noch zu holen ist.
+Die Oberfläche ist ein selbstgebundenes, vollständig aufgeschlagenes Buch. Die komplette Grundfläche
+wird in ihrer tatsächlichen GUI-Größe gezeichnet; sie darf ausdrücklich nicht aus einer winzigen,
+wiederholten Papierkachel entstehen. So bleiben Papierkanten, Seitenschatten und Bindung bewusst
+gesetzt und Text liegt immer auf einer ruhigen Fläche.
 
 Die Sprites gehören unter `src/main/resources/assets/hardwrought/textures/gui/sprites/compendium/`
 und werden mit `graphics.blitSprite(RenderPipelines.GUI_TEXTURED, id, x, y, w, h)` gezeichnet —
@@ -71,8 +71,9 @@ In Reihenfolge des Gewinns pro Aufwand:
 
 | # | Datei | Größe | Was es ersetzt | Was es sein soll |
 | --- | --- | --- | --- | --- |
-| 1 | `page.png` | 32x32, Nine-Slice | die zwei `graphics.fill` in `extractBackground` | Die Doppelseite: dunkles, rauchgedunkeltes Rindenpapier mit sichtbarer Faser, links und rechts ein dickerer, abgegriffener Rand, in der Mitte eine Bindung aus Pflanzenschnur. Unregelmäßig, nirgends eine gerade Kante. |
+| 1 | `book.png` | 344x204, feste Größe | der vollständige Hintergrund in `extractBackground` | Die gesamte Doppelseite samt Rindendeckel, ruhigem Lumpenpapier, Seitenschatten und Bindung aus Pflanzenschnur. Keine Skalierung und kein wiederholtes Muster. |
 | 2 | `slot.png` | 18x18 | den `fill` in `slot(...)` und `option(...)` | Ein einzelnes Fach: eine flach in das Papier gedrückte Vertiefung, innen eine Spur heller als die Seite. Die Helligkeit innen ist kein Geschmack, sondern Bedingung — siehe unten. |
+| 2a | `unknown_block.png` | 16x16 | massive schwarze Blockflächen | Ein neutraler, dunkler Würfel mit Fragezeichen. Block-Partikel füllen sonst den gesamten Slot und ergeben keine erkennbare Silhouette. |
 | 3 | `half.png`, `half_hovered.png` | 32x32, Nine-Slice | `fill` und `outline` in `drawHalf` | Die zwei Felder der Startseite, 140x122 groß. Zwei aufgeschlagene Hälften desselben Buches; die überfahrene bekommt einen wärmeren Ton und eine deutlichere Kante, nicht einen Rahmen in einer anderen Farbe. |
 | 4 | `tab.png`, `tab_selected.png` | 16x18, Nine-Slice | den `fill` in `drawTabs` | Die zehn Regalreiter, 82x18. Eingelegte Lederlaschen oder eingekerbte Papierzungen am linken Rand. Der ausgewählte steht nach rechts über und ist heller, der Rest liegt zurück. |
 | 5 | `card.png` | 32x32, Nine-Slice | den `fill` in `drawCard` | Die Rezeptkarte, 240x58. Ein mit Kohle grob umrandetes Feld auf der Seite, keine gefüllte Box. |
@@ -80,7 +81,8 @@ In Reihenfolge des Gewinns pro Aufwand:
 | 7 | `emblem_thoughts.png` | 32x32 | `drawWritingEmblem` | Das Zeichen der Gedankenhälfte. Heute fünf Balken; als Sprite fünf Zeilen unleserlicher Handschrift mit ungleichen Enden. |
 | 8 | `followed.png` | 9x9 | nichts — kommt neben `gui.hardwrought.compendium.followed` | Ein nachträglich hingesetzter Haken in derselben Tinte wie der Text, leicht schief. |
 
-Nine-Slice heißt: eine kleine Kachel, die der Renderer auf die gebrauchte Größe zieht, ohne die Ecken
+Die vollständige Grundfläche `book.png` ist ausdrücklich **kein** Nine-Slice. Die kleineren
+Bedienelemente dürfen Nine-Slices bleiben. Nine-Slice heißt: eine kleine Kachel, die der Renderer auf die gebrauchte Größe zieht, ohne die Ecken
 zu verzerren. Dazu gehört neben jedem solchen PNG eine `.mcmeta` mit demselben Namen, so wie Vanilla
 es macht:
 
@@ -106,19 +108,16 @@ gezeichnet.
 Sie weichen von den Inventarregeln oben ab, weil sie etwas anderes tun:
 
 - **Vollflächig deckend**, keine freistehende Silhouette. Die Seite ist eine Fläche, kein Gegenstand.
-- **Die Seite bleibt dunkel.** Das ist eine Entscheidung und keine Bequemlichkeit: ein hell
-  leuchtendes Blatt Papier mitten in einer Nacht unter Tage blendet, der Rest der Oberfläche des Mods
-  ist dunkel, und vor allem hängt der schwarze Schatten daran. Als Bereich: warmes, sehr dunkles
-  Braungrau um `#1E1A17`, die Vertiefung eines Fachs eine Stufe heller um `#4E4E4E`, Text bleibt
-  `#E0E0E0` und `#9A9A9A`.
+- **Lesbarkeit geht vor Körnung.** Das Papier ist ein mittleres, warmes Ocker um `#B89D69`, Text
+  nahezu schwarz. Fasern sind sparsame Einzelpixel und dürfen weder Buchstaben noch Itemkonturen
+  überlagern. Bedienelemente müssen auch ohne Hover klar voneinander zu unterscheiden sein.
 - **Der schwarze Schatten muss lesbar bleiben.** Eine nie gehaltene Sache wird als ihre eigene
-  Silhouette in reinem Schwarz gezeichnet. Wird der Boden eines Fachs dunkler als etwa `#3A3A3A`,
-  verschwindet der Schatten darin und die halbe Idee von Milestone 8 ist weg. Das Fach ist damit die
-  einzige Fläche im ganzen Buch, deren Helligkeit nicht verhandelbar ist.
+  Silhouette gezeichnet. Bei Blöcken wäre das nur ein volles Quadrat; sie verwenden deshalb den
+  neutralen unbekannten Würfel. Das Fach bleibt hell genug für beide Darstellungen.
 - Kein Farbstich, der nach Fantasy aussieht: keine Blautöne, kein Gold, keine Leuchtkanten.
-- Wenn die Seite doch einmal hell werden soll, sind `TEXT_COLOR`, `FADED_COLOR`, `SLOT_COLOR` und die
-  schwarze Silhouette in `ShadowItem` alle mit zu ändern. Das ist eine Umstellung, kein Austausch
-  einer Datei.
+- `TEXT_COLOR`, `FADED_COLOR`, Slot und Papier werden immer gemeinsam abgestimmt. Dunkle Schrift
+  braucht eine helle, ruhige Schreibfläche; der schwarze unbekannte Gegenstand braucht zusätzlich
+  das noch hellere Slot-Inlay.
 
 ### Optional: eine Handschrift für die Gedanken
 
@@ -130,6 +129,56 @@ Zeichenbreite wie Vanilla, aber mit ungleichmäßiger Grundlinie und leicht schi
 Das ist ein ganzer Zeichensatz Arbeit und braucht auch Code (`Style.withFont`), gehört also hinter
 alles andere auf dieser Liste. Aufgeschrieben, weil es der Punkt ist, an dem die Hälfte aufhören
 würde, wie ein Tooltip auszusehen.
+
+## Milestone 9: die Rucksaecke (umgesetzt)
+
+Beide Rucksaecke sind fertig implementiert und verwenden eigene 16x16-Sprites. Sie sind der
+wichtigste Gegenstand im fruehen Spiel, weil ohne sie das Inventar zu bleibt.
+
+| Datei | Was es sein soll |
+| --- | --- |
+| `textures/item/starter_backpack.png` | Ein aus Laubfasern geflochtener Tragebeutel: grobes, ungleichmaessiges Geflecht in Graugruen und Strohbraun, zwei Schlaufen als Traeger, kein Leder, keine Schnalle. Er soll aussehen, als haette ihn jemand am ersten Abend aus dem gemacht, was am Boden lag. |
+| `textures/item/basic_backpack.png` | Derselbe Beutel, aber gefasst: dunkelbraunes, vernaehtes Leder ueber dem Geflecht, eine erkennbare Klappe mit einem Riemen darueber, seitlich eine aufgesetzte Tasche. Deutlich praller als der geflochtene. Gedeckte Erdtoene, kein Metallbeschlag, kein Gold. |
+
+Beide folgen den Regeln fuer Inventarsprites oben. Wichtig ist der Unterschied auf einen Blick: die
+zwei stehen in derselben Leiste nebeneinander und muessen auch bei 16x16 auseinanderzuhalten sein —
+das Geflecht hell und offen, das Leder dunkel und geschlossen.
+
+Die Modelle unter `models/item/starter_backpack.json` und `basic_backpack.json` verweisen auf die
+jeweiligen Hardwrought-Texturen.
+
+## Milestone 9: die getragene Leiste (umgesetzt)
+
+Die getragene Ausruestung haengt als schmale Leiste an der linken Kante des Inventars und klappt ueber
+einen kleinen Knopf auf und zu — dieselbe Form, die Curios-Mods benutzen. Lederriemen, Vertiefungen,
+Knopfzustände und leere Slot-Symbole werden durch eigene Sprites gezeichnet.
+
+Die Sprites gehoeren unter `src/main/resources/assets/hardwrought/textures/gui/sprites/equipment/`
+und werden mit `graphics.blitSprite(RenderPipelines.GUI_TEXTURED, id, x, y, w, h)` gezeichnet.
+
+Die Masse stehen in `WornStrap` und sind die Wahrheit, gegen die gezeichnet wird: die Leiste ist
+**30 px breit**, das Brett beginnt 32 px links neben dem Inventar, jedes Fach ist **18x18** mit 18 px
+Abstand, der Knopf ist **14x14** und sitzt ueber dem Brett. Bei zwei Faechern ist das Brett 50 px hoch;
+es waechst mit jedem weiteren Fach um 18 px, muss also in der Hoehe dehnbar sein.
+
+| # | Datei | Groesse | Was es ersetzt | Was es sein soll |
+| --- | --- | --- | --- | --- |
+| 1 | `strap.png` | 30x32, Nine-Slice (Rand 6) | die zwei `fill` in `hardwrought$drawStrap` | Das Brett der Leiste: ein schmaler, senkrechter Lederriemen mit vernaehtem Rand, oben und unten abgerundet, in der Mitte dehnbar. Dunkles, abgegriffenes Braun, damit es an den Inventarrahmen anschliesst statt davor zu schweben. |
+| 2 | `worn_slot.png` | 18x18 | den dritten `fill` in `hardwrought$drawStrap` | Ein Fach in der Leiste: eine in das Leder eingelassene Vertiefung mit genaehter Kante. Innen eine Spur heller als der Riemen. |
+| 3 | `fold_button.png`, `fold_button_hovered.png` | 14x14 | die Vanilla-Knopftextur des Klappknopfs | Eine kleine Lederlasche mit einer eingepraegten Pfeilspitze. Der ueberfahrene Zustand ist eine Spur heller, kein anderer Farbton. |
+| 4 | `fold_button_blocked.png` | 14x14 | denselben Knopf, wenn das Rezeptbuch den Platz belegt | Dieselbe Lasche, matt und ohne Pfeil — sie soll aussehen, als ginge sie gerade nicht, nicht als sei sie kaputt. |
+| 5 | `slot_backpack.png` | 16x16 | nichts — neu, als Hinweis im leeren Fach | Die Umrisszeichnung eines Rucksacks, so wie Vanilla leere Ruestungsslots mit einem Helm- oder Stiefelumriss markiert. Ein Grauton, halbdurchsichtig, keine Fuellung. |
+| 6 | `slot_lamp.png` | 16x16 | nichts — neu, als Hinweis im leeren Fach | Dasselbe fuer die Grubenlampe: Umriss einer Laterne mit Buegel, gleicher Grauton und gleiche Strichstaerke wie der Rucksackumriss. |
+
+Die zwei leeren Umrisse (5 und 6) sind der groesste praktische Gewinn der Liste. Ein leeres Fach sagt
+heute nichts darueber, was hineingehoert — und das Rucksackfach ist das einzige Feld im ganzen Spiel,
+das darueber entscheidet, ob der Spieler ueberhaupt ein Inventar hat. Sie werden ueber
+`Slot#getNoItemIcon` gesetzt, genau wie Vanilla es fuer Helm, Brustplatte und Stiefel macht, und
+brauchen dafuer auch je einen Eintrag als Vanilla-Leerslot-Sprite.
+
+Es gelten die **Regeln fuer GUI-Sprites** aus dem Kompendium-Abschnitt oben, mit einer Ergaenzung: die
+Leiste haengt direkt am Vanilla-Inventarrahmen und muss zu ihm passen, nicht zum Kompendium. Also die
+gedeckten Grau- und Brauntoene des Vanilla-Inventars aufgreifen statt des dunklen Buchpapiers.
 
 ## Milestone 4: das Durst-Symbol (Platzhalter)
 

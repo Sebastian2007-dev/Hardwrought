@@ -8,7 +8,9 @@ import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 
@@ -22,8 +24,8 @@ import java.util.List;
  * ingot-shaped hole in a recipe knows to go looking for an ingot.
  *
  * <p>The silhouette is the item model particle texture tinted to black, which for a flat item model
- * is its own icon and for a block is the block face. Where a model has no such texture the shadow
- * falls back to a plain black square, which is still an entry and still says nothing.
+ * is its own icon. Block faces fill the complete slot and therefore use a neutral mystery cube;
+ * otherwise every undiscovered block would look like the same solid black square.
  *
  * <p>The model is resolved per draw rather than cached. That is what the inventory does for every
  * stack it renders anyway, and a cache of atlas sprites would go stale on the next resource reload.
@@ -32,6 +34,8 @@ public final class ShadowItem {
     /** The name every undiscovered entry carries. */
     public static final Component UNKNOWN_NAME = Component.literal("???");
     private static final int BLACK = 0xFF000000;
+    private static final Identifier UNKNOWN_BLOCK = Identifier.fromNamespaceAndPath(
+            "hardwrought", "compendium/unknown_block");
     private static final ItemStackRenderState STATE = new ItemStackRenderState();
     private static final RandomSource RANDOM = RandomSource.create(0L);
 
@@ -45,8 +49,15 @@ public final class ShadowItem {
             graphics.itemDecorations(Minecraft.getInstance().font, stack, x, y);
             return;
         }
+        // A block's particle texture fills all 16 pixels and used to become an unreadable black
+        // square. Keep genuine silhouettes for shaped items and use a neutral mystery cube for
+        // blocks (and models which cannot provide a useful sprite).
+        if (stack.getItem() instanceof BlockItem) {
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, UNKNOWN_BLOCK, x, y, 16, 16);
+            return;
+        }
         TextureAtlasSprite sprite = silhouette(stack);
-        if (sprite == null) graphics.fill(x + 1, y + 1, x + 15, y + 15, BLACK);
+        if (sprite == null) graphics.blitSprite(RenderPipelines.GUI_TEXTURED, UNKNOWN_BLOCK, x, y, 16, 16);
         else graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, y, 16, 16, BLACK);
     }
 
@@ -68,8 +79,8 @@ public final class ShadowItem {
             Material.Baked baked = STATE.pickParticleMaterial(RANDOM);
             return baked == null ? null : baked.sprite();
         } catch (RuntimeException failure) {
-            // A model that will not describe itself gets a plain black square rather than a crash in
-            // the middle of a screen the player opened on purpose.
+            // A model that will not describe itself gets the mystery cube rather than a crash in a
+            // screen the player opened on purpose.
             return null;
         }
     }

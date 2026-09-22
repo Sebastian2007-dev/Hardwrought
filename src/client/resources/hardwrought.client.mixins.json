@@ -3,7 +3,9 @@
 	"package": "de.ipnats.hardwrought.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
-		"AbstractContainerScreenMixin"
+		"AbstractContainerScreenMixin",
+		"InventoryScreenMixin",
+		"RecipeBookScreenAccessor"
 	],
 	"injectors": {
 		"defaultRequire": 1

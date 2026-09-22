@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.ipnats.hardwrought.Hardwrought;
 import de.ipnats.hardwrought.environment.CellAtmosphere;
+import de.ipnats.hardwrought.equipment.PlayerEquipment;
 import de.ipnats.hardwrought.survival.PlayerVitals;
 import de.ipnats.hardwrought.knowledge.PlayerKnowledge;
 import de.ipnats.hardwrought.water.AquiferState;
@@ -28,13 +29,18 @@ public final class CoreSaveData extends SavedData {
                     .forGetter(data -> java.util.Map.copyOf(data.aquifers)),
             Codec.unboundedMap(Codec.STRING, PlayerKnowledge.CODEC)
                     .optionalFieldOf("knowledge", java.util.Map.of())
-                    .forGetter(data -> java.util.Map.copyOf(data.knowledge))
-    ).apply(instance, (version, ticks, vitals, cells, aquifers, knowledge) ->
-            new CoreSaveData(ticks, vitals, cells, aquifers, knowledge)));
+                    .forGetter(data -> java.util.Map.copyOf(data.knowledge)),
+            // Added after Milestone 8, so a world saved before packs existed keeps loading and
+            // every player in it is handed a starter the next time they are looked at.
+            Codec.unboundedMap(Codec.STRING, PlayerEquipment.CODEC)
+                    .optionalFieldOf("equipment", java.util.Map.of())
+                    .forGetter(data -> java.util.Map.copyOf(data.equipment))
+    ).apply(instance, (version, ticks, vitals, cells, aquifers, knowledge, equipment) ->
+            new CoreSaveData(ticks, vitals, cells, aquifers, knowledge, equipment)));
     public static final SavedDataType<CoreSaveData> TYPE = new SavedDataType<>(
             Hardwrought.id("core"),
             () -> new CoreSaveData(0, java.util.Map.of(), java.util.Map.of(), java.util.Map.of(),
-                    java.util.Map.of()), CODEC, null);
+                    java.util.Map.of(), java.util.Map.of()), CODEC, null);
     /** Bounded so a long-lived world cannot grow an unlimited room table in its save file. */
     public static final int MAX_SAVED_CELLS = 256;
     /**
@@ -48,16 +54,32 @@ public final class CoreSaveData extends SavedData {
     private final java.util.Map<String, CellAtmosphere> cellAtmospheres;
     private final java.util.Map<String, AquiferState> aquifers;
     private final java.util.Map<String, PlayerKnowledge> knowledge;
+    private final java.util.Map<String, PlayerEquipment> equipment;
 
     private CoreSaveData(long ticks, java.util.Map<String, PlayerVitals> playerVitals,
                          java.util.Map<String, CellAtmosphere> cellAtmospheres,
                          java.util.Map<String, AquiferState> aquifers,
-                         java.util.Map<String, PlayerKnowledge> knowledge) {
+                         java.util.Map<String, PlayerKnowledge> knowledge,
+                         java.util.Map<String, PlayerEquipment> equipment) {
         this.ticks = ticks;
         this.playerVitals = new java.util.HashMap<>(playerVitals);
         this.cellAtmospheres = new java.util.HashMap<>(cellAtmospheres);
         this.aquifers = new java.util.HashMap<>(aquifers);
         this.knowledge = new java.util.HashMap<>(knowledge);
+        this.equipment = new java.util.HashMap<>(equipment);
+    }
+
+    /**
+     * What this player wears. World data rather than player data, which is exactly what keeps a pack
+     * out of the drop on death without anything having to intervene.
+     */
+    public PlayerEquipment equipment(java.util.UUID playerId) {
+        return equipment.getOrDefault(playerId.toString(), PlayerEquipment.empty());
+    }
+
+    public void setEquipment(java.util.UUID playerId, PlayerEquipment value) {
+        equipment.put(playerId.toString(), value == null ? PlayerEquipment.empty() : value);
+        setDirty();
     }
 
     public long ticks() {

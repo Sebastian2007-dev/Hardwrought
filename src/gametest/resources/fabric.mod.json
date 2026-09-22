@@ -7,6 +7,7 @@
   "entrypoints": {
     "fabric-gametest": [
       "de.ipnats.hardwrought.test.CoreGameTests",
+      "de.ipnats.hardwrought.test.EquipmentGameTests",
       "de.ipnats.hardwrought.test.CombatGameTests",
       "de.ipnats.hardwrought.test.EnvironmentGameTests",
       "de.ipnats.hardwrought.test.WaterGameTests",

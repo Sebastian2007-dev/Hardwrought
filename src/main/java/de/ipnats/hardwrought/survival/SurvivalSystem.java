@@ -380,7 +380,7 @@ public final class SurvivalSystem {
             lastOnGround.put(player.getUUID(), player.onGround());
 
             double carried = carriedWeight(player);
-            double load = Math.max(0, carried / CarryWeight.BASE_CAPACITY_KG - 1.0);
+            double load = Math.max(0, carried / capacity(player) - 1.0);
             if (active && load > 0) delta -= OVERLOAD_STAMINA_PER_TICK * load;
             if (active) delta -= ARMOR_STAMINA_PER_TICK * armorStaminaDrain(player);
             if (!active && !player.isSleeping()) {
@@ -464,7 +464,7 @@ public final class SurvivalSystem {
             double heatWater = Math.max(0, ambient - 28) * 0.006;
             double armorWater = armorMass * 0.0025;
         double badWater = thirstDrain(player);
-            double excessLoad = Math.max(0, carried / CarryWeight.BASE_CAPACITY_KG - 1.0);
+            double excessLoad = Math.max(0, carried / capacity(player) - 1.0);
             double coldEnergy = Math.max(0, 10 - ambient) * 0.08;
             double energyUse = BASAL_CALORIES_PER_SECOND + workEnergy + coldEnergy + excessLoad * 0.8;
             if (player.isSprinting()) energyUse += 1.15;
@@ -568,7 +568,7 @@ public final class SurvivalSystem {
     }
 
     private void applyPenalties(ServerPlayer player, PlayerVitals v, double carried) {
-        double load = Math.max(0, carried / CarryWeight.BASE_CAPACITY_KG - 1.0);
+        double load = Math.max(0, carried / capacity(player) - 1.0);
         double exhaustion = exhaustion(v.stamina());
         // Both penalties ramp gently and stop well short of crippling. A player who is overloaded
         // should feel heavy, not broken: at the cap they still sprint and still clear a single block.
@@ -684,6 +684,15 @@ public final class SurvivalSystem {
         return CarryWeight.calculate(player, server.getOrThrow(ItemWeightDefinitions.KEY));
     }
 
+    /**
+     * What this player may carry before the weight tells. No longer one number for everyone: the
+     * allowance is the pack's, and a player with nothing on their back has only what fits on a belt.
+     */
+    public double capacity(ServerPlayer player) {
+        var runtime = de.ipnats.hardwrought.core.events.CoreLifecycle.find(server);
+        return runtime == null ? CarryWeight.BASE_CAPACITY_KG : runtime.equipment().capacityKg(player);
+    }
+
     private void recordWork(ServerPlayer player, double energy, double water) {
         ActivityLoad value = activity.computeIfAbsent(player.getUUID(), ignored -> new ActivityLoad());
         value.energy += energy;
@@ -700,6 +709,6 @@ public final class SurvivalSystem {
         PlayerVitals v = vitals(player);
         ServerPlayNetworking.send(player, new SurvivalSnapshotPayload(v.stamina(), v.hydration(), v.calories(),
                 nutritionQuality(v), v.fatigue(), v.bodyTemperature(), ambient,
-                carried, CarryWeight.BASE_CAPACITY_KG, player.isSleeping(), quality, v.stress()));
+                carried, capacity(player), player.isSleeping(), quality, v.stress()));
     }
 }

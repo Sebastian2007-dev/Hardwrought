@@ -383,6 +383,32 @@ Spieler selbst herausgefunden hat. Einzelheiten stehen in [docs/milestone-8.md](
   seine Wissensstufe schon mit. Ein Client, der die Rezepttabelle selbst liest, wuesste vom ersten
   Tick an alles.
 
+## Milestone 9: Der Rucksack und die Bankstufen
+
+Das Inventar ist kein Geschenk mehr, und die erste Werkbank ist nicht die letzte. Einzelheiten stehen
+in [docs/milestone-9.md](docs/milestone-9.md).
+
+- **Ohne Rucksack nur der Guertel.** Die 27 Hauptslots sind zu, solange nichts auf dem Ruecken ist —
+  im Inventar, in jeder Truhe, und auch beim Aufsammeln: was nicht auf den Guertel passt, bleibt
+  liegen.
+- **Der geflochtene Packen** aus vier Laubfasern im 2x2-Raster oeffnet das gewohnte Inventar und die
+  gewohnten 85 kg. Er ist aus dem Nichts erreichbar, ganz ohne Werkbank.
+- **Der Lederrucksack** traegt 110 kg und bringt eine eigene 9er-Reihe mit. Ein Knopf unter dem Panel
+  blaettert zwischen dem eigenen Raster und der Rucksackseite um; spaetere Rucksaecke fuellen dieselbe
+  Seite von oben nach unten weiter auf.
+- **Der Rucksack kann nicht verloren gehen.** Er liegt gar nicht erst im Inventar, sondern in den
+  Weltdaten des Spielers — der Tod kommt also nicht an ihn heran. Beim Respawn traegt man immer einen,
+  beim ersten Spawn ebenfalls, **ausser auf Hardcore**: dort gibt es nur das Kompendium, und den
+  ersten Packen flicht man sich selbst.
+- **Getragene Ausruestung haengt am Inventar.** Links an der Charakteransicht klappt ueber einen
+  kleinen Knopf eine schmale Leiste mit Rucksack- und Lampenslot auf und zu. Die Grubenlampe wirkt von
+  dort genauso wie aus dem Inventar. Ist das Rezeptbuch offen, weicht die Leiste ihm und klappt sich
+  weg — Vanilla benutzt genau diesen Platz.
+- **Die gehauene Bank kann nur Fruehes.** Bretter, Stoecke, Truhen, Feuerstein-, Stein-, Bronze- und
+  Eisenausruestung, den Lederrucksack — und die geschreinerte Werkbank, die sie ersetzt. Alles
+  darueber (Diamant, Redstone-Mechanik, Amboss) verlangt die geschreinerte Bank. Die Liste ist ein
+  Datapack-Tag und zaehlt auf, was **geht**; was nicht drinsteht, geht nicht.
+
 ## Naechste Schritte
 
 Die detaillierte Arbeitsgrundlage ist jetzt die

@@ -24,6 +24,16 @@ public final class ModItems {
     // Milestone 8, section 79: the compendium is a book a player carries as well as a key they press.
     public static final Item COMPENDIUM = register("compendium",
             de.ipnats.hardwrought.knowledge.CompendiumItem::new, new Item.Properties().stacksTo(1));
+    // The pack is what unlocks the inventory at all, so the plainest one is reachable from leaf
+    // fibre alone and in the two-by-two grid a player always has.
+    public static final Item STARTER_BACKPACK = register("starter_backpack",
+            properties -> new de.ipnats.hardwrought.equipment.BackpackItem(
+                    de.ipnats.hardwrought.equipment.BackpackTier.STARTER, properties),
+            new Item.Properties().stacksTo(1));
+    public static final Item BASIC_BACKPACK = register("basic_backpack",
+            properties -> new de.ipnats.hardwrought.equipment.BackpackItem(
+                    de.ipnats.hardwrought.equipment.BackpackTier.BASIC, properties),
+            new Item.Properties().stacksTo(1));
     public static final Item HEWN_WORKBENCH = register("hewn_workbench",
             properties -> new BlockItem(ModBlocks.HEWN_WORKBENCH, properties),
             new Item.Properties().useBlockDescriptionPrefix());

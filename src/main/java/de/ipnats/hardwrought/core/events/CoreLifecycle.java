@@ -32,6 +32,13 @@ public final class CoreLifecycle {
                 runtime.waterFlow().shutdown();
             }
         });
+        // A pack cannot be lost, and that has to hold across the one event that takes everything
+        // else: a player who has died comes back wearing one.
+        net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents.AFTER_RESPAWN.register(
+                (oldPlayer, newPlayer, alive) -> {
+                    CoreRuntime runtime = RUNTIMES.get(newPlayer.level().getServer());
+                    if (runtime != null) runtime.equipment().respawned(newPlayer);
+                });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             // The weight table lives in a datapack, so the client is told it once rather than
             // guessing at what every item weighs.
@@ -40,6 +47,16 @@ public final class CoreLifecycle {
                     .canSend(handler.player, de.ipnats.hardwrought.core.networking.ItemWeightPayload.TYPE)) {
                 net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(handler.player,
                         new de.ipnats.hardwrought.core.networking.ItemWeightPayload(runtime.itemWeights()));
+            }
+            if (runtime == null) return;
+            // The first time a player is seen they are given what the mod assumes they start with.
+            // Every time after that, only the guarantee that they are wearing a pack at all — which
+            // also quietly fits out every player of a world saved before packs existed.
+            if (handler.player.getStats().getValue(net.minecraft.stats.Stats.CUSTOM
+                    .get(net.minecraft.stats.Stats.PLAY_TIME)) == 0) {
+                runtime.equipment().welcome(handler.player);
+            } else {
+                runtime.equipment().ensureBackpack(handler.player);
             }
         });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {

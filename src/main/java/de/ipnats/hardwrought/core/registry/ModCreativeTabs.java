@@ -47,6 +47,8 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.FLINT_PICKAXE);
                         output.accept(ModItems.FLINT_SHOVEL);
                         output.accept(ModItems.FLINT_SWORD);
+                        output.accept(ModItems.STARTER_BACKPACK);
+                        output.accept(ModItems.BASIC_BACKPACK);
                         output.accept(ModItems.STONE_HATCHET);
                         output.accept(ModItems.STONE_PICKAXE);
                         output.accept(ModItems.BRONZE_HATCHET);

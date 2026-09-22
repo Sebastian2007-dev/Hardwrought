@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "L": "minecraft:leather",
+    "T": "hardwrought:leaf_string",
+    "B": "hardwrought:starter_backpack"
+  },
+  "pattern": [
+    "TLT",
+    "LBL",
+    "TLT"
+  ],
+  "result": {
+    "id": "hardwrought:basic_backpack"
+  }
+}

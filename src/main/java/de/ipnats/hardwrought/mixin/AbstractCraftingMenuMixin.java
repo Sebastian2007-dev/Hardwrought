@@ -1,5 +1,6 @@
 package de.ipnats.hardwrought.mixin;
 
+import de.ipnats.hardwrought.progression.BenchTier;
 import de.ipnats.hardwrought.progression.RecipeSelectionMenu;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.resources.ResourceKey;
@@ -106,7 +107,7 @@ public abstract class AbstractCraftingMenuMixin extends RecipeBookMenu implement
         List<Choice> choices = new ArrayList<>();
         map.getRecipesFor(RecipeType.CRAFTING, input, level)
                 .sorted(Comparator.comparing(holder -> holder.id().identifier().toString()))
-                .forEach(holder -> hardwrought$addChoice(choices, holder, input, level, player));
+                .forEach(holder -> hardwrought$addChoice(choices, holder, input, level, player, this));
         return choices;
     }
 
@@ -114,15 +115,28 @@ public abstract class AbstractCraftingMenuMixin extends RecipeBookMenu implement
     private static void hardwrought$addChoice(List<Choice> choices,
                                                RecipeHolder<CraftingRecipe> holder,
                                                CraftingInput input, ServerLevel level,
-                                               ServerPlayer player) {
+                                               ServerPlayer player, Object menu) {
         CraftingRecipe recipe = holder.value();
         if (!hardwrought$isAvailable(player, holder)) return;
         ItemStack output = recipe.assemble(input);
         if (output.isEmpty() || !output.isItemEnabled(level.enabledFeatures())) return;
+        // Section 71: the first bench is a flat surface on a stump, and it only does early work.
+        if (!BenchTier.allows(hardwrought$onHewnBench(menu), output)) return;
         boolean alreadyShown = choices.stream().anyMatch(choice ->
                 choice.output.getCount() == output.getCount()
                         && ItemStack.isSameItemSameComponents(choice.output, output));
         if (!alreadyShown) choices.add(new Choice(holder, output));
+    }
+
+    /**
+     * True where this menu is the hewn bench. A grid carried in the hands and a joined crafting
+     * table are both something else, and neither is limited by the tier list.
+     */
+    @Unique
+    private static boolean hardwrought$onHewnBench(Object menu) {
+        if (!(menu instanceof de.ipnats.hardwrought.mixin.CraftingMenuAccessor accessor)) return false;
+        return accessor.hardwrought$access().evaluate(
+                (level, pos) -> BenchTier.isHewnBench(level.getBlockState(pos)), false);
     }
 
     @Unique

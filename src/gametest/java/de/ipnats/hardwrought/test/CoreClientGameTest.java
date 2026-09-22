@@ -41,6 +41,7 @@ public final class CoreClientGameTest implements FabricClientGameTest {
             verifyFiniteWater(context, world);
             verifySealedRoomAndCarriedLight(context, world);
             verifyCompendium(context, world);
+            verifyWornStrap(context, world);
             verifyBadWaterThirst(context, world);
             verifyFirecraft(context, world);
             // The weight table has to reach the client, or every tooltip would guess.
@@ -190,6 +191,113 @@ public final class CoreClientGameTest implements FabricClientGameTest {
      * is the item model particle texture tinted black, which is the one thing in this milestone that
      * cannot be checked without a real client and a real atlas.
      */
+    /**
+     * Milestone 9: the worn strap and the pack's page have to draw. Slot coordinates, a panel drawn
+     * behind them and a folding button are exactly the kind of thing that compiles, passes every
+     * server test, and is still visibly wrong on screen — so this opens the real inventory and
+     * photographs it.
+     */
+    private static void verifyWornStrap(ClientGameTestContext context,
+                                        net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
+        world.getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            var equipment = CoreLifecycle.require(server).equipment();
+            equipment.setBackpack(player, new net.minecraft.world.item.ItemStack(
+                    de.ipnats.hardwrought.core.registry.ModItems.BASIC_BACKPACK));
+            equipment.setLamp(player, new net.minecraft.world.item.ItemStack(
+                    de.ipnats.hardwrought.core.registry.ModItems.SAFETY_LAMP));
+            player.inventoryMenu.broadcastChanges();
+        });
+        // The strap only means anything once the pack has reached the client.
+        context.waitFor(client -> ((de.ipnats.hardwrought.equipment.CarriedInventoryMenu)
+                client.player.inventoryMenu).hardwrought$packSlots()
+                == de.ipnats.hardwrought.equipment.BackpackTier.BASIC.slots());
+
+        context.runOnClient(client -> {
+            de.ipnats.hardwrought.equipment.WornStrap.clientExpanded = true;
+            client.gui.setScreen(
+                    new net.minecraft.client.gui.screens.inventory.InventoryScreen(client.player));
+        });
+        context.waitTicks(5);
+        context.takeScreenshot("hardwrought-milestone-9-worn-strap-open");
+
+        // What is worn has to be reachable, not merely drawn.
+        context.runOnClient(client -> {
+            var worn = client.player.inventoryMenu.slots.stream()
+                    .filter(slot -> slot instanceof de.ipnats.hardwrought.equipment.WornSlot)
+                    .toList();
+            if (worn.size() != de.ipnats.hardwrought.equipment.EquipmentContainer.SIZE) {
+                throw new AssertionError("The strap must carry exactly its worn squares, found "
+                        + worn.size());
+            }
+            if (worn.stream().noneMatch(slot -> slot.getItem().is(
+                    de.ipnats.hardwrought.core.registry.ModItems.BASIC_BACKPACK))) {
+                throw new AssertionError("The pack the player is wearing must show in the strap");
+            }
+            if (worn.stream().anyMatch(slot -> !slot.isActive())) {
+                throw new AssertionError("A folded-out strap must have every square open");
+            }
+        });
+
+        // Folded away, the squares go with it.
+        context.runOnClient(client -> de.ipnats.hardwrought.equipment.WornStrap.clientExpanded = false);
+        context.waitTicks(5);
+        context.takeScreenshot("hardwrought-milestone-9-worn-strap-folded");
+        context.runOnClient(client -> {
+            if (client.player.inventoryMenu.slots.stream()
+                    .filter(slot -> slot instanceof de.ipnats.hardwrought.equipment.WornSlot)
+                    .anyMatch(net.minecraft.world.inventory.Slot::isActive)) {
+                throw new AssertionError("A folded strap must leave no square open to a click");
+            }
+        });
+        context.runOnClient(client -> de.ipnats.hardwrought.equipment.WornStrap.clientExpanded = true);
+
+        // And the pack's own page, which shares its coordinates with the player's own grid.
+        context.runOnClient(client -> client.gameMode.handleInventoryButtonClick(
+                client.player.inventoryMenu.containerId,
+                de.ipnats.hardwrought.equipment.CarriedInventoryMenu.TOGGLE_PAGE_BUTTON));
+        context.waitFor(client -> ((de.ipnats.hardwrought.equipment.CarriedInventoryMenu)
+                client.player.inventoryMenu).hardwrought$page() == 1);
+        context.waitTicks(5);
+        // The page is only useful if the pack's own row is reachable and the grid behind it is not.
+        context.runOnClient(client -> {
+            long packOpen = client.player.inventoryMenu.slots.stream()
+                    .filter(slot -> slot instanceof de.ipnats.hardwrought.equipment.CarriedSlot)
+                    .filter(slot -> !(slot.container instanceof net.minecraft.world.entity.player.Inventory))
+                    .filter(net.minecraft.world.inventory.Slot::isActive).count();
+            long ownOpen = client.player.inventoryMenu.slots.stream()
+                    .filter(slot -> slot instanceof de.ipnats.hardwrought.equipment.CarriedSlot)
+                    .filter(slot -> slot.container instanceof net.minecraft.world.entity.player.Inventory)
+                    .filter(net.minecraft.world.inventory.Slot::isActive).count();
+            if (packOpen != de.ipnats.hardwrought.equipment.BackpackTier.BASIC.slots()) {
+                throw new AssertionError("The pack page must open exactly its own row: " + packOpen
+                        + " open, page " + ((de.ipnats.hardwrought.equipment.CarriedInventoryMenu)
+                        client.player.inventoryMenu).hardwrought$page() + ", slots "
+                        + ((de.ipnats.hardwrought.equipment.CarriedInventoryMenu)
+                        client.player.inventoryMenu).hardwrought$packSlots());
+            }
+            if (ownOpen != 0) {
+                throw new AssertionError("and must close the grid behind it: " + ownOpen + " open");
+            }
+        });
+        context.takeScreenshot("hardwrought-milestone-9-pack-page");
+        context.runOnClient(client -> client.gameMode.handleInventoryButtonClick(
+                client.player.inventoryMenu.containerId,
+                de.ipnats.hardwrought.equipment.CarriedInventoryMenu.TOGGLE_PAGE_BUTTON));
+        context.waitFor(client -> ((de.ipnats.hardwrought.equipment.CarriedInventoryMenu)
+                client.player.inventoryMenu).hardwrought$page() == 0);
+        context.runOnClient(client -> client.gui.setScreen(null));
+        // Put the player back as they were found. The allowance the later HUD check reads is the
+        // worn pack's, so a leather pack left on here would quietly move a number two tests away.
+        world.getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            CoreLifecycle.require(server).equipment().setBackpack(player,
+                    new net.minecraft.world.item.ItemStack(
+                            de.ipnats.hardwrought.core.registry.ModItems.STARTER_BACKPACK));
+            player.inventoryMenu.broadcastChanges();
+        });
+    }
+
     private static void verifyCompendium(ClientGameTestContext context,
                                          net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
         world.getServer().runOnServer(server -> {

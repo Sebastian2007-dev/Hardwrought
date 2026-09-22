@@ -26,8 +26,12 @@ public final class SafetyLampItem extends Item {
         super(properties);
     }
 
-    /** True when the player has a lamp anywhere in the inventory they could read. */
+    /** True when the player has a lamp they could read: on the belt, in the inventory, or in hand. */
     public static boolean carriedBy(ServerPlayer player) {
+        var runtime = CoreLifecycle.find(player.level().getServer());
+        if (runtime != null && runtime.equipment().lamp(player).getItem() instanceof SafetyLampItem) {
+            return true;
+        }
         var inventory = player.getInventory();
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             if (inventory.getItem(slot).getItem() instanceof SafetyLampItem) return true;
