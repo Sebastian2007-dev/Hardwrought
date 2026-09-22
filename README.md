@@ -56,11 +56,22 @@ noch kein Rezept und keine eigene Spielmechanik.
 
 Milestone 1 ist spielbar: Gruene Ausdauertropfen stehen ueber den Herzen, blaue
 Wassertropfen ueber der Hungerleiste; unter Wasser verschwinden sie zugunsten der
-Vanilla-Atemblasen. `H` blendet oben links die duenne
-Muedigkeitsleiste und die Temperaturanzeige ein oder aus. Mit `V` schlaeft der Spieler auf
+Vanilla-Atemblasen. Die Hungerleiste selbst ist die Kalorienreserve. `H` blendet oben links die
+Kalorien-, Muedigkeits-, Temperatur-, Unruhe- und Lastanzeige ein oder aus. Mit `V` schlaeft der Spieler auf
 einer sicheren, trockenen Flaeche oder wacht wieder auf; das geht zu jeder Tageszeit, auch im Bett.
 Niemand wird geweckt: wer nach dem Ausruhen liegen bleibt, sammelt Unruhe an. Der Wasserschlauch ist
 herstellbar oder direkt testbar:
+
+Wasser fliesst mit einer **Rate**, nicht auf einmal: seitwaerts 60 mB pro Durchlauf, fallend und
+unter Druck 250 mB. Gemessen braucht eine Front **13 Ticks fuer sechs Bloecke** — rund zweieinhalbmal
+Vanilla statt vorher fuenfmal. Schneller als Vanilla, aber nicht mehr sofort.
+
+Schlechtes Wasser vergiftet nicht mehr, sondern gibt den Effekt **Durst** — das Wasser-Gegenstueck
+zu Hunger. Solange er anhaelt, faellt der Wasserhaushalt siebenmal so schnell wie im Ruhezustand.
+
+Mit **Shift + Rechtsklick und leerer Hand am Wasser** trinkt man direkt aus Fluss, See oder Pfuetze.
+Das ist der Notfall, nicht der Normalfall: eine Handvoll ist weniger wert als ein Schluck aus dem
+Schlauch, und sie ist ungekocht — was im Fluss ist, trinkt man mit.
 
 ```mcfunction
 /give @s hardwrought:filled_waterskin
@@ -126,6 +137,22 @@ Es werden keine fiktiven Messwerte oder noch nicht vorhandenen Simulationen ange
 Ausdauer, Hydration, Ernaehrung, Traglast, Schlaf und Basistemperatur sind als
 serverseitige, gespeicherte Systeme umgesetzt. Formeln, Bedienung und
 Erweiterungspunkte stehen in [docs/milestone-1.md](docs/milestone-1.md).
+
+- **Hunger ist das Thema, nicht die Randnotiz.** Es gibt nur einen Hunger: Hardwroughts Kalorien
+  schreiben die Vanilla-Hungerleiste, und alles, was daran haengt — kein Sprinten bei wenig, keine
+  Regeneration bis fast voll, Verhungern bei leer — gilt damit fuer den echten Wert. Der Grundumsatz
+  laeuft **auch im Leerlauf**: eine volle Reserve von 2400 kcal ist nach vierzig Minuten Nichtstun
+  weg, also nach zwei Minecraft-Tagen. Arbeit kommt obendrauf, und Ausdauer, die man ausgibt, wird
+  zu Hunger — ein Vormittag im Stollen kostet ein gutes Drittel des Bauches.
+- **Die Leiste ist voll ab 2000 kcal.** Die vierhundert darueber sind eine Reserve, die sie nicht
+  zeichnet: essen bei voller Leiste ist nie umsonst. Den genauen Stand zeigt das **H-Menue**.
+- **Die Saettigung traegt die Ernaehrungsqualitaet.** Wer nur von einer Sache lebt, heilt schlecht,
+  egal wie voll er ist.
+- **Traglast:** 85 kg sind frei — drei Stapel Bloecke, vier Werkzeuge und ein Stapel Brot kosten
+  nichts. Darueber wird man langsamer und springt niedriger, aber hoechstens −30 % und −25 %:
+  ueberladen heisst schwer, nicht gelaehmt.
+- **Jedes Item sagt im Tooltip, was es wiegt** (und was der Stapel wiegt).
+- **Das H-Menue zeigt die eigene Last** gegen die Grenze, gruen solange sie frei ist.
 
 ## Milestone 2: Kampf
 
@@ -290,6 +317,13 @@ man in der Hand haelt. Einzelheiten stehen in [docs/milestone-7.md](docs/milesto
 - **Werkzeugpflicht.** Stein, Erz, Holz und alles daraus Gebaute bewegt sich mit blossen Haenden
   **gar nicht** — die Aktionsleiste sagt auch, warum. Falsches Werkzeug geht, aber langsam, teuer und
   auf Kosten des Werkzeugs; oft ist der Block danach hin.
+- **Auch das richtige Werkzeug ist Arbeit.** Fels, Erz, Holz und Boden geben nur noch einen Teil der
+  Vanilla-Geschwindigkeit her, und zwar umso weniger, je haerter das Material ist: Stein mit der
+  Steinspitzhacke braucht 1,3 statt 0,56 Sekunden, Deepslate mit Eisen 2,4 statt 0,75, ein Eichenstamm
+  mit dem Flintbeil 6,2 statt 2,4. Gras, Laub, Getreide und Wolle bleiben unangetastet — einen Busch
+  auszureissen war nie das Problem.
+- **Abbau zehrt.** Ein Block kostet mehr Ausdauer, als Herumstehen in derselben Zeit zurueckgibt.
+  Eine lange Schicht im Stollen laeuft deshalb leer und wird spuerbar zaeher, bis man sich ausruht.
 - **Erde und Stein zerfallen in Brocken.** Dirt gibt 4 Dirt-Blobs, Stein 4 Cobblestone-Stuecke; vier
   davon ergeben den Block zurueck, zwei einen Dirt-Slab. Von Hand gegraben noch weniger. Behutsamkeit
   (Silk Touch) hebt den ganzen Block.
@@ -299,12 +333,55 @@ man in der Hand haelt. Einzelheiten stehen in [docs/milestone-7.md](docs/milesto
   einer Weile faellt der Stamm in **6 Bretter** auseinander. Ein besseres Beil braucht weniger
   Schlaege, jeder Schlag kostet Ausdauer.
 - **Feuerstein ist ein Anfang, keine Abkuerzung**: langsamer als Holz und so zerbrechlich wie Gold.
-- **Werkzeuggestuetztes Crafting.** Eine **Werkbank braucht ein Eisenbeil** im Raster. Das Beil wird
-  dabei nicht verbraucht, sondern kommt um einen Haltbarkeitspunkt aermer zurueck.
+- **Die erste Werkbank wird aus dem Stamm gehauen.** Geduckt gegen einen stehenden Stamm halten und
+  weiterarbeiten — dafuer braucht es **jede Axt ab Eisenstufe**: Eisenbeil, Eisenaxt, Bronzebeil,
+  Diamantaxt, Netheritaxt, und genauso eine gute Axt aus einem anderen Mod. Flint, Stein, Kupfer und
+  Gold reichen nicht; Gold ist zwar die schnellste Axt im Spiel, aber zu weich.
+- **Werkzeug in Rezepten wird benutzt, nicht verbraucht.** Was ein Rezept an Werkzeug verlangt, kommt
+  um einen Haltbarkeitspunkt aermer zurueck und verschwindet erst, wenn es endgueltig durch ist.
 
-> **Achtung, die Kette ist noch nicht geschlossen:** Werkbank braucht Eisen, Eisen braucht einen
-> Ofen, der Ofen braucht ein 3x3-Raster — also eine Werkbank. Es fehlt ein primitiver Schmelzschritt
-> im 2x2-Raster (Feuerstelle/Rennofen). Das ist die Metallurgie-Haelfte von Milestone 7.
+- **Feuer muss man machen.** Ein gesetztes Lagerfeuer brennt **nicht**. Anzuenden mit
+  **Feuerstaeben** — zwei gekreuzte Stoecke im 2x2-Raster, die sich dabei abnutzen. Nur beim Setzen;
+  ein Lagerfeuer aus einem Dorf brennt weiterhin.
+- **Der Ziegelofen schliesst die Kette.** Ton auf dem Lagerfeuer brennen gibt Ziegel, vier Ziegel im
+  2x2-Raster geben einen Ofen — ganz ohne Werkbank. Er ist absichtlich schlecht: halbe Geschwindigkeit
+  und zwei Drittel Brennstoffausbeute. Er soll ersetzt werden, nicht behalten.
+
+## Milestone 8: Wissen
+
+Das Kompendium ersetzt Rezeptbuch und Wiki in einem. Es zeigt alles, aber benennt nur, was der
+Spieler selbst herausgefunden hat. Einzelheiten stehen in [docs/milestone-8.md](docs/milestone-8.md).
+
+- **Aufsammeln entdeckt, Benutzen vertieft.** Was im Inventar liegt, ist *entdeckt* und traegt seinen
+  echten Namen. Was man zerschlagen, gecraftet oder gegessen hat, ist *studiert*.
+- **Noch nicht Entdecktes ist ein schwarzer Schatten** mit dem Namen `???` — die Silhouette bleibt
+  sichtbar, der Name nicht. Ein ingot-foermiger Schatten sagt: such einen Barren.
+- **Jede neue Entdeckung meldet sich** mit einem Popup in der Ecke, genau wie „Neues Rezept
+  freigeschaltet": das Item, und ob es *Entdeckt* oder *Studiert* wurde. Mehrere Erkenntnisse auf
+  einmal teilen sich ein Popup und wechseln sich darin ab, statt eine Saeule davon aufzutuermen.
+- **Voller Rezept-Browser.** `R` ueber einem Item zeigt, wie es hergestellt wird, `U` wofuer es
+  gebraucht wird — in jedem Inventar, in jeder Kiste, im Kompendium selbst. Linksklick geht zur
+  Herstellung, Rechtsklick zur Verwendung, Rueckschritt geht zurueck.
+- **Auch Mob-Drops und Truhen-Loot.** `R` auf eine Feder sagt nicht mehr "kein Rezept", sondern
+  *Beute von Huhn*, *Beute von Papagei*, *Zu finden in Shipwreck Map*. Bloecke stehen genauso drin
+  (*Aus Kies geschlagen*) — und ein Block, der sich selbst droppt, wird nicht aufgefuehrt.
+- **Zehn Regale** (Materialien, Handwerk, Metallurgie, Technik, Landwirtschaft, Biologie, Medizin,
+  Chemie, Magie, Elektrizitaet) mit Suchfeld. Gesucht werden kann nur nach Bekanntem.
+- **`B` oeffnet das Kompendium** auf seiner Startseite, und das gecraftete Buch (Pflanzenschnur und
+  Laub) tut dasselbe. Dort stehen zwei Haelften zur Wahl: **Wissen**, der Browser oben, und
+  **Gedanken**, die geschriebene Haelfte. `R` und `U` gehen weiter direkt zur Antwort.
+- **Gedanken fuehren durch den Einstieg, ohne ihn zu verraten.** Sechs handschriftliche Notizen in
+  einer Kette: erst eine Schneide aus Feuerstein, dann die aus dem Stamm gehauene Bank, dann Stein
+  statt Feuerstein, dann der Ofen, der die Hitze haelt, dann das Eisen, dann die Bronze. Jede nennt
+  das Material, den Ort oder den Handgriff — keine nennt ein Raster. Eine Notiz, die noch nicht dran
+  ist, ist unleserliches Gekritzel statt einer fehlenden Seite, genau wie der schwarze Schatten
+  nebenan, und sie geht auf, sobald der Spieler das erste Stueck dafuer in der Hand hatte.
+- **Wissen wird gespeichert.** Was du herausgefunden hast, steht in den Weltdaten und ueberlebt
+  Schliessen und Neustarten. Eine Welt von vor diesem Milestone laedt als leeres Buch, statt sich
+  zu weigern.
+- **Der Server antwortet, nicht der Client.** Jede Seite kommt fertig vom Server, jeder Stack traegt
+  seine Wissensstufe schon mit. Ein Client, der die Rezepttabelle selbst liest, wuesste vom ersten
+  Tick an alles.
 
 ## Naechste Schritte
 
@@ -313,8 +390,8 @@ Die detaillierte Arbeitsgrundlage ist jetzt die
 Der [Abgleich mit dem Fundament](docs/specification-review.md) dokumentiert die
 Anpassungen und Vorgaben fuer kommende Module.
 
-1. Milestone 7, zweite Haelfte: primitives Schmelzen im 2x2-Raster (Feuerstelle/Rennofen) — das
-   schliesst die Kette zur Werkbank — dann Stein, Kupfer, Bronze und fruehe Metallurgie.
+1. Milestone 7 ist geschlossen: Lagerfeuer und Ziegelofen tragen die fruehe Metallurgie. Offen
+   bleiben Stein-, Kupfer- und Bronzestufen darueber hinaus.
 2. Offen aus Milestone 6: Aufbereitung (Brechen, Sieben, Waschen), die spaeteren
    Prospektionsmethoden und Erz unterhalb von Y -64.
 3. Weitere Schritte gemaess Abschnitt 118 der Mechanik-Spezifikation.

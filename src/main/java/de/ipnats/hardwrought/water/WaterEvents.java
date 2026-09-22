@@ -2,6 +2,7 @@ package de.ipnats.hardwrought.water;
 
 import de.ipnats.hardwrought.core.events.CoreLifecycle;
 import de.ipnats.hardwrought.core.registry.ModDataComponents;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -69,6 +70,7 @@ public final class WaterEvents {
         });
         UseItemCallback.EVENT.register(WaterEvents::fillBucket);
         UseItemCallback.EVENT.register(WaterEvents::emptyBucket);
+        UseBlockCallback.EVENT.register(WaterEvents::drinkByHand);
     }
 
     /**
@@ -142,6 +144,64 @@ public final class WaterEvents {
             player.setItemInHand(hand, new ItemStack(Items.BUCKET));
         }
         return InteractionResult.SUCCESS;
+    }
+
+    /**
+     * Section 23.1: sneak and use an empty hand at the water to drink straight out of it.
+     *
+     * <p>A player who has lost their waterskin should not die of thirst standing in a river. It is a
+     * worse drink than one from a skin — most of a handful runs out between the fingers — and it is
+     * unboiled, so a river can still make the drinker ill. That is the trade, and it is the point.
+     *
+     * <p>This hangs on the block callback rather than the item one because vanilla never sends a use
+     * packet for an empty hand unless a block was hit. Water is invisible to the aim ray, so the
+     * block hit is the river bed or the bank; the water itself is found with a second ray that does
+     * see fluids, and failing that, in the cell the player is standing in.
+     */
+    private static InteractionResult drinkByHand(Player player, Level level, InteractionHand hand,
+                                                 BlockHitResult hit) {
+        if (hand != InteractionHand.MAIN_HAND || !player.isSecondaryUseActive()) {
+            return InteractionResult.PASS;
+        }
+        // An empty hand only: sneaking with something in hand already means placing it or using it,
+        // and a waterskin has its own answer to the same gesture.
+        if (!player.getItemInHand(hand).isEmpty()) return InteractionResult.PASS;
+        if (level.isClientSide() || !(player instanceof ServerPlayer serverPlayer)
+                || !(level instanceof ServerLevel serverLevel)) {
+            return InteractionResult.PASS;
+        }
+        BlockPos pos = drinkableWater(serverLevel, player);
+        if (pos == null) return InteractionResult.PASS;
+
+        var runtime = CoreLifecycle.find(serverLevel.getServer());
+        if (runtime == null) return InteractionResult.PASS;
+        if (!runtime.survival().mayDrinkByHand(serverPlayer)) return InteractionResult.CONSUME;
+
+        int available = WaterStorage.amount(serverLevel, pos);
+        if (available < WaterAmounts.DRINK) {
+            player.sendSystemMessage(Component.translatable("message.hardwrought.water_too_little"));
+            return InteractionResult.FAIL;
+        }
+        WaterQuality quality = runtime.water().qualityAt(serverLevel, pos);
+        WaterStorage.setAmount(serverLevel, pos, available - WaterAmounts.DRINK);
+        WaterFlow.disturb(serverLevel, pos);
+        runtime.survival().drinkByHand(serverPlayer, quality);
+        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.GENERIC_DRINK.value(), SoundSource.PLAYERS, 0.6f, 1.0f);
+        return InteractionResult.SUCCESS;
+    }
+
+    /**
+     * The water this player can reach with their hands: what they are looking at, or failing that,
+     * what they are standing in.
+     */
+    private static BlockPos drinkableWater(ServerLevel level, Player player) {
+        BlockPos looked = lookedAtWater(level, player);
+        if (looked != null) return looked;
+        BlockPos feet = player.blockPosition();
+        if (WaterStorage.containsWater(level.getBlockState(feet))) return feet;
+        BlockPos eye = BlockPos.containing(player.getEyePosition());
+        return WaterStorage.containsWater(level.getBlockState(eye)) ? eye : null;
     }
 
     /** Where a bucket would pour: the block looked at, or the face in front of it. */

@@ -19,8 +19,38 @@ second. Disconnecting or restarting a world does not reset the values.
   hydration after consumption. Ten common foods ship with datapack profiles; other vanilla foods
   use a bounded fallback based on their food component. Cold, work and excess load raise energy
   demand. Energy and dietary quality remain separate server-authoritative values.
-- **Carry weight:** all 41 player inventory slots are weighed. The base capacity is 45 kg; excess
-  weight slows movement and jumping and raises stamina cost.
+
+  **Calories drive the vanilla hunger bar.** There were two hungers before this: calories, which
+  nothing displayed and nothing enforced, and vanilla's shanks, which drained on their own schedule
+  and meant nothing here. `SurvivalSystem.applyHunger` writes one onto the other every metabolism
+  pass, so everything vanilla hangs off that bar — no sprinting when it is low, no regeneration
+  until it is nearly full, starvation damage when it is empty — applies to the real number without a
+  line of code for any of it. The bar reads full from **2000 kcal** up, so the four hundred above
+  that are a reserve it does not draw and eating at a full bar is never wasted. Saturation carries
+  dietary quality rather than a second energy figure, which is what the four nutrient tracks were
+  gathered for: a player living on one food heals badly however full they are. Creative is the one
+  place the coupling stands back.
+
+  The basal rate is **1.0 kcal per second**, so a full reserve burns away in forty minutes of doing
+  nothing at all — two Minecraft days. Work, cold, load and sprinting add to it, and every point of
+  stamina spent is charged as 1.6 kcal, which is what ties a morning of breaking rock to being
+  hungry at the end of it.
+- **Carry weight:** all 41 player inventory slots are weighed. The base capacity is **85 kg**; excess
+  weight slows movement and jumping and raises stamina cost. Every item says what it weighs in its
+  tooltip, and the vitals panel (**H**) shows the load against the allowance.
+
+  The numbers are game numbers, not physics — a Minecraft block is a cubic metre of stone and would
+  weigh tonnes. What they are sized against is a working trip: three stacks of blocks, four tools and
+  a stack of bread comes to 78 kg and is carried entirely free. A full inventory of rubble is 800 kg
+  and is meant to be felt.
+
+  Both penalties ramp gently and stop well short of crippling: movement at −30 %, jumping at −25 %,
+  however much is carried. An overloaded player is heavy, not broken — they still sprint, and they
+  still clear a single block. This was not always true: a block used to weigh 0.75 kg against a 45 kg
+  allowance, so **one stack of cobblestone put a fresh player permanently over the limit** and the
+  penalties reached their old caps of −55 % and −65 % at about two and a half stacks. The effect was
+  a player at full stamina who could not sprint and could barely jump, with nothing on screen saying
+  why. Hence both the softer numbers and the two readouts.
 - **Fatigue:** a day-scale value. Staying awake through one full Minecraft day and night costs about
   30 of 100, so a whole cycle can always be seen through without being forced to sleep, and one night
   of good sleep clears more than a day of being awake builds up. Bad air adds to it but stays in the
@@ -56,11 +86,12 @@ at `assets/hardwrought/textures/item/filled_waterskin.png`; the generated source
 ## HUD layout
 
 Ten green stamina drops sit directly above the vanilla hearts and ten blue hydration drops directly
-above the hunger bar. The hydration row disappears underwater so Minecraft's air bubbles stay clear.
-Empty and partially filled drops make both values readable without a large status
-panel. `H` toggles a compact panel in the upper-left corner. It contains a thin 0–100 fatigue bar
-with its number underneath, a blue-to-red body-temperature scale with a position marker and the exact
-Celsius value, and a 0–100 restlessness bar. `V` remains the sleep/wake key.
+above the hunger bar, which is itself the calorie reserve. The hydration row disappears underwater so
+Minecraft's air bubbles stay clear. Empty and partially filled drops make both values readable
+without a large status panel. `H` toggles a compact panel in the upper-left corner. It contains a
+0–2400 kcal bar with the exact figure underneath, a thin 0–100 fatigue bar with its number, a
+blue-to-red body-temperature scale with a position marker and the exact Celsius value, a 0–100
+restlessness bar and the carried load. `V` remains the sleep/wake key.
 
 Generated texture prompt:
 

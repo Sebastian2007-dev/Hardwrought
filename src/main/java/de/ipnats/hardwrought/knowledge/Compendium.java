@@ -2,6 +2,10 @@ package de.ipnats.hardwrought.knowledge;
 
 import de.ipnats.hardwrought.core.networking.CompendiumPagePayload;
 import de.ipnats.hardwrought.core.networking.CompendiumRequestPayload;
+import de.ipnats.hardwrought.core.registry.ModBlocks;
+import de.ipnats.hardwrought.core.registry.ModItems;
+import de.ipnats.hardwrought.progression.ToolCrafting;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
@@ -9,8 +13,11 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.context.ContextMap;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.display.FurnaceRecipeDisplay;
 import net.minecraft.world.item.crafting.display.RecipeDisplay;
 import net.minecraft.world.item.crafting.display.ShapedCraftingRecipeDisplay;
@@ -44,6 +51,8 @@ import java.util.Set;
  * game.
  */
 public final class Compendium {
+    /** Where things come from when nobody makes them: drops, block breaks and chests. */
+    private final LootSources loot = new LootSources();
     private Map<Item, Set<RecipeHolder<?>>> byResult;
     private Map<Item, Set<RecipeHolder<?>>> byIngredient;
     private int indexedRecipes = -1;
@@ -54,8 +63,22 @@ public final class Compendium {
         return switch (request.mode()) {
             case CompendiumPagePayload.MODE_RECIPES -> lookup(player, knowledge, request.subject(), true);
             case CompendiumPagePayload.MODE_USAGES -> lookup(player, knowledge, request.subject(), false);
+            case CompendiumPagePayload.MODE_JOURNAL -> journal(player, knowledge, request.subject());
             default -> shelf(player, knowledge, request);
         };
+    }
+
+    // ---------------------------------------------------------------- the written half
+
+    /**
+     * The journal. Built on the server for the same reason a shelf is: whether a thought has occurred
+     * to this player yet is a fact about their save, and a client that was handed the whole chain
+     * would be handing it on to anyone who looked.
+     */
+    private CompendiumPagePayload journal(ServerPlayer player, KnowledgeSystem knowledge,
+                                          Identifier subject) {
+        return new CompendiumPagePayload(CompendiumPagePayload.MODE_JOURNAL, subject, List.of(),
+                List.of(), List.of(), Journal.page(knowledge.knowledge(player)));
     }
 
     // ---------------------------------------------------------------- shelves
@@ -71,7 +94,7 @@ public final class Compendium {
         }
         return new CompendiumPagePayload(CompendiumPagePayload.MODE_SHELF,
                 Identifier.fromNamespaceAndPath("hardwrought", category.serializedName()),
-                entries, List.of());
+                entries, List.of(), List.of(), List.of());
     }
 
     // ---------------------------------------------------------------- recipes and usages
@@ -79,11 +102,17 @@ public final class Compendium {
     private CompendiumPagePayload lookup(ServerPlayer player, KnowledgeSystem knowledge,
                                          Identifier subject, boolean asResult) {
         int mode = asResult ? CompendiumPagePayload.MODE_RECIPES : CompendiumPagePayload.MODE_USAGES;
+        // The item registry answers an unknown name with air rather than nothing, so air is what a
+        // request for something that does not exist looks like.
         Item item = BuiltInRegistries.ITEM.getValue(subject);
         MinecraftServer server = player.level().getServer();
-        if (item == null || server == null) {
-            return new CompendiumPagePayload(mode, subject, List.of(), List.of());
+        if (item == null || item == Items.AIR || server == null) {
+            return new CompendiumPagePayload(mode, subject, List.of(), List.of(), List.of(), List.of());
         }
+        // The browser needs to know whether it may name the subject in its own title, so the one
+        // entry a lookup page carries is the subject itself.
+        List<CompendiumPagePayload.Entry> heading = List.of(new CompendiumPagePayload.Entry(subject,
+                knowledge.knowledge(player).level(subject).ordinal()));
         ContextMap context = SlotDisplayContext.fromLevel(player.level());
         index(server.getRecipeManager(), context);
         Map<Item, Set<RecipeHolder<?>>> source = asResult ? byResult : byIngredient;
@@ -97,7 +126,15 @@ public final class Compendium {
                 if (view != null) recipes.add(view);
             }
         }
-        return new CompendiumPagePayload(mode, subject, List.of(), recipes);
+        for (CompendiumPagePayload.Recipe inWorld : inWorldRecipes(item, asResult, known)) {
+            if (recipes.size() >= CompendiumPagePayload.MAX_RECIPES) break;
+            recipes.add(inWorld);
+        }
+        // What drops it belongs under how it is made, not under what it is used for: both answer
+        // the same question a player asks when they want one and do not have one.
+        List<CompendiumPagePayload.Source> sources = asResult
+                ? loot.of(server, item, known) : List.of();
+        return new CompendiumPagePayload(mode, subject, heading, recipes, sources, List.of());
     }
 
     private CompendiumPagePayload.Recipe view(RecipeHolder<?> holder, RecipeDisplay display,
@@ -127,7 +164,84 @@ public final class Compendium {
         CompendiumPagePayload.Slot result = slot(display.result(), context, known);
         if (result.isEmpty()) return null;
         return new CompendiumPagePayload.Recipe(holder.id().identifier(), inputs, width, height,
-                result, slot(display.craftingStation(), context, known));
+                result, slot(display.craftingStation(), context, known), method(holder));
+    }
+
+    /** The top bookmarks group vanilla recipe displays by the actual way the player performs them. */
+    private static int method(RecipeHolder<?> holder) {
+        RecipeType<?> type = holder.value().getType();
+        if (type == RecipeType.CAMPFIRE_COOKING || type == RecipeType.SMOKING) {
+            return CompendiumPagePayload.METHOD_COOKING;
+        }
+        if (type == RecipeType.SMITHING) return CompendiumPagePayload.METHOD_SMITHING;
+        if (type == RecipeType.SMELTING || type == RecipeType.BLASTING) {
+            return CompendiumPagePayload.METHOD_SMELTING;
+        }
+        return CompendiumPagePayload.METHOD_CRAFTING;
+    }
+
+    /**
+     * Processes performed directly in the world do not live in RecipeManager, but they are still
+     * recipes from the player's point of view. The first one is the hewn bench: a suitable hatchet
+     * is worked against any log until the log itself becomes the bench.
+     */
+    private static List<CompendiumPagePayload.Recipe> inWorldRecipes(Item subject, boolean asResult,
+                                                                     PlayerKnowledge known) {
+        List<CompendiumPagePayload.Recipe> recipes = new ArrayList<>();
+        Item resultItem = ModBlocks.HEWN_WORKBENCH.asItem();
+        boolean isResult = subject == resultItem;
+        boolean isIngredient = isLog(subject) || new ItemStack(subject).is(ToolCrafting.CRAFTING_TOOLS);
+        if (asResult ? isResult : isIngredient) {
+            recipes.add(worldRecipe("hewn_workbench_in_world",
+                    List.of(options(Compendium::isLog, known), options(item ->
+                            ToolCrafting.isCraftingTool(new ItemStack(item)), known)), resultItem, known));
+        }
+        if (asResult ? subject == Items.CAMPFIRE
+                : subject == Items.CAMPFIRE || subject == ModItems.LIGHTING_STICKS) {
+            recipes.add(worldRecipe("light_campfire_in_world",
+                    List.of(single(ModItems.LIGHTING_STICKS, known), single(Items.CAMPFIRE, known)),
+                    Items.CAMPFIRE, known));
+        }
+        if (asResult ? subject == ModItems.FILLED_WATERSKIN
+                : subject == ModItems.FILLED_WATERSKIN || subject == Items.CAMPFIRE) {
+            recipes.add(worldRecipe("boil_waterskin_in_world",
+                    List.of(single(ModItems.FILLED_WATERSKIN, known), single(Items.CAMPFIRE, known)),
+                    ModItems.FILLED_WATERSKIN, known));
+        }
+        return List.copyOf(recipes);
+    }
+
+    private static CompendiumPagePayload.Recipe worldRecipe(String id,
+                                                             List<CompendiumPagePayload.Slot> inputs,
+                                                             Item result, PlayerKnowledge known) {
+        return new CompendiumPagePayload.Recipe(Identifier.fromNamespaceAndPath("hardwrought", id),
+                inputs, 0, 0, single(result, known), CompendiumPagePayload.Slot.EMPTY,
+                CompendiumPagePayload.METHOD_IN_WORLD);
+    }
+
+    private static CompendiumPagePayload.Slot single(Item item, PlayerKnowledge known) {
+        return new CompendiumPagePayload.Slot(List.of(known(new ItemStack(item), known)));
+    }
+
+    private static boolean isLog(Item item) {
+        return item instanceof BlockItem blockItem && blockItem.getBlock().defaultBlockState().is(BlockTags.LOGS);
+    }
+
+    private static CompendiumPagePayload.Slot options(java.util.function.Predicate<Item> predicate,
+                                                       PlayerKnowledge known) {
+        List<CompendiumPagePayload.Known> options = new ArrayList<>();
+        for (Item item : BuiltInRegistries.ITEM) {
+            if (item == Items.AIR || !predicate.test(item)) continue;
+            options.add(known(new ItemStack(item), known));
+            if (options.size() >= CompendiumPagePayload.MAX_OPTIONS) break;
+        }
+        return options.isEmpty() ? CompendiumPagePayload.Slot.EMPTY
+                : new CompendiumPagePayload.Slot(options);
+    }
+
+    private static CompendiumPagePayload.Known known(ItemStack stack, PlayerKnowledge known) {
+        Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        return new CompendiumPagePayload.Known(stack, known.level(id).ordinal());
     }
 
     private CompendiumPagePayload.Slot slot(SlotDisplay display, ContextMap context, PlayerKnowledge known) {

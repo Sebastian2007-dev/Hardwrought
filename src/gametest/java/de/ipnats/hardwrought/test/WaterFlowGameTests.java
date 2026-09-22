@@ -593,4 +593,120 @@ public final class WaterFlowGameTests {
             }
         }
     }
+
+    /**
+     * Water moves at a rate, not all at once. It may be quicker than vanilla — this is a mod about
+     * water and a player should not wait a minute to watch a bucket settle — but a poured bucket
+     * that reaches the far wall the same tick reads as a bug even when the arithmetic is right.
+     */
+    @GameTest
+    public void waterSpreadsAtARateRatherThanAllAtOnce(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos base = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE_OFFSET);
+        var flow = CoreLifecycle.require(level.getServer()).waterFlow();
+        try {
+            // A dry channel seven long with a full block at one end.
+            for (int x = -1; x <= 7; x++) {
+                level.setBlockAndUpdate(base.offset(x, -1, 0), Blocks.STONE.defaultBlockState());
+                level.setBlockAndUpdate(base.offset(x, 0, 0), Blocks.AIR.defaultBlockState());
+                level.setBlockAndUpdate(base.offset(x, 1, 0), Blocks.AIR.defaultBlockState());
+            }
+            level.setBlockAndUpdate(base.offset(-1, 0, 0), Blocks.STONE.defaultBlockState());
+            level.setBlockAndUpdate(base.offset(7, 0, 0), Blocks.STONE.defaultBlockState());
+            for (int z = -1; z <= 1; z += 2) {
+                for (int x = 0; x <= 6; x++) {
+                    level.setBlockAndUpdate(base.offset(x, 0, z), Blocks.STONE.defaultBlockState());
+                }
+            }
+            WaterStorage.setAmount(level, base, WaterAmounts.BLOCK);
+
+            // One pass hands a neighbour a rate, not half of everything there is.
+            flow.step(level, base);
+            int handed = WaterStorage.amount(level, base.east());
+            helper.assertTrue(handed <= WaterAmounts.MAX_SPREAD_PER_PASS,
+                    "One pass moves at most the spread rate, not half the difference: " + handed);
+            helper.assertTrue(handed > 0, "But it does move");
+
+            // And the front is not at the far wall already.
+            helper.assertTrue(WaterStorage.amount(level, base.offset(6, 0, 0)) == 0,
+                    "A single pass does not carry water six blocks");
+
+            int reached = -1;
+            for (int pass = 1; pass <= 200 && reached < 0; pass++) {
+                for (int x = 0; x <= 6; x++) flow.step(level, base.offset(x, 0, 0));
+                if (WaterStorage.amount(level, base.offset(6, 0, 0)) > 0) reached = pass;
+            }
+            helper.assertTrue(reached > 0, "Water still gets there in the end");
+            // Vanilla covers six blocks in about thirty ticks. Faster is the point; instant is not.
+            helper.assertTrue(reached >= 6,
+                    "Six blocks take at least a pass each: reached the wall on pass " + reached);
+            helper.assertTrue(reached <= 20,
+                    "And it is quicker than vanilla, not slower: reached the wall on pass " + reached);
+
+            // Falling is allowed to be quicker than spreading, because gravity is.
+            helper.assertTrue(WaterAmounts.MAX_FALL_PER_PASS > WaterAmounts.MAX_SPREAD_PER_PASS,
+                    "Water falls faster than it creeps");
+        } finally {
+            for (int x = -1; x <= 7; x++) {
+                for (int y = -1; y <= 1; y++) {
+                    for (int z = -1; z <= 1; z++) {
+                        WaterStorage.setAmount(level, base.offset(x, y, z), 0);
+                        level.setBlockAndUpdate(base.offset(x, y, z), Blocks.AIR.defaultBlockState());
+                    }
+                }
+            }
+        }
+        helper.succeed();
+    }
+
+    /**
+     * A transfer wakes eleven neighbours and nearly all of them are already queued. Waking one has
+     * to be cheap, because it happens tens of thousands of times a tick: the queue is asked first,
+     * and only a position it has never heard of costs a chunk lookup and a block state.
+     */
+    @GameTest
+    public void wakingACellThatIsAlreadyQueuedCostsNoWorldLookup(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos base = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE_OFFSET);
+        var flow = CoreLifecycle.require(level.getServer()).waterFlow();
+        try {
+            for (int x = -1; x <= 5; x++) {
+                for (int y = -1; y <= 1; y++) {
+                    for (int z = -1; z <= 1; z++) {
+                        level.setBlockAndUpdate(base.offset(x, y, z), y == -1 || z != 0
+                                ? Blocks.STONE.defaultBlockState() : Blocks.AIR.defaultBlockState());
+                    }
+                }
+            }
+            for (int x = 0; x <= 4; x++) WaterStorage.setAmount(level, base.offset(x, 0, 0), WaterAmounts.BLOCK);
+
+            long signalsBefore = flow.signals();
+            long lookupsBefore = flow.worldLookups();
+            for (int pass = 0; pass < 20; pass++) {
+                for (int x = 0; x <= 4; x++) flow.step(level, base.offset(x, 0, 0));
+            }
+            long signals = flow.signals() - signalsBefore;
+            long lookups = flow.worldLookups() - lookupsBefore;
+
+            helper.assertTrue(signals > 0, "The passes woke cells at all");
+            helper.assertTrue(lookups < signals,
+                    "Most wake-ups are repeats and must not touch the world: " + lookups
+                            + " lookups for " + signals + " wake-ups");
+            // Measured at four in ten saved in a walled channel, where every side is stone and a
+            // wall has to be looked at every time because it could have become water. In open water
+            // the saving is larger. A quarter is the floor this may not fall below.
+            helper.assertTrue(lookups * 4 <= signals * 3,
+                    "At least a quarter of the wake-ups avoid the world: " + lookups + " of " + signals);
+        } finally {
+            for (int x = -1; x <= 5; x++) {
+                for (int y = -1; y <= 1; y++) {
+                    for (int z = -1; z <= 1; z++) {
+                        WaterStorage.setAmount(level, base.offset(x, y, z), 0);
+                        level.setBlockAndUpdate(base.offset(x, y, z), Blocks.AIR.defaultBlockState());
+                    }
+                }
+            }
+        }
+        helper.succeed();
+    }
 }

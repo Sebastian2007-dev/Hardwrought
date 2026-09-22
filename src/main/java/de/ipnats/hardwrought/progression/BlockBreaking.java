@@ -44,9 +44,26 @@ public final class BlockBreaking {
             TagKey.create(Registries.BLOCK, Hardwrought.id("shatters_by_hand"));
 
     /** Stamina one ordinary block costs with the right tool, before hardness and verdict. */
-    public static final double BASE_STAMINA = 0.10;
+    public static final double BASE_STAMINA = 0.18;
     /** However bad the tool and however hard the rock, one block never costs more than this. */
     public static final double MAX_STAMINA = 6.0;
+
+    /**
+     * How much of vanilla's breaking speed is left on material that has to be worked rather than
+     * picked. Section 71.1.9 already made a bad tool expensive; this is the other half of it — even
+     * the right tool against rock is work, and a mod whose first tool is a knapped flint edge should
+     * not shift stone at the pace of a creative-mode diamond pick.
+     *
+     * <p>Two numbers rather than one, because a flat multiplier gets the feel wrong in both
+     * directions: it makes gravel tedious while barely touching deepslate. Scaling with the block's
+     * own hardness keeps soil quick and turns rock and timber into the part of the day that costs
+     * something.
+     */
+    public static final double LABOR_BASE = 0.55;
+    /** How much further each point of hardness drags the same swing. */
+    public static final double LABOR_PER_HARDNESS = 0.08;
+    /** However hard the material, a swing never falls below this share of its vanilla speed. */
+    public static final double MIN_LABOR = 0.30;
 
     private BlockBreaking() { }
 
@@ -90,6 +107,30 @@ public final class BlockBreaking {
     /** True where the player is holding a tool at all, whatever it was made for. */
     public static boolean isTool(ItemStack held) {
         return held.has(DataComponents.TOOL);
+    }
+
+    /**
+     * What is left of vanilla's speed once the material's own resistance is paid for, for a player
+     * holding the right tool. One, and no slowdown at all, for everything that is gathered rather
+     * than worked: grass, crops, leaves, cloth, snow. Punching a bush was never the problem.
+     *
+     * <p>Deliberately not applied on top of {@link BreakingVerdict#speedFactor()}. That factor is
+     * the price of the wrong tool and was tuned on its own; multiplying the two would put a flint
+     * pick against iron ore into the minutes, which teaches nothing the refused drops do not.
+     */
+    public static double laborFactor(BlockState state) {
+        if (state == null || !worked(state)) return 1.0;
+        double hardness = Math.max(0.2, state.getBlock().defaultDestroyTime());
+        return Math.max(MIN_LABOR, LABOR_BASE - hardness * LABOR_PER_HARDNESS);
+    }
+
+    /**
+     * Material that is worked with a tool rather than gathered by hand: rock, ore, timber, built
+     * structure, and the ground itself. Read off the same vanilla tags the rest of this class uses,
+     * so a modded block lands on the right side without a line here.
+     */
+    public static boolean worked(BlockState state) {
+        return solid(state) || state.is(BlockTags.MINEABLE_WITH_SHOVEL);
     }
 
     /**

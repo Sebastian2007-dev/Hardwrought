@@ -99,6 +99,28 @@ A newly encountered carrier contains one block (1000 mB); partial amounts live i
 When the last water leaves, a waterlogged stair becomes a dry stair, while a bubble column or plant
 disappears. None of these blocks can act as an inexhaustible hidden source.
 
+### How fast it moves
+
+Water moves at a rate, not all at once. Without a cap the solver is a solver and not a fluid: a cell
+hands a neighbour half its surplus immediately, so a poured bucket reaches the far wall in as many
+ticks as there are blocks between. Water that teleports reads as a bug even when the arithmetic is
+right.
+
+| Direction | Per pass | Why |
+| --- | --- | --- |
+| Sideways | 60 mB | the one a player watches |
+| Falling | 250 mB | gravity is quick |
+| Rising (pressure) | 250 mB | pressure is quick |
+
+Sideways is the slow one on purpose. A receiving cell must gather `SPREAD_THRESHOLD` (125 mB) before
+it may pass anything on, so at 60 mB a pass it takes about two passes per block. **Measured: a front
+crosses six blocks in 13 ticks**, against vanilla's 5 ticks a block — about two and a half times
+vanilla, where it used to be five. Quicker than vanilla, which is the point of a mod about water; not
+instant, which was the complaint.
+
+The equilibrium is unchanged. Only the number of passes it takes to reach it moved, and the cost of
+a pass is capped either way, so slowing the water costs no more per tick — it simply takes more ticks.
+
 ### Bounded work
 
 Still water costs nothing: only disturbed cells are looked at. Vanilla already schedules a fluid tick
@@ -112,6 +134,35 @@ dimension, cells within 32 blocks of a player run before cells within 96 blocks,
 distant water. Small repeated batches let a newly woken pressure wave continue during the same tick
 instead of advancing only one cell per tick. A very large disturbance is therefore bounded rather
 than freezing the server, while water the player is watching remains responsive.
+
+### What a wake-up costs
+
+The solver only looks at disturbed cells, so the cost of the whole model is the cost of waking one.
+Each transfer wakes eleven neighbours and the solver makes up to a thousand transfers a tick, so a
+wake-up happens tens of thousands of times a second and every constant in it matters.
+
+Three things were taken out of that path:
+
+- **The queue is asked before the world.** Most wake-ups are repeats — the same cell woken by each of
+  its neighbours — and a hash lookup on a packed position is far cheaper than a chunk lookup, a
+  section lookup and a block state. The solver re-checks for water when it reaches the cell anyway.
+  Measured in a walled channel: **four in ten wake-ups no longer touch the world**. In open water the
+  share is higher; the ones that remain are stone, and a wall has to be looked at because it could
+  have become water.
+- **The player list is read once a tick.** Working out how near a cell is to a player used to walk
+  the player list on every wake-up. Players cannot move within a tick, so their positions are
+  snapshotted at the start of one.
+- **One chunk lookup instead of two.** Asking whether a chunk is loaded and then asking the level for
+  a block state looks the same chunk up twice. Taking the chunk once and reading the state off it
+  does the same work with half the map lookups — and returns null rather than loading a chunk the
+  solver has no business loading.
+
+Two smaller ones: the clock is read once every sixteen cells rather than once a cell (`nanoTime`
+costs about as much as inspecting a settled cell), and the list of levels is reused rather than
+allocated every tick.
+
+`/hardwrought status` shows the wake-up count and how many of them reached the world, so the saving
+is visible in a running world rather than only in this document.
 
 ## Water bodies
 
@@ -200,6 +251,42 @@ water that is not there rather than inventing the rest.
 Filling anything takes that volume out of the world. A bucket needs a whole block and leaves what is
 over; a bottle takes a tenth, so a puddle is enough for one; a skin takes up to eight hundred and
 fills part way when there is less. Nothing can be filled from water that is not there.
+
+### What bad water does
+
+Not poison. Drinking from a stagnant pond is not being envenomed, and a damage-over-time effect said
+the wrong thing about it entirely.
+
+Bad water applies **Thirst** (`hardwrought:thirst`), which is the water half of what hunger does to a
+well-fed player: while it lasts, the hydration reserve drains **0.25 a second** on top of everything
+else, against a resting drain of 0.035. Seven times as fast, for thirty seconds, so one bad drink
+costs about 7.5 of a hundred — felt immediately, survivable if there is clean water to be had, and
+proportionally worse at higher levels.
+
+The effect is a marker and nothing else. It overrides `shouldApplyEffectTickThisTick` to do no work
+of its own, because the survival metabolism already walks every player once a second to drain the
+reserve; reading the effect there costs one reserve update and one packet a second instead of twenty.
+
+Which water risks it is unchanged and lives in `WaterQuality`: clean water never does, and sea water
+is the worst of it.
+
+### Drinking straight from the water
+
+Sneak and use an **empty hand** at the water to drink out of it. A player who has lost their
+waterskin should not die of thirst standing in a river.
+
+It is a worse drink than one from a skin, and deliberately so: most of a handful runs out between the
+fingers, so it is worth 10 hydration where a skin is worth 24, and it is unboiled, so whatever the
+river carries goes in with it. The mouthful is the same 100 mB a skin drink costs, taken out of the
+cell like any other withdrawal, and it can be done once a second rather than held down.
+
+The empty hand is what keeps the gesture out of everything else. Sneaking with something in hand
+already means placing it or using it, and a waterskin answers the same gesture by filling itself.
+
+One wrinkle worth recording: this hangs on the block-use callback rather than the item one, because
+vanilla never sends a use packet for an empty hand unless a block was hit. Water is invisible to the
+aim ray, so the block that was hit is the river bed or the bank; the water itself is found with a
+second ray that does see fluids, and failing that, in the cell the player is standing in.
 
 ### Boiling
 

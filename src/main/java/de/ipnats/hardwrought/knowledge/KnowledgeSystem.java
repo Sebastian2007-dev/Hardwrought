@@ -1,9 +1,11 @@
 package de.ipnats.hardwrought.knowledge;
 
 import de.ipnats.hardwrought.core.debug.DiagnosticRegistry;
+import de.ipnats.hardwrought.core.networking.KnowledgeNotePayload;
 import de.ipnats.hardwrought.core.save.CoreSaveData;
 import de.ipnats.hardwrought.core.simulation.SimulationScheduler;
 import de.ipnats.hardwrought.core.simulation.SimulationTier;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
@@ -14,6 +16,7 @@ import net.minecraft.world.level.ItemLike;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -39,11 +42,14 @@ public final class KnowledgeSystem {
     private Map<KnowledgeCategory, List<Identifier>> shelves;
     /** The recipe browser behind the R and U keys, indexed on first use. */
     private final Compendium compendium = new Compendium();
+    /** Learnings waiting to be shown, gathered so a single act does not fire a burst of toasts. */
+    private final Map<UUID, List<KnowledgeNotePayload.Note>> pending = new HashMap<>();
 
     public KnowledgeSystem(MinecraftServer server, CoreSaveData save, SimulationScheduler scheduler) {
         this.server = server;
         this.save = save;
         scheduler.register("hardwrought:knowledge_discovery", SimulationTier.SLOW, this::tickDiscovery);
+        scheduler.register("hardwrought:knowledge_notes", SimulationTier.FAST, this::flushNotes);
     }
 
     // ---------------------------------------------------------------- what a player knows
@@ -63,6 +69,7 @@ public final class KnowledgeSystem {
         PlayerKnowledge knowledge = knowledge(player);
         if (!knowledge.discover(id)) return false;
         save.setKnowledge(player.getUUID(), knowledge);
+        note(player.getUUID(), id, KnowledgeLevel.DISCOVERED);
         return true;
     }
 
@@ -76,12 +83,19 @@ public final class KnowledgeSystem {
         PlayerKnowledge knowledge = knowledge(player);
         if (!knowledge.study(id)) return false;
         save.setKnowledge(player.getUUID(), knowledge);
+        note(player.getUUID(), id, KnowledgeLevel.STUDIED);
         return true;
     }
 
     /** Operator and test entry point; ordinary play fills this in through holding and working. */
     public void forget(UUID player) {
         save.setKnowledge(player, PlayerKnowledge.empty());
+        pending.remove(player);
+    }
+
+    /** Drops what a leaving player had not been shown yet. */
+    public void removePlayer(UUID player) {
+        pending.remove(player);
     }
 
     /** The recipe browser: how a thing is made, and what it is used in. */
@@ -156,10 +170,47 @@ public final class KnowledgeSystem {
         }
     }
 
+    // ---------------------------------------------------------------- telling the player
+
+    /**
+     * Records one learning for the toast in the corner of the screen. Discovering an item and then
+     * studying it in the same breath is one thing learned, not two, so the later level replaces the
+     * earlier note rather than adding to it.
+     */
+    private void note(UUID player, Identifier id, KnowledgeLevel level) {
+        List<KnowledgeNotePayload.Note> notes = pending.computeIfAbsent(player, key -> new ArrayList<>());
+        notes.removeIf(note -> note.id().equals(id));
+        if (notes.size() >= KnowledgeNotePayload.MAX_NOTES) notes.removeFirst();
+        notes.add(new KnowledgeNotePayload.Note(id, level.ordinal()));
+    }
+
+    /** What this player has learned but not yet been told about. Visible for tests. */
+    public List<KnowledgeNotePayload.Note> pendingNotes(UUID player) {
+        return List.copyOf(pending.getOrDefault(player, List.of()));
+    }
+
+    /**
+     * Sends the gathered learnings and forgets them. Running on the fast tier rather than on each
+     * event is what turns breaking a block with a new pick into one toast with two entries instead
+     * of two toasts racing each other.
+     */
+    public void flushNotes() {
+        if (pending.isEmpty()) return;
+        var iterator = pending.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
+            iterator.remove();
+            if (entry.getValue().isEmpty()) continue;
+            ServerPlayer player = server.getPlayerList().getPlayer(entry.getKey());
+            if (player == null || !ServerPlayNetworking.canSend(player, KnowledgeNotePayload.TYPE)) continue;
+            ServerPlayNetworking.send(player, new KnowledgeNotePayload(entry.getValue()));
+        }
+    }
+
     // ---------------------------------------------------------------- diagnostics
 
     public void registerDiagnostics(DiagnosticRegistry registry) {
-        registry.register("hardwrought:knowledge", DiagnosticRegistry.Channel.STRUCTURE, (level, pos) -> {
+        registry.register("hardwrought:knowledge", DiagnosticRegistry.Channel.KNOWLEDGE, (level, pos) -> {
             int total = 0;
             for (KnowledgeCategory category : KnowledgeCategory.values()) total += shelf(category).size();
             return String.format(Locale.ROOT, "compendium: %d entries on %d shelves", total,

@@ -48,6 +48,23 @@ public final class WaterAmounts {
     /** A difference smaller than this is left alone, which is what stops water from jittering. */
     public static final int LEVELLING_THRESHOLD = 10;
 
+    /**
+     * How much water one transfer may move in a single pass, in millibuckets.
+     *
+     * <p>Without a cap the solver is a solver and not a fluid: a cell hands a neighbour half its
+     * surplus immediately, so a poured bucket arrives at the far wall in as many ticks as there are
+     * blocks between. Water that teleports reads as a bug even when the arithmetic is right.
+     *
+     * <p>These are what make it look like flowing. Sideways is the slow one, because it is what a
+     * player watches: a receiving cell needs about two passes to gather the
+     * {@link #SPREAD_THRESHOLD} it must hold before it can pass anything on, so a front advances
+     * roughly one block every two ticks — around two and a half times vanilla rather than five.
+     * Falling and rising stay quick, because gravity and pressure are quick.
+     */
+    public static final int MAX_SPREAD_PER_PASS = 60;
+    public static final int MAX_FALL_PER_PASS = 250;
+    public static final int MAX_RISE_PER_PASS = 250;
+
     private WaterAmounts() { }
 
     /** The block state that shows this amount. Zero or less means there should be no water at all. */

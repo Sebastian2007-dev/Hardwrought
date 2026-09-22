@@ -8,6 +8,7 @@ import de.ipnats.hardwrought.survival.SurvivalSystem;
 import de.ipnats.hardwrought.progression.HewnWood;
 import de.ipnats.hardwrought.progression.HewnWorkbenchBlock;
 import de.ipnats.hardwrought.progression.LogWorking;
+import de.ipnats.hardwrought.progression.RecipeSelectionMenu;
 import de.ipnats.hardwrought.progression.ToolCrafting;
 import de.ipnats.hardwrought.progression.BreakingVerdict;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
@@ -81,6 +82,63 @@ public final class ProgressionGameTests {
                         + "better one feel like one");
         helper.assertTrue(BreakingVerdict.IMPROVISED.toolDamage() > 0,
                 "and it wears out faster for being misused");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void workedMaterialIsSlowerThanVanillaEvenWithTheRightTool(GameTestHelper helper) {
+        // The rule the mod exists for: a knapped edge against rock is work. Vanilla speed with the
+        // correct tool was the one place the progression said nothing at all.
+        for (BlockState worked : new BlockState[]{
+                Blocks.STONE.defaultBlockState(), Blocks.DEEPSLATE.defaultBlockState(),
+                Blocks.IRON_ORE.defaultBlockState(), Blocks.OAK_LOG.defaultBlockState(),
+                Blocks.DIRT.defaultBlockState()}) {
+            double factor = BlockBreaking.laborFactor(worked);
+            helper.assertTrue(factor < 1.0 && factor >= BlockBreaking.MIN_LABOR,
+                    "Worked material costs more than vanilla and never stalls: "
+                            + worked.getBlock().getName().getString() + " at " + factor);
+        }
+
+        // Harder material drags further, which is what makes deepslate feel unlike stone.
+        helper.assertTrue(BlockBreaking.laborFactor(Blocks.DEEPSLATE.defaultBlockState())
+                        < BlockBreaking.laborFactor(Blocks.STONE.defaultBlockState()),
+                "Deepslate is heavier going than stone");
+        helper.assertTrue(BlockBreaking.laborFactor(Blocks.STONE.defaultBlockState())
+                        < BlockBreaking.laborFactor(Blocks.DIRT.defaultBlockState()),
+                "and stone heavier going than soil");
+        helper.assertTrue(BlockBreaking.laborFactor(Blocks.OBSIDIAN.defaultBlockState())
+                        == BlockBreaking.MIN_LABOR,
+                "However hard the rock, the floor holds and a swing still lands");
+
+        // Anything gathered rather than worked is untouched. Punching a bush was never the problem.
+        for (BlockState gathered : new BlockState[]{
+                Blocks.SHORT_GRASS.defaultBlockState(), Blocks.OAK_LEAVES.defaultBlockState(),
+                Blocks.WHEAT.defaultBlockState()}) {
+            helper.assertTrue(BlockBreaking.laborFactor(gathered) == 1.0,
+                    "Gathered material keeps vanilla speed: "
+                            + gathered.getBlock().getName().getString());
+        }
+        helper.assertTrue(BlockBreaking.laborFactor(null) == 1.0, "and nothing at all is harmless");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void breakingRockCostsMoreThanRestingRestores(GameTestHelper helper) {
+        // Mining has to be self-limiting or none of the slowdown is felt: at the old cost a player
+        // standing still recovered more stamina per block than the block took off them.
+        BlockState stone = Blocks.STONE.defaultBlockState();
+        // Both costs land on the same break: the effort the material takes, and the flat cost of
+        // having broken a block at all.
+        double perBlock = BlockBreaking.staminaCost(stone, BreakingVerdict.PROPER)
+                + SurvivalSystem.MINED_BLOCK_STAMINA;
+        double seconds = 1.5 * 1.5 / 4.0 / BlockBreaking.laborFactor(stone);
+        double restored = seconds * 20.0 * SurvivalSystem.IDLE_RECOVERY_PER_TICK;
+        helper.assertTrue(perBlock > restored,
+                "One block of stone costs more than standing over it gives back: "
+                        + perBlock + " against " + restored);
+        helper.assertTrue(BlockBreaking.staminaCost(Blocks.DEEPSLATE.defaultBlockState(),
+                        BreakingVerdict.PROPER) > perBlock,
+                "and harder rock costs more again");
         helper.succeed();
     }
 
@@ -272,6 +330,66 @@ public final class ProgressionGameTests {
         helper.succeed();
     }
 
+    @GameTest
+    public void anyAxeOfIronTierOrBetterJoins(GameTestHelper helper) {
+        // The rule is about reach, not about one item: a player holding a diamond axe has plainly
+        // got past the point this gate exists for, and saying so in a list would miss every axe the
+        // mod has never heard of.
+        for (Item good : new Item[]{ModItems.IRON_HATCHET, ModItems.BRONZE_HATCHET,
+                Items.IRON_AXE, Items.DIAMOND_AXE, Items.NETHERITE_AXE}) {
+            helper.assertTrue(ToolCrafting.isCraftingTool(new ItemStack(good)),
+                    "An axe of iron tier or better joins: " + good.getName(new ItemStack(good)).getString());
+        }
+
+        // Below iron it is refused, which is the progression the whole milestone rests on.
+        for (Item soft : new Item[]{ModItems.FLINT_HATCHET, ModItems.STONE_HATCHET,
+                Items.WOODEN_AXE, Items.STONE_AXE, Items.COPPER_AXE, Items.GOLDEN_AXE}) {
+            helper.assertFalse(ToolCrafting.isCraftingTool(new ItemStack(soft)),
+                    "and a softer edge is not enough: "
+                            + soft.getName(new ItemStack(soft)).getString());
+        }
+
+        // Gold is the case a mining-speed test would get wrong: it is the fastest tool in the game
+        // and still too soft to be trusted with anything.
+        helper.assertTrue(new ItemStack(Items.GOLDEN_AXE).getDestroySpeed(
+                        Blocks.OAK_LOG.defaultBlockState())
+                        > new ItemStack(Items.IRON_AXE).getDestroySpeed(
+                                Blocks.OAK_LOG.defaultBlockState()),
+                "A golden axe cuts faster than an iron one");
+        helper.assertFalse(ToolCrafting.isJoinersAxe(new ItemStack(Items.GOLDEN_AXE)),
+                "and is still refused, because the question is tier and not speed");
+
+        // The right tier of the wrong kind is no help either: a bench is cut, not quarried.
+        for (Item wrongKind : new Item[]{Items.DIAMOND_PICKAXE, Items.NETHERITE_SHOVEL,
+                Items.IRON_SWORD, Items.SHEARS, Items.OAK_PLANKS}) {
+            helper.assertFalse(ToolCrafting.isCraftingTool(new ItemStack(wrongKind)),
+                    "Only an axe joins timber: "
+                            + wrongKind.getName(new ItemStack(wrongKind)).getString());
+        }
+        helper.assertFalse(ToolCrafting.isCraftingTool(ItemStack.EMPTY),
+                "and an empty hand joins nothing");
+
+        // A good axe carries the recipe rule with it: used, not used up.
+        ItemStack diamond = new ItemStack(Items.DIAMOND_AXE);
+        ItemStack returned = ToolCrafting.worn(diamond);
+        helper.assertTrue(returned.is(Items.DIAMOND_AXE)
+                        && returned.getDamageValue() == ToolCrafting.WEAR_PER_CRAFT,
+                "A diamond axe comes back out of the grid one point of wear worse");
+
+        // A better axe is never slower at the bench. Iron already reaches the floor of MIN_STROKES,
+        // so nothing above it is faster either — the reward for a diamond axe is reach, not speed.
+        BlockState log = Blocks.OAK_LOG.defaultBlockState();
+        int byDiamond = LogWorking.strokesNeeded(diamond, log);
+        int byIron = LogWorking.strokesNeeded(new ItemStack(ModItems.IRON_HATCHET), log);
+        helper.assertTrue(byDiamond <= byIron && byDiamond == LogWorking.MIN_STROKES,
+                "Every axe that may hew is already at the floor of the stroke count: "
+                        + byDiamond + " against " + byIron);
+        helper.assertTrue(LogWorking.strokesNeeded(new ItemStack(ModItems.FLINT_HATCHET), log)
+                        == Integer.MAX_VALUE,
+                "while one that may not never finishes at all");
+        helper.succeed();
+    }
+
 
     @GameTest
     public void exhaustionIsOnlyFeltOnTheLastFourDrops(GameTestHelper helper) {
@@ -304,6 +422,66 @@ public final class ProgressionGameTests {
                         && hasRecipe(helper, "hardwrought:bronze_ingot_from_campfire"),
                 "Section 56: three parts copper to one of tin, and back into the fire");
         helper.assertTrue(recipes != null, "The recipe table is loaded");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void primitiveHatchetAndPickaxeRecipesAreUnambiguous(GameTestHelper helper) {
+        var recipes = helper.getLevel().recipeAccess();
+        var hatchetHolder = recipes.byKey(ResourceKey.create(Registries.RECIPE,
+                Identifier.parse("hardwrought:flint_hatchet")));
+        var pickaxeHolder = recipes.byKey(ResourceKey.create(Registries.RECIPE,
+                Identifier.parse("hardwrought:flint_pickaxe")));
+        helper.assertTrue(hatchetHolder.isPresent() && pickaxeHolder.isPresent()
+                        && hatchetHolder.get().value() instanceof net.minecraft.world.item.crafting.ShapedRecipe
+                        && pickaxeHolder.get().value() instanceof net.minecraft.world.item.crafting.ShapedRecipe,
+                "Both primitive tool recipes are loaded as shaped recipes");
+
+        var hatchet = (net.minecraft.world.item.crafting.ShapedRecipe) hatchetHolder.get().value();
+        var pickaxe = (net.minecraft.world.item.crafting.ShapedRecipe) pickaxeHolder.get().value();
+        var hatchetLayout = net.minecraft.world.item.crafting.CraftingInput.of(2, 2, java.util.List.of(
+                new ItemStack(ModItems.FLINT_SHARD), new ItemStack(ModItems.LEAF_STRING),
+                new ItemStack(ModItems.FLINT_SHARD), new ItemStack(Items.STICK)));
+        var pickaxeLayout = net.minecraft.world.item.crafting.CraftingInput.of(2, 2, java.util.List.of(
+                new ItemStack(ModItems.FLINT_SHARD), new ItemStack(ModItems.FLINT_SHARD),
+                new ItemStack(ModItems.LEAF_STRING), new ItemStack(Items.STICK)));
+
+        helper.assertTrue(hatchet.matches(hatchetLayout, helper.getLevel())
+                        && !pickaxe.matches(hatchetLayout, helper.getLevel()),
+                "The vertical flint head makes only the hatchet");
+        helper.assertTrue(pickaxe.matches(pickaxeLayout, helper.getLevel())
+                        && !hatchet.matches(pickaxeLayout, helper.getLevel()),
+                "The horizontal flint head makes only the pickaxe, even with recipe mirroring");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void matchingCraftingRecipesCanBeSelected(GameTestHelper helper) {
+        net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        net.minecraft.world.inventory.InventoryMenu menu = player.inventoryMenu;
+        try {
+            menu.getCraftSlots().setItem(0, new ItemStack(Items.BARRIER));
+            menu.slotsChanged(menu.getCraftSlots());
+            RecipeSelectionMenu selection = (RecipeSelectionMenu) menu;
+            helper.assertTrue(selection.hardwrought$recipeChoiceCount() == 2,
+                    "The inventory notices both recipes that match the same ingredient");
+
+            Item before = menu.getResultSlot().getItem().getItem();
+            helper.assertTrue(before == Items.DIAMOND || before == Items.EMERALD,
+                    "One of the matching results is shown first");
+            helper.assertTrue(menu.clickMenuButton(player, RecipeSelectionMenu.NEXT_RECIPE_BUTTON),
+                    "The recipe choice button is accepted by the server");
+            Item after = menu.getResultSlot().getItem().getItem();
+            helper.assertTrue(after != before && (after == Items.DIAMOND || after == Items.EMERALD),
+                    "Choosing again changes to the other matching result");
+
+            menu.slotsChanged(menu.getCraftSlots());
+            helper.assertTrue(menu.getResultSlot().getItem().is(after),
+                    "The chosen result remains selected when the grid is recalculated");
+        } finally {
+            menu.getCraftSlots().clearContent();
+            player.closeContainer();
+        }
         helper.succeed();
     }
 

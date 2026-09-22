@@ -47,6 +47,8 @@ public class Hardwrought implements ModInitializer {
 		ModBlocks.initialize();
 		de.ipnats.hardwrought.metallurgy.ModMetals.initialize();
 		ModItems.initialize();
+		de.ipnats.hardwrought.core.registry.ModBlockEntities.initialize();
+		de.ipnats.hardwrought.core.registry.ModEffects.initialize();
 		ModCreativeTabs.initialize();
 		DataResourceLoader.get().registerReloadListener(id("materials"), new MaterialDefinitions());
 		DataResourceLoader.get().registerReloadListener(id("item_weights"), new ItemWeightDefinitions());

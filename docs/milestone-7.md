@@ -15,7 +15,7 @@ anything usable comes out (section 71.1.10):
 
 | Verdict | Speed | Stamina | Yield |
 | --- | --- | --- | --- |
-| **Proper** — the right tool | normal | normal | normal drops |
+| **Proper** — the right tool | see *Even the right tool* below | normal | normal drops |
 | **Loose** — plants, fibre, snow (71.1.1) | normal | half | normal drops |
 | **Diggable** — soil by hand (71.1.2) | ×0.30 | ×4 | a handful of loose ground |
 | **Improvised** — a tool, but the wrong one | ×0.25 | ×3 | often ruined, and hard on the tool |
@@ -37,6 +37,48 @@ not break on the server would be worse than no rule at all.
 
 Hitting a block that will not move says so in the action bar. A rule that silently does nothing reads
 as a bug.
+
+## Even the right tool is work
+
+The verdicts above priced the *wrong* tool. The right one was left at vanilla speed, and that was the
+one place the whole progression said nothing: a mod whose first tool is a knapped flint edge shifted
+stone at exactly the pace a creative-mode diamond pick does.
+
+`BlockBreaking.laborFactor` is the other half of section 71.1.9. Material that is worked rather than
+gathered — anything wanting a pickaxe, axe or shovel, plus anything that needs a correct tool for its
+drops — keeps only part of vanilla's speed, and less of it the harder it is:
+
+```
+factor = max(0.30, 0.55 − hardness × 0.08)
+```
+
+| | vanilla | with labour |
+| --- | --- | --- |
+| Stone, stone pickaxe | 0.56 s | 1.3 s |
+| Deepslate, iron pickaxe | 0.75 s | 2.4 s |
+| Iron ore, stone pickaxe | 1.13 s | 3.6 s |
+| Oak log, flint hatchet | 2.40 s | 6.2 s |
+| Oak log, stone hatchet | 0.75 s | 1.9 s |
+| Dirt, flint shovel | 0.60 s | 1.2 s |
+
+Two numbers rather than one flat multiplier, because a flat one gets the feel wrong in both
+directions: it makes gravel tedious while barely touching deepslate. Scaling with the block's own
+hardness keeps soil quick and turns rock and timber into the part of the day that costs something —
+and it makes each step up the tool chain worth taking, because the material's resistance is the same
+whatever is swung at it.
+
+Grass, leaves, crops, cloth and snow are untouched. Punching a bush was never the problem.
+
+The factor is deliberately **not** multiplied onto {@code BreakingVerdict.speedFactor}. That factor
+is the price of the wrong tool and was tuned on its own; compounding the two would put a flint pick
+against iron ore into the minutes, which teaches nothing the refused drops do not already say.
+
+Breaking also had to stop paying for itself. One block used to cost less stamina than standing over
+it restored, so no amount of slowing it down would ever have been felt. The base cost per block is
+now 0.18 against hardness, plus a flat 0.15 for having broken one at all, which puts a stone block
+at 0.42 against the 0.31 a player recovers in the time it takes. A long shift underground runs the
+reserve down and gets visibly harder until it is rested off — and, since spent stamina is charged as
+calories, it is also what makes a miner hungry.
 
 ## Earth and stone come apart into pieces
 
@@ -79,9 +121,9 @@ fragile as gold. They exist to open the first door, not to stay useful.
 
 ## The first workbench is hewn out of a log
 
-A workbench is not four boards in a square. **Crouch and hold an iron hatchet against a standing
-log** and keep working: each repetition of the interaction is one stroke, every stroke costs stamina,
-and after enough of them the log *becomes* a workbench where it stands. Strokes are remembered per
+A workbench is not four boards in a square. **Crouch and hold a good axe against a standing log** and
+keep working: each repetition of the interaction is one stroke, every stroke costs stamina, and after
+enough of them the log *becomes* a workbench where it stands. Strokes are remembered per
 player and forgotten after five seconds, so a bench cannot be cut across three sessions.
 
 It looks like what it is, in three layers rather than two: bark at the bottom, a band of the squared
@@ -90,9 +132,26 @@ workbench read as two blocks glued together; the stripped band in between is the
 wood travels with the block** — a birch bench keeps birch bark, a crimson stem keeps its stem —
 through breaking and placing it again.
 
-Only a tool in the `hardwrought:crafting_tools` tag can cut a flat working surface out of round
-timber; a knapped flint edge cannot. That tag is where the saws, chisels and hammers of the later
-technology tree will go.
+Which axe counts is worked out from the item, not looked up in a list: **any axe of iron tier or
+better**. The iron hatchet is the first one the progression reaches, and a player who has got as far
+as an iron, bronze, diamond or netherite axe has plainly got past the point this gate exists for —
+including one from a mod Hardwrought has never heard of. A knapped flint edge, a stone hatchet and a
+golden axe are all refused.
+
+Two questions, both asked of the item. **Is it an axe** is asked as everything else in this milestone
+is: an item that cuts a log faster than a fist would is an axe. **Is it good enough** is asked by
+whether the tool's own material would be refused the drops of a block in `#minecraft:needs_iron_tool`
+— which is vanilla's own definition of the iron line, so it stays right for materials nobody here has
+heard of. Gold is why the question is tier and not speed: a golden axe is the fastest in the game and
+still too soft to be trusted.
+
+`ItemStack#isCorrectToolForDrops` cannot answer the second question, which is why the rule reads the
+tool component itself. An axe is the wrong *kind* of tool for ore, so that method says no to every
+axe at every tier and the tier question goes unasked.
+
+The `hardwrought:crafting_tools` tag stays alongside it, naming tools outright. That is where the
+saws, chisels and hammers of the later technology tree will go, and how a datapack adds one that is
+not an axe at all.
 
 **Crouching against a log never strips it**, whatever is in hand. Bark coming off halfway through a
 cut reads as a bug, and stripping is what the same axe does when the player is not crouching.
@@ -218,17 +277,19 @@ listed in `textureRequirements.md`.
 
 ## Verification
 
-`gradlew.bat runGameTest` runs 115 server tests, eleven of them for this milestone.
+`gradlew.bat runGameTest` runs 149 server tests, fourteen of them for this milestone.
 
 They cover the rule rather than the wiring, because the rule is the milestone: fists doing nothing to
 stone, timber, ore, planks, brick and metal; the right tool being the one that works and the wrong
 one being slower, costlier and harder on itself; soil and growth staying within reach of hands; glass
 breaking without being harvested; flint being slower than wood and as fragile as gold; earth and
 stone dropping only their parts, with silk touch lifting the whole block; a log taking more strokes
-with a flint edge than with iron and none at all with a fist; a workbench being hewable only with a
-joiner's hatchet and only for more work than splitting the same log; the ordinary crafting table no
+with a flint edge than with iron and none at all with a fist; a workbench being hewable with any axe of iron tier or
+better and with nothing softer, and only for more work than splitting the same log; the ordinary crafting table no
 longer fitting the grid a player carries; and a tool in a recipe coming back worn rather than
-consumed.
+consumed. Two more hold the labour rule: worked material always costing more than vanilla and never
+stalling, harder material dragging further than softer, gathered material keeping vanilla speed
+untouched, and one block of stone costing more stamina than standing over it gives back.
 
 Two of them walk the chain out of nothing — leaves, gravel, flint, the first hatchet, the fire pit,
 the first metal — and assert that **every step of it fits the 2×2 grid**, because section 71.1.8 is
@@ -244,3 +305,31 @@ at the drill tier its own table states.
 One more covers the stamina threshold: being worn out costs a player nothing until the last four
 drops of the bar are all that is left. A penalty that starts at the first missing point means every
 player is permanently slightly slowed for no reason they can see.
+
+## Fire, and the first furnace
+
+A campfire a player sets down is **laid, not lit**. Vanilla hands out a burning fire for free, which
+makes the first night a formality; laying the wood is the easy half, and starting it is the part that
+should cost something.
+
+What it costs is **fire-lighting sticks**: two sticks, crossed, made in the inventory square. Using
+them on an unlit campfire starts it and wears them down — sixteen fires and they are gone. Flint and
+steel still works for anybody who has iron. This is what comes before iron. Only placement is
+touched, so a campfire that generates with a village is still burning when it is found.
+
+### The chain that used to be knotted
+
+A crafting table needs an iron hatchet. Iron needs a furnace. A vanilla furnace needs eight
+cobblestone in a three-by-three grid — which needs a crafting table. That circle is now cut:
+
+| Step | Where | What it needs |
+| --- | --- | --- |
+| Clay → brick | on a campfire | a lit campfire |
+| 4 bricks → **brick furnace** | the inventory square | nothing else |
+| Ore → ingot | the brick furnace | fuel |
+| Iron hatchet → crafting table | | |
+
+The brick furnace is deliberately poor. It smelts at **half the speed** of a stone furnace and gets
+**two thirds** of the work out of the same fuel, because it exists to be replaced. It is the first
+furnace a player can build, not one they should want to keep.
+

@@ -55,6 +55,11 @@ public record PlayerVitals(double stamina, double hydration, double calories, do
                 micronutrients, fatigue, bodyTemperature, wetness, stress).normalized();
     }
 
+    public PlayerVitals withHydration(double value) {
+        return new PlayerVitals(stamina, value, calories, protein, carbohydrates, fat,
+                micronutrients, fatigue, bodyTemperature, wetness, stress).normalized();
+    }
+
     public PlayerVitals drink(double amount) {
         return new PlayerVitals(stamina, hydration + amount, calories, protein, carbohydrates, fat,
                 micronutrients, fatigue, bodyTemperature, wetness, stress).normalized();

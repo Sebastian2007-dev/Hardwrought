@@ -119,6 +119,7 @@
     {
       "id": "hardwrought:deepslate_platinum_ore",
       "required": false
-    }
+    },
+    "hardwrought:brick_furnace"
   ]
 }

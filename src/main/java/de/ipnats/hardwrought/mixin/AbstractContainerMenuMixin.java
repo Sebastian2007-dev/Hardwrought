@@ -1,5 +1,6 @@
 package de.ipnats.hardwrought.mixin;
 
+import de.ipnats.hardwrought.progression.RecipeSelectionMenu;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
@@ -39,5 +40,14 @@ public abstract class AbstractContainerMenuMixin {
                         && level.getBlockState(pos).getBlock() != Blocks.CRAFTING_TABLE
                         && player.isWithinBlockInteractionRange(pos, VANILLA_REACH), false);
         if (workbench) info.setReturnValue(true);
+    }
+
+    @Inject(method = "clickMenuButton", at = @At("HEAD"), cancellable = true)
+    private void hardwrought$selectAnotherRecipe(Player player, int button,
+                                                  CallbackInfoReturnable<Boolean> info) {
+        if (button != RecipeSelectionMenu.NEXT_RECIPE_BUTTON
+                || !((Object) this instanceof RecipeSelectionMenu selection)
+                || !(player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)) return;
+        info.setReturnValue(selection.hardwrought$nextRecipe(serverPlayer));
     }
 }

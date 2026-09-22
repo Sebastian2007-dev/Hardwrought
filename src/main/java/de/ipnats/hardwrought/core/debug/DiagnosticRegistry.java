@@ -13,7 +13,7 @@ import java.util.Map;
 public final class DiagnosticRegistry {
     private final de.ipnats.hardwrought.core.utilities.ThreadOwnership ownership =
             new de.ipnats.hardwrought.core.utilities.ThreadOwnership();
-    public enum Channel { ENVIRONMENT, GAS, TEMPERATURE, WATER, STRUCTURE, ORE }
+    public enum Channel { ENVIRONMENT, GAS, TEMPERATURE, WATER, STRUCTURE, ORE, KNOWLEDGE }
 
     @FunctionalInterface
     public interface Probe {

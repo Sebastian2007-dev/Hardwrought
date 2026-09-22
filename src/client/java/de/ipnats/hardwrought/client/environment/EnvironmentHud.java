@@ -19,9 +19,10 @@ import java.util.Locale;
  */
 public final class EnvironmentHud {
     private static final int VIGNETTE_DEPTH = 26;
-    private static final int PANEL_X = 10;
-    private static final int PANEL_Y = 118;
-    private static final int PANEL_WIDTH = 122;
+    private static final int PANEL_X = de.ipnats.hardwrought.client.survival.SurvivalHud.PANEL_X;
+    /** Stacked under the vitals panel, so growing that one pushes this down instead of hiding it. */
+    private static final int PANEL_Y = de.ipnats.hardwrought.client.survival.SurvivalHud.PANEL_BOTTOM + 9;
+    private static final int PANEL_WIDTH = de.ipnats.hardwrought.client.survival.SurvivalHud.PANEL_WIDTH;
     private static EnvironmentSnapshotPayload snapshot;
 
     private EnvironmentHud() { }

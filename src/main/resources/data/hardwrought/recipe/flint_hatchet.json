@@ -7,8 +7,8 @@
     "T": "hardwrought:leaf_string"
   },
   "pattern": [
-    "FF",
-    "ST"
+    "FT",
+    "FS"
   ],
   "result": {
     "id": "hardwrought:flint_hatchet"

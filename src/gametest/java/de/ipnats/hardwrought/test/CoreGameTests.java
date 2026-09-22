@@ -7,6 +7,7 @@ import de.ipnats.hardwrought.core.events.CoreLifecycle;
 import de.ipnats.hardwrought.core.networking.DebugSnapshotPayload;
 import de.ipnats.hardwrought.core.networking.SurvivalSnapshotPayload;
 import de.ipnats.hardwrought.survival.PlayerVitals;
+import de.ipnats.hardwrought.survival.SurvivalSystem;
 import de.ipnats.hardwrought.survival.CarryWeight;
 import de.ipnats.hardwrought.survival.WaterskinItem;
 import de.ipnats.hardwrought.core.registry.MaterialDefinition;
@@ -339,5 +340,94 @@ public final class CoreGameTests {
         try { action.run(); }
         catch (IllegalArgumentException | IllegalStateException | UnsupportedOperationException expected) { return; }
         throw new AssertionError("Expected operation to be rejected");
+    }
+
+    /**
+     * The load a player carries is only a fair rule if the ordinary trip is free and the penalty for
+     * hauling too much stops well short of crippling. This is the test that would have caught a
+     * single stack of cobblestone putting a fresh player permanently over the limit.
+     */
+    @GameTest
+    public void anOrdinaryTripIsCarriedWithoutPenalty(GameTestHelper helper) {
+        double capacity = de.ipnats.hardwrought.survival.CarryWeight.BASE_CAPACITY_KG;
+        double block = de.ipnats.hardwrought.survival.CarryWeight.perItem(
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.COBBLESTONE));
+        double tool = de.ipnats.hardwrought.survival.CarryWeight.perItem(
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_PICKAXE));
+        double food = de.ipnats.hardwrought.survival.CarryWeight.perItem(
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BREAD));
+
+        helper.assertTrue(block * 64 < capacity,
+                "One stack of blocks must not use up the whole allowance by itself");
+        double trip = block * 64 * 3 + tool * 4 + food * 16;
+        helper.assertTrue(trip <= capacity,
+                "A working trip — three stacks, four tools, a stack of bread — is carried free: "
+                        + String.format(java.util.Locale.ROOT, "%.1f of %.0f kg", trip, capacity));
+
+        // A full inventory of rubble is another matter, and should be.
+        double hoard = block * 64 * 36;
+        helper.assertTrue(hoard > capacity * 3,
+                "Hauling a full inventory of stone is meant to be felt");
+
+        // Whatever the load, the penalties stay survivable: still sprinting, still clearing a block.
+        for (double carried : new double[]{0, capacity, capacity * 2, capacity * 20, hoard}) {
+            double load = Math.max(0, carried / capacity - 1.0);
+            double speed = Math.min(0.30, load * 0.18);
+            double jump = Math.min(0.25, load * 0.15);
+            helper.assertTrue(speed <= 0.30 && jump <= 0.25,
+                    "Overload slows and weighs down; it never stops a player moving");
+        }
+        helper.assertTrue(de.ipnats.hardwrought.survival.SurvivalSystem.exhaustion(
+                        de.ipnats.hardwrought.survival.PlayerVitals.MAX_STAMINA) == 0.0,
+                "And a player at full stamina pays no exhaustion penalty at all");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void hungerIsOneSystemAndItEmptiesOnItsOwn(GameTestHelper helper) {
+        // There used to be two hungers: calories nothing displayed and nothing enforced, and the
+        // vanilla shanks, which drained on their own schedule and meant nothing here.
+        helper.assertTrue(SurvivalSystem.shanks(PlayerVitals.MAX_CALORIES) == 20
+                        && SurvivalSystem.shanks(SurvivalSystem.BAR_FULL_CALORIES) == 20,
+                "A full reserve reads full, and so does the whole surplus above it");
+        helper.assertTrue(SurvivalSystem.shanks(0) == 0, "An empty one reads empty");
+        helper.assertTrue(SurvivalSystem.shanks(SurvivalSystem.BAR_FULL_CALORIES / 2) == 10,
+                "and half of it reads half");
+        helper.assertTrue(SurvivalSystem.shanks(-50) == 0 && SurvivalSystem.shanks(99999) == 20,
+                "Nonsense on either side still lands on the bar");
+
+        // The part the player asked about: doing nothing has to cost something, and on a scale they
+        // can feel within a day rather than a week.
+        double idleSeconds = PlayerVitals.MAX_CALORIES / SurvivalSystem.BASAL_CALORIES_PER_SECOND;
+        helper.assertTrue(idleSeconds > 1200 && idleSeconds < 3600,
+                "A full belly burns away in between one and three Minecraft days of doing nothing: "
+                        + idleSeconds + "s");
+
+        var runtime = de.ipnats.hardwrought.core.events.CoreLifecycle.require(
+                helper.getLevel().getServer());
+        // Asked for in survival on purpose: the default mock is a creative one, and hunger stands
+        // back in creative so a builder does not starve mid-build.
+        net.minecraft.server.level.ServerPlayer player = (net.minecraft.server.level.ServerPlayer)
+                helper.makeMockServerPlayer(net.minecraft.world.level.GameType.SURVIVAL);
+        PlayerVitals starved = runtime.survival().vitals(player).normalized();
+        runtime.survival().applyHunger(player, new PlayerVitals(starved.stamina(),
+                starved.hydration(), 0, 0, 0, 0, 0, starved.fatigue(), starved.bodyTemperature(),
+                starved.wetness(), starved.stress()));
+        helper.assertTrue(player.getFoodData().getFoodLevel() == 0,
+                "An empty reserve empties the bar the player actually watches, and vanilla starves "
+                        + "them for it without a line of code here");
+
+        runtime.survival().applyHunger(player, PlayerVitals.defaults()
+                .withStamina(starved.stamina()));
+        helper.assertTrue(player.getFoodData().getFoodLevel() == 20,
+                "and a fed one fills it again");
+
+        // And a creative player keeps a full bar however empty the reserve behind it is.
+        net.minecraft.server.level.ServerPlayer builder = (net.minecraft.server.level.ServerPlayer)
+                helper.makeMockServerPlayer(net.minecraft.world.level.GameType.CREATIVE);
+        runtime.survival().applyHunger(builder, new PlayerVitals(100, 100, 0, 0, 0, 0, 0, 0, 37, 0, 0));
+        helper.assertTrue(builder.getFoodData().getFoodLevel() == 20,
+                "Creative keeps its full bar whatever the reserve says");
+        helper.succeed();
     }
 }

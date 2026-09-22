@@ -32,9 +32,11 @@ public final class ModCreativeTabs {
                             output.accept(ModBlocks.HEWN_WORKBENCH.itemStack(wood));
                         }
                         output.accept(ModItems.LEAF_STRING);
+                        output.accept(ModItems.COMPENDIUM);
                         output.accept(ModItems.BRONZE_MIXTURE);
                         output.accept(ModItems.BRONZE_INGOT);
-                        output.accept(ModItems.LIGHTING_STICKS);;
+                        output.accept(ModItems.LIGHTING_STICKS);
+                        output.accept(ModItems.BRICK_FURNACE);
                         output.accept(ModItems.FILLED_WATERSKIN);
                         output.accept(ModItems.SAFETY_LAMP);
 

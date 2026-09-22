@@ -14,6 +14,7 @@ import de.ipnats.hardwrought.water.WaterEvents;
 import de.ipnats.hardwrought.water.WaterQuality;
 import de.ipnats.hardwrought.water.WaterQualityProfile;
 import de.ipnats.hardwrought.water.WaterSystem;
+import de.ipnats.hardwrought.survival.PlayerVitals;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -259,5 +260,131 @@ public final class WaterGameTests {
             return;
         }
         throw new AssertionError("Expected operation to be rejected");
+    }
+
+    /**
+     * Section 23.1: a player who has lost their waterskin should not die of thirst standing in a
+     * river. Sneak with an empty hand at the water and drink straight out of it.
+     */
+    @GameTest
+    public void sneakingWithAnEmptyHandDrinksStraightFromTheWater(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var runtime = de.ipnats.hardwrought.core.events.CoreLifecycle.require(level.getServer());
+        net.minecraft.core.BlockPos pos = helper.absolutePos(new net.minecraft.core.BlockPos(1, 2, 1));
+        level.setBlockAndUpdate(pos, net.minecraft.world.level.block.Blocks.WATER.defaultBlockState());
+        de.ipnats.hardwrought.water.WaterStorage.setAmount(level, pos,
+                de.ipnats.hardwrought.water.WaterAmounts.BLOCK);
+
+        net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        player.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 0.0f, 0.0f);
+        player.setShiftKeyDown(true);
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,
+                net.minecraft.world.item.ItemStack.EMPTY);
+
+        int water = de.ipnats.hardwrought.water.WaterStorage.amount(level, pos);
+        helper.assertTrue(runtime.survival().mayDrinkByHand(player), "A player who has not drunk may drink");
+        helper.assertTrue(drinkAt(player, level, pos) == net.minecraft.world.InteractionResult.SUCCESS,
+                "Sneaking at the water with an empty hand drinks from it");
+        helper.assertTrue(de.ipnats.hardwrought.water.WaterStorage.amount(level, pos)
+                        == water - de.ipnats.hardwrought.water.WaterAmounts.DRINK,
+                "A mouthful comes out of the world, the same as one out of a skin");
+
+        // A gesture, not a button to hold down.
+        helper.assertTrue(!runtime.survival().mayDrinkByHand(player),
+                "And the next mouthful has to wait");
+        int left = de.ipnats.hardwrought.water.WaterStorage.amount(level, pos);
+        helper.assertTrue(drinkAt(player, level, pos) != net.minecraft.world.InteractionResult.SUCCESS,
+                "A second mouthful in the same tick is refused");
+        helper.assertTrue(de.ipnats.hardwrought.water.WaterStorage.amount(level, pos) == left,
+                "And the refused mouthful takes nothing out of the river");
+
+        // What the mouthful is worth is arithmetic, and it is checked where the arithmetic lives: a
+        // mock player is always in creative, and a creative player is never thirsty.
+        PlayerVitals thirsty = PlayerVitals.defaults().withHydration(20.0);
+        double handful = de.ipnats.hardwrought.survival.SurvivalSystem.HAND_DRINK_HYDRATION;
+        helper.assertTrue(thirsty.drink(handful * de.ipnats.hardwrought.water.WaterQuality.FRESH
+                        .hydrationFactor()).hydration() == 20.0 + handful,
+                "A handful of clean water is worth exactly a handful");
+        helper.assertTrue(thirsty.drink(handful * de.ipnats.hardwrought.water.WaterQuality.SALT
+                        .hydrationFactor()).hydration() < 20.0,
+                "Section 23.2: a handful of sea water leaves the drinker worse off");
+        helper.assertTrue(handful < de.ipnats.hardwrought.survival.WaterskinItem.DRINK_HYDRATION,
+                "Cupped hands spill; a skin does not");
+
+        // Standing up, or holding anything at all, is somebody else’s interaction.
+        player.setShiftKeyDown(false);
+        helper.assertTrue(drinkAt(player, level, pos) == net.minecraft.world.InteractionResult.PASS,
+                "Standing upright at a river is not drinking from it");
+        player.setShiftKeyDown(true);
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.STONE));
+        helper.assertTrue(drinkAt(player, level, pos) == net.minecraft.world.InteractionResult.PASS,
+                "Sneaking with a block in hand still places the block");
+
+        // Dry ground is not a drink.
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,
+                net.minecraft.world.item.ItemStack.EMPTY);
+        net.minecraft.core.BlockPos dry = helper.absolutePos(new net.minecraft.core.BlockPos(3, 2, 3));
+        player.snapTo(dry.getX() + 0.5, dry.getY() + 4.0, dry.getZ() + 0.5, 0.0f, 90.0f);
+        helper.assertTrue(drinkAt(player, level, dry) == net.minecraft.world.InteractionResult.PASS,
+                "There is nothing to drink where there is no water");
+        helper.succeed();
+    }
+
+    private static net.minecraft.world.InteractionResult drinkAt(net.minecraft.server.level.ServerPlayer player,
+                                                                 net.minecraft.server.level.ServerLevel level,
+                                                                 net.minecraft.core.BlockPos pos) {
+        var hit = new net.minecraft.world.phys.BlockHitResult(
+                net.minecraft.world.phys.Vec3.atCenterOf(pos), net.minecraft.core.Direction.UP, pos, false);
+        return net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.invoker()
+                .interact(player, level, net.minecraft.world.InteractionHand.MAIN_HAND, hit);
+    }
+
+    /**
+     * Section 23.2: bad water is not venom. It leaves the drinker thirsty, which is the water half
+     * of what hunger does to a well-fed one.
+     */
+    @GameTest
+    public void badWaterLeavesYouThirstyRatherThanPoisoned(GameTestHelper helper) {
+        var thirst = de.ipnats.hardwrought.core.registry.ModEffects.THIRST;
+        helper.assertTrue(net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.getKey(thirst.value())
+                        .equals(de.ipnats.hardwrought.Hardwrought.id("thirst")),
+                "The effect is registered where its icon and its name are looked for");
+        helper.assertTrue(thirst.value().getCategory()
+                        == net.minecraft.world.effect.MobEffectCategory.HARMFUL,
+                "And it reads as harmful, so the bar shows it in the right colour");
+        helper.assertTrue(thirst.value().getDescriptionId().equals("effect.hardwrought.thirst"),
+                "Its name comes from the language file");
+
+        net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        helper.assertTrue(de.ipnats.hardwrought.survival.SurvivalSystem.thirstDrain(player) == 0.0,
+                "A player without the effect pays nothing for it");
+        player.addEffect(new net.minecraft.world.effect.MobEffectInstance(thirst,
+                de.ipnats.hardwrought.survival.SurvivalSystem.THIRST_DURATION_TICKS, 0));
+        helper.assertTrue(de.ipnats.hardwrought.survival.SurvivalSystem.thirstDrain(player)
+                        == de.ipnats.hardwrought.survival.SurvivalSystem.THIRST_PER_SECOND,
+                "The first level costs one share of the reserve a second");
+        player.removeEffect(thirst);
+        player.addEffect(new net.minecraft.world.effect.MobEffectInstance(thirst,
+                de.ipnats.hardwrought.survival.SurvivalSystem.THIRST_DURATION_TICKS, 1));
+        helper.assertTrue(de.ipnats.hardwrought.survival.SurvivalSystem.thirstDrain(player)
+                        == 2 * de.ipnats.hardwrought.survival.SurvivalSystem.THIRST_PER_SECOND,
+                "And a worse case costs proportionally more");
+        player.removeEffect(thirst);
+
+        // A debuff nobody notices is not a debuff. Resting thirst is 0.035 a second.
+        helper.assertTrue(de.ipnats.hardwrought.survival.SurvivalSystem.THIRST_PER_SECOND > 0.035 * 3,
+                "The effect has to be felt against the reserve draining on its own");
+        helper.assertTrue(de.ipnats.hardwrought.survival.SurvivalSystem.THIRST_PER_SECOND
+                        * de.ipnats.hardwrought.survival.SurvivalSystem.THIRST_DURATION_TICKS / 20.0
+                        < de.ipnats.hardwrought.survival.PlayerVitals.MAX_HYDRATION / 2.0,
+                "And it has to be survivable: one bad drink is not half the reserve");
+
+        // Only water that can make somebody ill does, and salt water is the worst of it.
+        helper.assertTrue(de.ipnats.hardwrought.water.WaterQuality.FRESH.illnessRisk() == 0.0,
+                "Clean water never does this");
+        helper.assertTrue(de.ipnats.hardwrought.water.WaterQuality.SALT.illnessRisk() > 0.0,
+                "Sea water does");
+        helper.succeed();
     }
 }

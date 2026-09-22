@@ -16,7 +16,9 @@
       "de.ipnats.hardwrought.test.VerticalWorldGameTests",
       "de.ipnats.hardwrought.test.GeologyGameTests",
       "de.ipnats.hardwrought.test.ProgressionGameTests",
-      "de.ipnats.hardwrought.test.MetalGameTests"
+      "de.ipnats.hardwrought.test.MetalGameTests",
+      "de.ipnats.hardwrought.test.KnowledgeGameTests",
+      "de.ipnats.hardwrought.test.FirecraftGameTests"
     ],
     "fabric-client-gametest": [
       "de.ipnats.hardwrought.test.CoreClientGameTest"

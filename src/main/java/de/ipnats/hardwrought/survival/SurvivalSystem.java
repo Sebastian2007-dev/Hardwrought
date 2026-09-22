@@ -64,7 +64,33 @@ public final class SurvivalSystem {
     private static final double CLIMB_STAMINA_PER_TICK = 0.006;
     private static final double OVERLOAD_STAMINA_PER_TICK = 0.002;
     private static final double JUMP_STAMINA = 0.30;
-    private static final double MINED_BLOCK_STAMINA = 0.10;
+    /**
+     * What having broken one block costs on top of the effort the material itself took. Public for
+     * the same reason {@link #IDLE_RECOVERY_PER_TICK} is: both costs land on the same break, and a
+     * test that weighs only one of them against recovery weighs the wrong thing.
+     */
+    public static final double MINED_BLOCK_STAMINA = 0.15;
+    /**
+     * What a body burns per second doing nothing at all, on top of whatever work is done on it.
+     *
+     * <p>Sized against the day rather than the minute: a full belly is 2400 kcal, the bar reads full
+     * from {@link #BAR_FULL_CALORIES} up, and doing nothing whatsoever empties it in forty minutes
+     * of real time — two Minecraft days. Working, carrying, freezing and sprinting all add to it, so
+     * a day spent breaking rock costs about twice a day spent sitting still. Hunger is meant to be
+     * the thing that gets a player out of the hole they are hiding in.
+     */
+    public static final double BASAL_CALORIES_PER_SECOND = 1.00;
+    /**
+     * Where the vanilla hunger bar reads full. The four hundred kcal above it are a reserve the bar
+     * does not draw, so eating at a full bar is never thrown away — and so that a player who has
+     * just eaten keeps the top of the bar for a few minutes rather than losing a shank at once.
+     */
+    public static final double BAR_FULL_CALORIES = 2000.0;
+    /**
+     * How much energy one point of spent stamina represents. Hard work has to be felt as hunger, or
+     * the two systems never meet: a morning of breaking rock should be the reason to go and eat.
+     */
+    private static final double CALORIES_PER_STAMINA = 1.6;
     /**
      * Stamina left before being worn out starts to cost a player anything. Four of the ten drops
      * the bar is drawn in: above that the reserve is there to be spent, and spending it is the
@@ -75,7 +101,12 @@ public final class SurvivalSystem {
     private static final double ARMOR_STAMINA_PER_TICK = 0.005;
     private static final EquipmentSlot[] ARMOR_SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST,
             EquipmentSlot.LEGS, EquipmentSlot.FEET};
-    private static final double IDLE_RECOVERY_PER_TICK = 0.012;
+    /**
+     * What standing still gives back per tick, before the recovery factor. Public because the
+     * progression tests weigh the cost of a block against it: mining that restores more than it
+     * takes is mining that costs nothing, however slow it is made.
+     */
+    public static final double IDLE_RECOVERY_PER_TICK = 0.012;
     /**
      * Fatigue is a day-scale value, so it is expressed against the day it is meant to cover: staying
      * awake through one full Minecraft day and night costs about 30 of 100. A player can therefore
@@ -107,6 +138,8 @@ public final class SurvivalSystem {
     private final Map<UUID, Double> sleepQuality = new HashMap<>();
     private final Set<UUID> restedNotice = new HashSet<>();
     private final Map<UUID, ActivityLoad> activity = new HashMap<>();
+    /** When each player last scooped a mouthful out of the world, so it cannot be spammed. */
+    private final Map<UUID, Long> lastHandDrink = new HashMap<>();
     private float normalTickRate = 20.0f;
     private boolean acceleratingSleep;
     /**
@@ -179,7 +212,7 @@ public final class SurvivalSystem {
             return false;
         }
         save.setVitals(player.getUUID(), current.withStamina(current.stamina() - amount));
-        recordWork(player, amount * 0.75, amount * 0.008);
+        recordWork(player, amount * CALORIES_PER_STAMINA, amount * 0.008);
         return true;
     }
 
@@ -212,12 +245,53 @@ public final class SurvivalSystem {
         if (player.isCreative()) return;
         save.setVitals(player.getUUID(), vitals(player).drink(amount * quality.hydrationFactor()));
         if (quality.illnessRisk() > 0 && player.level().getRandom().nextDouble() < quality.illnessRisk()) {
+            // Not poison. Drinking from a stagnant pond is not being envenomed, it is spending the
+            // next while thirstier than the drink was worth.
             player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                    net.minecraft.world.effect.MobEffects.POISON, 200, 0));
+                    de.ipnats.hardwrought.core.registry.ModEffects.THIRST, THIRST_DURATION_TICKS, 0));
             player.sendSystemMessage(Component.translatable("message.hardwrought.water_made_you_ill")
-                    .withStyle(net.minecraft.ChatFormatting.DARK_GREEN));
+                    .withStyle(net.minecraft.ChatFormatting.DARK_AQUA));
         }
         sync(player, carriedWeight(player), ambientTemperature(player), quality(player));
+    }
+
+    /**
+     * Section 23.1: a mouthful out of cupped hands. Worth less than a drink from a skin, because
+     * most of it runs out between the fingers, and worth nothing at all if the player is not thirsty
+     * enough to bother.
+     */
+    public static final double HAND_DRINK_HYDRATION = 10.0;
+    /** How long bad water stays with the drinker. */
+    public static final int THIRST_DURATION_TICKS = 600;
+    /**
+     * What the thirst effect costs per second, on top of everything else. Resting thirst is 0.035 a
+     * second, so this is a reserve draining seven times as fast: felt within seconds, survivable if
+     * there is clean water to be had.
+     */
+    public static final double THIRST_PER_SECOND = 0.25;
+    /** Long enough that scooping is a thing a player does, not a button they hold. */
+    public static final int HAND_DRINK_COOLDOWN_TICKS = 20;
+
+    /**
+     * What the thirst effect is costing this player this second. Folded into the metabolism pass
+     * rather than ticked by the effect itself, so bad water costs one reserve update and one
+     * synchronisation a second like everything else that drains it.
+     */
+    public static double thirstDrain(net.minecraft.world.entity.LivingEntity player) {
+        var effect = player.getEffect(de.ipnats.hardwrought.core.registry.ModEffects.THIRST);
+        return effect == null ? 0.0 : THIRST_PER_SECOND * (effect.getAmplifier() + 1);
+    }
+
+    /** True where this player has waited long enough since their last mouthful. */
+    public boolean mayDrinkByHand(ServerPlayer player) {
+        Long last = lastHandDrink.get(player.getUUID());
+        return last == null || player.level().getGameTime() - last >= HAND_DRINK_COOLDOWN_TICKS;
+    }
+
+    /** One mouthful from the world, straight and unboiled, with whatever was in it. */
+    public void drinkByHand(ServerPlayer player, WaterQuality quality) {
+        lastHandDrink.put(player.getUUID(), player.level().getGameTime());
+        drink(player, HAND_DRINK_HYDRATION, quality);
     }
 
     public void toggleSleep(ServerPlayer player) {
@@ -265,6 +339,7 @@ public final class SurvivalSystem {
 
     public void disconnect(UUID id) {
         restedNotice.remove(id);
+        lastHandDrink.remove(id);
         outdoorSleepers.remove(id);
         lastOnGround.remove(id);
         sleepQuality.remove(id);
@@ -388,9 +463,10 @@ public final class SurvivalSystem {
             double activityWater = player.isSprinting() ? 0.045 : (player.isSwimming() ? 0.035 : 0);
             double heatWater = Math.max(0, ambient - 28) * 0.006;
             double armorWater = armorMass * 0.0025;
+        double badWater = thirstDrain(player);
             double excessLoad = Math.max(0, carried / CarryWeight.BASE_CAPACITY_KG - 1.0);
             double coldEnergy = Math.max(0, 10 - ambient) * 0.08;
-            double energyUse = 0.65 + workEnergy + coldEnergy + excessLoad * 0.8;
+            double energyUse = BASAL_CALORIES_PER_SECOND + workEnergy + coldEnergy + excessLoad * 0.8;
             if (player.isSprinting()) energyUse += 1.15;
             else if (player.isSwimming()) energyUse += 0.9;
             // Section 18.1: thin air makes every breath harder work.
@@ -401,7 +477,8 @@ public final class SurvivalSystem {
                     + carbonDioxideStress * FATIGUE_PER_SECOND_CARBON_DIOXIDE);
             double stress = player.isSleeping() ? v.stress()
                     : Math.max(0, v.stress() - STRESS_RECOVERY_PER_SECOND);
-            PlayerVitals next = new PlayerVitals(v.stamina(), v.hydration() - 0.035 - activityWater - heatWater,
+            PlayerVitals next = new PlayerVitals(v.stamina(),
+                    v.hydration() - 0.035 - activityWater - heatWater - badWater,
                     v.calories() - energyUse, v.protein() - 0.006,
                     v.carbohydrates() - 0.012 - energyUse * 0.012, v.fat() - 0.006 - coldEnergy * 0.004,
                     v.micronutrients() - 0.002, fatigue, body, wetness, stress).normalized();
@@ -412,6 +489,7 @@ public final class SurvivalSystem {
             double airDrain = oxygenStress * 0.45 + carbonDioxideStress * 0.30 + smokeStress * 0.20;
             if (airDrain > 0) next = next.withStamina(next.stamina() - airDrain);
             save.setVitals(player.getUUID(), next);
+            applyHunger(player, next);
             applyAirDamage(player, gases);
             if (metabolismPasses % THERMAL_DAMAGE_PASSES == 0
                     && (next.bodyTemperature() < 34.0 || next.bodyTemperature() > 40.5)) {
@@ -421,6 +499,41 @@ public final class SurvivalSystem {
             applyPenalties(player, next, carried);
             sync(player, carried, ambient, quality(player));
         }
+    }
+
+    /**
+     * Writes the calorie reserve onto the vanilla hunger bar, once per metabolism pass.
+     *
+     * <p>Hardwrought had two hungers before this: its own calories, which nothing displayed and
+     * nothing enforced, and vanilla's shanks, which drained on their own schedule and meant nothing
+     * here. Driving one from the other collapses them into the bar the player already watches, and
+     * everything vanilla hangs off that bar — no sprinting when it is low, no regeneration until it
+     * is nearly full, and starvation when it is empty — starts applying to the real number for free.
+     *
+     * <p>Saturation carries dietary quality rather than a second energy figure. A player living on
+     * one food heals badly however full they are, which is what the four nutrient tracks were
+     * gathered for.
+     */
+    public void applyHunger(ServerPlayer player, PlayerVitals v) {
+        if (player.isCreative()) return;
+        net.minecraft.world.food.FoodData food = player.getFoodData();
+        int shanks = shanks(v.calories());
+        if (food.getFoodLevel() != shanks) food.setFoodLevel(shanks);
+        float saturation = (float) (nutritionQuality(v) / 100.0 * 8.0);
+        if (Math.abs(food.getSaturationLevel() - saturation) > 0.01f) food.setSaturation(saturation);
+    }
+
+    /** How many of the twenty shanks a calorie reserve is worth. Pure, so the mapping is testable. */
+    public static int shanks(double calories) {
+        double ratio = PlayerVitals.clamp(calories / BAR_FULL_CALORIES, 0, 1);
+        return (int) Math.round(20.0 * ratio);
+    }
+
+    /** How balanced a diet is, 0 to 100, across the four nutrient tracks it is kept in. */
+    private static double nutritionQuality(PlayerVitals v) {
+        double quality = ((v.protein() / 120.0) + (v.carbohydrates() / 360.0) + (v.fat() / 120.0)
+                + (v.micronutrients() / 100.0)) * 25.0;
+        return PlayerVitals.clamp(quality, 0, 100);
     }
 
     private double recoveryFactor(PlayerVitals v, double load, GasMixture gases) {
@@ -457,8 +570,10 @@ public final class SurvivalSystem {
     private void applyPenalties(ServerPlayer player, PlayerVitals v, double carried) {
         double load = Math.max(0, carried / CarryWeight.BASE_CAPACITY_KG - 1.0);
         double exhaustion = exhaustion(v.stamina());
-        double speedPenalty = -Math.min(0.55, load * 0.35 + exhaustion * 0.18);
-        double jumpPenalty = -Math.min(0.65, load * 0.45 + exhaustion * 0.22);
+        // Both penalties ramp gently and stop well short of crippling. A player who is overloaded
+        // should feel heavy, not broken: at the cap they still sprint and still clear a single block.
+        double speedPenalty = -Math.min(0.30, load * 0.18 + exhaustion * 0.18);
+        double jumpPenalty = -Math.min(0.25, load * 0.15 + exhaustion * 0.22);
         double miningPenalty = -Math.min(0.75, exhaustion * 0.45 + v.fatigue() / 300.0);
         updateModifier(player.getAttribute(Attributes.MOVEMENT_SPEED), MOVEMENT_MODIFIER, speedPenalty);
         updateModifier(player.getAttribute(Attributes.JUMP_STRENGTH), JUMP_MODIFIER, jumpPenalty);
@@ -583,10 +698,8 @@ public final class SurvivalSystem {
     private void sync(ServerPlayer player, double carried, double ambient, double quality) {
         if (!ServerPlayNetworking.canSend(player, SurvivalSnapshotPayload.TYPE)) return;
         PlayerVitals v = vitals(player);
-        double nutrition = ((v.protein() / 120.0) + (v.carbohydrates() / 360.0)
-                + (v.fat() / 120.0) + (v.micronutrients() / 100.0)) * 25.0;
         ServerPlayNetworking.send(player, new SurvivalSnapshotPayload(v.stamina(), v.hydration(), v.calories(),
-                PlayerVitals.clamp(nutrition, 0, 100), v.fatigue(), v.bodyTemperature(), ambient,
+                nutritionQuality(v), v.fatigue(), v.bodyTemperature(), ambient,
                 carried, CarryWeight.BASE_CAPACITY_KG, player.isSleeping(), quality, v.stress()));
     }
 }

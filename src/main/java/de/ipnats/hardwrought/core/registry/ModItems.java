@@ -21,6 +21,9 @@ public final class ModItems {
     public static final Item DIRT_SLAB = register("dirt_slab", properties -> new BlockItem(ModBlocks.DIRT_SLAB,
             properties), new Item.Properties().useBlockDescriptionPrefix());
     public static final Item LEAF_STRING = register("leaf_string", Item::new, new Item.Properties());
+    // Milestone 8, section 79: the compendium is a book a player carries as well as a key they press.
+    public static final Item COMPENDIUM = register("compendium",
+            de.ipnats.hardwrought.knowledge.CompendiumItem::new, new Item.Properties().stacksTo(1));
     public static final Item HEWN_WORKBENCH = register("hewn_workbench",
             properties -> new BlockItem(ModBlocks.HEWN_WORKBENCH, properties),
             new Item.Properties().useBlockDescriptionPrefix());
@@ -29,7 +32,14 @@ public final class ModItems {
     // in de.ipnats.hardwrought.metallurgy.Metal rather than one by one here.
     public static final Item BRONZE_MIXTURE = register("bronze_mixture", Item::new, new Item.Properties());
     public static final Item BRONZE_INGOT = register("bronze_ingot", Item::new, new Item.Properties());
-    public static final Item LIGHTING_STICKS = register("lighting_sticks", Item::new, new Item.Properties());
+    // Section 71: fire by friction. The sticks wear out, which is why a player wants a flint and
+    // steel eventually rather than because the sticks stop working.
+    public static final Item LIGHTING_STICKS = register("lighting_sticks",
+            de.ipnats.hardwrought.progression.LightingSticksItem::new,
+            new Item.Properties().durability(16));
+    public static final Item BRICK_FURNACE = register("brick_furnace",
+            properties -> new BlockItem(ModBlocks.BRICK_FURNACE, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
     public static final Item FILLED_WATERSKIN = register("filled_waterskin", WaterskinItem::new,
             new Item.Properties().durability(9).stacksTo(1));
     // Milestone 2 weapon classes that vanilla has no item for. Values follow the class profiles in

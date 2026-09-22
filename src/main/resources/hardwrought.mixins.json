@@ -5,12 +5,16 @@
 	"mixins": [
 		"AbstractBedBlockMixin",
 		"AbstractContainerMenuMixin",
+		"CampfireBlockMixin",
+		"AbstractCraftingMenuMixin",
+		"CraftingMenuMixin",
 		"CraftingRecipeMixin",
 		"FlowingFluidMixin",
 		"ItemStackCraftedMixin",
 		"ItemStackMixin",
 		"LivingEntityMixin",
 		"PlayerMixin",
+		"RecipeManagerAccessor",
 		"WaterFluidMixin"
 	],
 	"injectors": {

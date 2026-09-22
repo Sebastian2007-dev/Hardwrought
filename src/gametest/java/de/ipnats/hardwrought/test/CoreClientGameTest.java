@@ -31,6 +31,7 @@ public final class CoreClientGameTest implements FabricClientGameTest {
                 }
             });
             context.waitFor(client -> SurvivalHud.snapshot() != null);
+            verifyRecipeChoiceButton(context, world);
             context.runOnClient(client -> SurvivalHud.setDetailsVisible(true));
             context.waitFor(client -> SurvivalHud.detailsVisible());
             context.takeScreenshot("hardwrought-milestone-1-survival-hud");
@@ -39,13 +40,35 @@ public final class CoreClientGameTest implements FabricClientGameTest {
             verifyCombatFeedback(context, world);
             verifyFiniteWater(context, world);
             verifySealedRoomAndCarriedLight(context, world);
+            verifyCompendium(context, world);
+            verifyBadWaterThirst(context, world);
+            verifyFirecraft(context, world);
+            // The weight table has to reach the client, or every tooltip would guess.
+            context.waitFor(client -> !de.ipnats.hardwrought.client.survival.WeightTooltip.weights().isEmpty());
+            context.runOnClient(client -> {
+                var weights = de.ipnats.hardwrought.client.survival.WeightTooltip.weights();
+                if (!weights.containsKey(de.ipnats.hardwrought.Hardwrought.id("flint_shard"))) {
+                    throw new AssertionError("The datapack weight table must reach the client whole");
+                }
+                double listed = de.ipnats.hardwrought.survival.CarryWeight.perItem(
+                        new net.minecraft.world.item.ItemStack(
+                                de.ipnats.hardwrought.core.registry.ModItems.FLINT_SHARD), weights);
+                if (listed != weights.get(de.ipnats.hardwrought.Hardwrought.id("flint_shard"))) {
+                    throw new AssertionError("A tooltip must show the weight the server actually uses");
+                }
+            });
+            context.runOnClient(client -> SurvivalHud.setDetailsVisible(true));
+            context.waitTicks(2);
+            context.takeScreenshot("hardwrought-milestone-1-carried-weight");
+
             context.runOnClient(client -> client.player.connection.sendCommand("hardwrought debug on"));
             context.waitFor(client -> !DebugHud.snapshot().isEmpty());
             context.runOnClient(client -> {
                 if (DebugHud.snapshot().stream().noneMatch(line -> line.contains("server tick="))) {
                     throw new AssertionError("HUD must receive authoritative server snapshot");
                 }
-                if (SurvivalHud.snapshot().capacityKg() != 45.0) {
+                if (SurvivalHud.snapshot().capacityKg()
+                        != de.ipnats.hardwrought.survival.CarryWeight.BASE_CAPACITY_KG) {
                     throw new AssertionError("Survival HUD must receive server carry capacity");
                 }
             });
@@ -77,6 +100,14 @@ public final class CoreClientGameTest implements FabricClientGameTest {
                 de.ipnats.hardwrought.water.WaterStorage.setAmount(level, pos, 340);
                 return pos;
             });
+            // Milestone 8: what a player has found out has to outlive the session they found it in.
+            world.getServer().runOnServer(server -> {
+                var runtime = CoreLifecycle.require(server);
+                var player = server.getPlayerList().getPlayers().getFirst();
+                runtime.knowledge().forget(player.getUUID());
+                runtime.knowledge().study(player, net.minecraft.world.item.Items.DIAMOND);
+                runtime.knowledge().discover(player, net.minecraft.world.item.Items.EMERALD);
+            });
             beforeClose = world.getServer().computeOnServer(server -> CoreLifecycle.require(server).scheduler().ticks());
         }
         context.runOnClient(client -> {
@@ -86,6 +117,23 @@ public final class CoreClientGameTest implements FabricClientGameTest {
         try (var reopened = save.open()) {
             long afterOpen = reopened.getServer().computeOnServer(server -> CoreLifecycle.require(server).scheduler().ticks());
             if (afterOpen < beforeClose) throw new AssertionError("Simulation clock lost during save/reopen");
+            reopened.getServer().runOnServer(server -> {
+                var runtime = CoreLifecycle.require(server);
+                var player = server.getPlayerList().getPlayers().getFirst();
+                var knowledge = runtime.knowledge();
+                if (knowledge.level(player, net.minecraft.world.item.Items.DIAMOND)
+                        != de.ipnats.hardwrought.knowledge.KnowledgeLevel.STUDIED) {
+                    throw new AssertionError("A studied entry must survive closing and reopening the world");
+                }
+                if (knowledge.level(player, net.minecraft.world.item.Items.EMERALD)
+                        != de.ipnats.hardwrought.knowledge.KnowledgeLevel.DISCOVERED) {
+                    throw new AssertionError("A discovered entry must survive, and must not be promoted");
+                }
+                if (knowledge.level(player, net.minecraft.world.item.Items.NETHERITE_INGOT)
+                        != de.ipnats.hardwrought.knowledge.KnowledgeLevel.UNKNOWN) {
+                    throw new AssertionError("Reopening a world must not invent knowledge");
+                }
+            });
             reopened.getServer().runOnServer(server -> {
                 var level = server.getPlayerList().getPlayers().getFirst().level();
                 int amount = de.ipnats.hardwrought.water.WaterStorage.amount(level, waterMark);
@@ -98,6 +146,225 @@ public final class CoreClientGameTest implements FabricClientGameTest {
                 if (!DebugHud.snapshot().isEmpty()) throw new AssertionError("Debug subscription leaked into reopened world");
             });
         }
+    }
+
+    /** The selector must exist in the real 2x2 inventory screen, not only in server menu logic. */
+    private static void verifyRecipeChoiceButton(ClientGameTestContext context,
+                                                  net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
+        world.getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            var menu = player.inventoryMenu;
+            menu.getCraftSlots().setItem(0, new net.minecraft.world.item.ItemStack(
+                    net.minecraft.world.item.Items.BARRIER));
+            menu.slotsChanged(menu.getCraftSlots());
+            menu.broadcastChanges();
+        });
+        context.waitFor(client -> ((de.ipnats.hardwrought.progression.RecipeSelectionMenu)
+                client.player.inventoryMenu).hardwrought$recipeChoiceCount() == 2);
+        context.runOnClient(client -> client.gui.setScreen(
+                new net.minecraft.client.gui.screens.inventory.InventoryScreen(client.player)));
+        context.waitFor(client -> client.gui.screen() != null
+                && client.gui.screen().children().stream()
+                .filter(net.minecraft.client.gui.components.Button.class::isInstance)
+                .map(net.minecraft.client.gui.components.Button.class::cast)
+                .anyMatch(button -> button.visible && button.getMessage().getString().equals("↻")));
+
+        net.minecraft.world.item.Item[] first = new net.minecraft.world.item.Item[1];
+        context.runOnClient(client -> {
+            first[0] = client.player.inventoryMenu.getResultSlot().getItem().getItem();
+            client.gameMode.handleInventoryButtonClick(client.player.inventoryMenu.containerId,
+                    de.ipnats.hardwrought.progression.RecipeSelectionMenu.NEXT_RECIPE_BUTTON);
+        });
+        context.waitFor(client -> !client.player.inventoryMenu.getResultSlot().getItem().is(first[0]));
+        context.takeScreenshot("hardwrought-recipe-choice-button");
+        context.runOnClient(client -> client.gui.setScreen(null));
+        world.getServer().runOnServer(server -> {
+            var menu = server.getPlayerList().getPlayers().getFirst().inventoryMenu;
+            menu.getCraftSlots().clearContent();
+            menu.broadcastChanges();
+        });
+    }
+
+    /**
+     * Milestone 8: the browser has to draw, and the hard part is the shadow. An undiscovered entry
+     * is the item model particle texture tinted black, which is the one thing in this milestone that
+     * cannot be checked without a real client and a real atlas.
+     */
+    private static void verifyCompendium(ClientGameTestContext context,
+                                         net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
+        world.getServer().runOnServer(server -> {
+            var runtime = CoreLifecycle.require(server);
+            var player = server.getPlayerList().getPlayers().getFirst();
+            runtime.knowledge().forget(player.getUUID());
+            // Studied entries near the front of the registry, so the first page shows real icons
+            // next to the shadows and a broken item renderer could not pass unnoticed.
+            runtime.knowledge().study(player, net.minecraft.world.item.Items.STONE);
+            runtime.knowledge().study(player, net.minecraft.world.item.Items.GRANITE);
+            runtime.knowledge().study(player, net.minecraft.world.item.Items.DIORITE);
+        });
+        // The toast cycles through what was learned, and the index it picks has to land inside the
+        // list whatever the clock and the notification-time setting say. It once did not, and an
+        // index of minus one crashed the render thread.
+        for (int count = 1; count <= de.ipnats.hardwrought.core.networking.KnowledgeNotePayload.MAX_NOTES; count++) {
+            for (double multiplier : new double[]{0.0, 0.5, 1.0, 5.0}) {
+                for (long time : new long[]{Long.MIN_VALUE, -1L, 0L, 1L, 4999L, 5000L,
+                        1234567L, Long.MAX_VALUE}) {
+                    int index = de.ipnats.hardwrought.client.knowledge.KnowledgeToast
+                            .entryIndex(time, 5000.0 * multiplier, count);
+                    if (index < 0 || index >= count) {
+                        throw new AssertionError("Knowledge toast picked line " + index + " of "
+                                + count + " at time " + time + " with multiplier " + multiplier);
+                    }
+                }
+            }
+        }
+
+        // Learning something has to leave a mark, the way an unlocked recipe does.
+        context.waitFor(client -> client.gui.toastManager().getToast(
+                de.ipnats.hardwrought.client.knowledge.KnowledgeToast.class,
+                net.minecraft.client.gui.components.toasts.Toast.NO_TOKEN) != null);
+        // The toast slides in; a screenshot taken the instant it exists catches only its edge.
+        context.waitTicks(20);
+        context.takeScreenshot("hardwrought-milestone-8-knowledge-toast");
+
+        context.runOnClient(client -> de.ipnats.hardwrought.client.knowledge.CompendiumClient.openShelf(
+                de.ipnats.hardwrought.knowledge.KnowledgeCategory.MATERIALS, ""));
+        context.waitFor(client -> de.ipnats.hardwrought.client.knowledge.CompendiumClient.page() != null);
+        context.runOnClient(client -> {
+            var page = de.ipnats.hardwrought.client.knowledge.CompendiumClient.page();
+            if (page.entries().isEmpty()) throw new AssertionError("The materials shelf must not be empty");
+            if (page.entries().stream().noneMatch(entry -> entry.level() == 0)) {
+                throw new AssertionError("A player who has found almost nothing must see shadows");
+            }
+            if (page.entries().stream().noneMatch(entry -> entry.level() == 2)) {
+                throw new AssertionError("What was studied must come back as studied");
+            }
+        });
+        // Rendering happens between ticks; a screenshot is the proof that it happened at all.
+        context.waitTicks(5);
+        context.takeScreenshot("hardwrought-milestone-8-compendium-shelf");
+
+        context.runOnClient(client -> de.ipnats.hardwrought.client.knowledge.CompendiumClient.openRecipes(
+                ModItems.COMPENDIUM));
+        context.waitFor(client -> {
+            var page = de.ipnats.hardwrought.client.knowledge.CompendiumClient.page();
+            return page != null && !page.recipes().isEmpty();
+        });
+        context.waitTicks(5);
+        context.takeScreenshot("hardwrought-milestone-8-compendium-recipe");
+        // A feather has no recipe at all; the page is worth nothing unless it says where one comes
+        // from instead.
+        context.runOnClient(client -> de.ipnats.hardwrought.client.knowledge.CompendiumClient.openRecipes(
+                net.minecraft.world.item.Items.FEATHER));
+        context.waitFor(client -> {
+            var page = de.ipnats.hardwrought.client.knowledge.CompendiumClient.page();
+            return page != null && !page.sources().isEmpty();
+        });
+        context.waitTicks(5);
+        context.takeScreenshot("hardwrought-milestone-8-compendium-sources");
+        context.runOnClient(client -> client.gui.setScreen(null));
+        world.getServer().runOnServer(server -> CoreLifecycle.require(server).knowledge()
+                .forget(server.getPlayerList().getPlayers().getFirst().getUUID()));
+    }
+
+    /**
+     * Section 23.2: bad water leaves a real player thirsty, and never poisoned. This needs the real
+     * client player because a mock one is always in creative, and a creative player never drinks.
+     *
+     * <p>The illness is a roll per drink, so the check is a great many drinks of nothing: the drink
+     * is worth zero hydration, so nothing moves except the roll. Four hundred rolls at one in twenty
+     * leaves a chance of missing that is far smaller than the chance of the build machine catching
+     * fire.
+     */
+    private static void verifyBadWaterThirst(ClientGameTestContext context,
+                                             net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
+        world.getServer().runOnServer(server -> {
+            var runtime = CoreLifecycle.require(server);
+            var player = server.getPlayerList().getPlayers().getFirst();
+            player.removeAllEffects();
+            // Stop at the first hit: every drink that lands also writes a line of chat, and four
+            // hundred of them would bury every screenshot this test takes afterwards.
+            for (int roll = 0; roll < 400
+                    && !player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.THIRST); roll++) {
+                runtime.survival().drink(player, 0.0, de.ipnats.hardwrought.water.WaterQuality.SALT);
+            }
+            if (!player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.THIRST)) {
+                throw new AssertionError("Sea water has to leave the drinker thirsty");
+            }
+            if (player.hasEffect(net.minecraft.world.effect.MobEffects.POISON)) {
+                throw new AssertionError("And it must not poison them; that was the old answer");
+            }
+            // The drain is read by the metabolism pass, so it has to be visible there.
+            if (de.ipnats.hardwrought.survival.SurvivalSystem.thirstDrain(player)
+                    != de.ipnats.hardwrought.survival.SurvivalSystem.THIRST_PER_SECOND) {
+                throw new AssertionError("The thirst a player carries has to cost them something");
+            }
+            player.removeAllEffects();
+        });
+    }
+
+    /**
+     * Fire by friction, checked with the one player in these tests who is not in creative: a mock
+     * player never wears a tool out, so the cost of lighting a fire can only be seen here.
+     */
+    private static void verifyFirecraft(ClientGameTestContext context,
+                                        net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
+        world.getServer().runOnServer(server -> {
+            var level = server.getPlayerList().getPlayers().getFirst().level();
+            var player = server.getPlayerList().getPlayers().getFirst();
+            net.minecraft.core.BlockPos ground = player.blockPosition().below().east(2);
+            net.minecraft.core.BlockPos fire = ground.above();
+            level.setBlockAndUpdate(ground, net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+            level.setBlockAndUpdate(fire, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+
+            var campfire = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.CAMPFIRE);
+            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, campfire);
+            campfire.useOn(new net.minecraft.world.item.context.UseOnContext(level, player,
+                    net.minecraft.world.InteractionHand.MAIN_HAND, campfire,
+                    new net.minecraft.world.phys.BlockHitResult(
+                            net.minecraft.world.phys.Vec3.atCenterOf(ground),
+                            net.minecraft.core.Direction.UP, ground, false)));
+            if (level.getBlockState(fire).getValue(
+                    net.minecraft.world.level.block.state.properties.BlockStateProperties.LIT)) {
+                throw new AssertionError("A campfire a player sets down must not already be burning");
+            }
+
+            var sticks = new net.minecraft.world.item.ItemStack(
+                    de.ipnats.hardwrought.core.registry.ModItems.LIGHTING_STICKS);
+            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, sticks);
+            sticks.useOn(new net.minecraft.world.item.context.UseOnContext(level, player,
+                    net.minecraft.world.InteractionHand.MAIN_HAND, sticks,
+                    new net.minecraft.world.phys.BlockHitResult(
+                            net.minecraft.world.phys.Vec3.atCenterOf(fire),
+                            net.minecraft.core.Direction.UP, fire, false)));
+            if (!level.getBlockState(fire).getValue(
+                    net.minecraft.world.level.block.state.properties.BlockStateProperties.LIT)) {
+                throw new AssertionError("The fire-lighting sticks have to light it");
+            }
+            if (sticks.getDamageValue() <= 0) {
+                throw new AssertionError("And lighting it has to wear them down");
+            }
+
+            // The furnace the bricks build, stood next to the fire that fired them.
+            net.minecraft.core.BlockPos furnace = fire.east();
+            level.setBlockAndUpdate(furnace.below(),
+                    net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+            level.setBlockAndUpdate(furnace,
+                    de.ipnats.hardwrought.core.registry.ModBlocks.BRICK_FURNACE.defaultBlockState());
+            if (!(level.getBlockEntity(furnace)
+                    instanceof de.ipnats.hardwrought.metallurgy.BrickFurnaceBlockEntity)) {
+                throw new AssertionError("The brick furnace must carry its own block entity");
+            }
+            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,
+                    net.minecraft.world.item.ItemStack.EMPTY);
+        });
+        // Turn to face what was just built, or the picture is of the grass behind it.
+        context.runOnClient(client -> {
+            client.player.setYRot(-90.0f);
+            client.player.setXRot(10.0f);
+        });
+        context.waitTicks(10);
+        context.takeScreenshot("hardwrought-milestone-7-brick-furnace");
     }
 
     private static void verifyAcceleratedSleep(ClientGameTestContext context,

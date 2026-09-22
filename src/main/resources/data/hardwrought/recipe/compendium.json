@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:leaf_string",
+    "#minecraft:leaves",
+    "#minecraft:leaves"
+  ],
+  "result": {
+    "id": "hardwrought:compendium"
+  }
+}

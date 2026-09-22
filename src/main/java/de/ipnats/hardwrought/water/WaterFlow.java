@@ -58,12 +58,18 @@ public final class WaterFlow {
      */
     public static final int MAX_ACTIVE = 32_768;
     private static final Direction[] SIDES = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
+    /** How many cells are stepped between readings of the clock. A power of two, so the test is an and. */
+    private static final int CLOCK_INTERVAL = 16;
 
     private final MinecraftServer server;
     private final Map<ResourceKey<Level>, ActiveQueue> active = new LinkedHashMap<>();
+    /** Reused every tick so the solver allocates nothing at all in its hot path. */
+    private final List<ServerLevel> levels = new ArrayList<>();
     private int nextLevel;
     private long failedCells;
     private int lastProcessedCells;
+    private long signals;
+    private long worldLookups;
     private long lastWorkNanos;
     private long lastBudgetNanos;
 
@@ -97,8 +103,21 @@ public final class WaterFlow {
         // Only water can move. Avoid the much more expensive six-neighbour equilibrium scan here:
         // transfers signal the same cells repeatedly, and the queue can deduplicate a cheap signal
         // before the bounded solver examines each surviving cell once.
-        if (!level.hasChunkAt(pos) || !WaterStorage.containsWater(level.getBlockState(pos))) return;
-        enqueue(level, pos);
+        //
+        // A transfer wakes eleven neighbours and most of them are already queued, so the queue is
+        // asked first. A hash lookup on a packed long is far cheaper than a chunk and section lookup
+        // for a block state, and the solver re-checks for water when it reaches the cell anyway.
+        ActiveQueue queue = active.computeIfAbsent(level.dimension(), key -> new ActiveQueue());
+        signals++;
+        if (queue.contains(pos)) return;
+        worldLookups++;
+        // One chunk lookup, not two. Asking whether the chunk is loaded and then asking the level
+        // for the block state looks the chunk up twice; taking the chunk once and reading the state
+        // off it does the same work with half the map lookups, and returns null rather than loading
+        // a chunk the solver has no business loading.
+        var chunk = level.getChunkSource().getChunkNow(pos.getX() >> 4, pos.getZ() >> 4);
+        if (chunk == null || !WaterStorage.containsWater(chunk.getBlockState(pos))) return;
+        queue.activate(level, pos);
     }
 
     /**
@@ -107,12 +126,7 @@ public final class WaterFlow {
      * scanning six neighbours for every overdue fluid tick after loading a busy chunk.
      */
     private void signal(ServerLevel level, BlockPos pos) {
-        if (!level.hasChunkAt(pos) || !WaterStorage.containsWater(level.getBlockState(pos))) return;
-        enqueue(level, pos);
-    }
-
-    private void enqueue(ServerLevel level, BlockPos pos) {
-        active.computeIfAbsent(level.dimension(), key -> new ActiveQueue()).activate(level, pos);
+        activate(level, pos);
     }
 
     public int activeCells() {
@@ -135,12 +149,25 @@ public final class WaterFlow {
         return lastBudgetNanos;
     }
 
+    /** How many times a cell has been woken since the server started. */
+    public long signals() {
+        return signals;
+    }
+
+    /**
+     * How many of those wake-ups had to look at the world. The rest were already queued and cost a
+     * hash lookup on a packed position instead of a chunk lookup, a section lookup and a block state.
+     */
+    public long worldLookups() {
+        return worldLookups;
+    }
+
     private void tickFlow() {
         int budget = BUDGET_PER_PASS;
         long started = System.nanoTime();
         long timeBudget = timeBudget();
         int processed = 0;
-        List<ServerLevel> levels = new ArrayList<>();
+        levels.clear();
         server.getAllLevels().forEach(levels::add);
         if (levels.isEmpty()) {
             finishTick(started, timeBudget, processed);
@@ -160,7 +187,11 @@ public final class WaterFlow {
                 stepSafely(level, BlockPos.of(queue.poll()));
                 budget--;
                 processed++;
-                if (budget <= 0 || System.nanoTime() - started >= timeBudget) {
+                // Reading the clock costs about as much as inspecting a settled cell, so it is read
+                // once a batch rather than once a cell. Overshooting the time budget by fifteen
+                // cells is cheaper than asking the clock fifteen more times.
+                if (budget <= 0 || (processed & (CLOCK_INTERVAL - 1)) == 0
+                        && System.nanoTime() - started >= timeBudget) {
                     nextLevel = (levelIndex + 1) % levels.size();
                     finishTick(started, timeBudget, processed);
                     return;
@@ -225,7 +256,8 @@ public final class WaterFlow {
         // Keep only what a cell at this depth should carry; the rest is pressed upward.
         int move = amount - WaterAmounts.stableState(amount + overhead);
         if (move <= 0) return amount;
-        return transfer(level, pos, amount, above, overhead, move);
+        return transfer(level, pos, amount, above, overhead,
+                Math.min(move, WaterAmounts.MAX_RISE_PER_PASS));
     }
 
     /**
@@ -239,7 +271,8 @@ public final class WaterFlow {
         int beneath = WaterStorage.amount(level, below);
         int move = Math.min(amount, WaterAmounts.stableState(amount + beneath) - beneath);
         if (move <= 0) return amount;
-        return transfer(level, pos, amount, below, beneath, move);
+        return transfer(level, pos, amount, below, beneath,
+                Math.min(move, WaterAmounts.MAX_FALL_PER_PASS));
     }
 
     /** Rule three: water levels out. Each neighbour with less gets a share of the difference. */
@@ -253,8 +286,8 @@ public final class WaterFlow {
             if (difference < WaterAmounts.LEVELLING_THRESHOLD) continue;
             // Half the difference is the exact equilibrium of this pair. Rounding up is safe: an
             // odd difference can only reverse the pair by one millibucket, far below the threshold.
-            int move = Math.min((difference + 1) / 2,
-                    Math.min(mine, WaterAmounts.pressureRoom(theirs)));
+            int move = Math.min(WaterAmounts.MAX_SPREAD_PER_PASS, Math.min((difference + 1) / 2,
+                    Math.min(mine, WaterAmounts.pressureRoom(theirs))));
             if (move <= 0) continue;
             mine = transfer(level, pos, mine, next, theirs, move);
         }
@@ -293,6 +326,16 @@ public final class WaterFlow {
         private final LongLinkedOpenHashSet mid = new LongLinkedOpenHashSet();
         private final LongLinkedOpenHashSet far = new LongLinkedOpenHashSet();
         private int priorityTurn;
+        /**
+         * Where the players stood when this tick began, as flat x/y/z triples.
+         *
+         * <p>One transfer wakes eleven cells and the solver makes up to a thousand of them a tick,
+         * so working out how near a cell is to a player used to walk the player list tens of
+         * thousands of times a tick. The list cannot move within a tick, so it is read once.
+         */
+        private double[] players = new double[0];
+        private int playerCount;
+        private long playersTick = Long.MIN_VALUE;
 
         int size() {
             return near.size() + mid.size() + far.size();
@@ -302,10 +345,16 @@ public final class WaterFlow {
             return near.isEmpty() && mid.isEmpty() && far.isEmpty();
         }
 
+        boolean contains(BlockPos pos) {
+            long packed = pos.asLong();
+            return near.contains(packed) || mid.contains(packed) || far.contains(packed);
+        }
+
         void activate(ServerLevel level, BlockPos pos) {
             long packed = pos.asLong();
             if (near.contains(packed)) return;
-            int priority = priority(level, pos);
+            refreshPlayers(level);
+            int priority = priority(pos);
             if (mid.contains(packed)) {
                 if (priority == 0) {
                     mid.remove(packed);
@@ -355,17 +404,34 @@ public final class WaterFlow {
             return priority == 0 ? near : priority == 1 ? mid : far;
         }
 
-        private static int priority(ServerLevel level, BlockPos pos) {
-            if (level.players().isEmpty()) return 2;
+        /** Reads the player positions once a tick; they cannot move within one. */
+        private void refreshPlayers(ServerLevel level) {
+            long now = level.getGameTime();
+            if (now == playersTick) return;
+            playersTick = now;
+            var present = level.players();
+            playerCount = present.size();
+            if (players.length < playerCount * 3) players = new double[playerCount * 3];
+            for (int index = 0; index < playerCount; index++) {
+                var player = present.get(index);
+                players[index * 3] = player.getX();
+                players[index * 3 + 1] = player.getY();
+                players[index * 3 + 2] = player.getZ();
+            }
+        }
+
+        private int priority(BlockPos pos) {
+            if (playerCount == 0) return 2;
             double nearest = Double.MAX_VALUE;
             double x = pos.getX() + 0.5;
             double y = pos.getY() + 0.5;
             double z = pos.getZ() + 0.5;
-            for (var player : level.players()) {
-                double dx = player.getX() - x;
-                double dy = player.getY() - y;
-                double dz = player.getZ() - z;
-                nearest = Math.min(nearest, dx * dx + dy * dy + dz * dz);
+            for (int index = 0; index < playerCount; index++) {
+                double dx = players[index * 3] - x;
+                double dy = players[index * 3 + 1] - y;
+                double dz = players[index * 3 + 2] - z;
+                double distance = dx * dx + dy * dy + dz * dz;
+                if (distance < nearest) nearest = distance;
             }
             if (nearest <= NEAR_PLAYER_RADIUS * NEAR_PLAYER_RADIUS) return 0;
             if (nearest <= MID_PLAYER_RADIUS * MID_PLAYER_RADIUS) return 1;

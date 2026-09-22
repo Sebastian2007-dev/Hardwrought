@@ -22,6 +22,15 @@ public final class ModBlocks {
             HewnWorkbenchBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.CRAFTING_TABLE));
 
+    /**
+     * Section 56: the first furnace, and a poor one. Four fired bricks in the inventory square, so
+     * a player can smelt before they own a crafting table.
+     */
+    public static final de.ipnats.hardwrought.metallurgy.BrickFurnaceBlock BRICK_FURNACE =
+            register("brick_furnace", de.ipnats.hardwrought.metallurgy.BrickFurnaceBlock::new,
+                    BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS).lightLevel(
+                            state -> state.getValue(de.ipnats.hardwrought.metallurgy.BrickFurnaceBlock.LIT) ? 13 : 0));
+
     private ModBlocks() { }
 
     private static <T extends Block> T register(String name, Function<BlockBehaviour.Properties, T> factory,

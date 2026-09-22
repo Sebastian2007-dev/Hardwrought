@@ -32,10 +32,21 @@ public final class CoreLifecycle {
                 runtime.waterFlow().shutdown();
             }
         });
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            // The weight table lives in a datapack, so the client is told it once rather than
+            // guessing at what every item weighs.
+            CoreRuntime runtime = RUNTIMES.get(server);
+            if (runtime != null && net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
+                    .canSend(handler.player, de.ipnats.hardwrought.core.networking.ItemWeightPayload.TYPE)) {
+                net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(handler.player,
+                        new de.ipnats.hardwrought.core.networking.ItemWeightPayload(runtime.itemWeights()));
+            }
+        });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             CoreRuntime runtime = RUNTIMES.get(server);
             if (runtime != null) {
                 runtime.removeViewer(handler.player.getUUID());
+                runtime.knowledge().removePlayer(handler.player.getUUID());
                 runtime.survival().disconnect(handler.player.getUUID());
                 runtime.combat().disconnect(handler.player.getUUID());
                 runtime.environment().disconnect(handler.player.getUUID());

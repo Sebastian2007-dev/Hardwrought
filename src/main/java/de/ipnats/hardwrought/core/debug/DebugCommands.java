@@ -119,6 +119,12 @@ public final class DebugCommands {
                 runtime.waterFlow().lastBudgetNanos() / 1_000_000.0,
                 source.getServer().getAverageTickTimeNanos() / 1_000_000.0)), false);
 
+        source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "Weckrufe: %d | davon mit Weltzugriff %d (%.1f %%)",
+                runtime.waterFlow().signals(), runtime.waterFlow().worldLookups(),
+                runtime.waterFlow().signals() == 0 ? 0.0
+                        : 100.0 * runtime.waterFlow().worldLookups() / runtime.waterFlow().signals())), false);
+
         var body = de.ipnats.hardwrought.water.WaterBody.scan(level, pos);
         source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
                 "%s: %d mB (Stufe %s) | darueber %d mB | darunter %d mB",
