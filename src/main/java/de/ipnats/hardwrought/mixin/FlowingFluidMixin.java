@@ -11,6 +11,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import de.ipnats.hardwrought.water.WaterCurrent;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Specification section 23.1: water is a quantity, not a pattern copied outward from a source block.
@@ -36,5 +40,16 @@ public abstract class FlowingFluidMixin {
         // per-tick time budget, and every resulting block update schedules more fluid ticks. That
         // feedback loop can freeze the entire server for seconds or minutes around a large lake.
         WaterFlow.disturb(level, pos);
+    }
+
+    /**
+     * A river's current, and running water's, push what is in the water the same way vanilla's
+     * flowing water does: this is the vector entities, items and boats are carried along.
+     */
+    @ModifyReturnValue(method = "getFlow", at = @At("RETURN"))
+    private Vec3 hardwrought$current(Vec3 flow, BlockGetter level, BlockPos pos, FluidState fluid) {
+        if (!fluid.is(FluidTags.WATER)) return flow;
+        Vec3 current = WaterCurrent.at(level, pos);
+        return current == Vec3.ZERO ? flow : flow.add(current);
     }
 }

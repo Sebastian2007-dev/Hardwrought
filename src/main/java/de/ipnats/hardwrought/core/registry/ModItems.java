@@ -34,13 +34,62 @@ public final class ModItems {
             properties -> new de.ipnats.hardwrought.equipment.BackpackItem(
                     de.ipnats.hardwrought.equipment.BackpackTier.BASIC, properties),
             new Item.Properties().stacksTo(1));
+    /** A stick rubbed to a point on stone: the start of a needle. */
+    public static final Item POINTED_STICK = register("pointed_stick", Item::new, new Item.Properties());
+    /** Sharpened wood with a cord through it: weaves leaf cord into cloth, slowly. */
+    public static final Item SEWING_NEEDLE = register("sewing_needle",
+            properties -> new de.ipnats.hardwrought.progression.SewingNeedleItem(properties,
+                    de.ipnats.hardwrought.progression.SewingNeedleItem.WOODEN_WEAVE_TICKS),
+            new Item.Properties().durability(16));
+    /** A needle forged from iron at the anvil: weaves much faster, and lasts. */
+    public static final Item IRON_SEWING_NEEDLE = register("iron_sewing_needle",
+            properties -> new de.ipnats.hardwrought.progression.SewingNeedleItem(properties,
+                    de.ipnats.hardwrought.progression.SewingNeedleItem.IRON_WEAVE_TICKS),
+            new Item.Properties().durability(128));
+    /** A piece of cloth woven from leaf cord. Four make a woven pack. */
+    public static final Item WOVEN = register("woven", Item::new, new Item.Properties());
+    /** Hardcore's second pack: the woven one lashed to a frame of sticks. */
+    public static final Item FRAME_BACKPACK = register("frame_backpack",
+            properties -> new de.ipnats.hardwrought.equipment.BackpackItem(
+                    de.ipnats.hardwrought.equipment.BackpackTier.FRAME, properties),
+            new Item.Properties().stacksTo(1));
+    /** Fibre stripped from leaves, still green: binds a tool as it is, dries on a rack into cord. */
+    public static final Item GREEN_FIBRE = register("green_fibre", Item::new, new Item.Properties());
+    public static final Item DRYING_RACK = register("drying_rack",
+            properties -> new BlockItem(ModBlocks.DRYING_RACK, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
     public static final Item HEWN_WORKBENCH = register("hewn_workbench",
             properties -> new BlockItem(ModBlocks.HEWN_WORKBENCH, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item NAILED_WORKBENCH = register("nailed_workbench",
+            properties -> new BlockItem(ModBlocks.NAILED_WORKBENCH, properties),
             new Item.Properties().useBlockDescriptionPrefix());
     // Milestone 7, section 56: three parts copper to one of tin is bronze, and the mixture is what
     // goes back into the fire. The metals themselves, tin included, are registered from the table
     // in de.ipnats.hardwrought.metallurgy.Metal rather than one by one here.
     public static final Item BRONZE_MIXTURE = register("bronze_mixture", Item::new, new Item.Properties());
+    /** Nailing the hewn bench together is what turns it into the second one. */
+    public static final Item BRONZE_NAILS = register("bronze_nails", Item::new, new Item.Properties());
+    /** A wooden mallet: the first smith's hammer. Moves one square of metal per blow. */
+    public static final Item WOODEN_HAMMER = register("wooden_hammer", Item::new, new Item.Properties().durability(48));
+    /** A stone head on a stick: drives the nails into the hewn bench; two by two squares at the anvil. */
+    public static final Item HAMMER = register("hammer", Item::new, new Item.Properties().durability(96));
+    /** The stone hammer with an iron head: three by three squares at the anvil. */
+    public static final Item IRON_HAMMER = register("iron_hammer", Item::new, new Item.Properties().durability(320));
+    /** Worn on the strap; without them hot metal cannot be held. */
+    public static final Item WOODEN_ANVIL = register("wooden_anvil",
+            properties -> new BlockItem(ModBlocks.WOODEN_ANVIL, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item FORGE = register("forge",
+            properties -> new BlockItem(ModBlocks.FORGE, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item BELLOWS = register("bellows",
+            properties -> new BlockItem(ModBlocks.BELLOWS, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    /** Clay with grit worked into it, fired into brick that stands a forge's heat. */
+    public static final Item FIRECLAY = register("fireclay", Item::new, new Item.Properties());
+    public static final Item REFRACTORY_BRICK = register("refractory_brick", Item::new, new Item.Properties());
+    public static final Item SMITHING_GLOVES = register("smithing_gloves", Item::new, new Item.Properties().stacksTo(1));
     public static final Item BRONZE_INGOT = register("bronze_ingot", Item::new, new Item.Properties());
     // Section 71: fire by friction. The sticks wear out, which is why a player wants a flint and
     // steel eventually rather than because the sticks stop working.
@@ -88,6 +137,38 @@ public final class ModItems {
     /** Milestone 3, section 18.3: the primitive instrument that makes bad air readable. */
     public static final Item SAFETY_LAMP = register("safety_lamp", SafetyLampItem::new,
             new Item.Properties().stacksTo(1));
+
+    // Milestone-72 groundwork. The bar that turns has no item at all: it is only ever drawn.
+    public static final Item SHAFT = register("shaft",
+            properties -> new BlockItem(ModBlocks.SHAFT, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item CRANK_BOX = register("crank_box",
+            properties -> new BlockItem(ModBlocks.CRANK_BOX, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item HAND_CRANK = register("hand_crank",
+            properties -> new BlockItem(ModBlocks.HAND_CRANK, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item STARTER_CRUSHER = register("starter_crusher",
+            properties -> new BlockItem(ModBlocks.STARTER_CRUSHER, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item COGWHEEL = register("cogwheel",
+            properties -> new BlockItem(ModBlocks.COGWHEEL, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item LARGE_COGWHEEL = register("large_cogwheel",
+            properties -> new BlockItem(ModBlocks.LARGE_COGWHEEL, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item GEARBOX = register("gearbox",
+            properties -> new BlockItem(ModBlocks.GEARBOX, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item WATER_WHEEL = register("water_wheel",
+            properties -> new BlockItem(ModBlocks.WATER_WHEEL, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item WINDMILL = register("windmill",
+            properties -> new BlockItem(ModBlocks.WINDMILL, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    /** Section 73: laid round two parallel shafts, it makes them turn together. */
+    public static final Item BELT = register("belt", de.ipnats.hardwrought.machinery.BeltItem::new,
+            new Item.Properties().stacksTo(16));
 
     private ModItems() {
     }

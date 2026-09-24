@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_transmute",
+  "category": "equipment",
+  "input": "hardwrought:iron_pickaxe_head",
+  "material": "minecraft:stick",
+  "material_count": {
+    "min": 2,
+    "max": 2
+  },
+  "result": {
+    "id": "minecraft:iron_pickaxe"
+  }
+}

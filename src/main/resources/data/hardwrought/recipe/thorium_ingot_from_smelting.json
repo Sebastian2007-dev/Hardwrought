@@ -3,7 +3,7 @@
   "category": "misc",
   "cookingtime": 200,
   "experience": 0.7,
-  "ingredient": "hardwrought:raw_thorium",
+  "ingredient": "hardwrought:thorium_powder",
   "result": {
     "id": "hardwrought:thorium_ingot"
   }

@@ -7,10 +7,19 @@ public class HardwroughtClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		de.ipnats.hardwrought.client.debug.DebugHud.initialize();
 		de.ipnats.hardwrought.client.survival.SurvivalHud.initialize();
+		de.ipnats.hardwrought.client.survival.CrawlClient.initialize();
 		de.ipnats.hardwrought.client.survival.WeightTooltip.initialize();
+		de.ipnats.hardwrought.client.survival.MeltingPointTooltip.initialize();
+		de.ipnats.hardwrought.client.smithing.SmithingClient.initialize();
 		de.ipnats.hardwrought.client.combat.CombatHud.initialize();
 		de.ipnats.hardwrought.client.environment.EnvironmentHud.initialize();
 		de.ipnats.hardwrought.client.environment.DynamicLight.initialize();
+		de.ipnats.hardwrought.client.environment.CarrierWater.initialize();
+		de.ipnats.hardwrought.client.environment.LeafOverlay.initialize();
+		net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
+				de.ipnats.hardwrought.core.registry.ModBlockEntities.DRYING_RACK,
+				de.ipnats.hardwrought.client.environment.DryingRackRenderer::new);
 		de.ipnats.hardwrought.client.knowledge.CompendiumClient.initialize();
+		de.ipnats.hardwrought.client.machinery.MachineryClient.initialize();
 	}
 }

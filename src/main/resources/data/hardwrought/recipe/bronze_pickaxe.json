@@ -1,15 +1,12 @@
 {
-  "type": "minecraft:crafting_shaped",
+  "type": "minecraft:crafting_transmute",
   "category": "equipment",
-  "key": {
-    "B": "hardwrought:bronze_ingot",
-    "S": "minecraft:stick",
-    "T": "minecraft:string"
+  "input": "hardwrought:bronze_pickaxe_head",
+  "material": "minecraft:stick",
+  "material_count": {
+    "min": 1,
+    "max": 1
   },
-  "pattern": [
-    "BB",
-    "TS"
-  ],
   "result": {
     "id": "hardwrought:bronze_pickaxe"
   }

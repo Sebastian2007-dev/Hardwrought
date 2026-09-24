@@ -1,14 +1,9 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "category": "building",
-  "key": {
-    "P": "#minecraft:planks"
-  },
-  "pattern": [
-    "PPP",
-    "PPP"
-  ],
+  "__comment": "Shadows vanilla's crafting table recipe: in Hardwrought a crafting table is never made, and the nailed bench is made by driving bronze nails into a hewn bench with a hammer, in the world. The id cannot simply be removed because vanilla data refers to it, so it holds an exact copy of minecraft:book_cloning, which changes nothing.",
+  "type": "minecraft:crafting_special_bookcloning",
+  "material": "#minecraft:book_cloning_target",
   "result": {
-    "id": "minecraft:crafting_table"
-  }
+    "id": "minecraft:written_book"
+  },
+  "source": "minecraft:written_book"
 }

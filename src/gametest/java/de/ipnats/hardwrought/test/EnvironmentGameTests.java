@@ -331,6 +331,9 @@ public final class EnvironmentGameTests {
                     "An open trapdoor is still a wall: the space stays a room");
             helper.assertTrue(opened.apertureArea() == 1.0 && opened.volume() == closed.volume(),
                     "It counts as a whole opening and the room keeps its size");
+            helper.assertTrue(EnvironmentSystem.ventilationRate(opened.volume(), opened.apertureArea())
+                            > 10 * EnvironmentSystem.ventilationRate(closed.volume(), closed.apertureArea()),
+                    "and the room exchanges its air many times faster with the trapdoor open than shut");
 
             // A grille bounds the room too, but less of it is actually gap.
             level.setBlockAndUpdate(wall, Blocks.OAK_FENCE.defaultBlockState());
@@ -578,5 +581,40 @@ public final class EnvironmentGameTests {
             return;
         }
         throw new AssertionError("Expected operation to be rejected");
+    }
+
+    @GameTest(maxTicks = 80)
+    public void leavesHoldUpSmallAnimalsButNotPeople(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos floor = helper.absolutePos(new BlockPos(1, 4, 1));
+        for (int dx = -1; dx < 4; dx++) {
+            for (int dz = -1; dz < 4; dz++) {
+                level.setBlockAndUpdate(floor.offset(dx, 0, dz), Blocks.OAK_LEAVES.defaultBlockState()
+                        .setValue(net.minecraft.world.level.block.LeavesBlock.PERSISTENT, true));
+                level.setBlockAndUpdate(floor.offset(dx, -4, dz), Blocks.STONE.defaultBlockState());
+            }
+        }
+        BlockPos centre = floor.offset(1, 1, 1);
+        // An armour stand is a person's size and falls like one; a mob without its mind would float.
+        var zombie = net.minecraft.world.entity.EntityTypes.ARMOR_STAND.create(level, net.minecraft.world.entity.EntitySpawnReason.COMMAND);
+        zombie.snapTo(centre.getX() + 0.5, centre.getY() + 0.5, centre.getZ() + 0.5, 0, 0);
+        level.addFreshEntity(zombie);
+        var chicken = net.minecraft.world.entity.EntityTypes.CHICKEN.create(level, net.minecraft.world.entity.EntitySpawnReason.COMMAND);
+        chicken.snapTo(centre.getX() + 0.5, centre.getY() + 0.5, centre.getZ() + 0.5 - 1, 0, 0);
+        level.addFreshEntity(chicken);
+        var player = helper.makeMockServerPlayerInLevel();
+        helper.assertTrue(level.getBlockState(floor).getCollisionShape(level, floor,
+                        net.minecraft.world.phys.shapes.CollisionContext.of(player)).isEmpty(),
+                "A leaf block has nothing for a player to stand on");
+        helper.runAfterDelay(40, () -> {
+            try {
+                helper.assertTrue(zombie.getY() < floor.getY(), "Something the size of a person falls through: " + zombie.getY());
+                helper.assertTrue(chicken.getY() >= floor.getY() + 1 - 1e-3, "A chicken perches on the leaves: " + chicken.getY());
+            } finally {
+                zombie.discard();
+                chicken.discard();
+            }
+            helper.succeed();
+        });
     }
 }

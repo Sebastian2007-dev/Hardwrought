@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "C": "hardwrought:cobblestone_piece",
+    "T": "#c:strings",
+    "S": "minecraft:stick"
+  },
+  "pattern": [
+    "CTC",
+    " S ",
+    " S "
+  ],
+  "result": {
+    "id": "hardwrought:hammer"
+  }
+}

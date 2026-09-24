@@ -1,0 +1,50 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "axle": "minecraft:block/stripped_oak_log",
+    "arm": "minecraft:block/oak_planks",
+    "grip": "minecraft:block/stripped_spruce_log",
+    "particle": "minecraft:block/oak_planks"
+  },
+  "elements": [
+    {
+      "__comment": "Axle, out of the bearing along Z. The renderer turns everything here about it.",
+      "from": [6, 6, 3],
+      "to": [10, 10, 10],
+      "faces": {
+        "north": { "uv": [6, 6, 10, 10], "texture": "#axle" },
+        "south": { "uv": [6, 6, 10, 10], "texture": "#axle" },
+        "east":  { "uv": [3, 6, 10, 10], "texture": "#axle" },
+        "west":  { "uv": [3, 6, 10, 10], "texture": "#axle" },
+        "up":    { "uv": [6, 3, 10, 10], "texture": "#axle" },
+        "down":  { "uv": [6, 3, 10, 10], "texture": "#axle" }
+      }
+    },
+    {
+      "__comment": "Crank arm, from the axle out to the grip.",
+      "from": [6, 6, 10],
+      "to": [10, 15, 12],
+      "faces": {
+        "north": { "uv": [6, 1, 10, 10], "texture": "#arm" },
+        "south": { "uv": [6, 1, 10, 10], "texture": "#arm" },
+        "east":  { "uv": [10, 1, 12, 10], "texture": "#arm" },
+        "west":  { "uv": [10, 1, 12, 10], "texture": "#arm" },
+        "up":    { "uv": [6, 10, 10, 12], "texture": "#arm" },
+        "down":  { "uv": [6, 10, 10, 12], "texture": "#arm" }
+      }
+    },
+    {
+      "__comment": "Grip, parallel to the axle, where the hand goes.",
+      "from": [7, 12, 12],
+      "to": [9, 14, 16],
+      "faces": {
+        "north": { "uv": [7, 2, 9, 4], "texture": "#grip" },
+        "south": { "uv": [7, 2, 9, 4], "texture": "#grip" },
+        "east":  { "uv": [12, 2, 16, 4], "texture": "#grip" },
+        "west":  { "uv": [12, 2, 16, 4], "texture": "#grip" },
+        "up":    { "uv": [7, 12, 9, 16], "texture": "#grip" },
+        "down":  { "uv": [7, 12, 9, 16], "texture": "#grip" }
+      }
+    }
+  ]
+}

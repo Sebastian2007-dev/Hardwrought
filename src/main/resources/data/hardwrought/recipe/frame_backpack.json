@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "S": "minecraft:stick",
+    "C": "#hardwrought:weaving_cord",
+    "P": "hardwrought:starter_backpack",
+    "W": "hardwrought:woven"
+  },
+  "pattern": [
+    "SCS",
+    "WPW",
+    "SCS"
+  ],
+  "result": {
+    "id": "hardwrought:frame_backpack"
+  }
+}

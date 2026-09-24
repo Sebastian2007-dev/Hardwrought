@@ -3,7 +3,7 @@
   "category": "misc",
   "cookingtime": 100,
   "experience": 0.7,
-  "ingredient": "hardwrought:raw_lead",
+  "ingredient": "hardwrought:lead_powder",
   "result": {
     "id": "hardwrought:lead_ingot"
   }

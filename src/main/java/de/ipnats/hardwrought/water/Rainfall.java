@@ -36,6 +36,14 @@ public final class Rainfall {
     /** One visible step of water per column, so what lands is something rather than a sheen. */
     public static final int DROP = WaterAmounts.DISPLAY_STEP;
     public static final int THUNDER_DROP = 2 * WaterAmounts.DISPLAY_STEP;
+    /**
+     * How often rain landing on dry ground stays there as the start of a puddle. Most of it soaks in:
+     * a puddle on every patch of grass was more nuisance than weather, and a stubborn one to get rid of.
+     */
+    public static final double PUDDLE_CHANCE = 0.2;
+    public static final double THUNDER_PUDDLE_CHANCE = 0.35;
+    /** Rain falling into water that is already there counts this many times over: ponds and rivers rise. */
+    public static final int WATER_GAIN = 2;
 
     private final MinecraftServer server;
 
@@ -65,7 +73,7 @@ public final class Rainfall {
                 int x = origin.getX() + random.nextInt(2 * RADIUS + 1) - RADIUS;
                 int z = origin.getZ() + random.nextInt(2 * RADIUS + 1) - RADIUS;
                 if (!rainsOn(level, x, z)) continue;
-                rainOn(level, x, z, drop);
+                land(level, x, z, drop, thundering, random.nextDouble());
             }
         }
     }
@@ -82,6 +90,21 @@ public final class Rainfall {
         if (!level.isRaining()) return false;
         BlockPos sky = new BlockPos(x, level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z), z);
         return level.isRainingAt(sky);
+    }
+
+    /**
+     * One drop of rain on this column, the way weather gives it: into water that is already there it
+     * adds generously; on dry ground it mostly soaks in and only now and then starts a puddle.
+     * {@code roll} is a random number in [0, 1). Returns whether any water landed.
+     */
+    public static boolean land(ServerLevel level, int x, int z, int drop, boolean thundering, double roll) {
+        BlockPos target = target(level, x, z);
+        if (target == null) return false;
+        boolean intoWater = WaterStorage.containsWater(level.getBlockState(target))
+                || WaterStorage.containsWater(level.getBlockState(target.below()));
+        if (intoWater) return rainOn(level, x, z, drop * WATER_GAIN);
+        if (roll >= (thundering ? THUNDER_PUDDLE_CHANCE : PUDDLE_CHANCE)) return false;
+        return rainOn(level, x, z, drop);
     }
 
     /**

@@ -6,6 +6,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import de.ipnats.hardwrought.smithing.ForgeQuality;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -27,5 +29,19 @@ public abstract class ItemStackMixin {
                 runtime.knowledge().study(player, stack.getItem());
             }
         }
+    }
+
+    /** Sections 37 and 38: a forged tool digs as fast as it was well made. Unforged tools are untouched. */
+    @ModifyReturnValue(method = "getDestroySpeed", at = @At("RETURN"))
+    private float hardwrought$forgedSpeed(float speed) {
+        double factor = ForgeQuality.speedFactor((ItemStack) (Object) this);
+        return factor == 1.0 || speed <= 1.0f ? speed : (float) (speed * factor);
+    }
+
+    /** And lasts as long as it was well made and well treated. */
+    @ModifyReturnValue(method = "getMaxDamage", at = @At("RETURN"))
+    private int hardwrought$forgedDurability(int durability) {
+        double factor = ForgeQuality.durabilityFactor((ItemStack) (Object) this);
+        return factor == 1.0 || durability <= 0 ? durability : Math.max(1, (int) Math.round(durability * factor));
     }
 }

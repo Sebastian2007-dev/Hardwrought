@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "P": "#minecraft:planks",
+    "T": [
+      "minecraft:vine",
+      "minecraft:string",
+      "hardwrought:leaf_string"
+    ],
+    "S": "minecraft:stick"
+  },
+  "pattern": [
+    "PT",
+    "SP"
+  ],
+  "result": {
+    "id": "hardwrought:wooden_hammer"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "axis=y,driven=false":  { "model": "hardwrought:block/shaft" },
+    "axis=y,driven=true":   { "model": "hardwrought:block/shaft" },
+    "axis=x,driven=false":  { "model": "hardwrought:block/shaft", "x": 90, "y": 90 },
+    "axis=x,driven=true":   { "model": "hardwrought:block/shaft", "x": 90, "y": 90 },
+    "axis=z,driven=false":  { "model": "hardwrought:block/shaft", "x": 90 },
+    "axis=z,driven=true":   { "model": "hardwrought:block/shaft", "x": 90 }
+  }
+}

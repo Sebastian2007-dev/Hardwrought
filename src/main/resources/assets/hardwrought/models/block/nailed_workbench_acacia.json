@@ -1,0 +1,10 @@
+{
+  "parent": "minecraft:block/orientable_with_bottom",
+  "textures": {
+    "top": "hardwrought:block/nailed_workbench_top_acacia",
+    "side": "hardwrought:block/nailed_workbench_side_acacia",
+    "front": "hardwrought:block/nailed_workbench_front_acacia",
+    "bottom": "hardwrought:block/nailed_workbench_bottom_acacia",
+    "particle": "hardwrought:block/nailed_workbench_side_acacia"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "parent": "hardwrought:block/forge/part_34_shape",
+  "textures": {
+    "side": "hardwrought:block/forge/large_side_lined",
+    "rim": "minecraft:block/mud_bricks",
+    "bed": "minecraft:block/coal_block",
+    "bottom": "minecraft:block/cobblestone",
+    "particle": "minecraft:block/mud_bricks"
+  }
+}

@@ -16,7 +16,7 @@ import java.util.UUID;
  * That is not generosity — a player without a pack has no inventory beyond their belt, so losing it
  * to a mistake would take every slot they own with it and leave them no way back.
  *
- * <p>The one place a pack is <em>not</em> handed out is the first spawn on hardcore. There a player
+ * <p>The one place a pack is <em>not</em> handed out is the first spawn in an Ultra world. There a player
  * gets the compendium and nothing else, and weaving the first pack out of leaf fibre is the opening
  * move rather than something they woke up holding.
  */
@@ -55,6 +55,19 @@ public final class EquipmentSystem {
         setEquipment(player, equipment(player).withLamp(stack));
     }
 
+    public ItemStack gloves(ServerPlayer player) {
+        return equipment(player).gloves();
+    }
+
+    public void setGloves(ServerPlayer player, ItemStack stack) {
+        setEquipment(player, equipment(player).withGloves(stack));
+    }
+
+    /** Whether this player's hands are protected from hot metal. */
+    public boolean wearsGloves(ServerPlayer player) {
+        return !equipment(player).gloves().isEmpty();
+    }
+
     /** What pack this player is wearing, or null for none. */
     public BackpackTier tier(ServerPlayer player) {
         return isCreative(player) ? BackpackTier.BASIC : equipment(player).tier();
@@ -77,7 +90,10 @@ public final class EquipmentSystem {
      * is the whole of what a pack is for.
      */
     public int mainRows(ServerPlayer player) {
-        return tier(player) == null ? 0 : BackpackTier.MAIN_ROWS;
+        BackpackTier tier = tier(player);
+        if (tier == null) return 0;
+        var server = player.level() == null ? null : player.level().getServer();
+        return tier.mainRows(de.ipnats.hardwrought.survival.Ultra.active(server));
     }
 
     /** What this player may carry before the weight starts to tell. */
@@ -89,17 +105,20 @@ public final class EquipmentSystem {
     // ---------------------------------------------------------------- handing one out
 
     /**
-     * Called when a player joins for the first time. Everywhere but hardcore that is a pack and the
-     * book; on hardcore it is the book alone, and the pack is the player's own first problem.
+     * Called when a player joins for the first time. Everywhere but Ultra that is a pack and the
+     * book; in Ultra it is the book alone, and the pack is the player's own first problem.
      */
     public void welcome(ServerPlayer player) {
-        if (!server.isHardcore()) ensureBackpack(player);
+        if (!de.ipnats.hardwrought.survival.Ultra.active(server)) ensureBackpack(player);
         giveOnce(player, new ItemStack(ModItems.COMPENDIUM));
     }
 
-    /** Called after a respawn. A player who has died is always wearing a pack again. */
+    /**
+     * Called after a respawn. A player who has died is wearing a pack again — except in an Ultra
+     * world, where the pack was never given in the first place and is not given back either.
+     */
     public void respawned(ServerPlayer player) {
-        ensureBackpack(player);
+        if (!de.ipnats.hardwrought.survival.Ultra.active(player.level().getServer())) ensureBackpack(player);
     }
 
     /**
@@ -114,7 +133,7 @@ public final class EquipmentSystem {
 
     /**
      * Gives a stack, or leaves it at the player's feet where there is nowhere to put it. Nowhere to
-     * put it is the ordinary case on hardcore, where a fresh player has only the nine belt slots.
+     * put it is the ordinary case in Ultra, where a fresh player has only the nine belt slots.
      */
     private static void giveOnce(ServerPlayer player, ItemStack stack) {
         if (player.getInventory().add(stack)) return;

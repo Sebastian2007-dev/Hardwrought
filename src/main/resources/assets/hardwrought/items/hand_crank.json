@@ -1,0 +1,9 @@
+{
+  "model": {
+    "type": "minecraft:composite",
+    "models": [
+      { "type": "minecraft:model", "model": "hardwrought:block/hand_crank" },
+      { "type": "minecraft:model", "model": "hardwrought:block/hand_crank_handle" }
+    ]
+  }
+}

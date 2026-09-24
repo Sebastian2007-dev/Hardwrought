@@ -9,7 +9,8 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * The two worn squares as a container a menu can sit on: the pack on the back, the lamp on the belt.
+ * The worn squares as a container a menu can sit on: the pack on the back, the lamp on the belt,
+ * the gloves on the hands.
  *
  * <p>Read fresh on every sync rather than copied in once, for the same reason the pack's own page is:
  * the player's inventory menu is built inside the {@code ServerPlayer} constructor and then lives as
@@ -20,7 +21,8 @@ import net.minecraft.world.item.ItemStack;
 public class EquipmentContainer extends SimpleContainer {
     public static final int BACKPACK_SLOT = 0;
     public static final int LAMP_SLOT = 1;
-    public static final int SIZE = 2;
+    public static final int GLOVES_SLOT = 2;
+    public static final int SIZE = 3;
 
     private final ServerPlayer owner;
     private boolean loading;
@@ -56,6 +58,9 @@ public class EquipmentContainer extends SimpleContainer {
             if (!ItemStack.matches(getItem(LAMP_SLOT), worn.lamp())) {
                 setItem(LAMP_SLOT, worn.lamp().copy());
             }
+            if (!ItemStack.matches(getItem(GLOVES_SLOT), worn.gloves())) {
+                setItem(GLOVES_SLOT, worn.gloves().copy());
+            }
         } finally {
             loading = false;
         }
@@ -70,7 +75,8 @@ public class EquipmentContainer extends SimpleContainer {
         var equipment = runtime.equipment();
         ItemStack packBefore = equipment.backpack(owner);
         ItemStack packNow = getItem(BACKPACK_SLOT);
-        equipment.setEquipment(owner, new PlayerEquipment(packNow.copy(), getItem(LAMP_SLOT).copy()));
+        equipment.setEquipment(owner, new PlayerEquipment(packNow.copy(), getItem(LAMP_SLOT).copy(),
+                getItem(GLOVES_SLOT).copy()));
         spillShrunkRows(packBefore, packNow);
     }
 
@@ -103,6 +109,7 @@ public class EquipmentContainer extends SimpleContainer {
             case BACKPACK_SLOT -> BackpackItem.isBackpack(stack);
             case LAMP_SLOT -> stack.getItem()
                     instanceof de.ipnats.hardwrought.environment.SafetyLampItem;
+            case GLOVES_SLOT -> stack.is(de.ipnats.hardwrought.core.registry.ModItems.SMITHING_GLOVES);
             default -> false;
         };
     }

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "W": "#minecraft:wool",
+    "S": "minecraft:stick",
+    "H": "hardwrought:shaft"
+  },
+  "pattern": [
+    "WSW",
+    "SHS",
+    "WSW"
+  ],
+  "result": {
+    "id": "hardwrought:windmill"
+  }
+}

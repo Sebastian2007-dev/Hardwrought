@@ -16,12 +16,26 @@ import java.util.List;
  *                and holding any of them is what marks the thought as followed
  * @param after   what has to have been seen before the thought occurs to the player at all; empty
  *                for the first entry, which is readable the moment the book is opened
+ * @param needsAll whether the thought is followed only once every one of {@code teaches} has been
+ *                held, for a problem that takes several things together to solve
+ * @param ultraOnly whether the thought belongs only to an Ultra world, for a problem that only
+ *                exists there
  */
-public record JournalEntry(Identifier id, List<Identifier> teaches, List<Identifier> after) {
+public record JournalEntry(Identifier id, List<Identifier> teaches, List<Identifier> after, boolean needsAll,
+                           boolean ultraOnly) {
     public JournalEntry {
         if (id == null) throw new IllegalArgumentException("A journal entry needs a name");
         teaches = List.copyOf(teaches);
         after = List.copyOf(after);
+    }
+
+    /** An entry followed by holding any one of the things it points at. */
+    public JournalEntry(Identifier id, List<Identifier> teaches, List<Identifier> after) {
+        this(id, teaches, after, false, false);
+    }
+
+    public JournalEntry(Identifier id, List<Identifier> teaches, List<Identifier> after, boolean needsAll) {
+        this(id, teaches, after, needsAll, false);
     }
 
     /** The item the entry is drawn with and the compendium opens on when it is clicked. */

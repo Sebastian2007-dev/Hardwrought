@@ -31,14 +31,38 @@ public final class ModCreativeTabs {
                         for (HewnWood wood : HewnWood.values()) {
                             output.accept(ModBlocks.HEWN_WORKBENCH.itemStack(wood));
                         }
+                        for (HewnWood wood : HewnWood.values()) {
+                            output.accept(ModBlocks.NAILED_WORKBENCH.itemStack(wood));
+                        }
                         output.accept(ModItems.LEAF_STRING);
                         output.accept(ModItems.COMPENDIUM);
                         output.accept(ModItems.BRONZE_MIXTURE);
+                        output.accept(ModItems.BRONZE_NAILS);
+                        output.accept(ModItems.WOODEN_HAMMER);
+                        output.accept(ModItems.HAMMER);
+                        output.accept(ModItems.IRON_HAMMER);
+                        output.accept(ModItems.SMITHING_GLOVES);
+                        output.accept(ModItems.WOODEN_ANVIL);
+                        output.accept(ModItems.FORGE);
+                        output.accept(ModItems.BELLOWS);
+                        output.accept(ModItems.COGWHEEL);
+                        output.accept(ModItems.LARGE_COGWHEEL);
+                        output.accept(ModItems.GEARBOX);
+                        output.accept(ModItems.BELT);
+                        output.accept(ModItems.WATER_WHEEL);
+                        output.accept(ModItems.WINDMILL);
+                        output.accept(ModItems.FIRECLAY);
+                        output.accept(ModItems.REFRACTORY_BRICK);
+                        de.ipnats.hardwrought.smithing.ToolParts.all().forEach(output::accept);
                         output.accept(ModItems.BRONZE_INGOT);
                         output.accept(ModItems.LIGHTING_STICKS);
                         output.accept(ModItems.BRICK_FURNACE);
                         output.accept(ModItems.FILLED_WATERSKIN);
                         output.accept(ModItems.SAFETY_LAMP);
+                        output.accept(ModItems.SHAFT);
+                        output.accept(ModItems.CRANK_BOX);
+                        output.accept(ModItems.HAND_CRANK);
+                        output.accept(ModItems.STARTER_CRUSHER);
 
                         // Primitive tools and weapons, ordered by material progression.
                         output.accept(ModItems.FLINT_DAGGER);
@@ -47,7 +71,14 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.FLINT_PICKAXE);
                         output.accept(ModItems.FLINT_SHOVEL);
                         output.accept(ModItems.FLINT_SWORD);
+                        output.accept(ModItems.POINTED_STICK);
+                        output.accept(ModItems.SEWING_NEEDLE);
+                        output.accept(ModItems.IRON_SEWING_NEEDLE);
+                        output.accept(ModItems.WOVEN);
+                        output.accept(ModItems.GREEN_FIBRE);
+                        output.accept(ModItems.DRYING_RACK);
                         output.accept(ModItems.STARTER_BACKPACK);
+                        output.accept(ModItems.FRAME_BACKPACK);
                         output.accept(ModItems.BASIC_BACKPACK);
                         output.accept(ModItems.STONE_HATCHET);
                         output.accept(ModItems.STONE_PICKAXE);
@@ -59,11 +90,17 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.IRON_GREATSWORD);
                         output.accept(ModItems.IRON_HALBERD);
 
-                        // Sections 55 and 56: every metal of the table, ore, raw and ingot.
+                        // Powder forms of vanilla ore materials; redstone already has vanilla dust.
+                        for (var ore : de.ipnats.hardwrought.metallurgy.OrePowders.VanillaOre.values()) {
+                            output.accept(de.ipnats.hardwrought.metallurgy.OrePowders.powder(ore));
+                        }
+
+                        // Sections 55 and 56: every metal of the table, ore, raw, powder and ingot.
                         for (var metal : de.ipnats.hardwrought.metallurgy.Metal.values()) {
                             output.accept(de.ipnats.hardwrought.metallurgy.ModMetals.ore(metal));
                             output.accept(de.ipnats.hardwrought.metallurgy.ModMetals.deepslateOre(metal));
                             output.accept(de.ipnats.hardwrought.metallurgy.ModMetals.raw(metal));
+                            output.accept(de.ipnats.hardwrought.metallurgy.OrePowders.powder(metal));
                             output.accept(de.ipnats.hardwrought.metallurgy.ModMetals.ingot(metal));
                         }
                     })

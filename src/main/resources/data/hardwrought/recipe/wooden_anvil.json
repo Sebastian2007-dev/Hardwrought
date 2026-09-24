@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "L": "#minecraft:logs"
+  },
+  "pattern": [
+    "LL",
+    "L "
+  ],
+  "result": {
+    "id": "hardwrought:wooden_anvil"
+  }
+}

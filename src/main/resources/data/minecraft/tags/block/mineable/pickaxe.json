@@ -120,6 +120,8 @@
       "id": "hardwrought:deepslate_platinum_ore",
       "required": false
     },
-    "hardwrought:brick_furnace"
+    "hardwrought:brick_furnace",
+    "hardwrought:starter_crusher",
+    "hardwrought:forge"
   ]
 }

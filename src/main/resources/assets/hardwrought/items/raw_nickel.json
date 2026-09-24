@@ -1,6 +1,19 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "hardwrought:item/raw_nickel"
+    "type": "minecraft:condition",
+    "property": "hardwrought:hot",
+    "on_true": {
+      "type": "minecraft:model",
+      "model": "hardwrought:item/glow/hardwrought_raw_nickel",
+      "tints": [
+        {
+          "type": "hardwrought:heat"
+        }
+      ]
+    },
+    "on_false": {
+      "type": "minecraft:model",
+      "model": "hardwrought:item/raw_nickel"
+    }
   }
 }

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "hardwrought:block/windmill"
+    },
+    "facing=east": {
+      "model": "hardwrought:block/windmill",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "hardwrought:block/windmill",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "hardwrought:block/windmill",
+      "y": 270
+    }
+  }
+}

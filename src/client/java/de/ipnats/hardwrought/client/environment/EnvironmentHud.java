@@ -58,11 +58,6 @@ public final class EnvironmentHud {
 
     private static void panel(net.minecraft.client.gui.GuiGraphicsExtractor graphics, Minecraft client,
                               GasMixture gases) {
-        int height = snapshot.instrumented() ? 54 : 34;
-        graphics.fill(PANEL_X - 4, PANEL_Y - 4, PANEL_X + PANEL_WIDTH + 4, PANEL_Y + height, 0xA6080B0E);
-        graphics.fill(PANEL_X - 3, PANEL_Y - 3, PANEL_X + PANEL_WIDTH + 3, PANEL_Y - 2, 0x805D6972);
-        graphics.text(client.font, I18n.get("hud.hardwrought.air"), PANEL_X, PANEL_Y, 0xFFE8EDF0, true);
-
         String space;
         if (!snapshot.sealed()) {
             space = I18n.get("hud.hardwrought.air.open");
@@ -71,29 +66,53 @@ public final class EnvironmentHud {
         } else {
             space = I18n.get("hud.hardwrought.air.enclosed", snapshot.volume());
         }
+        String noInstrument = I18n.get("hud.hardwrought.air.no_instrument");
+        String[][] readings = {
+                {"hud.hardwrought.air.oxygen", value(gases.oxygen())},
+                {"hud.hardwrought.air.carbon_dioxide", value(gases.carbonDioxide())},
+                {"hud.hardwrought.air.methane", value(gases.methane())}};
+
+        // As wide as its longest line, never narrower than the vitals panel it hangs under: a room
+        // size or a translation that runs long widens the board instead of spilling off it.
+        int width = Math.max(PANEL_WIDTH, client.font.width(space));
+        if (snapshot.instrumented()) {
+            for (String[] reading : readings) {
+                width = Math.max(width, client.font.width(I18n.get(reading[0])) + 8
+                        + client.font.width(reading[1]));
+            }
+        } else {
+            width = Math.max(width, client.font.width(noInstrument));
+        }
+
+        int height = snapshot.instrumented() ? 54 : 34;
+        graphics.fill(PANEL_X - 4, PANEL_Y - 4, PANEL_X + width + 4, PANEL_Y + height, 0xA6080B0E);
+        graphics.fill(PANEL_X - 3, PANEL_Y - 3, PANEL_X + width + 3, PANEL_Y - 2, 0x805D6972);
+        graphics.text(client.font, I18n.get("hud.hardwrought.air"), PANEL_X, PANEL_Y, 0xFFE8EDF0, true);
         graphics.text(client.font, space, PANEL_X, PANEL_Y + 12, 0xFFB7C0C6, false);
 
         if (!snapshot.instrumented()) {
-            graphics.text(client.font, I18n.get("hud.hardwrought.air.no_instrument"),
-                    PANEL_X, PANEL_Y + 22, 0xFF8C959B, false);
+            graphics.text(client.font, noInstrument, PANEL_X, PANEL_Y + 22, 0xFF8C959B, false);
             return;
         }
-        reading(graphics, client, PANEL_Y + 24, "hud.hardwrought.air.oxygen", gases.oxygen() * 100,
+        reading(graphics, client, width, PANEL_Y + 24, readings[0],
                 gases.oxygen() < GasMixture.OXYGEN_DANGEROUS ? 0xFFE06B6B
                         : gases.oxygen() < GasMixture.OXYGEN_IMPAIRED ? 0xFFE9C45C : 0xFF8FD08F);
-        reading(graphics, client, PANEL_Y + 34, "hud.hardwrought.air.carbon_dioxide", gases.carbonDioxide() * 100,
+        reading(graphics, client, width, PANEL_Y + 34, readings[1],
                 gases.carbonDioxide() > GasMixture.CARBON_DIOXIDE_SEVERE ? 0xFFE06B6B
                         : gases.carbonDioxide() > GasMixture.CARBON_DIOXIDE_NOTICEABLE ? 0xFFE9C45C : 0xFF8FD08F);
-        reading(graphics, client, PANEL_Y + 44, "hud.hardwrought.air.methane", gases.methane() * 100,
+        reading(graphics, client, width, PANEL_Y + 44, readings[2],
                 gases.explosive() ? 0xFFE06B6B
                         : gases.methane() > 0.005 ? 0xFFE9C45C : 0xFF8FD08F);
     }
 
+    private static String value(double fraction) {
+        return String.format(Locale.ROOT, "%.2f %%", fraction * 100);
+    }
+
     private static void reading(net.minecraft.client.gui.GuiGraphicsExtractor graphics, Minecraft client,
-                                int y, String key, double percent, int color) {
-        graphics.text(client.font, I18n.get(key), PANEL_X, y, 0xFFB7C0C6, false);
-        String value = String.format(Locale.ROOT, "%.2f %%", percent);
-        graphics.text(client.font, value, PANEL_X + PANEL_WIDTH - client.font.width(value), y, color, false);
+                                int width, int y, String[] reading, int color) {
+        graphics.text(client.font, I18n.get(reading[0]), PANEL_X, y, 0xFFB7C0C6, false);
+        graphics.text(client.font, reading[1], PANEL_X + width - client.font.width(reading[1]), y, color, false);
     }
 
     private static void warning(net.minecraft.client.gui.GuiGraphicsExtractor graphics, Minecraft client,

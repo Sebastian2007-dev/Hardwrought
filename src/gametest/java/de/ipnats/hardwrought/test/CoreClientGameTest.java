@@ -44,6 +44,7 @@ public final class CoreClientGameTest implements FabricClientGameTest {
             verifyWornStrap(context, world);
             verifyBadWaterThirst(context, world);
             verifyFirecraft(context, world);
+            verifyTurningShaft(context, world);
             // The weight table has to reach the client, or every tooltip would guess.
             context.waitFor(client -> !de.ipnats.hardwrought.client.survival.WeightTooltip.weights().isEmpty());
             context.runOnClient(client -> {
@@ -373,6 +374,97 @@ public final class CoreClientGameTest implements FabricClientGameTest {
         context.runOnClient(client -> client.gui.setScreen(null));
         world.getServer().runOnServer(server -> CoreLifecycle.require(server).knowledge()
                 .forget(server.getPlayerList().getPlayers().getFirst().getUUID()));
+    }
+
+    /**
+     * Milestone-72 groundwork: a shaft turns, and turning is something a block model cannot do.
+     *
+     * <p>A screenshot proves it was drawn; it cannot prove it moved. What proves that is the angle
+     * on the client's own block entity — it has to climb while a crank is turning and stand still
+     * when the crank stops. Both halves matter: a shaft that never stops is as wrong as one that
+     * never starts, and only the second of those is obvious by eye.
+     */
+    private static void verifyTurningShaft(ClientGameTestContext context,
+                                           net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
+        net.minecraft.core.BlockPos crank = world.getServer().computeOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            var level = player.level();
+            // Well clear of the fire the firecraft check left burning, or the screenshot is of smoke.
+            net.minecraft.core.BlockPos base = player.blockPosition().west(12);
+            for (int step = -1; step <= 4; step++) {
+                for (int side = -1; side <= 1; side++) {
+                    level.setBlockAndUpdate(base.above(step).south(side),
+                            net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+                }
+            }
+            level.setBlockAndUpdate(base.below(), net.minecraft.world.level.block.Blocks.STONE
+                    .defaultBlockState());
+            level.setBlockAndUpdate(base, de.ipnats.hardwrought.core.registry.ModBlocks.CRANK_BOX
+                    .defaultBlockState());
+            // Three shafts standing on the crank, so the line is visible from the side.
+            for (int step = 1; step <= 3; step++) {
+                level.setBlockAndUpdate(base.above(step),
+                        de.ipnats.hardwrought.core.registry.ModBlocks.SHAFT.defaultBlockState()
+                                .setValue(de.ipnats.hardwrought.machinery.ShaftBlock.AXIS,
+                                        net.minecraft.core.Direction.Axis.Y));
+            }
+            // Stood back and looking straight at the column, so the screenshot shows the thing
+            // under test rather than whatever the last check left lying around.
+            // teleportTo and not snapTo: the second one moves the player on the server and never
+            // tells the client, so the camera stays where it was and the screenshot is of nothing.
+            player.teleportTo((net.minecraft.server.level.ServerLevel) level,
+                    base.getX() + 0.5, base.getY(), base.getZ() + 5.5,
+                    java.util.Set.of(), 180.0f, 0.0f, false);
+            return base;
+        });
+        net.minecraft.core.BlockPos shaft = crank.above(2);
+
+        world.getConnection().waitForChunksRender();
+        context.waitTicks(10);
+        context.waitFor(client -> client.level != null
+                && client.level.getBlockEntity(shaft) instanceof de.ipnats.hardwrought.machinery.ShaftBlockEntity);
+
+        // Still, because nothing is turning the crank yet.
+        context.waitTicks(5);
+        float resting = context.computeOnClient(client ->
+                ((de.ipnats.hardwrought.machinery.ShaftBlockEntity)
+                        client.level.getBlockEntity(shaft)).angle());
+        context.waitTicks(10);
+        context.runOnClient(client -> {
+            float now = ((de.ipnats.hardwrought.machinery.ShaftBlockEntity)
+                    client.level.getBlockEntity(shaft)).angle();
+            if (now != resting) {
+                throw new AssertionError("A shaft nothing is driving must stand still, moved to " + now);
+            }
+        });
+
+        world.getServer().runOnServer(server -> {
+            var level = server.getPlayerList().getPlayers().getFirst().level();
+            level.setBlockAndUpdate(crank, de.ipnats.hardwrought.core.registry.ModBlocks.CRANK_BOX
+                    .defaultBlockState()
+                    .setValue(de.ipnats.hardwrought.machinery.CrankBoxBlock.TURNING, true));
+            de.ipnats.hardwrought.machinery.Driveline.update(level, crank);
+        });
+        context.waitFor(client -> {
+            var entity = client.level.getBlockEntity(shaft);
+            return entity instanceof de.ipnats.hardwrought.machinery.ShaftBlockEntity turning
+                    && turning.getBlockState().getValue(
+                            de.ipnats.hardwrought.machinery.ShaftBlock.DRIVEN);
+        });
+        context.waitTicks(10);
+        context.runOnClient(client -> {
+            float now = ((de.ipnats.hardwrought.machinery.ShaftBlockEntity)
+                    client.level.getBlockEntity(shaft)).angle();
+            if (now == resting) {
+                throw new AssertionError("A driven shaft has to turn, and this one sat at " + now);
+            }
+        });
+        // Two pictures ten ticks apart, which at this speed is a quarter turn: a square bar is at
+        // its narrowest square-on and its widest at forty-five degrees, so the pair is the proof
+        // that the renderer is actually using the angle rather than drawing a still bar.
+        context.takeScreenshot("hardwrought-machinery-shaft-turning-a");
+        context.waitTicks(10);
+        context.takeScreenshot("hardwrought-machinery-shaft-turning-b");
     }
 
     /**

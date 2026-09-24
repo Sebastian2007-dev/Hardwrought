@@ -1,0 +1,72 @@
+{
+  "values": [
+    "#minecraft:wooden_slabs",
+    "#minecraft:wooden_stairs",
+    "#minecraft:wooden_doors",
+    "#minecraft:wooden_trapdoors",
+    "#minecraft:wooden_fences",
+    "#minecraft:fence_gates",
+    "#minecraft:logs",
+    "#minecraft:boats",
+    "#minecraft:signs",
+    "#minecraft:wool",
+    "#minecraft:beds",
+    "minecraft:crafting_table",
+    "hardwrought:nailed_workbench",
+    "minecraft:chest",
+    "minecraft:barrel",
+    "minecraft:ladder",
+    "minecraft:scaffolding",
+    "minecraft:campfire",
+    "minecraft:bowl",
+    "minecraft:paper",
+    "minecraft:book",
+    "minecraft:leather",
+    "minecraft:stone_bricks",
+    "minecraft:bricks",
+    "minecraft:arrow",
+    "minecraft:bow",
+    "minecraft:wooden_axe",
+    "minecraft:wooden_pickaxe",
+    "minecraft:wooden_shovel",
+    "minecraft:wooden_hoe",
+    "minecraft:wooden_sword",
+    "minecraft:stone_axe",
+    "minecraft:stone_pickaxe",
+    "minecraft:stone_shovel",
+    "minecraft:stone_hoe",
+    "minecraft:stone_sword",
+    "minecraft:leather_helmet",
+    "minecraft:leather_chestplate",
+    "minecraft:leather_leggings",
+    "minecraft:leather_boots",
+    {
+      "id": "hardwrought:stone_hatchet",
+      "required": false
+    },
+    {
+      "id": "hardwrought:stone_pickaxe",
+      "required": false
+    },
+    {
+      "id": "hardwrought:basic_backpack",
+      "required": false
+    },
+    {
+      "id": "hardwrought:brick_furnace",
+      "required": false
+    },
+    {
+      "id": "hardwrought:filled_waterskin",
+      "required": false
+    },
+    "hardwrought:shaft",
+    "hardwrought:hand_crank",
+    "hardwrought:starter_crusher",
+    "hardwrought:bronze_mixture",
+    "hardwrought:bronze_nails",
+    "hardwrought:hammer",
+    "hardwrought:smithing_gloves",
+    "hardwrought:frame_backpack"
+  ]
+}

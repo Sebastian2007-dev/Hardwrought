@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "axis=x,waterlogged=true": {
+      "model": "hardwrought:block/shaft",
+      "x": 90,
+      "y": 90
+    },
+    "axis=z,waterlogged=true": {
+      "model": "hardwrought:block/shaft",
+      "x": 90
+    },
+    "axis=x,waterlogged=false": {
+      "model": "hardwrought:block/shaft",
+      "x": 90,
+      "y": 90
+    },
+    "axis=z,waterlogged=false": {
+      "model": "hardwrought:block/shaft",
+      "x": 90
+    }
+  }
+}

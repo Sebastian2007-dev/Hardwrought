@@ -1,0 +1,10 @@
+{
+  "parent": "minecraft:block/orientable_with_bottom",
+  "textures": {
+    "top": "hardwrought:block/nailed_workbench_top_bamboo",
+    "side": "hardwrought:block/nailed_workbench_side_bamboo",
+    "front": "hardwrought:block/nailed_workbench_front_bamboo",
+    "bottom": "hardwrought:block/nailed_workbench_bottom_bamboo",
+    "particle": "hardwrought:block/nailed_workbench_side_bamboo"
+  }
+}

@@ -3,7 +3,7 @@
   "category": "misc",
   "cookingtime": 200,
   "experience": 0.7,
-  "ingredient": "hardwrought:raw_nickel",
+  "ingredient": "hardwrought:nickel_powder",
   "result": {
     "id": "hardwrought:nickel_ingot"
   }

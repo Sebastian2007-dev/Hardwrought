@@ -9,6 +9,15 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.permissions.Permissions;
 
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.item.ItemArgument;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.Item;
+
+import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 
 import static net.minecraft.commands.Commands.argument;
@@ -36,9 +45,77 @@ public final class DebugCommands {
                             context.getSource().sendSuccess(() -> Component.literal("Hardwrought: Profiling zurueckgesetzt."), false);
                             return 1;
                         })))
+                        .then(knowledge(registries))
                         .then(literal("debug")
                                 .then(literal("on").executes(context -> toggle(context.getSource(), true)))
                                 .then(literal("off").executes(context -> toggle(context.getSource(), false))))));
+    }
+
+    /**
+     * Testing and building tool for the compendium: {@code knowledge unlock <item>|all [players]}
+     * studies one entry or every entry, {@code knowledge forget [players]} empties it again. Without
+     * players it acts on whoever ran it.
+     */
+    private static LiteralArgumentBuilder<CommandSourceStack> knowledge(CommandBuildContext registries) {
+        return literal("knowledge")
+                .then(literal("unlock")
+                        .then(literal("all")
+                                .executes(context -> unlockAll(context.getSource(), self(context.getSource())))
+                                .then(argument("players", EntityArgument.players())
+                                        .executes(context -> unlockAll(context.getSource(),
+                                                EntityArgument.getPlayers(context, "players")))))
+                        .then(argument("item", ItemArgument.item(registries))
+                                .executes(context -> unlock(context.getSource(),
+                                        ItemArgument.getItem(context, "item").item().value(),
+                                        self(context.getSource())))
+                                .then(argument("players", EntityArgument.players())
+                                        .executes(context -> unlock(context.getSource(),
+                                                ItemArgument.getItem(context, "item").item().value(),
+                                                EntityArgument.getPlayers(context, "players"))))))
+                .then(literal("forget")
+                        .executes(context -> forget(context.getSource(), self(context.getSource())))
+                        .then(argument("players", EntityArgument.players())
+                                .executes(context -> forget(context.getSource(),
+                                        EntityArgument.getPlayers(context, "players")))));
+    }
+
+    private static Collection<ServerPlayer> self(CommandSourceStack source)
+            throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        return List.of(source.getPlayerOrException());
+    }
+
+    private static int unlockAll(CommandSourceStack source, Collection<ServerPlayer> players) {
+        var knowledge = CoreLifecycle.require(source.getServer()).knowledge();
+        for (ServerPlayer player : players) {
+            int learned = knowledge.studyAll(player);
+            source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                    "Hardwrought: %s kennt jetzt alles (%d neue Eintraege).",
+                    player.getName().getString(), learned)), true);
+        }
+        return players.size();
+    }
+
+    private static int unlock(CommandSourceStack source, Item item, Collection<ServerPlayer> players) {
+        var knowledge = CoreLifecycle.require(source.getServer()).knowledge();
+        int changed = 0;
+        for (ServerPlayer player : players) {
+            boolean news = knowledge.study(player, item);
+            if (news) changed++;
+            source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                    news ? "Hardwrought: %s hat %s studiert." : "Hardwrought: %s kannte %s schon.",
+                    player.getName().getString(), BuiltInRegistries.ITEM.getKey(item))), true);
+        }
+        return changed;
+    }
+
+    private static int forget(CommandSourceStack source, Collection<ServerPlayer> players) {
+        var knowledge = CoreLifecycle.require(source.getServer()).knowledge();
+        for (ServerPlayer player : players) {
+            knowledge.forget(player.getUUID());
+            source.sendSuccess(() -> Component.literal(
+                    "Hardwrought: " + player.getName().getString() + " hat alles vergessen."), true);
+        }
+        return players.size();
     }
 
     private static int toggle(CommandSourceStack source, boolean enabled) throws com.mojang.brigadier.exceptions.CommandSyntaxException {

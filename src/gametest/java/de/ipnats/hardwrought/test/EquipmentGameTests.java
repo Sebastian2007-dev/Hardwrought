@@ -4,6 +4,7 @@ import de.ipnats.hardwrought.core.events.CoreLifecycle;
 import de.ipnats.hardwrought.core.registry.ModItems;
 import de.ipnats.hardwrought.equipment.BackpackItem;
 import de.ipnats.hardwrought.equipment.BackpackTier;
+import de.ipnats.hardwrought.equipment.CarriedInventoryMenu;
 import de.ipnats.hardwrought.equipment.EquipmentContainer;
 import de.ipnats.hardwrought.equipment.EquipmentSystem;
 import de.ipnats.hardwrought.progression.BenchTier;
@@ -11,6 +12,7 @@ import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.NonNullList;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
@@ -123,31 +125,51 @@ public final class EquipmentGameTests {
     }
 
     @GameTest
-    public void theHewnBenchOnlyDoesEarlyWork(GameTestHelper helper) {
-        // The bench cut out of a standing log is the first one in the game, and the list of what it
-        // can make is deliberately a list of what it CAN: anything it has not heard of is refused.
-        for (ItemStack early : List.of(new ItemStack(Items.STICK), new ItemStack(Items.CRAFTING_TABLE),
-                new ItemStack(Items.CHEST), new ItemStack(Items.IRON_PICKAXE),
-                new ItemStack(ModItems.IRON_HATCHET), new ItemStack(ModItems.BASIC_BACKPACK))) {
-            helper.assertTrue(BenchTier.allows(true, early),
-                    "The hewn bench does early work: " + early.getHoverName().getString());
+    public void eachBenchMakesWhatItIsGoodEnoughToMake(GameTestHelper helper) {
+        // The tags say the MINIMUM bench, not the permission, so each result is listed once and a
+        // bench makes anything at or below itself. Anything no tag has heard of wants the best one.
+        for (ItemStack bare : List.of(new ItemStack(Items.STICK), new ItemStack(Items.TORCH),
+                new ItemStack(ModItems.LEAF_STRING), new ItemStack(ModItems.FLINT_HATCHET),
+                new ItemStack(ModItems.STARTER_BACKPACK))) {
+            helper.assertTrue(BenchTier.required(bare) == BenchTier.INVENTORY,
+                    "A player's own hands are the bottom rung: " + bare.getHoverName().getString());
         }
-        for (ItemStack later : List.of(new ItemStack(Items.DIAMOND_PICKAXE),
-                new ItemStack(Items.PISTON), new ItemStack(Items.ANVIL),
-                new ItemStack(Items.ENCHANTING_TABLE), new ItemStack(Items.HOPPER))) {
-            helper.assertFalse(BenchTier.allows(true, later),
-                    "and refuses what wants a joined bench: " + later.getHoverName().getString());
+        // Without this the ladder has no first step: hewing a bench needs a tool, and the only tool
+        // available before there is a bench is one made in the grid the player carries.
+        helper.assertTrue(BenchTier.allows(BenchTier.INVENTORY, new ItemStack(ModItems.FLINT_HATCHET)),
+                "Section 71: the hatchet that cuts the first bench has to come before the first bench");
+
+        for (ItemStack hewn : List.of(new ItemStack(Items.CHEST), new ItemStack(Items.CAMPFIRE),
+                new ItemStack(Items.BOW), new ItemStack(ModItems.BASIC_BACKPACK),
+                new ItemStack(ModItems.STONE_PICKAXE))) {
+            helper.assertTrue(BenchTier.required(hewn) == BenchTier.HEWN,
+                    "Wood, stone, flint and fibre want the hewn bench: "
+                            + hewn.getHoverName().getString());
+            helper.assertFalse(BenchTier.allows(BenchTier.INVENTORY, hewn),
+                    "and not the grid in a player's hands");
         }
 
-        // A crafting table that was itself joined is not limited by any of this.
-        helper.assertTrue(BenchTier.allows(false, new ItemStack(Items.DIAMOND_PICKAXE))
-                        && BenchTier.allows(false, new ItemStack(Items.PISTON)),
-                "A joined crafting table makes anything a recipe allows");
-        helper.assertFalse(BenchTier.allows(true, ItemStack.EMPTY),
+        for (ItemStack joined : List.of(new ItemStack(Items.IRON_PICKAXE),
+                new ItemStack(ModItems.IRON_HATCHET), new ItemStack(ModItems.BRONZE_INGOT),
+                new ItemStack(Items.BUCKET), new ItemStack(Items.SHIELD),
+                new ItemStack(Items.DIAMOND_PICKAXE), new ItemStack(Items.PISTON))) {
+            helper.assertTrue(BenchTier.required(joined) == BenchTier.JOINED,
+                    "Everything metal, and everything unlisted, wants a bench that was built: "
+                            + joined.getHoverName().getString());
+            helper.assertFalse(BenchTier.allows(BenchTier.HEWN, joined),
+                    "and the stump with a flat top does not make it");
+        }
+
+        // A rung makes everything below it as well as its own, which is what makes it a ladder.
+        helper.assertTrue(BenchTier.allows(BenchTier.HEWN, new ItemStack(Items.STICK))
+                        && BenchTier.allows(BenchTier.JOINED, new ItemStack(Items.CHEST)),
+                "A better bench never makes less than a worse one");
+        helper.assertTrue(BenchTier.required(ItemStack.EMPTY) == BenchTier.HIGHEST
+                        && !BenchTier.allows(BenchTier.JOINED, ItemStack.EMPTY),
                 "and nothing at all is never a product");
 
         // The chain has to stay walkable: without this entry the first bench is also the last one.
-        helper.assertTrue(BenchTier.allows(true, new ItemStack(Items.CRAFTING_TABLE)),
+        helper.assertTrue(BenchTier.allows(BenchTier.HEWN, new ItemStack(Items.CRAFTING_TABLE)),
                 "Section 71.1.8: the hewn bench must be able to make the bench that replaces it");
         helper.succeed();
     }
@@ -189,6 +211,73 @@ public final class EquipmentGameTests {
         helper.assertTrue(new java.util.HashSet<>(pack).size() == pack.size(),
                 "and no two squares of the pack page either: " + pack);
         helper.succeed();
+    }
+
+    @GameTest
+    public void shiftClickingReachesThePackPage(GameTestHelper helper) {
+        // Every vanilla menu quick-moves by hard-coded slot ranges written when the player's grid was
+        // the only grid. The pack's page lies outside all of them, so a shift-click at it did nothing
+        // whatsoever — the one gesture that makes a second grid worth having.
+        EquipmentSystem equipment = CoreLifecycle.require(helper.getLevel().getServer()).equipment();
+        ServerPlayer player = survivor(helper);
+        equipment.clear(player.getUUID());
+        equipment.setBackpack(player, new ItemStack(ModItems.BASIC_BACKPACK));
+
+        var menu = player.inventoryMenu;
+        var carried = (CarriedInventoryMenu) menu;
+        menu.broadcastChanges();
+        helper.assertTrue(carried.hardwrought$packSlots() == BackpackTier.BASIC.slots(),
+                "The pack is on, and the menu knows how much of it there is");
+        helper.assertTrue(menu.clickMenuButton(player, CarriedInventoryMenu.TOGGLE_PAGE_BUTTON),
+                "and its page can be turned to");
+        helper.assertTrue(carried.hardwrought$page() == 1, "which is the page now being looked at");
+
+        int belt = hardwroughtBeltSlot(menu, player);
+        menu.getSlot(belt).set(new ItemStack(Items.IRON_INGOT, 5));
+        menu.clicked(belt, 0, ContainerInput.QUICK_MOVE, player);
+        helper.assertTrue(!menu.getSlot(belt).hasItem(), "A shift-click empties the square it came from");
+        ItemStack stowed = BackpackItem.contentsOf(equipment.backpack(player)).get(0);
+        helper.assertTrue(stowed.is(Items.IRON_INGOT) && stowed.getCount() == 5,
+                "and the whole stack is in the pack, not lost: " + stowed);
+
+        // Out again is vanilla's own business, and has to keep working.
+        int pack = hardwroughtPackSlot(menu, player);
+        menu.clicked(pack, 0, ContainerInput.QUICK_MOVE, player);
+        helper.assertTrue(player.getInventory().countItem(Items.IRON_INGOT) == 5,
+                "and a shift-click back takes it out again");
+
+        // On the player's own page the pack is shut, and a shift-click must not reach through it.
+        helper.assertTrue(menu.clickMenuButton(player, CarriedInventoryMenu.TOGGLE_PAGE_BUTTON),
+                "Turning back to the player's own grid");
+        menu.getSlot(belt).set(new ItemStack(Items.COAL, 3));
+        menu.clicked(belt, 0, ContainerInput.QUICK_MOVE, player);
+        helper.assertTrue(BackpackItem.contentsOf(equipment.backpack(player)).stream()
+                        .noneMatch(stack -> stack.is(Items.COAL)),
+                "puts nothing into a pack page the player cannot see");
+
+        equipment.clear(player.getUUID());
+        helper.succeed();
+    }
+
+    /** The first belt square: the one grid a player has whether they are wearing anything or not. */
+    private static int hardwroughtBeltSlot(net.minecraft.world.inventory.AbstractContainerMenu menu,
+                                           ServerPlayer player) {
+        for (net.minecraft.world.inventory.Slot slot : menu.slots) {
+            if (slot.container == player.getInventory() && slot.getContainerSlot() == 0) return slot.index;
+        }
+        throw new AssertionError("No belt square in the player's own menu");
+    }
+
+    /** The first square of the pack's page. */
+    private static int hardwroughtPackSlot(net.minecraft.world.inventory.AbstractContainerMenu menu,
+                                           ServerPlayer player) {
+        for (net.minecraft.world.inventory.Slot slot : menu.slots) {
+            if (slot instanceof de.ipnats.hardwrought.equipment.CarriedSlot
+                    && slot.container != player.getInventory() && slot.getContainerSlot() == 0) {
+                return slot.index;
+            }
+        }
+        throw new AssertionError("No pack page in the player's own menu");
     }
 
     private static ServerPlayer survivor(GameTestHelper helper) {

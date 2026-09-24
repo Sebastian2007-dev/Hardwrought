@@ -32,8 +32,11 @@ public interface CarriedInventoryMenu {
         return hardwrought$packSlots() > 0;
     }
 
-    /** True where the player's own grid is unlocked, which is to say: they are wearing something. */
-    default boolean hardwrought$mainUnlocked() {
-        return hardwrought$packSlots() >= 0;
+    /** How many rows of the player's own grid are open: none without a pack, up to three. */
+    int hardwrought$mainRows();
+
+    /** True where this row of the player's own grid is open. */
+    default boolean hardwrought$mainUnlocked(int row) {
+        return row < hardwrought$mainRows();
     }
 }

@@ -3,7 +3,7 @@
   "category": "misc",
   "cookingtime": 200,
   "experience": 0.7,
-  "ingredient": "hardwrought:raw_chromium",
+  "ingredient": "hardwrought:chromium_powder",
   "result": {
     "id": "hardwrought:chromium_ingot"
   }

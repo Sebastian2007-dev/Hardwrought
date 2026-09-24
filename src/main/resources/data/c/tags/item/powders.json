@@ -1,0 +1,29 @@
+{
+  "values": [
+    "#c:powders/coal",
+    "#c:powders/copper",
+    "#c:powders/iron",
+    "#c:powders/gold",
+    "#c:powders/lapis_lazuli",
+    "#c:powders/diamond",
+    "#c:powders/emerald",
+    "#c:powders/nether_gold",
+    "#c:powders/nether_quartz",
+    "#c:powders/ancient_debris",
+    "#c:powders/tin",
+    "#c:powders/zinc",
+    "#c:powders/lead",
+    "#c:powders/manganese",
+    "#c:powders/magnesium",
+    "#c:powders/aluminum",
+    "#c:powders/nickel",
+    "#c:powders/cobalt",
+    "#c:powders/chromium",
+    "#c:powders/mercury",
+    "#c:powders/titanium",
+    "#c:powders/tungsten",
+    "#c:powders/uranium",
+    "#c:powders/thorium",
+    "#c:powders/platinum"
+  ]
+}

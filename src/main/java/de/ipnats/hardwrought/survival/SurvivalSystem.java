@@ -400,6 +400,10 @@ public final class SurvivalSystem {
                         value.hydration(), value.calories(),
                         value.protein(), value.carbohydrates(), value.fat(), value.micronutrients(),
                         newFatigue, value.bodyTemperature(), value.wetness(), newStress).normalized();
+                // Ultra: health does not come back by itself, only in a sleep good enough to count.
+                if (quality > Ultra.HEALING_SLEEP && Ultra.active(server) && player.getHealth() < player.getMaxHealth()) {
+                    player.heal(Ultra.SLEEP_HEAL_PER_TICK);
+                }
                 if (rested && restedNotice.add(player.getUUID())) {
                     player.sendSystemMessage(Component.translatable("message.hardwrought.sleep_rested"));
                 }

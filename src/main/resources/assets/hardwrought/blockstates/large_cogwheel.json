@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "hardwrought:block/large_cogwheel"
+    },
+    "axis=y": {
+      "model": "hardwrought:block/large_cogwheel"
+    },
+    "axis=z": {
+      "model": "hardwrought:block/large_cogwheel"
+    }
+  }
+}

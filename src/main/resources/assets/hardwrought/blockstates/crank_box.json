@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "turning=false": { "model": "hardwrought:block/crank_box" },
+    "turning=true":  { "model": "hardwrought:block/crank_box_turning" }
+  }
+}

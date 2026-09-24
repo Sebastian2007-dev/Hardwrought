@@ -1,14 +1,12 @@
 {
-  "type": "minecraft:crafting_shaped",
+  "type": "minecraft:crafting_transmute",
   "category": "equipment",
-  "key": {
-    "I": "minecraft:iron_ingot",
-    "S": "minecraft:stick"
+  "input": "hardwrought:iron_dagger_blade",
+  "material": "minecraft:stick",
+  "material_count": {
+    "min": 1,
+    "max": 1
   },
-  "pattern": [
-    "I",
-    "S"
-  ],
   "result": {
     "id": "hardwrought:iron_dagger"
   }

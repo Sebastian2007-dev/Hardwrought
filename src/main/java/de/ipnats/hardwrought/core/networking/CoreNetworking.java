@@ -15,6 +15,11 @@ public final class CoreNetworking {
         PayloadTypeRegistry.clientboundPlay().register(CompendiumPagePayload.TYPE, CompendiumPagePayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(KnowledgeNotePayload.TYPE, KnowledgeNotePayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ItemWeightPayload.TYPE, ItemWeightPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(MeltingPointPayload.TYPE, MeltingPointPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ForgingPayloads.Open.TYPE, ForgingPayloads.Open.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ForgingPayloads.Begin.TYPE, ForgingPayloads.Begin.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ForgingPayloads.Strike.TYPE, ForgingPayloads.Strike.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ForgingPayloads.Cancel.TYPE, ForgingPayloads.Cancel.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SleepRequestPayload.TYPE, SleepRequestPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(CompendiumRequestPayload.TYPE, CompendiumRequestPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(SleepRequestPayload.TYPE,

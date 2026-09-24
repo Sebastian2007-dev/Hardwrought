@@ -111,6 +111,10 @@ public enum Metal {
         return id + "_ingot";
     }
 
+    public String powderId() {
+        return id + "_powder";
+    }
+
     public int minY() {
         return minY;
     }

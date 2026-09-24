@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "#minecraft:planks",
+    "F": "minecraft:flint",
+    "H": "hardwrought:shaft",
+    "C": "minecraft:cobblestone"
+  },
+  "pattern": [
+    "P P",
+    "FHF",
+    "CCC"
+  ],
+  "result": {
+    "id": "hardwrought:starter_crusher"
+  }
+}

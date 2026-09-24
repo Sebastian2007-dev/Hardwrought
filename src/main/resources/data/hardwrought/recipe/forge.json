@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": "minecraft:brick",
+    "C": "#minecraft:coals",
+    "S": "minecraft:cobblestone"
+  },
+  "pattern": [
+    "B B",
+    "BCB",
+    "SSS"
+  ],
+  "result": {
+    "id": "hardwrought:forge"
+  }
+}

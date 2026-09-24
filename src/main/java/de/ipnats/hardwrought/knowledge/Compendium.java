@@ -2,10 +2,6 @@ package de.ipnats.hardwrought.knowledge;
 
 import de.ipnats.hardwrought.core.networking.CompendiumPagePayload;
 import de.ipnats.hardwrought.core.networking.CompendiumRequestPayload;
-import de.ipnats.hardwrought.core.registry.ModBlocks;
-import de.ipnats.hardwrought.core.registry.ModItems;
-import de.ipnats.hardwrought.progression.ToolCrafting;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
@@ -14,7 +10,6 @@ import net.minecraft.util.context.ContextMap;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -114,6 +109,9 @@ public final class Compendium {
         List<CompendiumPagePayload.Entry> heading = List.of(new CompendiumPagePayload.Entry(subject,
                 knowledge.knowledge(player).level(subject).ordinal()));
         ContextMap context = SlotDisplayContext.fromLevel(player.level());
+        var runtime = de.ipnats.hardwrought.core.events.CoreLifecycle.find(server);
+        Map<Identifier, de.ipnats.hardwrought.core.registry.MaterialDefinition> materials =
+                runtime == null ? Map.of() : runtime.materials();
         index(server.getRecipeManager(), context);
         Map<Item, Set<RecipeHolder<?>>> source = asResult ? byResult : byIngredient;
         PlayerKnowledge known = knowledge.knowledge(player);
@@ -122,7 +120,7 @@ public final class Compendium {
             if (recipes.size() >= CompendiumPagePayload.MAX_RECIPES) break;
             for (RecipeDisplay display : holder.value().display()) {
                 if (recipes.size() >= CompendiumPagePayload.MAX_RECIPES) break;
-                CompendiumPagePayload.Recipe view = view(holder, display, context, known);
+                CompendiumPagePayload.Recipe view = view(holder, display, context, known, materials);
                 if (view != null) recipes.add(view);
             }
         }
@@ -138,7 +136,8 @@ public final class Compendium {
     }
 
     private CompendiumPagePayload.Recipe view(RecipeHolder<?> holder, RecipeDisplay display,
-                                              ContextMap context, PlayerKnowledge known) {
+                                              ContextMap context, PlayerKnowledge known,
+                                              Map<Identifier, de.ipnats.hardwrought.core.registry.MaterialDefinition> materials) {
         List<CompendiumPagePayload.Slot> inputs = new ArrayList<>();
         int width = 0;
         int height = 0;
@@ -164,7 +163,47 @@ public final class Compendium {
         CompendiumPagePayload.Slot result = slot(display.result(), context, known);
         if (result.isEmpty()) return null;
         return new CompendiumPagePayload.Recipe(holder.id().identifier(), inputs, width, height,
-                result, slot(display.craftingStation(), context, known), method(holder));
+                result, station(holder, display, context, known, materials), method(holder));
+    }
+
+    /**
+     * What the player actually needs to make this, drawn beside the recipe.
+     *
+     * <p>Vanilla names a crafting table for every crafting recipe and a furnace for every smelting
+     * one, and in this mod both answers are wrong: a crafting table is never made, and a furnace is
+     * only one rung of a ladder. So a crafting recipe shows the lowest bench that may make its
+     * result — nothing at all where the grid in the player's hands will do — and a smelting recipe
+     * the coldest furnace that still melts what goes into it.
+     */
+    private CompendiumPagePayload.Slot station(RecipeHolder<?> holder, RecipeDisplay display, ContextMap context,
+                                               PlayerKnowledge known,
+                                               Map<Identifier, de.ipnats.hardwrought.core.registry.MaterialDefinition> materials) {
+        RecipeType<?> type = holder.value().getType();
+        if (type == RecipeType.CRAFTING) {
+            List<ItemStack> results = resolve(display.result(), context);
+            if (results.isEmpty()) return CompendiumPagePayload.Slot.EMPTY;
+            return switch (de.ipnats.hardwrought.progression.BenchTier.required(results.getFirst())) {
+                case de.ipnats.hardwrought.progression.BenchTier.INVENTORY -> CompendiumPagePayload.Slot.EMPTY;
+                case de.ipnats.hardwrought.progression.BenchTier.HEWN ->
+                        slot(List.of(new ItemStack(de.ipnats.hardwrought.core.registry.ModBlocks.HEWN_WORKBENCH)), known);
+                default -> slot(List.of(new ItemStack(de.ipnats.hardwrought.core.registry.ModBlocks.NAILED_WORKBENCH)), known);
+            };
+        }
+        if (type == RecipeType.SMELTING && display instanceof FurnaceRecipeDisplay furnace) {
+            List<ItemStack> inputs = resolve(furnace.ingredient(), context);
+            if (!inputs.isEmpty()) {
+                var melting = de.ipnats.hardwrought.metallurgy.Smelting.meltingPoint(inputs.getFirst().getItem(), materials);
+                if (melting.isPresent()) {
+                    double degrees = melting.getAsDouble();
+                    ItemStack needed = degrees <= de.ipnats.hardwrought.metallurgy.Smelting.BRICK_FURNACE_MAX_C
+                            ? new ItemStack(de.ipnats.hardwrought.core.registry.ModBlocks.BRICK_FURNACE)
+                            : degrees <= de.ipnats.hardwrought.metallurgy.Smelting.FURNACE_MAX_C
+                                    ? new ItemStack(Items.FURNACE) : new ItemStack(Items.BLAST_FURNACE);
+                    return slot(List.of(needed), known);
+                }
+            }
+        }
+        return slot(display.craftingStation(), context, known);
     }
 
     /** The top bookmarks group vanilla recipe displays by the actual way the player performs them. */
@@ -181,62 +220,38 @@ public final class Compendium {
     }
 
     /**
-     * Processes performed directly in the world do not live in RecipeManager, but they are still
-     * recipes from the player's point of view. The first one is the hewn bench: a suitable hatchet
-     * is worked against any log until the log itself becomes the bench.
+     * Recipes the recipe manager does not hold — work done in the world and work done by a machine —
+     * come from {@link WorldRecipes}, where each mechanic describes its own. Nothing here names a
+     * single one of them, so a new machine or a new row in a machine's table needs no change to the
+     * book. Asking for how the machine itself is used lists what it works on.
      */
     private static List<CompendiumPagePayload.Recipe> inWorldRecipes(Item subject, boolean asResult,
                                                                      PlayerKnowledge known) {
         List<CompendiumPagePayload.Recipe> recipes = new ArrayList<>();
-        Item resultItem = ModBlocks.HEWN_WORKBENCH.asItem();
-        boolean isResult = subject == resultItem;
-        boolean isIngredient = isLog(subject) || new ItemStack(subject).is(ToolCrafting.CRAFTING_TOOLS);
-        if (asResult ? isResult : isIngredient) {
-            recipes.add(worldRecipe("hewn_workbench_in_world",
-                    List.of(options(Compendium::isLog, known), options(item ->
-                            ToolCrafting.isCraftingTool(new ItemStack(item)), known)), resultItem, known));
-        }
-        if (asResult ? subject == Items.CAMPFIRE
-                : subject == Items.CAMPFIRE || subject == ModItems.LIGHTING_STICKS) {
-            recipes.add(worldRecipe("light_campfire_in_world",
-                    List.of(single(ModItems.LIGHTING_STICKS, known), single(Items.CAMPFIRE, known)),
-                    Items.CAMPFIRE, known));
-        }
-        if (asResult ? subject == ModItems.FILLED_WATERSKIN
-                : subject == ModItems.FILLED_WATERSKIN || subject == Items.CAMPFIRE) {
-            recipes.add(worldRecipe("boil_waterskin_in_world",
-                    List.of(single(ModItems.FILLED_WATERSKIN, known), single(Items.CAMPFIRE, known)),
-                    ModItems.FILLED_WATERSKIN, known));
+        for (WorldRecipes.WorldRecipe recipe : WorldRecipes.all()) {
+            if (recipes.size() >= CompendiumPagePayload.MAX_RECIPES) break;
+            if (asResult ? !recipe.makes(subject) : !recipe.uses(subject)) continue;
+            List<CompendiumPagePayload.Slot> inputs = new ArrayList<>();
+            for (List<ItemStack> options : recipe.inputs()) {
+                if (inputs.size() >= CompendiumPagePayload.MAX_SLOTS) break;
+                inputs.add(slot(options, known));
+            }
+            recipes.add(new CompendiumPagePayload.Recipe(recipe.id(), inputs, 0, 0,
+                    slot(List.of(recipe.result()), known),
+                    recipe.station().isEmpty() ? CompendiumPagePayload.Slot.EMPTY
+                            : slot(List.of(recipe.station()), known),
+                    CompendiumPagePayload.METHOD_IN_WORLD));
         }
         return List.copyOf(recipes);
     }
 
-    private static CompendiumPagePayload.Recipe worldRecipe(String id,
-                                                             List<CompendiumPagePayload.Slot> inputs,
-                                                             Item result, PlayerKnowledge known) {
-        return new CompendiumPagePayload.Recipe(Identifier.fromNamespaceAndPath("hardwrought", id),
-                inputs, 0, 0, single(result, known), CompendiumPagePayload.Slot.EMPTY,
-                CompendiumPagePayload.METHOD_IN_WORLD);
-    }
-
-    private static CompendiumPagePayload.Slot single(Item item, PlayerKnowledge known) {
-        return new CompendiumPagePayload.Slot(List.of(known(new ItemStack(item), known)));
-    }
-
-    private static boolean isLog(Item item) {
-        return item instanceof BlockItem blockItem && blockItem.getBlock().defaultBlockState().is(BlockTags.LOGS);
-    }
-
-    private static CompendiumPagePayload.Slot options(java.util.function.Predicate<Item> predicate,
-                                                       PlayerKnowledge known) {
+    private static CompendiumPagePayload.Slot slot(List<ItemStack> stacks, PlayerKnowledge known) {
         List<CompendiumPagePayload.Known> options = new ArrayList<>();
-        for (Item item : BuiltInRegistries.ITEM) {
-            if (item == Items.AIR || !predicate.test(item)) continue;
-            options.add(known(new ItemStack(item), known));
+        for (ItemStack stack : stacks) {
             if (options.size() >= CompendiumPagePayload.MAX_OPTIONS) break;
+            if (!stack.isEmpty()) options.add(known(stack, known));
         }
-        return options.isEmpty() ? CompendiumPagePayload.Slot.EMPTY
-                : new CompendiumPagePayload.Slot(options);
+        return options.isEmpty() ? CompendiumPagePayload.Slot.EMPTY : new CompendiumPagePayload.Slot(options);
     }
 
     private static CompendiumPagePayload.Known known(ItemStack stack, PlayerKnowledge known) {

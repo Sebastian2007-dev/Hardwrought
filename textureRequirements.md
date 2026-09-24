@@ -2,23 +2,35 @@
 
 What Hardwrought still needs drawn, and what it has to be.
 
-The item and block art is essentially finished: of eighty-seven item models exactly one still points at
-a vanilla sprite. What is missing now is not another icon — it is the **surface of the compendium**,
-which is currently drawn entirely out of coloured rectangles and does not yet look like a book.
+The resource audit of 24 September 2026 found **122 registered item IDs**. Every one has an item
+definition, every referenced Hardwrought model exists, and every Hardwrought texture reference
+resolves to a PNG. There are no technically missing item textures.
+
+The remaining work is visual polish. Four machinery and driveline block items still render entirely
+from vanilla block textures, while the thirst effect still uses a functional generated placeholder.
+The dirt slab also uses a vanilla texture, deliberately: it is made from ordinary dirt.
 
 | | Was fehlt | Aufwand |
 | --- | --- | --- |
-| 1 | `item/compendium.png` — der einzige verbliebene Platzhalter im ganzen Mod | ein Sprite |
-| 2 | Die Oberfläche des Kompendiums | acht GUI-Sprites, Code-Änderungen dabei beschrieben |
-| 3 | `mob_effect/thirst.png` — ein generierter Platzhalter, spielbar aber nicht gezeichnet | ein Sprite |
+| 1 | Eigene Oberflächen für Welle, Kurbelkasten, Handkurbel und Starter Crusher | mehrere Block-Sprites; Modelle bestehen bereits |
+| 2 | `mob_effect/thirst.png` — vorhanden, aber noch ein generierter Platzhalter | ein 18x18-Sprite |
+| 3 | Das Kompendium samt Oberfläche | umgesetzt |
+| 4 | Die Werkbank der zweiten Stufe | umgesetzt: 52 Block-Sprites für 13 Holzarten |
+| 5 | Schmieden: Esse, Blasebalg, Handschuhe, Schamotte, feuerfester Ziegel | Werkzeugteile umgesetzt; übrige Platzhalter siehe Abschnitt „Schmieden“ |
+
+Die Werkbank-Stufen haben ein eigenes Dokument, weil dort die Erzählung über die Stufen hinweg
+zusammenhängen muss: [`art_source/bench_tiers_style_prompt.md`](art_source/bench_tiers_style_prompt.md).
+Dort stehen die Dateipfade, die Beschreibung jeder Fläche, der fertige Imagegen-Prompt und warum
+für einen würfelförmigen Block kein Blockbench nötig ist.
 
 ## How a placeholder is replaced
 
-1. Put the finished PNG at the path in the table, for example
-   `src/main/resources/assets/hardwrought/textures/item/compendium.png`.
-2. In `src/main/resources/assets/hardwrought/models/item/<item>.json` change the single line
-   `"layer0"` from the vanilla path to `hardwrought:item/<item>`.
-3. Nothing else changes. No Java, no recipe, no data file.
+1. Put the finished PNG under `src/main/resources/assets/hardwrought/textures/item/` or
+   `textures/block/`, depending on the model.
+2. For a flat item sprite, point `models/item/<item>.json` at `hardwrought:item/<item>`.
+3. For a block item, replace the relevant vanilla entries in the block model's `textures` object
+   with `hardwrought:block/<texture>`. Its item definition can keep rendering the block model.
+4. Nothing else changes. No registry, recipe or data-file change is needed.
 
 Keep the generated source image next to the others in `art_source/` so a later re-export does not
 have to start from nothing.
@@ -36,7 +48,21 @@ have to start from nothing.
 
 GUI sprites are a different job and follow their own rules; those are in the compendium section.
 
-## Milestone 8: das Kompendium
+## Milestone 8: das Kompendium (umgesetzt)
+
+### Verbindliche Neuausrichtung der Startstufe
+
+Das erste Kompendium ist noch kein ordentlich gebundenes Buch. Es besteht aus überlappenden
+Blättern, Rindenstücken, Zweigen, Pflanzenfasern und zwei hellen Fetzen als ruhiger Schreibfläche.
+Erst ein späteres Upgrade darf wie das saubere, mehrlagige Buchkonzept aussehen.
+
+- Unbekannte Gegenstände bleiben ihre echten, schwarz eingefärbten Silhouetten — auch Blöcke.
+  Es gibt kein allgemeines Fragezeichen- oder Würfel-Icon.
+- Methodenreiter rendern echte Minecraft-ItemStacks: Werkbank, Truhe, Lagerfeuer, Schmiedetisch,
+  Ofen und Holzblock. Sichtbar sind nur Reiter, hinter denen Rezepte oder Fundorte liegen.
+- Text wird ohne Minecraft-Dropshadow auf heller, kontrastreicher Fläche gezeichnet.
+- Titelbanner und alle außerhalb des Buches schwebenden Bedienelemente entfallen.
+- Das polierte Buchkonzept ist die Vorlage für ein späteres Compendium-Upgrade, nicht für Stufe 1.
 
 Das Kompendium (`hardwrought:compendium`) ist das Buch, in dem der Spieler nachschlägt, was er
 herausgefunden hat. Es hat seit Milestone 8 zwei Hälften, zwischen denen die Startseite wählt:
@@ -47,16 +73,19 @@ herausgefunden hat. Es hat seit Milestone 8 zwei Hälften, zwischen denen die St
   ohne die Lösung zu verraten. Ein Eintrag, der noch nicht an der Reihe ist, ist unleserliches
   Gekritzel statt einer fehlenden Seite.
 
-### Das Buch als Gegenstand (Platzhalter)
+### Das Buch als Gegenstand (umgesetzt)
 
 | Datei | Was es sein soll |
 | --- | --- |
 | `textures/item/compendium.png` | Ein abgegriffenes, selbstgebundenes Notizbuch: Blätter aus Rinde oder Lumpenpapier, mit Pflanzenschnur gebunden, deren Knoten am Rücken sichtbar ist. Gedeckte Braun- und Grautöne, kein Leder, kein Gold, keine Verzierung. Es soll aussehen, als hätte der Spieler es selbst aus dem gemacht, was er gefunden hat, und nicht, als hätte er es gekauft. |
 
-Wenn die Textur fertig ist, in `src/main/resources/assets/hardwrought/models/item/compendium.json`
-die Zeile `"layer0"` von `minecraft:item/book` auf `hardwrought:item/compendium` ändern.
+Die 16x16-Textur liegt am angegebenen Pfad. Das Itemmodell verweist bereits auf
+`hardwrought:item/compendium`; der frühere Vanilla-Buch-Platzhalter ist entfernt.
 
 ### Die Oberfläche
+
+Umgesetzt. Alle unten aufgeführten Sprites sind vorhanden und werden von `CompendiumScreen`
+verwendet. Die Tabelle bleibt als verbindliche Stil- und Regenerationsreferenz erhalten.
 
 Die Oberfläche ist ein selbstgebundenes, vollständig aufgeschlagenes Buch. Die komplette Grundfläche
 wird in ihrer tatsächlichen GUI-Größe gezeichnet; sie darf ausdrücklich nicht aus einer winzigen,
@@ -73,7 +102,6 @@ In Reihenfolge des Gewinns pro Aufwand:
 | --- | --- | --- | --- | --- |
 | 1 | `book.png` | 344x204, feste Größe | der vollständige Hintergrund in `extractBackground` | Die gesamte Doppelseite samt Rindendeckel, ruhigem Lumpenpapier, Seitenschatten und Bindung aus Pflanzenschnur. Keine Skalierung und kein wiederholtes Muster. |
 | 2 | `slot.png` | 18x18 | den `fill` in `slot(...)` und `option(...)` | Ein einzelnes Fach: eine flach in das Papier gedrückte Vertiefung, innen eine Spur heller als die Seite. Die Helligkeit innen ist kein Geschmack, sondern Bedingung — siehe unten. |
-| 2a | `unknown_block.png` | 16x16 | massive schwarze Blockflächen | Ein neutraler, dunkler Würfel mit Fragezeichen. Block-Partikel füllen sonst den gesamten Slot und ergeben keine erkennbare Silhouette. |
 | 3 | `half.png`, `half_hovered.png` | 32x32, Nine-Slice | `fill` und `outline` in `drawHalf` | Die zwei Felder der Startseite, 140x122 groß. Zwei aufgeschlagene Hälften desselben Buches; die überfahrene bekommt einen wärmeren Ton und eine deutlichere Kante, nicht einen Rahmen in einer anderen Farbe. |
 | 4 | `tab.png`, `tab_selected.png` | 16x18, Nine-Slice | den `fill` in `drawTabs` | Die zehn Regalreiter, 82x18. Eingelegte Lederlaschen oder eingekerbte Papierzungen am linken Rand. Der ausgewählte steht nach rechts über und ist heller, der Rest liegt zurück. |
 | 5 | `card.png` | 32x32, Nine-Slice | den `fill` in `drawCard` | Die Rezeptkarte, 240x58. Ein mit Kohle grob umrandetes Feld auf der Seite, keine gefüllte Box. |
@@ -111,9 +139,8 @@ Sie weichen von den Inventarregeln oben ab, weil sie etwas anderes tun:
 - **Lesbarkeit geht vor Körnung.** Das Papier ist ein mittleres, warmes Ocker um `#B89D69`, Text
   nahezu schwarz. Fasern sind sparsame Einzelpixel und dürfen weder Buchstaben noch Itemkonturen
   überlagern. Bedienelemente müssen auch ohne Hover klar voneinander zu unterscheiden sein.
-- **Der schwarze Schatten muss lesbar bleiben.** Eine nie gehaltene Sache wird als ihre eigene
-  Silhouette gezeichnet. Bei Blöcken wäre das nur ein volles Quadrat; sie verwenden deshalb den
-  neutralen unbekannten Würfel. Das Fach bleibt hell genug für beide Darstellungen.
+- **Der schwarze Schatten muss lesbar bleiben.** Eine nie gehaltene Sache wird als ihre echte
+  Silhouette gezeichnet, ausdrücklich auch bei Blöcken. Das Fach bleibt hell genug dafür.
 - Kein Farbstich, der nach Fantasy aussieht: keine Blautöne, kein Gold, keine Leuchtkanten.
 - `TEXT_COLOR`, `FADED_COLOR`, Slot und Papier werden immer gemeinsam abgestimmt. Dunkle Schrift
   braucht eine helle, ruhige Schreibfläche; der schwarze unbekannte Gegenstand braucht zusätzlich
@@ -180,6 +207,89 @@ Es gelten die **Regeln fuer GUI-Sprites** aus dem Kompendium-Abschnitt oben, mit
 Leiste haengt direkt am Vanilla-Inventarrahmen und muss zu ihm passen, nicht zum Kompendium. Also die
 gedeckten Grau- und Brauntoene des Vanilla-Inventars aufgreifen statt des dunklen Buchpapiers.
 
+## Milestone 10: Antrieb und Starter Crusher (offen)
+
+Die Blockmodelle und Itemdarstellungen funktionieren, besitzen aber noch keine eigenen
+Oberflaechentexturen. Die Items rendern ihre jeweiligen Blockmodelle; deshalb werden **keine
+separaten 16x16-Item-Sprites** benoetigt. Gezeichnet werden die Blocktexturen, die anschliessend in
+den vorhandenen Modell-JSONs anstelle der aktuellen `minecraft:block/...`-Referenzen eingetragen
+werden.
+
+| Modell | Derzeit verwendete Vanilla-Texturen | Was es sein soll |
+| --- | --- | --- |
+| `models/block/shaft.json` und `shaft_bar.json` | entrindeter Eichenstamm | Eine grob zugerichtete hoelzerne Welle: laengs laufende Werkzeugspuren, dunklere Stirnflaeche und klar erkennbare Lagerflaechen. Sie soll mechanisch bearbeitet aussehen, nicht wie ein duenner Baumstamm. |
+| `models/block/crank_box.json` und `crank_box_turning.json` | Eichenbretter und entrindete Eiche | Ein schwerer hoelzerner Getriebekasten mit gezapften Brettern, dunklen Fugen und einer deutlich anderen Oberseite im laufenden Zustand. Keine moderne Metallverkleidung. |
+| `models/block/hand_crank.json` und `hand_crank_handle.json` | entrindete Eiche, Eichenbretter und Fichte | Ein handgebautes Lager mit sichtbarer Holzachse, kantigem Kurbelarm und dunklem, abgegriffenem Griff. Lager, Arm und Griff muessen auf einen Blick getrennt lesbar sein. |
+| `models/block/starter_crusher.json` | Eiche, Bruchstein und Schleifstein | Ein primitiver Backenbrecher aus schwerem Holzrahmen und zwei rauen Steinbacken. Der Einfuelltrichter braucht eine eigene dunkle Innenflaeche; die Backen sollen wie zwei gegeneinander arbeitende Teile und nicht wie eingesetzte Schleifsteine aussehen.|
+| `models/block/cogwheel_gear.json` und `large_cogwheel_gear.json` | Fichtenbretter, entrindete Eiche | Hoelzerne Zahnraeder: Radscheibe mit sichtbarer Maserung quer zu den Zaehnen, eingesetzte Zaehne mit dunkleren Stirnflaechen, Nabe mit Keil. Das grosse Rad braucht zusaetzlich Speichen, damit es nicht wie eine volle Scheibe wirkt. Die Modelle werden aus `tools/machinery_assets.py` erzeugt. |
+| `models/block/gearbox.json` | Fass-Seite und Fassboden | Ein geschlossener Holzkasten mit eisenbeschlagenen Kanten und runden Lagerbuchsen auf allen sechs Seiten. |
+| `models/block/water_wheel_rim.json` | Eichen- und Fichtenbretter, entrindete Eiche | Ein Wasserrad drei Bloecke breit: nasse, dunkle Schaufelbretter, hellere Speichen, eisenbeschlagene Nabe. |
+| `models/block/windmill_sails.json` und `windmill.json` | weisse Wolle, dunkler Eichenstamm und -bretter | Segeltuch mit sichtbaren Naehten und Reffleinen, dunkle Holzruten, ein Lagergehaeuse mit Dach. |
+| `models/block/belt_strip.json`, `textures/item/belt.png` | braune Wolle; generiertes Icon | Ein Lederriemen: dunkles Leder mit hellerer Naht an den Kanten; das Item als zusammengerollter Riemen. |
+
+Gemeinsame Regeln:
+
+- Native 16x16-Blocktexturen, harte Pixelkanten und dieselbe gedeckte Palette wie Werkbaenke und
+  Ziegelofen.
+- Holz darf zur Eiche passen, muss aber durch Werkzeugspuren, Fugen und Lagerstellen klar als
+  bearbeitetes Maschinenteil erkennbar sein.
+- Bewegte und ruhende Zustaende unterscheiden sich durch die Stellung oder Oberflaeche des Bauteils,
+  nicht durch Leuchten oder eine unpassende Signalfarbe.
+- Quellen unter `art_source/machinery/` ablegen und einen reproduzierbaren Exporter unter `tools/`
+  behalten.
+
+## Spezifikation Milestone 9: Schmieden (Platzhalter)
+
+Alles hier funktioniert im Spiel, aber die Grafiken sind generierte Platzhalter. Die Tabellen nennen
+die Datei, das heutige Aussehen und was daraus werden soll.
+
+### Werkzeugteile — 15 Item-Sprites (fertig)
+
+Erzeugt von `tools/part_textures.py`: Vanilla-nahe, pixelgenaue Köpfe und Klingen ohne Holzstiele,
+mit eigener Materialpalette für Eisen, Gold und Bronze. Der Stilentwurf und seine Vorgaben liegen
+unter `art_source/smithing/`.
+
+| Datei (`textures/item/`) | Was es sein soll |
+| --- | --- |
+| `iron_pickaxe_head.png` | Der gebogene Kopf der Eisenspitzhacke, mit Öhr in der Mitte, wo der Stiel hineinkommt. Schmiedespuren und eine etwas hellere, geschliffene Spitze an beiden Enden. |
+| `iron_axe_head.png` | Axtkopf mit breiter Schneide und Öhr. Die Schneide heller angeschliffen als der Rücken. |
+| `iron_shovel_head.png` | Das Schaufelblatt mit Tülle oben. |
+| `iron_hoe_head.png` | Hackenblatt, rechtwinklig zur Tülle. |
+| `iron_sword_blade.png` | Schwertklinge mit Angel (der Dorn, der ins Heft geht), noch ohne Parierstange und Griff. |
+| `iron_dagger_blade.png` | Kurze Dolchklinge mit Angel. |
+| `iron_greatsword_blade.png` | Lange, breite Klinge mit langer Angel. |
+| `iron_halberd_head.png` | Hellebardenkopf: Beilblatt, Spitze und Haken, mit Tülle. |
+| `gold_pickaxe_head.png` … `gold_sword_blade.png` (5) | Dieselben Formen in Gold; weicher und glänzender, weniger Schmiedespuren. |
+| `bronze_pickaxe_head.png`, `bronze_axe_head.png` | In Bronze, passend zur vorhandenen Bronzespitzhacke und zum Bronzebeil. |
+
+Wichtig für das Minispiel: Der Amboss liest die **Form** des Werkstücks aus genau diesen Texturen
+(jeder nicht durchsichtige Pixel ist Metall). Ein Kopf sollte deshalb deutlich anders geformt sein als
+ein Barren, sonst gibt es nichts zu schmieden — der Server lehnt Arbeit unter 6 abweichenden Pixeln ab.
+
+### Glühen — nichts zu zeichnen
+
+Heißes Metall wird über eine helle Graustufen-Kopie jeder Metalltextur dargestellt, die je nach
+Temperatur rot, orange oder gelbweiß eingefärbt wird. Diese Kopien unter `textures/item/glow/`
+werden von `tools/glow_textures.py` erzeugt. **Nach jeder neuen oder geänderten Metalltextur
+(Roherz, Barren, Werkzeugteil) das Skript erneut ausführen**, sonst glüht die alte Form.
+
+### Blöcke
+
+| Modell | Heute | Was es sein soll |
+| --- | --- | --- |
+| `models/block/wooden_anvil.json` | Eichenstamm und entrindete Stirnseite | **Bleibt so.** Ein Hartholzklotz, Hirnholz oben. |
+| `models/block/forge*.json` (4 Zustände: an/aus, ausgekleidet/nicht) | Vanilla-Ziegel, Schlammziegel, Magma und Kohleblock | Eine gemauerte Schmiedeesse mit eingelassenem Glutbett. Eigene Ziegelflächen für außen, eine eigene Glut-Oberfläche (aus: schwarze Kohle mit etwas Asche; an: glühende Kohle), und für den ausgekleideten Zustand ein helleres, feuerfestes Mauerwerk an der Innenkante. |
+| `models/block/bellows.json` | Eichenbretter, braune Wolle, Eisenblock | Ein Blasebalg: zwei Holzplatten mit gefaltetem Leder dazwischen und einer Düse vorn. Das Leder soll wie Leder aussehen, nicht wie Wolle. |
+
+### Items und Symbole
+
+| Datei | Heute | Was es sein soll |
+| --- | --- | --- |
+| `textures/item/smithing_gloves.png` | generierte braune Faust | Dicke, genähte Lederhandschuhe mit Stulpe; angesengte Fingerspitzen wären ein schönes Detail. |
+| `textures/gui/sprites/equipment/slot_gloves.png` | graue Silhouette derselben Form | Leeres-Slot-Symbol im Stil von `slot_backpack` und `slot_lamp`. |
+| `textures/item/fireclay.png` | generierter grauer Klumpen | Ein Klumpen hellgrauer, körniger Ton mit sichtbarem Sand und Kies darin. |
+| `textures/item/refractory_brick.png` | generierter gelblicher Ziegel | Ein feuerfester Schamotteziegel: blass gelbbraun, feinporig, heller als ein gewöhnlicher Ziegel. |
+
 ## Milestone 4: das Durst-Symbol (Platzhalter)
 
 Der Effekt `hardwrought:thirst` hat ein generiertes Platzhalter-Symbol: ein leerer Tropfen mit einem
@@ -202,6 +312,24 @@ neu erzeugt werden müssen:
   `tools/BrickFurnaceTextureExporter.java`, Quellen unter `art_source/brick_furnace/`.
 - **Die Metalle**, Erz, Rohbrocken und Barren je Metall — erzeugt von
   `tools/MetalTextureGenerator.java`, Quellen unter `art_source/metals_*`.
+- **Die Erzpulver**, 25 Pulverformen fuer Vanilla-Erzmaterialien und Hardwrought-Metalle — erzeugt
+  von `tools/PowderTextureExporter.java`, Quelle und Vorschau unter `art_source/powder_*`.
+- **Bronzegemenge, Bronzenaegel und Hammer** besitzen eigene 16x16-Item-Sprites. Das Bronzegemenge
+  verwendet dieselbe Pulversprache wie die Erzpulver.
+- **Das Kompendium**, seine Buchoberflaeche und alle Bedienelemente — Quellen unter
+  `art_source/compendium/`, Export ueber `tools/CompendiumTextureExporter.java`.
+- **Die zweite Werkbank**, 52 Blocktexturen fuer 13 Holzarten — erzeugt von
+  `tools/NailedWorkbenchTextureGenerator.java`, Quellen unter `art_source/bench_tiers/`.
+- **Rucksaecke und getragene Leiste**, einschliesslich der leeren Rucksack- und Lampenslots.
+
+## Technische Aufraeumarbeit, keine fehlende Textur
+
+- `cobblestone_piece` verweist derzeit korrekt, aber mit historisch falsch geschriebenem Dateinamen
+  auf `textures/item/cobblestone_pice.png`. Eine Umbenennung muss Datei und Modell gemeinsam aendern.
+- Einige aeltere Werkzeugtexturen verwenden verkuerzte Namen wie `flint_h.png`, `iron_pick.png` und
+  `stone_h.png`. Die Referenzen sind gueltig; eine Umbenennung waere nur Konsistenzpflege.
+- `dirt_slab` verwendet absichtlich `minecraft:block/dirt` und braucht keine eigene Kopie derselben
+  Textur.
 
 ## Not yet required
 

@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "running=false": { "model": "hardwrought:block/starter_crusher" },
+    "running=true":  { "model": "hardwrought:block/starter_crusher" }
+  }
+}

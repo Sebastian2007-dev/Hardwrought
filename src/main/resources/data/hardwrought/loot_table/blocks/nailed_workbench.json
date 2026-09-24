@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "hardwrought:nailed_workbench",
+          "modifier": [
+            {
+              "type": "minecraft:copy_state",
+              "block": "hardwrought:nailed_workbench",
+              "properties": ["wood"]
+            },
+            {"type": "minecraft:explosion_decay"}
+          ]
+        }
+      ]
+    }
+  ]
+}

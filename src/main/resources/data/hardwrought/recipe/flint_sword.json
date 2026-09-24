@@ -3,7 +3,7 @@
   "category": "equipment",
   "key": {
     "F": "hardwrought:flint_shard",
-    "T": "hardwrought:leaf_string"
+    "T": "#c:strings"
   },
   "pattern": [
     "FT",

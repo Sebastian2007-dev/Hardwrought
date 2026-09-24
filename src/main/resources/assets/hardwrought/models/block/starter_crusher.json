@@ -1,0 +1,93 @@
+{
+  "parent": "minecraft:block/block",
+  "__comment": "Placeholder look from vanilla textures: a timber frame, stone jaws showing on top.",
+  "textures": {
+    "frame": "minecraft:block/stripped_oak_log",
+    "planks": "minecraft:block/oak_planks",
+    "jaw": "minecraft:block/grindstone_side",
+    "floor": "minecraft:block/cobblestone",
+    "particle": "minecraft:block/cobblestone"
+  },
+  "elements": [
+    {
+      "__comment": "Stone body with the timber cladding round it.",
+      "from": [0, 0, 0],
+      "to": [16, 13, 16],
+      "faces": {
+        "north": { "uv": [0, 3, 16, 16], "texture": "#planks", "cullface": "north" },
+        "south": { "uv": [0, 3, 16, 16], "texture": "#planks", "cullface": "south" },
+        "east":  { "uv": [0, 3, 16, 16], "texture": "#planks", "cullface": "east" },
+        "west":  { "uv": [0, 3, 16, 16], "texture": "#planks", "cullface": "west" },
+        "up":    { "uv": [0, 0, 16, 16], "texture": "#floor" },
+        "down":  { "uv": [0, 0, 16, 16], "texture": "#floor", "cullface": "down" }
+      }
+    },
+    {
+      "__comment": "Hopper rim, west side",
+      "from": [0, 13, 0],
+      "to": [3, 16, 16],
+      "faces": {
+        "north": { "uv": [13, 0, 16, 3], "texture": "#frame", "cullface": "north" },
+        "south": { "uv": [0, 0, 3, 3], "texture": "#frame", "cullface": "south" },
+        "east":  { "uv": [0, 0, 16, 3], "texture": "#frame" },
+        "west":  { "uv": [0, 0, 16, 3], "texture": "#frame", "cullface": "west" },
+        "up":    { "uv": [0, 0, 3, 16], "texture": "#frame", "cullface": "up" }
+      }
+    },
+    {
+      "__comment": "Hopper rim, east side",
+      "from": [13, 13, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "north": { "uv": [0, 0, 3, 3], "texture": "#frame", "cullface": "north" },
+        "south": { "uv": [13, 0, 16, 3], "texture": "#frame", "cullface": "south" },
+        "east":  { "uv": [0, 0, 16, 3], "texture": "#frame", "cullface": "east" },
+        "west":  { "uv": [0, 0, 16, 3], "texture": "#frame" },
+        "up":    { "uv": [13, 0, 16, 16], "texture": "#frame", "cullface": "up" }
+      }
+    },
+    {
+      "__comment": "Hopper rim, north side",
+      "from": [3, 13, 0],
+      "to": [13, 16, 3],
+      "faces": {
+        "north": { "uv": [3, 0, 13, 3], "texture": "#frame", "cullface": "north" },
+        "south": { "uv": [3, 0, 13, 3], "texture": "#frame" },
+        "up":    { "uv": [3, 0, 13, 3], "texture": "#frame", "cullface": "up" }
+      }
+    },
+    {
+      "__comment": "Hopper rim, south side",
+      "from": [3, 13, 13],
+      "to": [13, 16, 16],
+      "faces": {
+        "north": { "uv": [3, 0, 13, 3], "texture": "#frame" },
+        "south": { "uv": [3, 0, 13, 3], "texture": "#frame", "cullface": "south" },
+        "up":    { "uv": [3, 13, 13, 16], "texture": "#frame", "cullface": "up" }
+      }
+    },
+    {
+      "__comment": "The two stone jaws, lying in the mouth of the hopper.",
+      "from": [4, 13, 4],
+      "to": [7, 15, 12],
+      "faces": {
+        "north": { "uv": [0, 0, 3, 2], "texture": "#jaw" },
+        "south": { "uv": [0, 0, 3, 2], "texture": "#jaw" },
+        "east":  { "uv": [0, 0, 8, 2], "texture": "#jaw" },
+        "west":  { "uv": [0, 0, 8, 2], "texture": "#jaw" },
+        "up":    { "uv": [0, 0, 3, 8], "texture": "#jaw" }
+      }
+    },
+    {
+      "from": [9, 13, 4],
+      "to": [12, 15, 12],
+      "faces": {
+        "north": { "uv": [0, 0, 3, 2], "texture": "#jaw" },
+        "south": { "uv": [0, 0, 3, 2], "texture": "#jaw" },
+        "east":  { "uv": [0, 0, 8, 2], "texture": "#jaw" },
+        "west":  { "uv": [0, 0, 8, 2], "texture": "#jaw" },
+        "up":    { "uv": [0, 0, 3, 8], "texture": "#jaw" }
+      }
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "#minecraft:planks",
+    "L": "minecraft:leather",
+    "H": "hardwrought:shaft"
+  },
+  "pattern": [
+    "PPP",
+    "LLL",
+    "PHP"
+  ],
+  "result": {
+    "id": "hardwrought:bellows"
+  }
+}

@@ -148,7 +148,8 @@ public final class ProgressionEvents {
         // the fibre a primitive tool is bound with, so a player with nothing can always start again.
         if (state.is(BlockTags.LEAVES) && !BlockBreaking.isTool(held)
                 && serverLevel.getRandom().nextDouble() < FIBRE_CHANCE) {
-            Block.popResource(serverLevel, pos, new ItemStack(ModItems.LEAF_STRING));
+            // Green: it binds a tool as it is, but has to dry on a rack before it twists into cord.
+            Block.popResource(serverLevel, pos, new ItemStack(ModItems.GREEN_FIBRE));
         }
         // Sections 55 and 56: tin is not mined out of a seam, it is washed out of river gravel.
         // That is where the bronze age got it, and it needs no ore of its own in the ground.

@@ -4,7 +4,7 @@
   "key": {
     "C": "hardwrought:cobblestone_piece",
     "S": "minecraft:stick",
-    "T": "hardwrought:leaf_string"
+    "T": "#c:strings"
   },
   "pattern": [
     "CC",

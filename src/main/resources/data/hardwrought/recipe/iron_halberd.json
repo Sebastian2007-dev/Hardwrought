@@ -1,15 +1,12 @@
 {
-  "type": "minecraft:crafting_shaped",
+  "type": "minecraft:crafting_transmute",
   "category": "equipment",
-  "key": {
-    "I": "minecraft:iron_ingot",
-    "S": "minecraft:stick"
+  "input": "hardwrought:iron_halberd_head",
+  "material": "minecraft:stick",
+  "material_count": {
+    "min": 2,
+    "max": 2
   },
-  "pattern": [
-    "II ",
-    " SI",
-    " S "
-  ],
   "result": {
     "id": "hardwrought:iron_halberd"
   }

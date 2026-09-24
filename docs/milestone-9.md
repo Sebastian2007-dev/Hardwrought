@@ -61,9 +61,35 @@ that silently refused everything, and a one-row pack looked like it had twenty-s
 things. The screen shades over every position where nothing is open — per position rather than per
 slot, since the two grids share their coordinates.
 
+### Shift-clicking into it
+
+A second grid nobody can shift-click into is a second grid nobody uses, and that is what it was.
+Every vanilla menu decides where a quick-moved stack goes by hard-coded slot ranges — nine to
+forty-five in the inventory, thirty-six to forty-five back the other way — written when the player's
+own grid was the only grid there was. The pack's page is appended after the belt and lies outside
+every one of those ranges, so while it was open a shift-click had nowhere to put anything and simply
+did nothing.
+
+Rewriting a range per menu would mean knowing every menu, including the ones other mods add. Instead
+`AbstractContainerMenuMixin` redirects the `quickMoveStack` call inside `doClick` and lets the menu
+answer first: only where vanilla came back empty-handed — it could place nothing anywhere — is the
+stack offered the pack. A shift-click inside a chest therefore still means the chest and one inside
+the crafting grid still means the grid, and the pack catches exactly the case where the grid vanilla
+was aiming at is the one the player has turned away from.
+
+It has to be the redirect and not an inject, because `doClick` calls `quickMoveStack` twice: once to
+start and once per turn of the loop that empties a slot stackful by stackful. Catching only the first
+would move one slotful into the pack and stop. The fallback also follows vanilla's return contract to
+the letter — the stack as it was on success, empty for "not an inch" — because a stack returned after
+moving nothing spins that loop for ever.
+
+Going the other way needs nothing: a pack index falls into the catch-all branch of vanilla's own
+quick move, which walks the player's grid and belt, so shift-clicking out of the pack already worked.
+
 `isActive` alone would not have been enough. It stops a slot being drawn and clicked, but vanilla's
-own shift-click walks the slot list asking only `mayPlace`, so a closed slot refuses both. And closing
-the grid in the menu is only half the rule: picking something up never looks at a menu, so
+own shift-click walks the slot list asking only `mayPlace`, so a closed slot refuses both — which is
+also what keeps the fallback honest on the player's own page: the pack is shut, so nothing reaches
+through it. And closing the grid in the menu is only half the rule: picking something up never looks at a menu, so
 `InventoryMixin` stops `getFreeSlot` and `getSlotWithRemainingSpace` reaching past the belt. The belt
 fills, and then the ground keeps the rest — which is exactly what carrying nothing should feel like.
 
@@ -105,7 +131,7 @@ the first metal tools, the leather pack — and anything more wants a bench that
 rather than of what it cannot. That is the strict reading on purpose: something the tag has not heard
 of is refused, so a recipe from a later milestone or another mod does not quietly become available at
 the first bench in the game. The cost is real and worth stating — every new early recipe has to be
-added to `hardwrought:hewn_bench_products`, and forgetting one shows up as a bench that will not make
+added to the tag of the rung it belongs to, and forgetting one shows up as a bench that will not make
 it.
 
 One entry in that tag matters more than the rest: **the crafting table**. Without it the first bench
@@ -118,7 +144,7 @@ is for.
 
 ## Tests
 
-`EquipmentGameTests`, six tests:
+`EquipmentGameTests`, eight tests:
 
 - a worn pack is nowhere in the inventory, and is still worn after the inventory is emptied
 - a player without one is given the plainest pack back, and one wearing a better one is left alone
@@ -127,6 +153,9 @@ is for.
 - what is in a pack rides on the pack through a copy, a woven pack holds nothing, and something that
   is not a pack is not mistaken for one
 - only a pack goes on the back and only a lamp on the belt, and emptying a worn slot is always allowed
+- **shift-clicking reaches the pack page.** A stack quick-moved while the page is open lands in the
+  pack whole, a quick-move from the pack comes back out, and the same click on the player's own page
+  puts nothing into a pack the player cannot see
 - the hewn bench does early work and refuses what wants a joined bench, a joined bench is not limited
   at all, and the hewn bench can make the bench that replaces it
 - **every square of the carried grid still points at its own slot.** A slot carries two different

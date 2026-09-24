@@ -105,6 +105,23 @@ public final class LogWorking {
         return true;
     }
 
+    /** How the compendium shows this: any log, any tool that can hew it, and the bench it becomes. */
+    public static java.util.List<de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe> worldRecipes() {
+        java.util.List<ItemStack> logs = new java.util.ArrayList<>();
+        java.util.List<ItemStack> tools = new java.util.ArrayList<>();
+        for (net.minecraft.world.item.Item item : net.minecraft.core.registries.BuiltInRegistries.ITEM) {
+            ItemStack stack = new ItemStack(item);
+            if (logs.size() < 16 && item instanceof net.minecraft.world.item.BlockItem block
+                    && block.getBlock().defaultBlockState().is(BlockTags.LOGS)) {
+                logs.add(stack);
+            }
+            if (tools.size() < 16 && ToolCrafting.isCraftingTool(stack)) tools.add(stack);
+        }
+        return java.util.List.of(new de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe(
+                de.ipnats.hardwrought.Hardwrought.id("hewn_workbench_in_world"),
+                java.util.List.of(logs, tools), new ItemStack(ModBlocks.HEWN_WORKBENCH), ItemStack.EMPTY));
+    }
+
     /** Forgets what a player was working on, so a disconnect leaves nothing behind. */
     public static void forget(UUID player) {
         WORKING.remove(player);

@@ -4,7 +4,7 @@
   "key": {
     "F": "hardwrought:flint_shard",
     "S": "minecraft:stick",
-    "T": "hardwrought:leaf_string"
+    "T": "#c:strings"
   },
   "pattern": [
     "FF",

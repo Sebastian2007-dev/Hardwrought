@@ -120,8 +120,9 @@ public abstract class AbstractCraftingMenuMixin extends RecipeBookMenu implement
         if (!hardwrought$isAvailable(player, holder)) return;
         ItemStack output = recipe.assemble(input);
         if (output.isEmpty() || !output.isItemEnabled(level.enabledFeatures())) return;
-        // Section 71: the first bench is a flat surface on a stump, and it only does early work.
-        if (!BenchTier.allows(hardwrought$onHewnBench(menu), output)) return;
+        // Section 71: a bench makes what it is good enough to make, and the grid in a player's
+        // hands is the bottom of that ladder rather than an exception to it.
+        if (!BenchTier.allows(hardwrought$benchTier(menu), output)) return;
         boolean alreadyShown = choices.stream().anyMatch(choice ->
                 choice.output.getCount() == output.getCount()
                         && ItemStack.isSameItemSameComponents(choice.output, output));
@@ -129,14 +130,16 @@ public abstract class AbstractCraftingMenuMixin extends RecipeBookMenu implement
     }
 
     /**
-     * True where this menu is the hewn bench. A grid carried in the hands and a joined crafting
-     * table are both something else, and neither is limited by the tier list.
+     * Which rung of the ladder this menu is standing on. A menu with no block under it is the grid
+     * the player carries in their hands, which is the bottom rung and not an exception to it.
      */
     @Unique
-    private static boolean hardwrought$onHewnBench(Object menu) {
-        if (!(menu instanceof de.ipnats.hardwrought.mixin.CraftingMenuAccessor accessor)) return false;
+    private static int hardwrought$benchTier(Object menu) {
+        if (!(menu instanceof de.ipnats.hardwrought.mixin.CraftingMenuAccessor accessor)) {
+            return BenchTier.INVENTORY;
+        }
         return accessor.hardwrought$access().evaluate(
-                (level, pos) -> BenchTier.isHewnBench(level.getBlockState(pos)), false);
+                (level, pos) -> BenchTier.of(level.getBlockState(pos)), BenchTier.INVENTORY);
     }
 
     @Unique

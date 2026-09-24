@@ -137,4 +137,28 @@ public final class RainfallGameTests {
                 "and it runs as a registered simulation job that has not failed");
         helper.succeed();
     }
+
+    @GameTest
+    public void rainSeldomStartsAPuddleButFillsWaterThatIsThere(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos ground = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE_OFFSET);
+        BlockPos above = ground.above();
+        try {
+            level.setBlockAndUpdate(ground, Blocks.STONE.defaultBlockState());
+            helper.assertFalse(Rainfall.land(level, ground.getX(), ground.getZ(), Rainfall.DROP, false, 0.9),
+                    "Most rain on dry ground soaks in");
+            helper.assertTrue(WaterStorage.amount(level, above) == 0, "and leaves no puddle");
+            helper.assertTrue(Rainfall.land(level, ground.getX(), ground.getZ(), Rainfall.DROP, false, 0.0),
+                    "Now and then it starts one");
+            helper.assertTrue(Rainfall.land(level, ground.getX(), ground.getZ(), Rainfall.DROP, false, 0.99),
+                    "Rain into water that is already there always lands");
+            helper.assertTrue(WaterStorage.amount(level, above) == Rainfall.DROP * (1 + Rainfall.WATER_GAIN),
+                    "and brings more than a drop on dry ground: " + WaterStorage.amount(level, above));
+        } finally {
+            WaterStorage.setAmount(level, above, 0);
+            level.setBlockAndUpdate(above, Blocks.AIR.defaultBlockState());
+            level.setBlockAndUpdate(ground, Blocks.AIR.defaultBlockState());
+        }
+        helper.succeed();
+    }
 }

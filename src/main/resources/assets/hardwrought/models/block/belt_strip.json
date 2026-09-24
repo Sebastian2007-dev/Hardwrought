@@ -1,0 +1,41 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "belt": "minecraft:block/brown_wool",
+    "particle": "minecraft:block/brown_wool"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        7.5,
+        6
+      ],
+      "to": [
+        16,
+        8.5,
+        10
+      ],
+      "faces": {
+        "north": {
+          "texture": "#belt"
+        },
+        "south": {
+          "texture": "#belt"
+        },
+        "east": {
+          "texture": "#belt"
+        },
+        "west": {
+          "texture": "#belt"
+        },
+        "up": {
+          "texture": "#belt"
+        },
+        "down": {
+          "texture": "#belt"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "hardwrought:block/bellows"
+    },
+    "facing=east": {
+      "model": "hardwrought:block/bellows",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "hardwrought:block/bellows",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "hardwrought:block/bellows",
+      "y": 270
+    }
+  }
+}

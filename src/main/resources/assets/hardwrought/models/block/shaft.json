@@ -1,0 +1,36 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "bearing": "minecraft:block/stripped_oak_log",
+    "face": "minecraft:block/stripped_oak_log_top",
+    "particle": "minecraft:block/stripped_oak_log"
+  },
+  "elements": [
+    {
+      "__comment": "Lower bearing. The shaft turns inside these; they do not turn.",
+      "from": [5, 0, 5],
+      "to": [11, 2, 11],
+      "faces": {
+        "north": { "uv": [5, 14, 11, 16], "texture": "#bearing" },
+        "south": { "uv": [5, 14, 11, 16], "texture": "#bearing" },
+        "east":  { "uv": [5, 14, 11, 16], "texture": "#bearing" },
+        "west":  { "uv": [5, 14, 11, 16], "texture": "#bearing" },
+        "up":    { "uv": [5, 5, 11, 11], "texture": "#face" },
+        "down":  { "uv": [5, 5, 11, 11], "texture": "#face", "cullface": "down" }
+      }
+    },
+    {
+      "__comment": "Upper bearing",
+      "from": [5, 14, 5],
+      "to": [11, 16, 11],
+      "faces": {
+        "north": { "uv": [5, 0, 11, 2], "texture": "#bearing" },
+        "south": { "uv": [5, 0, 11, 2], "texture": "#bearing" },
+        "east":  { "uv": [5, 0, 11, 2], "texture": "#bearing" },
+        "west":  { "uv": [5, 0, 11, 2], "texture": "#bearing" },
+        "up":    { "uv": [5, 5, 11, 11], "texture": "#face", "cullface": "up" },
+        "down":  { "uv": [5, 5, 11, 11], "texture": "#face" }
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "cookingtime": 100,
+  "experience": 0.7,
+  "ingredient": "hardwrought:copper_powder",
+  "result": {
+    "id": "minecraft:copper_ingot"
+  }
+}

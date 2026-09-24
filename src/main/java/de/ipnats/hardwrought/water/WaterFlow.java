@@ -302,6 +302,8 @@ public final class WaterFlow {
         // costs two map lookups here and nothing else; only marked water is mixed.
         WaterQualityStorage.carry(level, from, source, to, destination, move);
         WaterStorage.setAmounts(level, from, source - move, to, destination + move);
+        // Water that moves is a current while it moves: it pushes what floats and turns wheels.
+        WaterCurrent.record(level, from, to, move);
         activate(level, from);
         activate(level, to);
         activate(level, from.above());

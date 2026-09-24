@@ -32,10 +32,23 @@ import java.util.UUID;
  * made of and what it is for. Section 81 is the reason for the split: an unknown material is an entry
  * full of question marks, not an absent one.
  *
+ * <p>Section 82 counts experimenting among the ways to learn, and that is what the other two ways in
+ * are for. An ingot is the case that needs them: there is nothing a player can break, cook or craft
+ * <em>with</em> a bar of iron, so on breaking and crafting alone it would stay a page of question
+ * marks for ever. Keeping a thing in the main hand for a few seconds examines it, and carrying it
+ * around from one inventory pass to the next studies it too — slower, and without saying so.
+ *
  * <p>Bounded like every other system here: one inventory scan per player per slow pass, forty-one
  * slots, no registry sweeps in a tick job.
  */
 public final class KnowledgeSystem {
+    /**
+     * How many examination passes the same item has to stay in the main hand before it counts as
+     * studied. On the medium tier that is a shade over three seconds: long enough that flicking
+     * across the hotbar teaches nothing, short enough to be an act rather than a chore.
+     */
+    public static final int EXAMINATION_PASSES = 3;
+
     private final MinecraftServer server;
     private final CoreSaveData save;
     /** The registry does not change after start-up, so the shelves are sorted once. */
@@ -44,11 +57,14 @@ public final class KnowledgeSystem {
     private final Compendium compendium = new Compendium();
     /** Learnings waiting to be shown, gathered so a single act does not fire a burst of toasts. */
     private final Map<UUID, List<KnowledgeNotePayload.Note>> pending = new HashMap<>();
+    /** What each player is currently turning over in their hand, and for how long. */
+    private final Map<UUID, Examination> examinations = new HashMap<>();
 
     public KnowledgeSystem(MinecraftServer server, CoreSaveData save, SimulationScheduler scheduler) {
         this.server = server;
         this.save = save;
         scheduler.register("hardwrought:knowledge_discovery", SimulationTier.SLOW, this::tickDiscovery);
+        scheduler.register("hardwrought:knowledge_examination", SimulationTier.MEDIUM, this::examineHeldItems);
         scheduler.register("hardwrought:knowledge_notes", SimulationTier.FAST, this::flushNotes);
     }
 
@@ -87,15 +103,33 @@ public final class KnowledgeSystem {
         return true;
     }
 
+    /**
+     * Operator entry point: every entry of every shelf studied at once. Silent, unlike
+     * {@link #study}: a thousand toasts are not information. Returns how many entries were news.
+     */
+    public int studyAll(ServerPlayer player) {
+        PlayerKnowledge knowledge = knowledge(player);
+        int learned = 0;
+        for (KnowledgeCategory category : KnowledgeCategory.values()) {
+            for (Identifier id : shelf(category)) {
+                if (knowledge.study(id)) learned++;
+            }
+        }
+        if (learned > 0) save.setKnowledge(player.getUUID(), knowledge);
+        return learned;
+    }
+
     /** Operator and test entry point; ordinary play fills this in through holding and working. */
     public void forget(UUID player) {
         save.setKnowledge(player, PlayerKnowledge.empty());
         pending.remove(player);
+        examinations.remove(player);
     }
 
     /** Drops what a leaving player had not been shown yet. */
     public void removePlayer(UUID player) {
         pending.remove(player);
+        examinations.remove(player);
     }
 
     /** The recipe browser: how a thing is made, and what it is used in. */
@@ -152,21 +186,81 @@ public final class KnowledgeSystem {
     // ---------------------------------------------------------------- upkeep
 
     /**
-     * Anything a player is carrying has been held, and anything held is discovered. One pass over
-     * the inventory rather than an event on every pickup: it costs the same, it cannot miss an item
-     * that arrived some other way, and it needs no hook into vanilla at all.
+     * Anything a player is carrying has been held, and anything carried long enough has been looked
+     * at. One pass over the inventory rather than an event on every pickup: it costs the same, it
+     * cannot miss an item that arrived some other way, and it needs no hook into vanilla at all.
+     *
+     * <p>The two levels fall out of the two passes. A thing seen for the first time is discovered;
+     * a thing still in the bag one pass later has been carried around for ten seconds and more, and
+     * that is study. Nothing extra is remembered to make that work — the discovered set already
+     * <em>is</em> the record of having seen it before.
+     *
+     * <p>Silent, unlike the acts. Picking up a stack of gravel is not a moment, and a player walking
+     * out of a cave with thirty new things should not be handed thirty toasts about it. Breaking,
+     * crafting, eating and examining still announce themselves, because each of those was a decision.
      */
     private void tickDiscovery() {
-        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            if (player.isSpectator()) continue;
-            PlayerKnowledge knowledge = knowledge(player);
-            boolean news = false;
-            for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
-                ItemStack stack = player.getInventory().getItem(slot);
-                if (stack.isEmpty()) continue;
-                news |= knowledge.discover(idOf(stack.getItem()));
-            }
-            if (news) save.setKnowledge(player.getUUID(), knowledge);
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) carry(player);
+    }
+
+    /** One player's share of the carrying pass. Returns true where this pass taught them anything. */
+    public boolean carry(ServerPlayer player) {
+        if (player == null || player.isSpectator()) return false;
+        PlayerKnowledge knowledge = knowledge(player);
+        boolean news = false;
+        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = player.getInventory().getItem(slot);
+            if (stack.isEmpty()) continue;
+            Identifier id = idOf(stack.getItem());
+            if (id == null) continue;
+            news |= knowledge.level(id) == KnowledgeLevel.UNKNOWN
+                    ? knowledge.discover(id) : knowledge.study(id);
+        }
+        if (news) save.setKnowledge(player.getUUID(), knowledge);
+        return news;
+    }
+
+    /**
+     * Section 82, experimenting: an item kept in the main hand across {@link #EXAMINATION_PASSES}
+     * passes has been looked at properly, and is studied. Switching slots, emptying the hand or
+     * swapping for something else starts the count again, so this rewards holding one thing rather
+     * than owning many. One main-hand read per player per pass, and the entry is left marked
+     * afterwards so a player who never puts the item down does not re-study it every second.
+     *
+     * <p>Public because the scheduler and the tests both drive it.
+     */
+    public void examineHeldItems() {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) examine(player);
+    }
+
+    /** One player's share of {@link #examineHeldItems()}. Returns true where this pass taught them. */
+    public boolean examine(ServerPlayer player) {
+        if (player == null || player.isSpectator()) return false;
+        ItemStack held = player.getMainHandItem();
+        Identifier id = held.isEmpty() ? null : idOf(held.getItem());
+        if (id == null) {
+            examinations.remove(player.getUUID());
+            return false;
+        }
+        Examination examination = examinations.get(player.getUUID());
+        if (examination == null || !id.equals(examination.item)) {
+            examinations.put(player.getUUID(), new Examination(id));
+            return false;
+        }
+        if (examination.finished) return false;
+        if (++examination.passes < EXAMINATION_PASSES) return false;
+        examination.finished = true;
+        return study(player, held.getItem());
+    }
+
+    /** One item being turned over in one player's hand. */
+    private static final class Examination {
+        private final Identifier item;
+        private int passes;
+        private boolean finished;
+
+        private Examination(Identifier item) {
+            this.item = item;
         }
     }
 

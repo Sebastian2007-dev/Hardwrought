@@ -1,15 +1,12 @@
 {
-  "type": "minecraft:crafting_shaped",
+  "type": "minecraft:crafting_transmute",
   "category": "equipment",
-  "key": {
-    "I": "minecraft:iron_ingot",
-    "S": "minecraft:stick"
+  "input": "hardwrought:iron_greatsword_blade",
+  "material": "minecraft:stick",
+  "material_count": {
+    "min": 2,
+    "max": 2
   },
-  "pattern": [
-    " I ",
-    " I ",
-    "SIS"
-  ],
   "result": {
     "id": "hardwrought:iron_greatsword"
   }

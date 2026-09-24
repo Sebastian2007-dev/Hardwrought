@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:shaft",
+    "#minecraft:planks"
+  ],
+  "result": {
+    "id": "hardwrought:cogwheel"
+  }
+}

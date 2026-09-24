@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "S": "minecraft:stick",
+    "F": "#c:strings"
+  },
+  "pattern": [
+    " S",
+    "SF"
+  ],
+  "result": {
+    "id": "minecraft:fishing_rod",
+    "components": {
+      "minecraft:max_damage": 24,
+      "minecraft:item_name": {
+        "translate": "item.hardwrought.primitive_fishing_rod"
+      }
+    }
+  }
+}

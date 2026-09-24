@@ -2,10 +2,10 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    "minecraft:copper_ingot",
-    "minecraft:copper_ingot",
-    "minecraft:copper_ingot",
-    "hardwrought:tin_ingot"
+    "#c:powders/copper",
+    "#c:powders/copper",
+    "#c:powders/copper",
+    "#c:powders/tin"
   ],
   "result": {
     "id": "hardwrought:bronze_mixture",

@@ -32,22 +32,23 @@ public abstract class InventoryMixin {
 
     @Inject(method = "getFreeSlot", at = @At("RETURN"), cancellable = true)
     private void hardwrought$noFreeSlotBehindTheBelt(CallbackInfoReturnable<Integer> info) {
-        if (info.getReturnValue() >= BackpackTier.COLUMNS && hardwrought$mainClosed()) {
-            info.setReturnValue(-1);
-        }
+        if (hardwrought$closed(info.getReturnValue())) info.setReturnValue(-1);
     }
 
     @Inject(method = "getSlotWithRemainingSpace", at = @At("RETURN"), cancellable = true)
     private void hardwrought$noRoomBehindTheBelt(ItemStack stack, CallbackInfoReturnable<Integer> info) {
-        if (info.getReturnValue() >= BackpackTier.COLUMNS && hardwrought$mainClosed()) {
-            info.setReturnValue(-1);
-        }
+        if (hardwrought$closed(info.getReturnValue())) info.setReturnValue(-1);
     }
 
+    /** Whether this slot of the main grid is in a row the player's pack does not open. */
     @Unique
-    private boolean hardwrought$mainClosed() {
+    private boolean hardwrought$closed(int slot) {
+        int main = BackpackTier.COLUMNS * (BackpackTier.MAIN_ROWS + 1);
+        if (slot < BackpackTier.COLUMNS || slot >= main) return false;
         if (!(player instanceof ServerPlayer serverPlayer)) return false;
         var runtime = CoreLifecycle.find(serverPlayer.level().getServer());
-        return runtime != null && runtime.equipment().tier(serverPlayer) == null;
+        if (runtime == null) return false;
+        int row = (slot - BackpackTier.COLUMNS) / BackpackTier.COLUMNS;
+        return row >= runtime.equipment().mainRows(serverPlayer);
     }
 }

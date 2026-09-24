@@ -77,7 +77,9 @@ public final class WaterEvents {
      * Filling a bucket is taken over from vanilla for the same two reasons the bottle was. Vanilla
      * takes the whole block whatever is in it, which destroys the surplus a cell under pressure
      * carries; and it records nothing, so seawater carried inland used to become clean on the way.
-     * A bucket takes exactly one block of water and remembers where it was dipped.
+     * A bucket takes exactly one block of water and remembers where it was dipped. The block it
+     * was dipped into gives what it holds and the water connected to it makes up the rest — see
+     * {@link WaterDraw}.
      */
     private static InteractionResult fillBucket(Player player, Level level, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
@@ -88,18 +90,17 @@ public final class WaterEvents {
         }
         BlockPos pos = lookedAtWater(level, player);
         if (pos == null) return InteractionResult.PASS;
-        int available = WaterStorage.amount(serverLevel, pos);
-        if (available < WaterAmounts.BUCKET) {
-            player.sendSystemMessage(Component.translatable("message.hardwrought.water_too_little"));
-            return InteractionResult.FAIL;
-        }
+        // Read before drawing: the block dipped into is what the bucket tastes of, even when the
+        // water around it made up the rest.
         var runtime = CoreLifecycle.find(serverLevel.getServer());
         WaterQuality quality = runtime == null
                 ? WaterQuality.FRESH : runtime.water().qualityAt(serverLevel, pos);
+        if (!WaterDraw.draw(serverLevel, pos, WaterAmounts.BUCKET)) {
+            player.sendSystemMessage(Component.translatable("message.hardwrought.water_too_little"));
+            return InteractionResult.FAIL;
+        }
         ItemStack filled = new ItemStack(Items.WATER_BUCKET);
         filled.set(ModDataComponents.WATER_QUALITY, quality);
-        WaterStorage.setAmount(serverLevel, pos, available - WaterAmounts.BUCKET);
-        WaterFlow.disturb(serverLevel, pos);
         level.playSound(null, pos, SoundEvents.BUCKET_FILL, SoundSource.BLOCKS, 1.0f, 1.0f);
         serverPlayer.awardStat(Stats.ITEM_USED.get(Items.BUCKET));
         if (stack.getCount() == 1) {

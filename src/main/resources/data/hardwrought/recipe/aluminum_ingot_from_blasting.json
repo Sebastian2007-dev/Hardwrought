@@ -3,7 +3,7 @@
   "category": "misc",
   "cookingtime": 100,
   "experience": 0.7,
-  "ingredient": "hardwrought:raw_aluminum",
+  "ingredient": "hardwrought:aluminum_powder",
   "result": {
     "id": "hardwrought:aluminum_ingot"
   }

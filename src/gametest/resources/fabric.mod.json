@@ -19,10 +19,15 @@
       "de.ipnats.hardwrought.test.ProgressionGameTests",
       "de.ipnats.hardwrought.test.MetalGameTests",
       "de.ipnats.hardwrought.test.KnowledgeGameTests",
-      "de.ipnats.hardwrought.test.FirecraftGameTests"
+      "de.ipnats.hardwrought.test.FirecraftGameTests",
+      "de.ipnats.hardwrought.test.MachineryGameTests",
+      "de.ipnats.hardwrought.test.KineticsGameTests",
+      "de.ipnats.hardwrought.test.SmithingGameTests"
     ],
     "fabric-client-gametest": [
-      "de.ipnats.hardwrought.test.CoreClientGameTest"
+      "de.ipnats.hardwrought.test.CoreClientGameTest",
+      "de.ipnats.hardwrought.test.SmithingClientGameTest",
+      "de.ipnats.hardwrought.test.MachineryClientGameTest"
     ]
   }
 }

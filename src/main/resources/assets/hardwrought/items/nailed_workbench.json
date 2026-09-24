@@ -1,0 +1,22 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:block_state",
+    "block_state_property": "wood",
+    "cases": [
+      {"when": "spruce", "model": {"type": "minecraft:model", "model": "hardwrought:block/nailed_workbench_spruce"}},
+      {"when": "birch", "model": {"type": "minecraft:model", "model": "hardwrought:block/nailed_workbench_birch"}},
+      {"when": "jungle", "model": {"type": "minecraft:model", "model": "hardwrought:block/nailed_workbench_jungle"}},
+      {"when": "acacia", "model": {"type": "minecraft:model", "model": "hardwrought:block/nailed_workbench_acacia"}},
+      {"when": "dark_oak", "model": {"type": "minecraft:model", "model": "hardwrought:block/nailed_workbench_dark_oak"}},
+      {"when": "pale_oak", "model": {"type": "minecraft:model", "model": "hardwrought:block/nailed_workbench_pale_oak"}},
+      {"when": "poplar", "model": {"type": "minecraft:model", "model": "hardwrought:block/nailed_workbench_poplar"}},
+      {"when": "mangrove", "model": {"type": "minecraft:model", "model": "hardwrought:block/nailed_workbench_mangrove"}},
+      {"when": "cherry", "model": {"type": "minecraft:model", "model": "hardwrought:block/nailed_workbench_cherry"}},
+      {"when": "bamboo", "model": {"type": "minecraft:model", "model": "hardwrought:block/nailed_workbench_bamboo"}},
+      {"when": "crimson", "model": {"type": "minecraft:model", "model": "hardwrought:block/nailed_workbench_crimson"}},
+      {"when": "warped", "model": {"type": "minecraft:model", "model": "hardwrought:block/nailed_workbench_warped"}}
+    ],
+    "fallback": {"type": "minecraft:model", "model": "hardwrought:block/nailed_workbench_oak"}
+  }
+}

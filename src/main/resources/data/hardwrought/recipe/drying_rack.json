@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "S": "minecraft:stick",
+    "F": "hardwrought:green_fibre"
+  },
+  "pattern": [
+    "SS",
+    "FF"
+  ],
+  "result": {
+    "id": "hardwrought:drying_rack"
+  }
+}

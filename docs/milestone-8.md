@@ -14,12 +14,21 @@ found out.**
 | --- | --- | --- |
 | **Unknown** | never held, never worked with | a black shadow of the item, named `???` |
 | **Discovered** | held — it was in the inventory | the real icon and the real name |
-| **Studied** | worked with — broken, crafted, eaten | the same, and the entry counts as understood |
+| **Studied** | worked with, examined in the hand, or carried around | the same, and the entry counts as understood |
 
 Discovery is found rather than announced. A slow simulation job walks the inventory of each online
 player and marks what it finds. That costs one pass over forty-one slots per player per slow tick,
 it needs no hook into vanilla pickup at all, and it cannot miss an item that arrived some other way
 — a trade, a dispenser, a command.
+
+The same pass is also the slowest way to study something, and the two levels fall out of the two
+passes. A thing seen for the first time is discovered; a thing still in the bag one pass later has
+been carried around for ten seconds and more, and that is study. Nothing extra is remembered to make
+that work — the discovered set already *is* the record of having seen it before.
+
+That pass stays silent. Picking up a stack of gravel is not a moment, and a player walking out of a
+cave with thirty new things should not be handed thirty toasts about it. The acts below still
+announce themselves, because each of those was a decision.
 
 Studying has to be an act, so it is hooked where the act already happens:
 
@@ -28,6 +37,15 @@ Studying has to be an act, so it is hooked where the act already happens:
 | Breaking a block | `PlayerBlockBreakEvents.AFTER` | the block **and** the tool that did it |
 | Crafting | `ItemStack#onCraftedBy` (mixin) | what was made, in any grid, anywhere |
 | Eating | the existing `ItemStackMixin` | the food |
+| Examining | a medium simulation job on the main hand | what is being held |
+
+Examining is the one act that had to be added rather than found. Section 82 counts experimenting
+among the ways to learn, and an ingot is why that matters: there is nothing a player can break, cook
+or craft **with** a bar of iron, so without a way of simply turning it over it would stay a page of
+question marks for ever. Keeping the same item in the main hand across three medium passes — a shade
+over three seconds — studies it. Switching slots, emptying the hand or swapping for something else
+starts the count again, so this rewards holding one thing rather than owning many, and the entry is
+marked afterwards so a player who never puts the item down does not re-study it every second.
 
 One mixin on `ItemStack#onCraftedBy` covers the inventory square, a vanilla workbench, a hewn
 workbench and any station a later milestone adds. Hooking every menu with a result slot would have
@@ -197,6 +215,10 @@ server whether a given item exists.
 `KnowledgeGameTests`, twelve tests:
 
 - holding discovers, working studies, and studying implies having discovered
+- an item kept in the main hand long enough is studied, a glance at it is not, and a half-examined
+  item put down stays half-examined
+- an item carried across two inventory passes is studied, one carried across a single pass and put
+  down stays discovered, and neither says anything out loud
 - learning something queues exactly one toast line for it, at the level it reached, and the queue is
   capped and cleared when it is sent
 - two players do not share one book

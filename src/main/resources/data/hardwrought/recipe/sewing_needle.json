@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "hardwrought:pointed_stick",
+    "#c:strings"
+  ],
+  "result": {
+    "id": "hardwrought:sewing_needle"
+  }
+}

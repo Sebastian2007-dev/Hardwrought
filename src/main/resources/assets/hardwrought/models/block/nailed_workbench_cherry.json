@@ -1,0 +1,10 @@
+{
+  "parent": "minecraft:block/orientable_with_bottom",
+  "textures": {
+    "top": "hardwrought:block/nailed_workbench_top_cherry",
+    "side": "hardwrought:block/nailed_workbench_side_cherry",
+    "front": "hardwrought:block/nailed_workbench_front_cherry",
+    "bottom": "hardwrought:block/nailed_workbench_bottom_cherry",
+    "particle": "hardwrought:block/nailed_workbench_side_cherry"
+  }
+}

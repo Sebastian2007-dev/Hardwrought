@@ -161,6 +161,68 @@ public final class MetalGameTests {
                 .toList();
     }
 
+    @GameTest
+    public void everyOreMeltsAtItsOwnPointAndTheFurnacesAreALadder(GameTestHelper helper) {
+        var materials = CoreLifecycle.require(helper.getLevel().getServer()).materials();
+        for (Metal metal : Metal.values()) {
+            helper.assertTrue(de.ipnats.hardwrought.metallurgy.Smelting.meltingPoint(
+                            ModMetals.raw(metal), materials).isPresent(),
+                    "Raw " + metal.id() + " has a melting point, read from its material");
+            helper.assertTrue(de.ipnats.hardwrought.metallurgy.Smelting.meltingPoint(
+                            de.ipnats.hardwrought.metallurgy.OrePowders.powder(metal), materials).isPresent(),
+                    "and so does its powder, without being listed anywhere");
+        }
+        double iron = de.ipnats.hardwrought.metallurgy.Smelting.meltingPoint(
+                net.minecraft.world.item.Items.RAW_IRON, materials).orElseThrow();
+        double titanium = de.ipnats.hardwrought.metallurgy.Smelting.meltingPoint(
+                ModMetals.raw(Metal.TITANIUM), materials).orElseThrow();
+        double tungsten = de.ipnats.hardwrought.metallurgy.Smelting.meltingPoint(
+                ModMetals.raw(Metal.TUNGSTEN), materials).orElseThrow();
+        helper.assertTrue(iron <= de.ipnats.hardwrought.metallurgy.Smelting.BRICK_FURNACE_MAX_C
+                        && titanium > de.ipnats.hardwrought.metallurgy.Smelting.BRICK_FURNACE_MAX_C,
+                "A brick furnace gets as far as iron and no further");
+        helper.assertTrue(titanium <= de.ipnats.hardwrought.metallurgy.Smelting.FURNACE_MAX_C
+                        && tungsten > de.ipnats.hardwrought.metallurgy.Smelting.FURNACE_MAX_C,
+                "a stone furnace reaches titanium, and tungsten needs a blast furnace");
+        helper.assertTrue(de.ipnats.hardwrought.progression.BenchTier.required(
+                        new ItemStack(net.minecraft.world.item.Items.FURNACE))
+                        == de.ipnats.hardwrought.progression.BenchTier.JOINED,
+                "A stone furnace is made at the nailed bench, not before");
+        helper.succeed();
+    }
+
+    @GameTest(maxTicks = 40)
+    public void aFurnaceTooColdForItsLoadLeavesItAndBurnsNothing(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos brick = helper.absolutePos(new BlockPos(1, 1, 1));
+        BlockPos stone = helper.absolutePos(new BlockPos(3, 1, 1));
+        BlockPos warm = helper.absolutePos(new BlockPos(5, 1, 1));
+        level.setBlockAndUpdate(brick, de.ipnats.hardwrought.core.registry.ModBlocks.BRICK_FURNACE.defaultBlockState());
+        level.setBlockAndUpdate(stone, net.minecraft.world.level.block.Blocks.FURNACE.defaultBlockState());
+        level.setBlockAndUpdate(warm, de.ipnats.hardwrought.core.registry.ModBlocks.BRICK_FURNACE.defaultBlockState());
+        var tooCold = (net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity) level.getBlockEntity(brick);
+        var hotEnough = (net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity) level.getBlockEntity(stone);
+        var ironBrick = (net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity) level.getBlockEntity(warm);
+        for (var furnace : List.of(tooCold, hotEnough)) {
+            furnace.setItem(0, new ItemStack(ModMetals.raw(Metal.TUNGSTEN)));
+            furnace.setItem(1, new ItemStack(net.minecraft.world.item.Items.COAL, 4));
+        }
+        ironBrick.setItem(0, new ItemStack(net.minecraft.world.item.Items.RAW_IRON));
+        ironBrick.setItem(1, new ItemStack(net.minecraft.world.item.Items.COAL, 4));
+        helper.runAfterDelay(20, () -> {
+            helper.assertTrue(tooCold.getItem(1).getCount() == 4,
+                    "A brick furnace does not burn fuel on tungsten it cannot even bring to working heat");
+            helper.assertTrue(hotEnough.getItem(1).getCount() == 3,
+                    "a stone furnace lights for the same load");
+            helper.assertTrue(ironBrick.getItem(1).getCount() == 3,
+                    "and the brick furnace lights for iron, which it can melt");
+            for (BlockPos pos : List.of(brick, stone, warm)) {
+                level.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 2);
+            }
+            helper.succeed();
+        });
+    }
+
     private static boolean hasRecipe(GameTestHelper helper, String id) {
         return helper.getLevel().recipeAccess()
                 .byKey(ResourceKey.create(Registries.RECIPE, Identifier.parse(id))).isPresent();

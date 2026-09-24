@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "hardwrought:item/glow/hardwrought_thorium_ingot"
+  }
+}

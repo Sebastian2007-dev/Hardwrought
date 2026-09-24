@@ -181,6 +181,8 @@ public final class CombatSystem {
             damage = amount * (1.0 - resistance);
         }
         damage *= attackerFactors(defender, source, weapon);
+        // Section 38: a blade forged well, and hardened, hits harder than the same blade made badly.
+        damage *= de.ipnats.hardwrought.smithing.ForgeQuality.damageFactor(weaponStack);
         return (float) Math.max(0, damage);
     }
 

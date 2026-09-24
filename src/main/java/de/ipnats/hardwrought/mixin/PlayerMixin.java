@@ -22,7 +22,26 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * either.
  */
 @Mixin(Player.class)
-public abstract class PlayerMixin {
+public abstract class PlayerMixin implements de.ipnats.hardwrought.survival.Crawling.Crawler {
+    @org.spongepowered.asm.mixin.Unique
+    private boolean hardwrought$crawling;
+
+    @Override
+    public boolean hardwrought$crawling() {
+        return hardwrought$crawling;
+    }
+
+    @Override
+    public void hardwrought$setCrawling(boolean crawling) {
+        hardwrought$crawling = crawling;
+    }
+
+    /** A player who has chosen to crawl wants to be down on the ground; see {@code Crawling}. */
+    @com.llamalad7.mixinextras.injector.ModifyReturnValue(method = "getDesiredPose", at = @At("RETURN"))
+    private net.minecraft.world.entity.Pose hardwrought$crawlWhenChosen(net.minecraft.world.entity.Pose pose) {
+        return de.ipnats.hardwrought.survival.Crawling.desired((Player) (Object) this, pose);
+    }
+
     @Inject(method = "getDestroySpeed", at = @At("RETURN"), cancellable = true)
     private void hardwrought$applyToolRules(BlockState state, CallbackInfoReturnable<Float> info) {
         float vanilla = info.getReturnValue();

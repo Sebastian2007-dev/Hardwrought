@@ -1,0 +1,29 @@
+{
+  "values": [
+    "hardwrought:leaf_string",
+    "hardwrought:flint_shard",
+    "hardwrought:cobblestone_piece",
+    "hardwrought:dirt_blob",
+    "hardwrought:dirt_slab",
+    "hardwrought:compendium",
+    "hardwrought:starter_backpack",
+    "hardwrought:lighting_sticks",
+    "hardwrought:flint_dagger",
+    "hardwrought:flint_hatchet",
+    "hardwrought:flint_hoe",
+    "hardwrought:flint_pickaxe",
+    "hardwrought:flint_shovel",
+    "hardwrought:flint_sword",
+    "#minecraft:planks",
+    "minecraft:stick",
+    "minecraft:string",
+    "minecraft:torch",
+    "minecraft:cobblestone",
+    "minecraft:dirt",
+    "hardwrought:wooden_hammer",
+    "hardwrought:sewing_needle",
+    "hardwrought:drying_rack",
+    "minecraft:fishing_rod",
+    "hardwrought:wooden_anvil"
+  ]
+}

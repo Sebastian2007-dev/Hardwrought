@@ -2,6 +2,7 @@ package de.ipnats.hardwrought.test;
 
 import de.ipnats.hardwrought.core.events.CoreLifecycle;
 import de.ipnats.hardwrought.water.WaterAmounts;
+import de.ipnats.hardwrought.water.WaterDraw;
 import de.ipnats.hardwrought.water.WaterFlow;
 import de.ipnats.hardwrought.water.WaterStorage;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
@@ -177,6 +178,12 @@ public final class WaterFlowGameTests {
             helper.assertTrue(WaterStorage.amount(level, base) + WaterStorage.amount(level, base.east())
                             == WaterAmounts.BLOCK,
                     "Water leaves the slab without being created");
+            WaterStorage.setAmount(level, base, WaterAmounts.BLOCK / 2);
+            helper.assertTrue(WaterStorage.carrierLevel(level, base) == WaterAmounts.displayLevel(WaterAmounts.BLOCK / 2),
+                    "A half-filled waterlogged slab tells the client to draw half a block of water");
+            WaterStorage.setAmount(level, base, WaterAmounts.BLOCK);
+            helper.assertTrue(WaterStorage.carrierLevel(level, base) == 0,
+                    "A full waterlogged slab is drawn full again");
             WaterStorage.setAmount(level, base, 0);
             helper.assertTrue(level.getBlockState(base).is(Blocks.OAK_SLAB)
                             && !level.getBlockState(base).getValue(BlockStateProperties.WATERLOGGED),
@@ -526,6 +533,64 @@ public final class WaterFlowGameTests {
     }
 
     // ---------------------------------------------------------------- helpers
+
+    /**
+     * A bucket dipped into shallow water takes the rest of its bucket from the water around it,
+     * nearest first, and takes nothing at all when the water in reach does not add up to a bucket.
+     */
+    @GameTest
+    public void aBucketDrawsFromTheWaterAroundWhereItIsDipped(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos base = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE_OFFSET);
+        int length = 8;
+        try {
+            // A sealed trough one block deep, every cell a third full: no single block holds a bucket.
+            for (int x = -1; x <= length; x++) {
+                level.setBlock(base.offset(x, -1, 0), Blocks.STONE.defaultBlockState(), 2);
+                level.setBlock(base.offset(x, 0, -1), Blocks.STONE.defaultBlockState(), 2);
+                level.setBlock(base.offset(x, 0, 1), Blocks.STONE.defaultBlockState(), 2);
+                level.setBlock(base.offset(x, 1, 0), Blocks.STONE.defaultBlockState(), 2);
+            }
+            level.setBlock(base.offset(-1, 0, 0), Blocks.STONE.defaultBlockState(), 2);
+            level.setBlock(base.offset(length, 0, 0), Blocks.STONE.defaultBlockState(), 2);
+            for (int x = 0; x < length; x++) {
+                level.setBlock(base.east(x), Blocks.WATER.defaultBlockState(), 2);
+                WaterStorage.setAmount(level, base.east(x), 300);
+            }
+
+            helper.assertTrue(WaterDraw.draw(level, base, WaterAmounts.BUCKET),
+                    "Four thirds of a block within reach fill a bucket although no block holds one");
+            helper.assertTrue(WaterStorage.amount(level, base) == 0
+                            && WaterStorage.amount(level, base.east(1)) == 0
+                            && WaterStorage.amount(level, base.east(2)) == 0,
+                    "The block dipped into and its nearest neighbours give everything first");
+            helper.assertTrue(WaterStorage.amount(level, base.east(3)) == 200,
+                    "the next one only what was still missing");
+            helper.assertTrue(WaterStorage.amount(level, base.east(4)) == 300,
+                    "and water further off is left alone");
+
+            // From the far end, five blocks lie within reach. Four of 200 and one of 100 make 900,
+            // which is short of a bucket.
+            for (int x = 4; x < length; x++) WaterStorage.setAmount(level, base.east(x), 200);
+            WaterStorage.setAmount(level, base.east(3), 100);
+            int before = 0;
+            for (int x = 0; x < length; x++) before += WaterStorage.amount(level, base.east(x));
+            helper.assertFalse(WaterDraw.draw(level, base.east(length - 1), WaterAmounts.BUCKET),
+                    "When the water in reach falls short there is no bucket");
+            int after = 0;
+            for (int x = 0; x < length; x++) after += WaterStorage.amount(level, base.east(x));
+            helper.assertTrue(before == after, "and a refused draw takes nothing: " + before + " -> " + after);
+        } finally {
+            for (int x = -1; x <= length; x++) {
+                for (int y = -1; y <= 1; y++) {
+                    for (int z = -1; z <= 1; z++) {
+                        level.setBlock(base.offset(x, y, z), Blocks.AIR.defaultBlockState(), 2);
+                    }
+                }
+            }
+        }
+        helper.succeed();
+    }
 
     private static int total(ServerLevel level, BlockPos base, int height) {
         int sum = 0;

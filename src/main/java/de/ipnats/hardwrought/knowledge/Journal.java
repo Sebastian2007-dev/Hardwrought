@@ -37,6 +37,12 @@ public final class Journal {
      * handed a recipe.
      */
     private static final List<JournalEntry> CHAIN = List.of(
+            // Ultra only: nobody hands the player a pack there, so carrying anything at all is the
+            // very first problem. Cord from leaves, a needle from a stick, cloth, and a pack of cloth.
+            new JournalEntry(Hardwrought.id("something_to_carry"),
+                    List.of(Hardwrought.id("starter_backpack")), List.of(), false, true),
+            new JournalEntry(Hardwrought.id("more_on_my_back"),
+                    List.of(Hardwrought.id("frame_backpack")), List.of(Hardwrought.id("starter_backpack")), false, true),
             // Nothing is required: a player holding the book has already stripped leaves for it.
             new JournalEntry(Hardwrought.id("first_edge"),
                     List.of(Hardwrought.id("flint_hatchet"), Hardwrought.id("flint_pickaxe"),
@@ -53,15 +59,45 @@ public final class Journal {
             new JournalEntry(Hardwrought.id("heat_that_holds"),
                     List.of(Hardwrought.id("brick_furnace"), vanilla("brick")),
                     List.of(vanilla("clay_ball"), vanilla("clay"), Hardwrought.id("cobblestone_piece"))),
+            // Metal is worked hot, on something that takes a blow, by hands that can hold it: all three.
+            new JournalEntry(Hardwrought.id("at_the_anvil"),
+                    List.of(Hardwrought.id("smithing_gloves"), Hardwrought.id("wooden_anvil"),
+                            Hardwrought.id("hammer")),
+                    List.of(Hardwrought.id("brick_furnace"), vanilla("raw_iron")), true),
             new JournalEntry(Hardwrought.id("rust_in_the_rock"),
                     List.of(Hardwrought.id("iron_hatchet"), Hardwrought.id("iron_pickaxe")),
-                    List.of(Hardwrought.id("brick_furnace"), vanilla("raw_iron"))),
+                    List.of(vanilla("iron_ingot"))),
+            new JournalEntry(Hardwrought.id("fire_and_water"),
+                    List.of(Hardwrought.id("forge"), Hardwrought.id("bellows")),
+                    List.of(Hardwrought.id("iron_pickaxe_head"), Hardwrought.id("iron_axe_head"),
+                            Hardwrought.id("iron_sword_blade"), Hardwrought.id("iron_pickaxe"),
+                            Hardwrought.id("iron_hatchet"))),
+            // Metals only mix once they are ground, and grinding is the first work done by a machine.
+            // The crusher, the crank that turns it and the shaft that carries the turning: all three,
+            // each shown on its own, because any one of them alone grinds nothing.
+            new JournalEntry(Hardwrought.id("breaking_it_finer"),
+                    List.of(Hardwrought.id("starter_crusher"), Hardwrought.id("hand_crank"),
+                            Hardwrought.id("shaft")),
+                    List.of(vanilla("raw_copper"), Hardwrought.id("raw_tin")), true),
             new JournalEntry(Hardwrought.id("two_soft_metals"),
-                    List.of(Hardwrought.id("bronze_ingot"), Hardwrought.id("bronze_hatchet")),
-                    List.of(vanilla("copper_ingot"), Hardwrought.id("raw_tin")))
+                    List.of(Hardwrought.id("bronze_ingot"), Hardwrought.id("bronze_mixture"),
+                            Hardwrought.id("bronze_hatchet")),
+                    List.of(Hardwrought.id("copper_powder"), Hardwrought.id("tin_powder"))),
+            new JournalEntry(Hardwrought.id("nails_for_the_bench"),
+                    List.of(Hardwrought.id("nailed_workbench"), Hardwrought.id("bronze_nails"),
+                            Hardwrought.id("hammer")),
+                    List.of(Hardwrought.id("bronze_ingot")))
     );
 
+    /** Whether the running world is an Ultra one; set when the server starts. */
+    private static volatile boolean ultra;
+
     private Journal() { }
+
+    /** Called when a server starts: entries for Ultra worlds are only read in one. */
+    public static void setUltra(boolean value) {
+        ultra = value;
+    }
 
     /** The chain as written, whatever any player knows of it. Visible for tests. */
     public static List<JournalEntry> chain() {
@@ -70,13 +106,11 @@ public final class Journal {
 
     /**
      * Where one player stands on one entry. An entry counts as followed the moment the player has
-     * held any of the things it points at — however they came by it, because the book is a record of
-     * what is true, not of who did the work.
+     * held any of the things it points at — or all of them, for an entry that needs all — however
+     * they came by it, because the book is a record of what is true, not of who did the work.
      */
     public static int state(PlayerKnowledge knowledge, JournalEntry entry) {
-        for (Identifier taught : entry.teaches()) {
-            if (knowledge.level(taught).named()) return DONE;
-        }
+        if (followed(knowledge, entry)) return DONE;
         if (entry.after().isEmpty()) return OPEN;
         for (Identifier seen : entry.after()) {
             if (knowledge.level(seen).named()) return OPEN;
@@ -84,14 +118,26 @@ public final class Journal {
         return HIDDEN;
     }
 
+    /** Whether the player holds what the entry asks for: any one of it, or all of it. */
+    private static boolean followed(PlayerKnowledge knowledge, JournalEntry entry) {
+        if (entry.teaches().isEmpty()) return false;
+        for (Identifier taught : entry.teaches()) {
+            boolean held = knowledge.level(taught).named();
+            if (held && !entry.needsAll()) return true;
+            if (!held && entry.needsAll()) return false;
+        }
+        return entry.needsAll();
+    }
+
     /** The whole chain as this player reads it, hidden entries included. */
     public static List<CompendiumPagePayload.Note> page(PlayerKnowledge knowledge) {
         List<CompendiumPagePayload.Note> notes = new ArrayList<>(CHAIN.size());
         for (JournalEntry entry : CHAIN) {
             if (notes.size() >= CompendiumPagePayload.MAX_NOTES) break;
+            if (entry.ultraOnly() && !ultra) continue;
             int state = state(knowledge, entry);
             notes.add(new CompendiumPagePayload.Note(entry.id(), subject(knowledge, entry, state),
-                    state));
+                    state, parts(knowledge, entry, state)));
         }
         return List.copyOf(notes);
     }
@@ -111,7 +157,28 @@ public final class Journal {
                 if (knowledge.level(taught).named()) return taught;
             }
         }
+        if (entry.needsAll()) {
+            // Part of the way there: point at the piece still missing, which is drawn as a shadow
+            // and so says exactly what the player has yet to find.
+            for (Identifier taught : entry.teaches()) {
+                if (!knowledge.level(taught).named()) return taught;
+            }
+        }
         return entry.subject();
+    }
+
+    /**
+     * Every piece of a thought that takes several things together, each with whether the player
+     * has held it. Nothing for an unread thought, for the same reason it has no icon.
+     */
+    private static List<CompendiumPagePayload.Part> parts(PlayerKnowledge knowledge, JournalEntry entry,
+                                                          int state) {
+        if (state == HIDDEN || !entry.needsAll()) return List.of();
+        List<CompendiumPagePayload.Part> parts = new ArrayList<>();
+        for (Identifier taught : entry.teaches()) {
+            parts.add(new CompendiumPagePayload.Part(taught, knowledge.level(taught).named()));
+        }
+        return parts;
     }
 
     private static Identifier vanilla(String path) {

@@ -1,0 +1,259 @@
+{
+  "parent": "minecraft:block/block",
+  "__comment": "Two boards with leather pleated between them and a nozzle facing north.",
+  "textures": {
+    "board": "minecraft:block/oak_planks",
+    "leather": "minecraft:block/brown_wool",
+    "nozzle": "minecraft:block/iron_block",
+    "particle": "minecraft:block/oak_planks"
+  },
+  "elements": [
+    {
+      "from": [
+        1,
+        0,
+        2
+      ],
+      "to": [
+        15,
+        2,
+        16
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ],
+          "texture": "#board"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ],
+          "texture": "#board"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ],
+          "texture": "#board"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ],
+          "texture": "#board"
+        },
+        "up": {
+          "uv": [
+            1,
+            2,
+            15,
+            16
+          ],
+          "texture": "#board"
+        },
+        "down": {
+          "uv": [
+            1,
+            2,
+            15,
+            16
+          ],
+          "texture": "#board",
+          "cullface": "down"
+        }
+      }
+    },
+    {
+      "from": [
+        2,
+        2,
+        3
+      ],
+      "to": [
+        14,
+        7,
+        15
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            2,
+            0,
+            14,
+            5
+          ],
+          "texture": "#leather"
+        },
+        "south": {
+          "uv": [
+            2,
+            0,
+            14,
+            5
+          ],
+          "texture": "#leather"
+        },
+        "east": {
+          "uv": [
+            2,
+            0,
+            14,
+            5
+          ],
+          "texture": "#leather"
+        },
+        "west": {
+          "uv": [
+            2,
+            0,
+            14,
+            5
+          ],
+          "texture": "#leather"
+        }
+      }
+    },
+    {
+      "from": [
+        1,
+        7,
+        2
+      ],
+      "to": [
+        15,
+        9,
+        16
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ],
+          "texture": "#board"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ],
+          "texture": "#board"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ],
+          "texture": "#board"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ],
+          "texture": "#board"
+        },
+        "up": {
+          "uv": [
+            1,
+            2,
+            15,
+            16
+          ],
+          "texture": "#board"
+        },
+        "down": {
+          "uv": [
+            1,
+            2,
+            15,
+            16
+          ],
+          "texture": "#board"
+        }
+      }
+    },
+    {
+      "from": [
+        6,
+        2,
+        0
+      ],
+      "to": [
+        10,
+        6,
+        3
+      ],
+      "faces": {
+        "east": {
+          "uv": [
+            6,
+            0,
+            10,
+            4
+          ],
+          "texture": "#nozzle"
+        },
+        "west": {
+          "uv": [
+            6,
+            0,
+            10,
+            4
+          ],
+          "texture": "#nozzle"
+        },
+        "up": {
+          "uv": [
+            6,
+            0,
+            10,
+            4
+          ],
+          "texture": "#nozzle"
+        },
+        "down": {
+          "uv": [
+            6,
+            0,
+            10,
+            4
+          ],
+          "texture": "#nozzle"
+        },
+        "north": {
+          "uv": [
+            6,
+            0,
+            10,
+            4
+          ],
+          "texture": "#nozzle",
+          "cullface": "north"
+        }
+      }
+    }
+  ]
+}

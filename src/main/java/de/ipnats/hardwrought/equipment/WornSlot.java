@@ -6,7 +6,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * One square of the worn strap beside the inventory: the pack, or the lamp.
+ * One square of the worn strap beside the inventory: the pack, the lamp, or the gloves.
  *
  * <p>Takes one kind of thing and never more than one of it. The pack square is the one place in the
  * game where a player may end up wearing nothing, and emptying it is allowed on purpose — being
@@ -22,6 +22,8 @@ public class WornSlot extends Slot {
             "hardwrought", "equipment/slot_backpack");
     private static final Identifier LAMP_ICON = Identifier.fromNamespaceAndPath(
             "hardwrought", "equipment/slot_lamp");
+    private static final Identifier GLOVES_ICON = Identifier.fromNamespaceAndPath(
+            "hardwrought", "equipment/slot_gloves");
     /** Whether this square is open. On the server this is always true. */
     @FunctionalInterface
     public interface Fold {
@@ -57,6 +59,10 @@ public class WornSlot extends Slot {
 
     @Override
     public Identifier getNoItemIcon() {
-        return getContainerSlot() == EquipmentContainer.BACKPACK_SLOT ? BACKPACK_ICON : LAMP_ICON;
+        return switch (getContainerSlot()) {
+            case EquipmentContainer.BACKPACK_SLOT -> BACKPACK_ICON;
+            case EquipmentContainer.LAMP_SLOT -> LAMP_ICON;
+            default -> GLOVES_ICON;
+        };
     }
 }

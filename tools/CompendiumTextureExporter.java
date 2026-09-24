@@ -38,7 +38,6 @@ public final class CompendiumTextureExporter {
         sprites.put("page", page());
         sprites.put("binding", binding());
         sprites.put("slot", slot());
-        sprites.put("unknown_block", unknownBlock());
         sprites.put("half", panel(false));
         sprites.put("half_hovered", panel(true));
         sprites.put("tab", tab(false));
@@ -50,12 +49,8 @@ public final class CompendiumTextureExporter {
         sprites.put("button", button(false));
         sprites.put("button_hovered", button(true));
         sprites.put("search", search());
-        sprites.put("method_crafting", methodTab(0));
-        sprites.put("method_loot", methodTab(1));
-        sprites.put("method_cooking", methodTab(2));
-        sprites.put("method_smithing", methodTab(3));
-        sprites.put("method_smelting", methodTab(4));
-        sprites.put("method_in_world", methodTab(5));
+        sprites.put("method_tab", methodBookmark(false));
+        sprites.put("method_tab_selected", methodBookmark(true));
         for (Map.Entry<String, BufferedImage> sprite : sprites.entrySet()) {
             write(gui.resolve(sprite.getKey() + ".png"), sprite.getValue());
         }
@@ -101,49 +96,49 @@ public final class CompendiumTextureExporter {
     private static BufferedImage book() {
         int width = 344;
         int height = 204;
-        BufferedImage image = image(width, height, rgb(38, 22, 16));
+        BufferedImage image = image(width, height, TRANSPARENT);
 
-        // Rough bark cover, visible as a narrow frame around the paper.
-        fill(image, 3, 3, width - 4, height - 4, rgb(64, 35, 23));
-        fill(image, 6, 6, width - 7, height - 7, rgb(82, 45, 27));
-        for (int x = 8; x < width - 8; x++) {
-            if (x % 11 != 3) set(image, x, 7, rgb(124, 70, 38));
-            if (x % 13 != 5) set(image, x, height - 8, rgb(45, 27, 20));
+        // The first compendium is not a bound book. Broad overlapping leaves make its cover,
+        // branches stiffen the edges and plant fibre holds the hinge together.
+        fill(image, 5, 7, 338, 197, rgb(42, 48, 27));
+        fill(image, 2, 15, 341, 188, rgb(55, 65, 33));
+        fill(image, 10, 3, 158, 200, rgb(68, 78, 39));
+        fill(image, 184, 5, 334, 199, rgb(61, 72, 35));
+        for (int y = 10; y < height - 9; y += 17) {
+            fill(image, 2 + (y % 5), y, 11, y + 9, rgb(83, 91, 45));
+            fill(image, 333, y + 3, 341 - (y % 4), y + 12, rgb(45, 57, 29));
         }
-
-        // Two broad, calm sheets. Sparse flecks preserve the handmade material without fighting text.
-        fill(image, 8, 8, 163, height - 9, PAGE);
-        fill(image, 180, 8, 335, height - 9, PAGE);
+        // Uneven rag-paper scraps provide a quiet, high-contrast writing surface.
+        fill(image, 13, 13, 158, height - 14, rgb(205, 187, 144));
+        fill(image, 186, 13, 330, height - 14, rgb(205, 187, 144));
         for (int y = 11; y < height - 11; y++) {
             for (int x = 11; x < width - 11; x++) {
-                if (x >= 164 && x <= 179) continue;
+                if (x < 13 || x > 330 || (x > 158 && x < 186)) continue;
                 int grain = Math.floorMod(x * 17 + y * 31 + x * y, 211);
-                if (grain == 0) set(image, x, y, rgb(151, 124, 81));
-                else if (grain == 1) set(image, x, y, PAGE_WARM);
+                if (grain == 0) set(image, x, y, rgb(154, 135, 98));
+                else if (grain == 1) set(image, x, y, rgb(225, 208, 165));
             }
         }
+        // Deckled scraps, charcoal seams, crooked twig frame.
+        for (int y = 13; y <= height - 14; y++) {
+            set(image, 13, y, y % 7 == 2 ? rgb(230, 213, 171) : rgb(105, 86, 57));
+            set(image, 158, y, rgb(103, 82, 54));
+            set(image, 186, y, rgb(103, 82, 54));
+            set(image, 330, y, y % 8 == 3 ? rgb(229, 212, 170) : rgb(105, 86, 57));
+        }
+        for (int x = 13; x <= 330; x++) {
+            if (x > 158 && x < 186) continue;
+            set(image, x, 13, x % 9 == 4 ? rgb(229, 212, 170) : rgb(105, 86, 57));
+            set(image, x, height - 14, x % 11 == 5 ? rgb(229, 212, 170) : rgb(105, 86, 57));
+        }
+        fill(image, 0, 3, 5, 199, rgb(58, 37, 22));
+        fill(image, 338, 5, 343, 197, rgb(58, 37, 22));
+        fill(image, 4, 0, 339, 5, rgb(72, 44, 24));
+        fill(image, 3, 198, 340, 203, rgb(49, 31, 20));
 
-        // Deckled outer edges and a gentle shadow toward the fold.
-        for (int y = 8; y < height - 8; y++) {
-            set(image, 8, y, y % 9 == 2 ? PAGE_WEAR : PAGE_EDGE);
-            set(image, 335, y, y % 8 == 3 ? PAGE_WEAR : PAGE_EDGE);
-            set(image, 162, y, rgb(135, 102, 65));
-            set(image, 163, y, rgb(91, 61, 40));
-            set(image, 180, y, rgb(94, 63, 41));
-            set(image, 181, y, rgb(139, 106, 68));
-        }
-        for (int x = 8; x <= 163; x++) {
-            set(image, x, 8, x % 10 == 4 ? PAGE_WEAR : PAGE_EDGE);
-            set(image, x, height - 9, x % 12 == 7 ? PAGE_WEAR : PAGE_EDGE);
-        }
-        for (int x = 180; x <= 335; x++) {
-            set(image, x, 8, x % 11 == 5 ? PAGE_WEAR : PAGE_EDGE);
-            set(image, x, height - 9, x % 13 == 2 ? PAGE_WEAR : PAGE_EDGE);
-        }
-
-        // Recessed spine and visible plant-cord sewing.
-        fill(image, 164, 6, 179, height - 7, rgb(49, 30, 22));
-        fill(image, 167, 8, 176, height - 9, rgb(68, 39, 25));
+        // Branch spine and coarse vine lashings.
+        fill(image, 165, 3, 179, 200, rgb(47, 31, 20));
+        fill(image, 170, 5, 174, 198, rgb(91, 66, 35));
         for (int y = 13; y < height - 12; y++) {
             set(image, 171, y, CORD_DARK);
             set(image, 172, y, y % 4 == 0 ? CORD_LIGHT : CORD);
@@ -154,6 +149,34 @@ public final class CompendiumTextureExporter {
             set(image, 171, y - 2, CORD_LIGHT);
             set(image, 173, y + 2, CORD_DARK);
         }
+        // Visible leaf veins and torn paper corners keep the silhouette from reading as a factory
+        // made rectangular book when the GUI is scaled up.
+        int vein = rgb(34, 45, 24);
+        brokenLine(image, 12, 10, 72, 5, vein, 13);
+        brokenLine(image, 82, 6, 148, 10, vein, 11);
+        brokenLine(image, 191, 9, 254, 5, vein, 12);
+        brokenLine(image, 266, 6, 331, 10, vein, 10);
+        brokenLine(image, 7, 28, 12, 77, vein, 9);
+        brokenLine(image, 332, 116, 338, 169, vein, 11);
+        fill(image, 13, 13, 17, 14, rgb(68, 78, 39));
+        fill(image, 13, 15, 14, 18, rgb(68, 78, 39));
+        fill(image, 155, 187, 158, 190, rgb(68, 78, 39));
+        fill(image, 186, 13, 190, 14, rgb(61, 72, 35));
+        fill(image, 328, 185, 330, 190, rgb(61, 72, 35));
+        return image;
+    }
+
+    /** A scrap bookmark only; the recognizable icon is rendered from a real Minecraft ItemStack. */
+    private static BufferedImage methodBookmark(boolean selected) {
+        BufferedImage image = image(24, 24, TRANSPARENT);
+        int base = selected ? rgb(190, 169, 119) : rgb(105, 119, 61);
+        int light = selected ? rgb(228, 211, 168) : rgb(137, 148, 79);
+        fill(image, 2, selected ? 0 : 2, 21, 20, base);
+        brokenLine(image, 3, selected ? 0 : 2, 20, selected ? 0 : 2, light, 7);
+        brokenLine(image, 2, selected ? 1 : 3, 2, 20, rgb(45, 38, 25), 6);
+        brokenLine(image, 21, selected ? 1 : 3, 21, 20, rgb(45, 38, 25), 5);
+        set(image, 3, 21, base); set(image, 4, 22, base);
+        set(image, 20, 21, base); set(image, 19, 22, base);
         return image;
     }
 
@@ -235,33 +258,6 @@ public final class CompendiumTextureExporter {
         fill(image, 2, 15, 15, 16, SLOT_LIGHT);
         fill(image, 15, 2, 16, 16, SLOT_LIGHT);
         set(image, 5, 4, rgb(158, 147, 126)); set(image, 12, 11, rgb(137, 128, 111));
-        return image;
-    }
-
-    /** A readable placeholder for blocks; their particle texture would otherwise be a black square. */
-    private static BufferedImage unknownBlock() {
-        BufferedImage image = image(16, 16, TRANSPARENT);
-        Graphics2D graphics = image.createGraphics();
-        graphics.setColor(new java.awt.Color(rgb(82, 65, 47), true));
-        graphics.fillPolygon(new int[]{2, 8, 14, 8}, new int[]{5, 2, 5, 9}, 4);
-        graphics.setColor(new java.awt.Color(rgb(61, 47, 36), true));
-        graphics.fillPolygon(new int[]{2, 8, 8, 2}, new int[]{5, 9, 15, 11}, 4);
-        graphics.setColor(new java.awt.Color(rgb(43, 34, 28), true));
-        graphics.fillPolygon(new int[]{8, 14, 14, 8}, new int[]{9, 5, 11, 15}, 4);
-        graphics.dispose();
-        int edge = rgb(31, 24, 20);
-        brokenLine(image, 2, 5, 8, 2, edge, 17);
-        brokenLine(image, 8, 2, 14, 5, edge, 17);
-        brokenLine(image, 2, 5, 8, 9, edge, 17);
-        brokenLine(image, 14, 5, 8, 9, edge, 17);
-        brokenLine(image, 8, 9, 8, 15, edge, 17);
-        brokenLine(image, 2, 5, 2, 11, edge, 17);
-        brokenLine(image, 14, 5, 14, 11, edge, 17);
-        set(image, 11, 7, PAGE_WEAR);
-        set(image, 12, 7, PAGE_WEAR);
-        set(image, 12, 8, PAGE_WEAR);
-        set(image, 11, 9, PAGE_WEAR);
-        set(image, 11, 11, PAGE_WEAR);
         return image;
     }
 
@@ -364,52 +360,6 @@ public final class CompendiumTextureExporter {
         return image;
     }
 
-    /** Six top-edge bookmarks, each identifiable without relying on generated text. */
-    private static BufferedImage methodTab(int method) {
-        int[] colors = {
-                rgb(130, 103, 61), rgb(101, 68, 49), rgb(139, 72, 54),
-                rgb(80, 89, 91), rgb(92, 82, 72), rgb(91, 108, 62)
-        };
-        BufferedImage image = image(24, 24, TRANSPARENT);
-        int base = colors[method];
-        fill(image, 2, 0, 21, 20, base);
-        fill(image, 3, 1, 20, 1, blend(base, rgb(220, 196, 147), 0.28));
-        fill(image, 2, 0, 2, 19, rgb(45, 34, 27));
-        fill(image, 21, 0, 21, 19, rgb(45, 34, 27));
-        fill(image, 4, 20, 9, 22, base); fill(image, 14, 20, 19, 22, base);
-        set(image, 10, 20, rgb(45, 34, 27)); set(image, 13, 20, rgb(45, 34, 27));
-        switch (method) {
-            case 0 -> { // crafting grid
-                for (int y = 0; y < 3; y++) for (int x = 0; x < 3; x++)
-                    outline(image, 7 + x * 4, 5 + y * 4, 3, 3, INK);
-            }
-            case 1 -> { // loot chest
-                fill(image, 6, 9, 17, 16, INK); fill(image, 7, 7, 16, 9, INK_SOFT);
-                fill(image, 7, 10, 16, 14, rgb(151, 106, 44)); set(image, 11, 11, CORD_LIGHT);
-            }
-            case 2 -> { // flame
-                fill(image, 9, 8, 14, 16, rgb(71, 38, 25));
-                fill(image, 10, 6, 12, 15, rgb(188, 102, 43));
-                set(image, 13, 10, rgb(215, 144, 58)); set(image, 11, 13, rgb(234, 177, 75));
-            }
-            case 3 -> { // anvil
-                fill(image, 6, 8, 18, 10, INK); fill(image, 8, 11, 15, 13, INK);
-                fill(image, 10, 14, 14, 16, INK); fill(image, 7, 17, 17, 18, INK);
-            }
-            case 4 -> { // furnace
-                outline(image, 6, 6, 13, 13, INK); fill(image, 8, 9, 16, 11, INK);
-                fill(image, 9, 13, 15, 16, rgb(159, 75, 36)); set(image, 12, 13, rgb(222, 143, 55));
-            }
-            case 5 -> { // log and hatchet
-                fill(image, 6, 10, 12, 17, rgb(75, 49, 29));
-                outline(image, 6, 8, 7, 4, INK); set(image, 8, 9, CORD_LIGHT);
-                brokenLine(image, 13, 15, 18, 6, INK, 9);
-                fill(image, 15, 6, 19, 9, rgb(94, 101, 93));
-            }
-        }
-        return image;
-    }
-
     private static BufferedImage thirst() {
         BufferedImage image = image(18, 18, TRANSPARENT);
         int outline = rgb(28, 38, 41);
@@ -472,12 +422,15 @@ public final class CompendiumTextureExporter {
 
     private static void brokenLine(BufferedImage image, int x1, int y1, int x2, int y2,
                                    int color, int rhythm) {
-        int dx = Integer.compare(x2, x1);
-        int dy = Integer.compare(y2, y1);
+        // Interpolated rather than stepped one pixel in each axis at a time: stepping both axes
+        // by one drew every line at 45 degrees, so a vein meant to run along the cover's edge
+        // cut diagonally across the pages instead.
         int length = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
         for (int step = 0; step <= length; step++) {
-            if (Math.floorMod(step * 5 + x1 + y1, rhythm) != 0)
-                set(image, x1 + dx * step, y1 + dy * step, color);
+            if (Math.floorMod(step * 5 + x1 + y1, rhythm) == 0) continue;
+            int x = length == 0 ? x1 : x1 + Math.round((x2 - x1) * (float) step / length);
+            int y = length == 0 ? y1 : y1 + Math.round((y2 - y1) * (float) step / length);
+            set(image, x, y, color);
         }
     }
 

@@ -3,8 +3,8 @@
   "category": "equipment",
   "key": {
     "L": "minecraft:leather",
-    "T": "hardwrought:leaf_string",
-    "B": "hardwrought:starter_backpack"
+    "T": "#c:strings",
+    "B": "hardwrought:frame_backpack"
   },
   "pattern": [
     "TLT",

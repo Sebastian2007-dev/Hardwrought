@@ -103,6 +103,25 @@ public abstract class InventoryScreenMixin extends AbstractRecipeBookScreen<Inve
         }
     }
 
+    /**
+     * The strap is part of the inventory, even though it hangs outside its panel. Vanilla treats a
+     * click anywhere outside the panel as a click into the world and throws whatever is on the
+     * cursor — so taking the pack or the lamp out of its square dropped it at the player's feet
+     * instead of putting it in hand.
+     */
+    @Override
+    protected boolean hasClickedOutside(double mouseX, double mouseY, int left, int top) {
+        if (hardwrought$strapShown()) {
+            int x = leftPos + WornStrap.OFFSET_X;
+            int y = topPos + WornStrap.PANEL_Y;
+            if (mouseX >= x && mouseX < x + WornStrap.WIDTH
+                    && mouseY >= y && mouseY < y + WornStrap.panelHeight(EquipmentContainer.SIZE)) {
+                return false;
+            }
+        }
+        return super.hasClickedOutside(mouseX, mouseY, left, top);
+    }
+
     /** True where the strap is both folded out and not being sat on by the recipe book. */
     @Unique
     private boolean hardwrought$strapShown() {

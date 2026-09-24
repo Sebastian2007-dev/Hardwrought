@@ -14,7 +14,15 @@ import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.LevelChunk;
+import io.netty.buffer.ByteBuf;
+import it.unimi.dsi.fastutil.longs.Long2ByteMap;
+import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.longs.LongSet;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
+import net.minecraft.network.VarInt;
+import net.minecraft.network.codec.StreamCodec;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 
 import java.util.HashMap;
@@ -38,6 +46,21 @@ public final class WaterStorage {
             AttachmentRegistry.<WaterChunkData>create(Hardwrought.id("partial_water"), builder ->
                     builder.persistent(TABLE_CODEC).initializer(WaterChunkData::new));
 
+    /**
+     * What the client needs to draw water it cannot see the amount of: the visible step of every cell
+     * that holds its water inside another block (a waterlogged stair, a kelp, a bubble column) and
+     * is not full. Vanilla draws those as full blocks whatever they hold; with this they stand at the
+     * same eighths as free water beside them.
+     *
+     * <p>Kept apart from {@link #PARTIAL_WATER} so that only the rare change of a visible step travels
+     * to the client, not every millibucket moving through a lake. The value is replaced rather than
+     * edited, which is what makes Fabric send it.
+     */
+    public static final AttachmentType<CarrierLevels> CARRIER_LEVELS =
+            AttachmentRegistry.<CarrierLevels>create(Hardwrought.id("carrier_levels"), builder ->
+                    builder.persistent(CarrierLevels.CODEC)
+                            .syncWith(CarrierLevels.STREAM_CODEC, AttachmentSyncPredicate.all()));
+
     private WaterStorage() { }
 
     /**
@@ -47,7 +70,33 @@ public final class WaterStorage {
      * current session put there.
      */
     public static void initialize() {
-        // Loading the class registers the attachment.
+        // Loading the class registers the attachments.
+        ServerChunkEvents.CHUNK_LOAD.register((level, chunk, generated) -> refreshCarriers(chunk));
+    }
+
+    /**
+     * Works out the visible steps of a chunk's water carriers from the amounts stored in it. Carriers
+     * that were already partly filled before the steps were kept, or whose block changed while
+     * nothing was watching, would otherwise be drawn full until their water next moved.
+     */
+    static void refreshCarriers(LevelChunk chunk) {
+        WaterChunkData table = chunk.getAttached(PARTIAL_WATER);
+        CarrierLevels current = chunk.getAttached(CARRIER_LEVELS);
+        if (table == null && current == null) return;
+        Long2ByteOpenHashMap levels = new Long2ByteOpenHashMap();
+        if (table != null) {
+            for (Long2IntMap.Entry entry : table.amounts.long2IntEntrySet()) {
+                int amount = entry.getIntValue();
+                if (amount <= 0 || amount >= WaterAmounts.BLOCK) continue;
+                BlockState state = chunk.getBlockState(BlockPos.of(entry.getLongKey()));
+                if (containsWater(state) && !isFreeWater(state)) {
+                    levels.put(entry.getLongKey(), (byte) WaterAmounts.displayLevel(amount));
+                }
+            }
+        }
+        CarrierLevels fresh = new CarrierLevels(levels);
+        if (current != null && current.levels.equals(levels)) return;
+        chunk.setAttached(CARRIER_LEVELS, levels.isEmpty() ? null : fresh);
     }
 
     /** How much water stands in this block, in millibuckets. Zero when there is none. */
@@ -80,6 +129,7 @@ public final class WaterStorage {
         if (amount <= 0) {
             removeWater(level, pos, state);
             store(level.getChunkAt(pos), pos, amount);
+            showCarrier(level, pos, amount);
             // Water that is no longer there cannot still be salt water.
             WaterQualityStorage.clear(level, pos);
             return;
@@ -89,12 +139,14 @@ public final class WaterStorage {
                 level.setBlock(pos, state.setValue(BlockStateProperties.WATERLOGGED, true), Block.UPDATE_ALL);
             }
             store(level.getChunkAt(pos), pos, amount);
+            showCarrier(level, pos, amount);
             return;
         }
         if (containsWater(state) && !isFreeWater(state)) {
             // Bubble columns and water plants keep their block while some water remains. Their exact
-            // partial amount lives in the attachment even though vanilla can only draw them full.
+            // partial amount lives in the attachment; its visible step goes to the client separately.
             store(level.getChunkAt(pos), pos, amount);
+            showCarrier(level, pos, amount);
             return;
         }
         if (!isFreeWater(state) && !state.isAir()) {
@@ -106,6 +158,7 @@ public final class WaterStorage {
         BlockState target = Blocks.WATER.defaultBlockState().setValue(LiquidBlock.LEVEL, display);
         setWaterDisplay(level, pos, state, target);
         store(level.getChunkAt(pos), pos, amount);
+        showCarrier(level, pos, amount);
     }
 
     /**
@@ -118,6 +171,8 @@ public final class WaterStorage {
         int second = WaterAmounts.clamp(secondMillibuckets);
         updateDisplay(level, firstPos, first);
         updateDisplay(level, secondPos, second);
+        showCarrier(level, firstPos, first);
+        showCarrier(level, secondPos, second);
 
         LevelChunk firstChunk = level.getChunkAt(firstPos);
         boolean sameChunkPosition = firstPos.getX() >> 4 == secondPos.getX() >> 4
@@ -224,6 +279,30 @@ public final class WaterStorage {
         level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
     }
 
+    /**
+     * Records the visible step of a water carrier, or forgets it where the cell is full, empty or
+     * plain water again. Only a change of step replaces the attachment and so reaches the client.
+     */
+    private static void showCarrier(ServerLevel level, BlockPos pos, int amount) {
+        BlockState state = level.getBlockState(pos);
+        boolean carrier = containsWater(state) && !isFreeWater(state);
+        byte step = carrier && amount > 0 && amount < WaterAmounts.BLOCK
+                ? (byte) WaterAmounts.displayLevel(amount) : 0;
+        LevelChunk chunk = level.getChunkAt(pos);
+        CarrierLevels current = chunk.getAttached(CARRIER_LEVELS);
+        if (current == null && step == 0) return;
+        long key = pos.asLong();
+        if (current != null && current.level(key) == step) return;
+        CarrierLevels next = (current == null ? CarrierLevels.EMPTY : current).with(key, step);
+        chunk.setAttached(CARRIER_LEVELS, next.isEmpty() ? null : next);
+    }
+
+    /** The visible step of a partly filled water carrier, 0 where it is full, dry or free water. */
+    public static byte carrierLevel(ServerLevel level, BlockPos pos) {
+        CarrierLevels levels = level.getChunkAt(pos).getAttached(CARRIER_LEVELS);
+        return levels == null ? 0 : levels.level(pos.asLong());
+    }
+
     private static void store(LevelChunk chunk, BlockPos pos, int amount) {
         WaterChunkData table = chunk.getAttached(PARTIAL_WATER);
         if (table == null) {
@@ -261,6 +340,69 @@ public final class WaterStorage {
         // attachment entirely instead of saving empty bookkeeping forever.
         if (table.isEmpty()) chunk.removeAttached(PARTIAL_WATER);
         else chunk.markUnsaved();
+    }
+
+    /**
+     * The visible water step, 1 (almost full) to 7 (a film), of each partly filled carrier in a chunk.
+     * Immutable: a change is a new value.
+     */
+    public static final class CarrierLevels {
+        static final CarrierLevels EMPTY = new CarrierLevels(new Long2ByteOpenHashMap());
+        static final Codec<CarrierLevels> CODEC = Codec.unboundedMap(Codec.STRING, Codec.BYTE).xmap(
+                map -> {
+                    Long2ByteOpenHashMap levels = new Long2ByteOpenHashMap(map.size());
+                    map.forEach((key, value) -> levels.put(Long.parseLong(key), value.byteValue()));
+                    return new CarrierLevels(levels);
+                },
+                carriers -> {
+                    Map<String, Byte> map = new HashMap<>(carriers.levels.size());
+                    for (Long2ByteMap.Entry entry : carriers.levels.long2ByteEntrySet()) {
+                        map.put(Long.toString(entry.getLongKey()), entry.getByteValue());
+                    }
+                    return map;
+                });
+        static final StreamCodec<ByteBuf, CarrierLevels> STREAM_CODEC = StreamCodec.of(
+                (buffer, carriers) -> {
+                    VarInt.write(buffer, carriers.levels.size());
+                    for (Long2ByteMap.Entry entry : carriers.levels.long2ByteEntrySet()) {
+                        buffer.writeLong(entry.getLongKey());
+                        buffer.writeByte(entry.getByteValue());
+                    }
+                },
+                buffer -> {
+                    int size = VarInt.read(buffer);
+                    Long2ByteOpenHashMap levels = new Long2ByteOpenHashMap(size);
+                    for (int i = 0; i < size; i++) levels.put(buffer.readLong(), buffer.readByte());
+                    return new CarrierLevels(levels);
+                });
+
+        private final Long2ByteOpenHashMap levels;
+
+        private CarrierLevels(Long2ByteOpenHashMap levels) {
+            this.levels = levels;
+            levels.defaultReturnValue((byte) 0);
+        }
+
+        /** The visible step at this position, or 0 where the carrier is drawn as vanilla draws it. */
+        public byte level(long pos) {
+            return levels.get(pos);
+        }
+
+        /** Every position this value knows about, for comparing an old value against a new one. */
+        public LongSet positions() {
+            return levels.keySet();
+        }
+
+        boolean isEmpty() {
+            return levels.isEmpty();
+        }
+
+        CarrierLevels with(long pos, byte step) {
+            Long2ByteOpenHashMap copy = new Long2ByteOpenHashMap(levels);
+            if (step == 0) copy.remove(pos);
+            else copy.put(pos, step);
+            return new CarrierLevels(copy);
+        }
     }
 
     /** Primitive runtime representation; its codec keeps the existing string-keyed save format. */

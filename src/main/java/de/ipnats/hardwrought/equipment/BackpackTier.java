@@ -22,11 +22,16 @@ public enum BackpackTier implements StringRepresentable {
      * the carry allowance everything else in the mod was balanced against, and holds nothing of its
      * own. Section 71.1.8 in spirit: the first link of the chain has to be reachable from nothing.
      */
-    STARTER("starter", 0, 85.0),
+    STARTER("starter", 0, 85.0, 1),
+    /**
+     * Hardcore's second step: the woven pack lashed to a frame of sticks. It carries more of the
+     * player's own grid; outside hardcore it is only the way from the woven pack to the leather one.
+     */
+    FRAME("frame", 0, 95.0, 2),
     /**
      * The first real pack. A little more on the back, and a row of its own to put it in.
      */
-    BASIC("basic", 1, 110.0);
+    BASIC("basic", 1, 110.0, 3);
 
     /** Rows the main inventory has while a pack is worn. Nothing to do with the pack's own rows. */
     public static final int MAIN_ROWS = 3;
@@ -37,11 +42,21 @@ public enum BackpackTier implements StringRepresentable {
     private final String serializedName;
     private final int rows;
     private final double capacityKg;
+    private final int hardcoreMainRows;
 
-    BackpackTier(String serializedName, int rows, double capacityKg) {
+    BackpackTier(String serializedName, int rows, double capacityKg, int hardcoreMainRows) {
         this.serializedName = serializedName;
         this.rows = rows;
         this.capacityKg = capacityKg;
+        this.hardcoreMainRows = hardcoreMainRows;
+    }
+
+    /**
+     * How many rows of the player's own grid this pack opens. Outside Ultra any pack opens all
+     * three; in Ultra the grid is earned a row at a time, woven pack, frame, leather.
+     */
+    public int mainRows(boolean ultra) {
+        return ultra ? hardcoreMainRows : MAIN_ROWS;
     }
 
     @Override

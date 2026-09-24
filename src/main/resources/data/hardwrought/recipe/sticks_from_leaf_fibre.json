@@ -2,8 +2,8 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    "hardwrought:leaf_string",
-    "hardwrought:leaf_string"
+    "#c:strings",
+    "#c:strings"
   ],
   "result": {
     "id": "minecraft:stick",

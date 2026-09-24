@@ -3,7 +3,7 @@
   "category": "misc",
   "cookingtime": 100,
   "experience": 0.7,
-  "ingredient": "hardwrought:raw_platinum",
+  "ingredient": "hardwrought:platinum_powder",
   "result": {
     "id": "hardwrought:platinum_ingot"
   }

@@ -3,7 +3,7 @@
   "category": "misc",
   "cookingtime": 200,
   "experience": 0.7,
-  "ingredient": "hardwrought:raw_uranium",
+  "ingredient": "hardwrought:uranium_powder",
   "result": {
     "id": "hardwrought:uranium_ingot"
   }

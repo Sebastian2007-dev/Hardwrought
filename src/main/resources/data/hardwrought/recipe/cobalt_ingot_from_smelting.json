@@ -3,7 +3,7 @@
   "category": "misc",
   "cookingtime": 200,
   "experience": 0.7,
-  "ingredient": "hardwrought:raw_cobalt",
+  "ingredient": "hardwrought:cobalt_powder",
   "result": {
     "id": "hardwrought:cobalt_ingot"
   }

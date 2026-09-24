@@ -1,0 +1,364 @@
+{
+  "variants": {
+    "facing=north,uses=0": {
+      "model": "hardwrought:block/wooden_anvil"
+    },
+    "facing=north,uses=1": {
+      "model": "hardwrought:block/wooden_anvil"
+    },
+    "facing=north,uses=2": {
+      "model": "hardwrought:block/wooden_anvil"
+    },
+    "facing=north,uses=3": {
+      "model": "hardwrought:block/wooden_anvil"
+    },
+    "facing=north,uses=4": {
+      "model": "hardwrought:block/wooden_anvil"
+    },
+    "facing=north,uses=5": {
+      "model": "hardwrought:block/wooden_anvil"
+    },
+    "facing=north,uses=6": {
+      "model": "hardwrought:block/wooden_anvil"
+    },
+    "facing=north,uses=7": {
+      "model": "hardwrought:block/wooden_anvil"
+    },
+    "facing=north,uses=8": {
+      "model": "hardwrought:block/wooden_anvil_cracked"
+    },
+    "facing=north,uses=9": {
+      "model": "hardwrought:block/wooden_anvil_cracked"
+    },
+    "facing=north,uses=10": {
+      "model": "hardwrought:block/wooden_anvil_cracked"
+    },
+    "facing=north,uses=11": {
+      "model": "hardwrought:block/wooden_anvil_cracked"
+    },
+    "facing=north,uses=12": {
+      "model": "hardwrought:block/wooden_anvil_cracked"
+    },
+    "facing=north,uses=13": {
+      "model": "hardwrought:block/wooden_anvil_cracked"
+    },
+    "facing=north,uses=14": {
+      "model": "hardwrought:block/wooden_anvil_cracked"
+    },
+    "facing=north,uses=15": {
+      "model": "hardwrought:block/wooden_anvil_cracked"
+    },
+    "facing=north,uses=16": {
+      "model": "hardwrought:block/wooden_anvil_split"
+    },
+    "facing=north,uses=17": {
+      "model": "hardwrought:block/wooden_anvil_split"
+    },
+    "facing=north,uses=18": {
+      "model": "hardwrought:block/wooden_anvil_split"
+    },
+    "facing=north,uses=19": {
+      "model": "hardwrought:block/wooden_anvil_split"
+    },
+    "facing=north,uses=20": {
+      "model": "hardwrought:block/wooden_anvil_split"
+    },
+    "facing=north,uses=21": {
+      "model": "hardwrought:block/wooden_anvil_split"
+    },
+    "facing=north,uses=22": {
+      "model": "hardwrought:block/wooden_anvil_split"
+    },
+    "facing=north,uses=23": {
+      "model": "hardwrought:block/wooden_anvil_split"
+    },
+    "facing=east,uses=0": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 90
+    },
+    "facing=east,uses=1": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 90
+    },
+    "facing=east,uses=2": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 90
+    },
+    "facing=east,uses=3": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 90
+    },
+    "facing=east,uses=4": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 90
+    },
+    "facing=east,uses=5": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 90
+    },
+    "facing=east,uses=6": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 90
+    },
+    "facing=east,uses=7": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 90
+    },
+    "facing=east,uses=8": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 90
+    },
+    "facing=east,uses=9": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 90
+    },
+    "facing=east,uses=10": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 90
+    },
+    "facing=east,uses=11": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 90
+    },
+    "facing=east,uses=12": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 90
+    },
+    "facing=east,uses=13": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 90
+    },
+    "facing=east,uses=14": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 90
+    },
+    "facing=east,uses=15": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 90
+    },
+    "facing=east,uses=16": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 90
+    },
+    "facing=east,uses=17": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 90
+    },
+    "facing=east,uses=18": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 90
+    },
+    "facing=east,uses=19": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 90
+    },
+    "facing=east,uses=20": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 90
+    },
+    "facing=east,uses=21": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 90
+    },
+    "facing=east,uses=22": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 90
+    },
+    "facing=east,uses=23": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 90
+    },
+    "facing=south,uses=0": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 180
+    },
+    "facing=south,uses=1": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 180
+    },
+    "facing=south,uses=2": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 180
+    },
+    "facing=south,uses=3": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 180
+    },
+    "facing=south,uses=4": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 180
+    },
+    "facing=south,uses=5": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 180
+    },
+    "facing=south,uses=6": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 180
+    },
+    "facing=south,uses=7": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 180
+    },
+    "facing=south,uses=8": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 180
+    },
+    "facing=south,uses=9": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 180
+    },
+    "facing=south,uses=10": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 180
+    },
+    "facing=south,uses=11": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 180
+    },
+    "facing=south,uses=12": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 180
+    },
+    "facing=south,uses=13": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 180
+    },
+    "facing=south,uses=14": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 180
+    },
+    "facing=south,uses=15": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 180
+    },
+    "facing=south,uses=16": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 180
+    },
+    "facing=south,uses=17": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 180
+    },
+    "facing=south,uses=18": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 180
+    },
+    "facing=south,uses=19": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 180
+    },
+    "facing=south,uses=20": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 180
+    },
+    "facing=south,uses=21": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 180
+    },
+    "facing=south,uses=22": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 180
+    },
+    "facing=south,uses=23": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 180
+    },
+    "facing=west,uses=0": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 270
+    },
+    "facing=west,uses=1": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 270
+    },
+    "facing=west,uses=2": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 270
+    },
+    "facing=west,uses=3": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 270
+    },
+    "facing=west,uses=4": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 270
+    },
+    "facing=west,uses=5": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 270
+    },
+    "facing=west,uses=6": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 270
+    },
+    "facing=west,uses=7": {
+      "model": "hardwrought:block/wooden_anvil",
+      "y": 270
+    },
+    "facing=west,uses=8": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 270
+    },
+    "facing=west,uses=9": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 270
+    },
+    "facing=west,uses=10": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 270
+    },
+    "facing=west,uses=11": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 270
+    },
+    "facing=west,uses=12": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 270
+    },
+    "facing=west,uses=13": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 270
+    },
+    "facing=west,uses=14": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 270
+    },
+    "facing=west,uses=15": {
+      "model": "hardwrought:block/wooden_anvil_cracked",
+      "y": 270
+    },
+    "facing=west,uses=16": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 270
+    },
+    "facing=west,uses=17": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 270
+    },
+    "facing=west,uses=18": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 270
+    },
+    "facing=west,uses=19": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 270
+    },
+    "facing=west,uses=20": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 270
+    },
+    "facing=west,uses=21": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 270
+    },
+    "facing=west,uses=22": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 270
+    },
+    "facing=west,uses=23": {
+      "model": "hardwrought:block/wooden_anvil_split",
+      "y": 270
+    }
+  }
+}

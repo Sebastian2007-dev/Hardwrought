@@ -21,7 +21,9 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 import java.util.List;
@@ -57,6 +59,81 @@ public final class KnowledgeGameTests {
         helper.assertTrue(knowledge.knowledge(player).discovered().contains(
                         BuiltInRegistries.ITEM.getKey(Items.COAL)),
                 "Studying implies having discovered");
+        knowledge.forget(player.getUUID());
+        helper.succeed();
+    }
+
+    @GameTest
+    public void carryingSomethingAroundStudiesItToo(GameTestHelper helper) {
+        KnowledgeSystem knowledge = CoreLifecycle.require(helper.getLevel().getServer()).knowledge();
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        knowledge.forget(player.getUUID());
+        player.getInventory().clearContent();
+
+        player.getInventory().add(new ItemStack(Items.IRON_INGOT));
+        helper.assertTrue(knowledge.carry(player), "The first pass over the bag finds it");
+        helper.assertTrue(knowledge.level(player, Items.IRON_INGOT) == KnowledgeLevel.DISCOVERED,
+                "and seeing a thing for the first time is discovery, not study");
+
+        helper.assertTrue(knowledge.carry(player), "Still carrying it a pass later is news again");
+        helper.assertTrue(knowledge.level(player, Items.IRON_INGOT) == KnowledgeLevel.STUDIED,
+                "because a thing carried around has been looked at");
+        helper.assertTrue(!knowledge.carry(player), "and a third pass has nothing left to learn");
+
+        // Silent, unlike the acts: a bagful of new things must not be a wall of toasts.
+        helper.assertTrue(knowledge.pendingNotes(player.getUUID()).isEmpty(),
+                "Carrying says nothing; breaking, crafting, eating and examining do");
+
+        // What was put down stops short wherever it got to.
+        player.getInventory().clearContent();
+        player.getInventory().add(new ItemStack(Items.COAL));
+        knowledge.carry(player);
+        player.getInventory().clearContent();
+        knowledge.carry(player);
+        helper.assertTrue(knowledge.level(player, Items.COAL) == KnowledgeLevel.DISCOVERED,
+                "A thing carried for one pass and dropped is discovered and no more");
+
+        player.getInventory().clearContent();
+        knowledge.forget(player.getUUID());
+        helper.succeed();
+    }
+
+    @GameTest
+    public void keepingSomethingInHandLongEnoughStudiesIt(GameTestHelper helper) {
+        KnowledgeSystem knowledge = CoreLifecycle.require(helper.getLevel().getServer()).knowledge();
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        knowledge.forget(player.getUUID());
+
+        // An ingot is the case this exists for: nothing can be broken, cooked or crafted with it.
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_INGOT));
+        for (int pass = 0; pass < KnowledgeSystem.EXAMINATION_PASSES; pass++) {
+            helper.assertTrue(!knowledge.examine(player), "A glance at it is not yet study");
+            helper.assertTrue(knowledge.level(player, Items.IRON_INGOT) != KnowledgeLevel.STUDIED,
+                    "Section 82: study is an act, so it takes holding the thing a while");
+        }
+        helper.assertTrue(knowledge.examine(player), "Turning it over long enough is news");
+        helper.assertTrue(knowledge.level(player, Items.IRON_INGOT) == KnowledgeLevel.STUDIED,
+                "An item examined in the hand is studied");
+        helper.assertTrue(!knowledge.examine(player), "And holding it on teaches nothing further");
+
+        // Swapping hands mid-examination starts the count over rather than carrying it across.
+        knowledge.forget(player.getUUID());
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.COAL));
+        knowledge.examine(player);
+        knowledge.examine(player);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_INGOT));
+        for (int pass = 0; pass <= KnowledgeSystem.EXAMINATION_PASSES; pass++) knowledge.examine(player);
+        helper.assertTrue(knowledge.level(player, Items.COAL) != KnowledgeLevel.STUDIED,
+                "What was put down half-examined stays half-examined");
+        helper.assertTrue(knowledge.level(player, Items.IRON_INGOT) == KnowledgeLevel.STUDIED,
+                "And the thing actually held is the thing learned");
+
+        // An empty hand is nothing to examine, and does not leave the last item counting up.
+        knowledge.forget(player.getUUID());
+        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        for (int pass = 0; pass <= KnowledgeSystem.EXAMINATION_PASSES; pass++) {
+            helper.assertTrue(!knowledge.examine(player), "An empty hand teaches nothing");
+        }
         knowledge.forget(player.getUUID());
         helper.succeed();
     }
@@ -250,6 +327,99 @@ public final class KnowledgeGameTests {
         helper.succeed();
     }
 
+    /**
+     * The slot beside a recipe says what is really needed: the bench a crafting recipe asks for,
+     * the furnace hot enough for a smelting one — never vanilla's crafting table, which is not made.
+     */
+    @GameTest
+    public void aRecipeShowsTheBenchOrFurnaceItReallyNeeds(GameTestHelper helper) {
+        KnowledgeSystem knowledge = CoreLifecycle.require(helper.getLevel().getServer()).knowledge();
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        java.util.function.BiFunction<Item, String, Item> stationOf = (result, recipeId) ->
+                made(knowledge, player, result).recipes().stream()
+                        .filter(recipe -> recipe.id().equals(Identifier.parse(recipeId)))
+                        .findFirst()
+                        .map(recipe -> recipe.station().isEmpty() ? Items.AIR
+                                : recipe.station().options().getFirst().stack().getItem())
+                        .orElse(null);
+
+        helper.assertTrue(stationOf.apply(ModItems.SHAFT, "hardwrought:shaft") == ModBlocks.HEWN_WORKBENCH.asItem(),
+                "A shaft is made at the hewn bench, and the recipe says so");
+        helper.assertTrue(stationOf.apply(Items.FURNACE, "minecraft:furnace") == ModBlocks.NAILED_WORKBENCH.asItem(),
+                "a furnace at the nailed one");
+        helper.assertTrue(stationOf.apply(ModItems.FLINT_HATCHET, "hardwrought:flint_hatchet") == Items.AIR,
+                "and a flint hatchet needs no bench at all");
+
+        Item titanium = de.ipnats.hardwrought.metallurgy.ModMetals.ingot(de.ipnats.hardwrought.metallurgy.Metal.TITANIUM);
+        helper.assertTrue(stationOf.apply(titanium, "hardwrought:titanium_ingot_from_smelting") == Items.FURNACE,
+                "Titanium is too hot for a brick furnace, so its recipe shows the furnace it needs");
+        Item tin = de.ipnats.hardwrought.metallurgy.ModMetals.ingot(de.ipnats.hardwrought.metallurgy.Metal.TIN);
+        helper.assertTrue(stationOf.apply(tin, "hardwrought:tin_ingot_from_smelting")
+                        == ModBlocks.BRICK_FURNACE.asItem(),
+                "while tin melts in the brick furnace");
+        helper.succeed();
+    }
+
+    /** Grinding takes the crusher, a crank and a shaft; any of them alone is not the thought followed. */
+    @GameTest
+    public void grindingIsFollowedOnlyWithCrusherCrankAndShaft(GameTestHelper helper) {
+        JournalEntry grinding = Journal.chain().stream()
+                .filter(entry -> entry.id().equals(Hardwrought.id("breaking_it_finer"))).findFirst().orElseThrow();
+        PlayerKnowledge knowledge = PlayerKnowledge.empty();
+        knowledge.discover(BuiltInRegistries.ITEM.getKey(Items.RAW_COPPER));
+        helper.assertTrue(Journal.state(knowledge, grinding) == Journal.OPEN, "Raw copper brings the thought up");
+
+        knowledge.discover(Hardwrought.id("starter_crusher"));
+        helper.assertTrue(Journal.state(knowledge, grinding) == Journal.OPEN,
+                "A crusher alone does not follow it: nothing turns it yet");
+        var note = Journal.page(knowledge).stream()
+                .filter(entry -> entry.id().equals(grinding.id())).findFirst().orElseThrow();
+        helper.assertTrue(Hardwrought.id("hand_crank").equals(note.subject()),
+                "and the note points at the piece still missing, the crank");
+
+        helper.assertTrue(note.parts().size() == 3 && note.parts().get(0).held()
+                        && !note.parts().get(1).held() && !note.parts().get(2).held(),
+                "All three pieces are shown on their own, the crusher as held and the rest as shadows");
+
+        knowledge.discover(Hardwrought.id("hand_crank"));
+        helper.assertTrue(Journal.state(knowledge, grinding) == Journal.OPEN,
+                "Crusher and crank are still not enough without the shaft");
+        knowledge.discover(Hardwrought.id("shaft"));
+        helper.assertTrue(Journal.state(knowledge, grinding) == Journal.DONE,
+                "With the shaft as well, it is followed");
+        helper.succeed();
+    }
+
+    /**
+     * Machine recipes are read off the machine's own table, so every row it has is in the book
+     * without being listed anywhere else — and every one of them shows the machine that does it.
+     */
+    @GameTest
+    public void everyRowOfTheCrushersTableIsInTheBookWithTheCrusherBesideIt(GameTestHelper helper) {
+        KnowledgeSystem knowledge = CoreLifecycle.require(helper.getLevel().getServer()).knowledge();
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        Item crusher = ModBlocks.STARTER_CRUSHER.asItem();
+
+        var rows = de.ipnats.hardwrought.metallurgy.Crushing.worldRecipes();
+        helper.assertTrue(!rows.isEmpty(), "The crusher's table describes itself for the book");
+        for (var row : rows) {
+            Item powder = row.result().getItem();
+            CompendiumPagePayload page = made(knowledge, player, powder);
+            helper.assertTrue(page.recipes().stream().anyMatch(recipe -> recipe.id().equals(row.id())
+                            && recipe.station().options().stream().anyMatch(option -> option.stack().is(crusher))),
+                    "How " + BuiltInRegistries.ITEM.getKey(powder) + " is made shows " + row.id()
+                            + " with the crusher as its station");
+        }
+
+        CompendiumPagePayload uses = knowledge.compendium().answer(player, knowledge,
+                new CompendiumRequestPayload(CompendiumPagePayload.MODE_USAGES,
+                        BuiltInRegistries.ITEM.getKey(crusher), ""));
+        helper.assertTrue(uses.recipes().stream().filter(recipe -> recipe.id().getPath().startsWith("crushing/"))
+                        .count() == Math.min(rows.size(), CompendiumPagePayload.MAX_RECIPES),
+                "What the crusher is used for is everything it crushes");
+        helper.succeed();
+    }
+
     @GameTest
     public void thingsNobodyMakesStillHaveAnOrigin(GameTestHelper helper) {
         KnowledgeSystem knowledge = CoreLifecycle.require(helper.getLevel().getServer()).knowledge();
@@ -362,6 +532,35 @@ public final class KnowledgeGameTests {
     }
 
     @GameTest
+    public void theKnowledgeCommandUnlocksOneThingOrEverythingAndForgetsIt(GameTestHelper helper) {
+        var server = helper.getLevel().getServer();
+        KnowledgeSystem knowledge = CoreLifecycle.require(server).knowledge();
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        // The server's own source, acting as the player: operator rights, and "self" is the player.
+        var source = server.createCommandSourceStack().withEntity(player).withSuppressedOutput();
+        knowledge.forget(player.getUUID());
+
+        server.getCommands().performPrefixedCommand(source, "hardwrought knowledge unlock minecraft:diamond");
+        helper.assertTrue(knowledge.level(player, Items.DIAMOND) == KnowledgeLevel.STUDIED,
+                "Unlocking one item studies exactly that item");
+        helper.assertTrue(knowledge.level(player, Items.EMERALD) == KnowledgeLevel.UNKNOWN,
+                "and nothing else");
+
+        server.getCommands().performPrefixedCommand(source, "hardwrought knowledge unlock all");
+        helper.assertTrue(knowledge.level(player, Items.EMERALD) == KnowledgeLevel.STUDIED
+                        && knowledge.level(player, ModItems.STARTER_CRUSHER) == KnowledgeLevel.STUDIED,
+                "Unlocking all studies every entry, the mod's own included");
+        helper.assertTrue(knowledge.studyAll(player) == 0, "after which there is nothing left to learn");
+        helper.assertTrue(knowledge.pendingNotes(player.getUUID()).size() <= KnowledgeNotePayload.MAX_NOTES,
+                "and it does not queue a toast per entry");
+
+        server.getCommands().performPrefixedCommand(source, "hardwrought knowledge forget");
+        helper.assertTrue(knowledge.level(player, Items.DIAMOND) == KnowledgeLevel.UNKNOWN,
+                "Forgetting empties the compendium again");
+        helper.succeed();
+    }
+
+    @GameTest
     public void unknownSubjectsAndNonsenseRequestsAnswerEmpty(GameTestHelper helper) {
         KnowledgeSystem knowledge = CoreLifecycle.require(helper.getLevel().getServer()).knowledge();
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
@@ -403,8 +602,15 @@ public final class KnowledgeGameTests {
         knowledge.forget(player.getUUID());
 
         List<CompendiumPagePayload.Note> blank = journal(knowledge, player);
-        helper.assertTrue(blank.size() == Journal.chain().size(),
-                "Every thought is on the page, read or not");
+        helper.assertTrue(blank.size() == Journal.chain().stream().filter(entry -> !entry.ultraOnly()).count(),
+                "Every thought is on the page, read or not; the Ultra ones only in an Ultra world");
+        Journal.setUltra(true);
+        try {
+            helper.assertTrue(journal(knowledge, player).getFirst().id().equals(Hardwrought.id("something_to_carry")),
+                    "In Ultra the first problem is carrying anything at all");
+        } finally {
+            Journal.setUltra(de.ipnats.hardwrought.survival.Ultra.active(helper.getLevel().getServer()));
+        }
         helper.assertTrue(blank.getFirst().state() == Journal.OPEN,
                 "The first thought is there the moment the book is opened");
         helper.assertTrue(blank.get(1).state() == Journal.HIDDEN,

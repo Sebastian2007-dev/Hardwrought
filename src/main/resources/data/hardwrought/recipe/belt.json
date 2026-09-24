@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "L": "minecraft:leather"
+  },
+  "pattern": [
+    "LLL"
+  ],
+  "result": {
+    "id": "hardwrought:belt",
+    "count": 2
+  }
+}

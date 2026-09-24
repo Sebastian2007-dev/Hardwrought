@@ -62,6 +62,8 @@ public record CompendiumPagePayload(int mode, Identifier subject, List<Entry> en
     public static final int MAX_OPTIONS = 16;
     /** The journal is a handwritten chain, not a registry dump; it never grows past this. */
     public static final int MAX_NOTES = 64;
+    /** Pieces one thought may ask for together; as many as fit side by side on a page. */
+    public static final int MAX_PARTS = 6;
 
     /** One line of a shelf: what it is, and how well it is known. */
     public record Entry(Identifier id, int level) { }
@@ -77,8 +79,22 @@ public record CompendiumPagePayload(int mode, Identifier subject, List<Entry> en
      * @param subject what the entry points at, so the browser can draw it and jump to its recipe;
      *                null while the entry is still unreadable
      * @param state   one of {@code Journal.HIDDEN}, {@code OPEN} or {@code DONE}
+     * @param parts   for a thought that takes several things together, each of them and whether the
+     *                player has held it yet, so the book can show every piece on its own; empty for
+     *                any other thought, and always empty while a thought is unread
      */
-    public record Note(Identifier id, Identifier subject, int state) { }
+    public record Note(Identifier id, Identifier subject, int state, List<Part> parts) {
+        public Note {
+            parts = parts == null ? List.of() : List.copyOf(parts);
+        }
+
+        public Note(Identifier id, Identifier subject, int state) {
+            this(id, subject, state, List.of());
+        }
+    }
+
+    /** One of the several things a thought asks for, and whether this player has held it. */
+    public record Part(Identifier id, boolean held) { }
 
     /**
      * One place a thing is found.
@@ -157,7 +173,13 @@ public record CompendiumPagePayload(int mode, Identifier subject, List<Entry> en
             for (int index = 0; index < noteCount; index++) {
                 Identifier note = buffer.readIdentifier();
                 Identifier points = buffer.readBoolean() ? buffer.readIdentifier() : null;
-                journal.add(new Note(note, points, buffer.readVarInt()));
+                int state = buffer.readVarInt();
+                int partCount = Math.min(buffer.readVarInt(), MAX_PARTS);
+                List<Part> parts = new ArrayList<>(partCount);
+                for (int part = 0; part < partCount; part++) {
+                    parts.add(new Part(buffer.readIdentifier(), buffer.readBoolean()));
+                }
+                journal.add(new Note(note, points, state, parts));
             }
             return new CompendiumPagePayload(mode, subject, entries, recipes, sources, journal);
         }
@@ -194,6 +216,11 @@ public record CompendiumPagePayload(int mode, Identifier subject, List<Entry> en
                 buffer.writeBoolean(note.subject() != null);
                 if (note.subject() != null) buffer.writeIdentifier(note.subject());
                 buffer.writeVarInt(note.state());
+                buffer.writeVarInt(Math.min(note.parts().size(), MAX_PARTS));
+                for (int part = 0; part < Math.min(note.parts().size(), MAX_PARTS); part++) {
+                    buffer.writeIdentifier(note.parts().get(part).id());
+                    buffer.writeBoolean(note.parts().get(part).held());
+                }
             }
         }
 
