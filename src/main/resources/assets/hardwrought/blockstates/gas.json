@@ -1,0 +1,145 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "hardwrought:block/gas/clear"
+      }
+    },
+    {
+      "when": {
+        "carbon_dioxide": "1"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/haze_1"
+      }
+    },
+    {
+      "when": {
+        "carbon_dioxide": "0",
+        "decayed_carbon_dioxide": "1"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/haze_1"
+      }
+    },
+    {
+      "when": {
+        "carbon_dioxide": "2"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/haze_2"
+      }
+    },
+    {
+      "when": {
+        "carbon_dioxide": "0",
+        "decayed_carbon_dioxide": "2"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/haze_2"
+      }
+    },
+    {
+      "when": {
+        "carbon_dioxide": "3"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/haze_3"
+      }
+    },
+    {
+      "when": {
+        "carbon_dioxide": "0",
+        "decayed_carbon_dioxide": "3"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/haze_3"
+      }
+    },
+    {
+      "when": {
+        "carbon_dioxide": "4"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/haze_4"
+      }
+    },
+    {
+      "when": {
+        "carbon_dioxide": "0",
+        "decayed_carbon_dioxide": "4"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/haze_4"
+      }
+    },
+    {
+      "when": {
+        "carbon_dioxide": "5"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/haze_5"
+      }
+    },
+    {
+      "when": {
+        "carbon_dioxide": "0",
+        "decayed_carbon_dioxide": "5"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/haze_5"
+      }
+    },
+    {
+      "when": {
+        "carbon_dioxide": "6"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/haze_6"
+      }
+    },
+    {
+      "when": {
+        "carbon_dioxide": "0",
+        "decayed_carbon_dioxide": "6"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/haze_6"
+      }
+    },
+    {
+      "when": {
+        "carbon_dioxide": "7"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/haze_7"
+      }
+    },
+    {
+      "when": {
+        "carbon_dioxide": "0",
+        "decayed_carbon_dioxide": "7"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/haze_7"
+      }
+    },
+    {
+      "when": {
+        "carbon_dioxide": "8"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/haze_8"
+      }
+    },
+    {
+      "when": {
+        "carbon_dioxide": "0",
+        "decayed_carbon_dioxide": "8"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/haze_8"
+      }
+    }
+  ]
+}

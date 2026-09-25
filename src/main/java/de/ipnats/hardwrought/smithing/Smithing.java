@@ -33,8 +33,8 @@ public final class Smithing {
     /** Coldest a piece can be hammered without straining it. */
     public static final double WORKING_MIN = 0.55;
     /**
-     * Hottest a fire takes it, as a share of its melting point: all the way up to it. A piece follows
-     * the fire it lies in, and only its own melting point stops it.
+     * Top of the useful hammering range as a share of the melting point. This describes when the
+     * anvil can work a piece; it does not cap the temperature a hotter forge can put into it.
      */
     public static final double WORKING_MAX = 1.0;
     /** Quenched from above this, iron hardens. */
@@ -100,6 +100,16 @@ public final class Smithing {
             if (recipe.input() == input && BuiltInRegistries.ITEM.getKey(recipe.result()).equals(result)) return recipe;
         }
         return null;
+    }
+
+    /** Whether an item is a plain metal bar rather than a finished part made from bars. */
+    public static boolean isIngot(Item item) {
+        if (item == Items.IRON_INGOT || item == Items.COPPER_INGOT || item == Items.GOLD_INGOT
+                || item == de.ipnats.hardwrought.core.registry.ModItems.BRONZE_INGOT) return true;
+        for (Metal metal : Metal.values()) {
+            if (item == ModMetals.ingot(metal)) return true;
+        }
+        return false;
     }
 
     public static OptionalDouble meltingPoint(Item item, Map<Identifier, MaterialDefinition> materials) {

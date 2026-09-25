@@ -63,9 +63,11 @@ Pixel tief statt nur zwei bis vier. Kurze dunkle Beilkerben mit einzelnen hellen
 kleine Ausbrüche an der Übergangslinie zeigen die stärkere Bearbeitung. Keine Brettfugen, kein
 Querriegel und kein Plankenmosaik.
 
-**Front.** Derselbe Aufbau wie die Seite. Drei kleine, dunkle geschmiedete Nagelköpfe sitzen in der
-behauenen Zone und unterscheiden die genagelte Stufe, ohne den Stammcharakter zu überdecken. Kein
-Eisenband und keine Zwinge.
+**Front.** Derselbe Aufbau wie die Seite. Drei kleine, runde geschmiedete Nagelköpfe sitzen
+unregelmäßig in der behauenen Zone. Ein einzelner kühler Lichtpunkt und eine dunkle Unterkante
+lassen sie als gehämmertes Eisen statt als schwarze Löcher erkennen. Die asymmetrische Anordnung
+bildet kein Gesicht und unterscheidet die genagelte Stufe, ohne den Stammcharakter zu überdecken.
+Kein Eisenband und keine Zwinge.
 
 **Unten.** Unveränderte Stirnfläche des ursprünglichen Logs beziehungsweise Stems. Sie zeigt klar,
 aus welcher Holzart die Werkbank gefertigt wurde.

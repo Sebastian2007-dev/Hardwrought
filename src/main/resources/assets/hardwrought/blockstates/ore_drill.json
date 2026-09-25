@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "formed=false,running=false": {
+      "model": "hardwrought:block/ore_drill"
+    },
+    "formed=true,running=false": {
+      "model": "hardwrought:block/ore_drill_formed/head"
+    },
+    "formed=false,running=true": {
+      "model": "hardwrought:block/ore_drill"
+    },
+    "formed=true,running=true": {
+      "model": "hardwrought:block/ore_drill_formed/head"
+    }
+  }
+}

@@ -1,9 +1,7 @@
 package de.ipnats.hardwrought.core.debug;
 
-import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import de.ipnats.hardwrought.core.events.CoreLifecycle;
-import de.ipnats.hardwrought.environment.GasMixture;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
@@ -34,12 +32,14 @@ public final class DebugCommands {
                         .then(literal("materials").executes(context -> materials(context.getSource())))
                         .then(literal("combat").executes(context -> combat(context.getSource())))
                         .then(literal("water").executes(context -> water(context.getSource())))
+                        .then(literal("nutrition").then(literal("satisfy")
+                                .executes(context -> satisfyNutrition(context.getSource()))))
                         .then(literal("air").executes(context -> air(context.getSource()))
-                                .then(literal("set")
-                                        .then(gas("oxygen", GasMixture.MAX_OXYGEN))
-                                        .then(gas("carbon_dioxide", GasMixture.MAX_CARBON_DIOXIDE))
-                                        .then(gas("methane", GasMixture.MAX_METHANE))
-                                        .then(gas("smoke", 1.0))))
+                                .then(literal("gas")
+                                        .then(gas(de.ipnats.hardwrought.environment.Gas.CARBON_DIOXIDE))
+                                        .then(gas(de.ipnats.hardwrought.environment.Gas.DECAYED_CARBON_DIOXIDE))
+                                        .then(gas(de.ipnats.hardwrought.environment.Gas.CARBON_MONOXIDE))
+                                        .then(gas(de.ipnats.hardwrought.environment.Gas.METHANE))))
                         .then(literal("profile").then(literal("reset").executes(context -> {
                             CoreLifecycle.require(context.getSource().getServer()).scheduler().resetProfiles();
                             context.getSource().sendSuccess(() -> Component.literal("Hardwrought: Profiling zurueckgesetzt."), false);
@@ -140,26 +140,34 @@ public final class DebugCommands {
     }
 
     /**
-     * Balancing and testing tool: the interesting states of the air model otherwise take minutes of
-     * standing in a sealed room to reach.
+     * Balancing and testing tool: sets how much of one gas is in the block at the player's head. The
+     * gas then does what gas does, so this is also the quickest way to watch it move.
      */
-    private static LiteralArgumentBuilder<CommandSourceStack> gas(String component, double maximum) {
-        return literal(component).then(argument("value", DoubleArgumentType.doubleArg(0, maximum))
-                .executes(context -> setGas(context.getSource(), component,
-                        DoubleArgumentType.getDouble(context, "value"))));
+    private static LiteralArgumentBuilder<CommandSourceStack> gas(de.ipnats.hardwrought.environment.Gas gas) {
+        return literal(gas.id()).then(argument("units",
+                        com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, de.ipnats.hardwrought.environment.Gas.CAPACITY))
+                .executes(context -> setGas(context.getSource(), gas,
+                        com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "units"))));
     }
 
-    private static int setGas(CommandSourceStack source, String component, double value)
+    private static int setGas(CommandSourceStack source, de.ipnats.hardwrought.environment.Gas gas, int units)
             throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         var player = source.getPlayerOrException();
-        var environment = CoreLifecycle.require(source.getServer()).environment();
-        GasMixture updated = environment.reading(player).gases().with(component, value);
-        if (!environment.overrideAtmosphere(player, updated)) {
-            source.sendFailure(Component.literal("Hardwrought: nur in einem geschlossenen Raum moeglich."));
+        var level = player.level();
+        var pos = net.minecraft.core.BlockPos.containing(player.getEyePosition());
+        var state = level.getBlockState(pos);
+        if (!de.ipnats.hardwrought.environment.Gases.passable(state)) {
+            source.sendFailure(Component.literal("Hardwrought: hier ist kein Platz fuer Gas."));
             return 0;
         }
+        int now = de.ipnats.hardwrought.environment.Gases.units(state, gas);
+        int others = de.ipnats.hardwrought.environment.Gases.total(state) - now;
+        int wanted = Math.min(units, de.ipnats.hardwrought.environment.Gas.CAPACITY - others);
+        level.setBlock(pos, de.ipnats.hardwrought.environment.Gases.with(state, gas, wanted - now),
+                net.minecraft.world.level.block.Block.UPDATE_ALL);
         source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
-                "Hardwrought: %s auf %.4f gesetzt.", component, value)), false);
+                "Hardwrought: %s am Kopf auf %d von %d Einheiten gesetzt.", gas.id(), wanted,
+                de.ipnats.hardwrought.environment.Gas.CAPACITY)), false);
         return 1;
     }
 
@@ -239,14 +247,27 @@ public final class DebugCommands {
         return 1;
     }
 
+    /** Balancing and testing tool: every nutrient back to the middle of its healthy band. */
+    private static int satisfyNutrition(CommandSourceStack source)
+            throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        var player = source.getPlayerOrException();
+        var survival = CoreLifecycle.require(source.getServer()).survival();
+        survival.setVitalsForTesting(player, survival.vitals(player)
+                .withNutrition(de.ipnats.hardwrought.survival.Nutrition.START));
+        source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "Hardwrought: alle Naehrstoffe auf %.0f gesetzt.", de.ipnats.hardwrought.survival.Nutrient.START)), false);
+        return 1;
+    }
+
     private static int air(CommandSourceStack source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         var player = source.getPlayerOrException();
         var reading = CoreLifecycle.require(source.getServer()).environment().reading(player);
         var gases = reading.gases();
         source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
-                "%s, %d Bloecke | O2=%.3f%% CO2=%.3f%% CH4=%.3f%% Rauch=%.2f",
+                "%s, %d Bloecke | O2=%.3f%% CO2=%.3f%% CH4=%.3f%% CO=%.0fppm",
                 reading.sealed() ? "Geschlossener Raum" : "Im Freien", reading.volume(),
-                gases.oxygen() * 100, gases.carbonDioxide() * 100, gases.methane() * 100, gases.smoke())), false);
+                gases.oxygen() * 100, gases.carbonDioxide() * 100, gases.methane() * 100,
+                gases.carbonMonoxide() * 1_000_000)), false);
         source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
                 "Raumtemperatur %.1f C | Wind %.2f | Isolierung %.2f",
                 reading.temperature(), reading.wind(), reading.insulation())), false);

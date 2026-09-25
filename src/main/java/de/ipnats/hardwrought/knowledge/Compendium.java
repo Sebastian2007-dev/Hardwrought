@@ -106,8 +106,16 @@ public final class Compendium {
         }
         // The browser needs to know whether it may name the subject in its own title, so the one
         // entry a lookup page carries is the subject itself.
-        List<CompendiumPagePayload.Entry> heading = List.of(new CompendiumPagePayload.Entry(subject,
-                knowledge.knowledge(player).level(subject).ordinal()));
+        List<CompendiumPagePayload.Entry> heading = new ArrayList<>();
+        heading.add(new CompendiumPagePayload.Entry(subject, knowledge.knowledge(player).level(subject).ordinal()));
+        // After it, every block of a structure the subject is built into, so the browser can tell
+        // whether the player knows enough of it to be shown how it goes together.
+        for (Multiblocks.Multiblock multiblock : Multiblocks.containing(subject)) {
+            for (Identifier block : multiblock.blocks()) {
+                if (block.equals(subject) || heading.stream().anyMatch(entry -> entry.id().equals(block))) continue;
+                heading.add(new CompendiumPagePayload.Entry(block, knowledge.knowledge(player).level(block).ordinal()));
+            }
+        }
         ContextMap context = SlotDisplayContext.fromLevel(player.level());
         var runtime = de.ipnats.hardwrought.core.events.CoreLifecycle.find(server);
         Map<Identifier, de.ipnats.hardwrought.core.registry.MaterialDefinition> materials =

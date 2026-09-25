@@ -90,6 +90,7 @@ public final class GeologyEvents {
         RockType rock = Geology.rockAt(seed, pos.getX(), pos.getZ());
         player.sendSystemMessage(Component.translatable("message.hardwrought.prospect_rock",
                 Component.translatable("rock.hardwrought." + rock.serializedName())));
+        if (rock == RockType.SEDIMENTARY) readForOil(player, seed, pos, precise);
 
         OreDeposit here = Geology.depositAt(seed, profiles, pos.getX(), pos.getY(), pos.getZ());
         if (here != null) {
@@ -118,6 +119,33 @@ public final class GeologyEvents {
                         + bearing(pos, closest.centre()).getSerializedName()),
                 closest.centre().getY()).withStyle(ChatFormatting.AQUA));
         level.playSound(null, pos, SoundEvents.STONE_HIT, SoundSource.BLOCKS, 0.8f, 1.0f);
+    }
+
+    /**
+     * Sections 60 and 61: sedimentary rock over oil smells of it, and the smell carries. Standing over
+     * a reservoir every pickaxe tells so, with the depth of its top; nearby, a plain one notices the
+     * smell and a proper tool gives the bearing and the distance to its middle.
+     */
+    private static void readForOil(ServerPlayer player, long seed, BlockPos pos, boolean precise) {
+        Reservoir under = Reservoirs.under(seed, pos.getX(), pos.getZ());
+        if (under != null) {
+            player.sendSystemMessage(Component.translatable("message.hardwrought.prospect_reservoir_under",
+                    Component.translatable("reservoir.hardwrought." + under.kind().serializedName()),
+                    under.topAt(pos.getX(), pos.getZ())).withStyle(ChatFormatting.DARK_GREEN));
+            return;
+        }
+        List<Reservoir> near = Reservoirs.nearby(seed, pos, precise ? SURVEY_RANGE : TRACE_RANGE * 2);
+        if (near.isEmpty()) return;
+        Reservoir closest = near.getFirst();
+        Component kind = Component.translatable("reservoir.hardwrought." + closest.kind().serializedName());
+        if (!precise) {
+            player.sendSystemMessage(Component.translatable("message.hardwrought.prospect_reservoir_traces", kind));
+            return;
+        }
+        player.sendSystemMessage(Component.translatable("message.hardwrought.prospect_reservoir_bearing", kind,
+                Math.round(closest.horizontalDistance(pos)),
+                Component.translatable("direction.hardwrought." + bearing(pos, closest.centre()).getSerializedName()),
+                closest.topAt(closest.centre().getX(), closest.centre().getZ())).withStyle(ChatFormatting.DARK_GREEN));
     }
 
     /** Which way to walk. Only the four cardinal directions: this is a hint, not a map. */

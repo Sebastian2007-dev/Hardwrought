@@ -34,7 +34,7 @@ public record DepositProfile(Identifier ore, int weight, int minY, int maxY,
             Codec.intRange(4, 128).optionalFieldOf("max_radius", 44).forGetter(DepositProfile::maxRadius),
             Codec.doubleRange(0.0, 1.0).optionalFieldOf("min_grade", 0.03).forGetter(DepositProfile::minGrade),
             Codec.doubleRange(0.0, 1.0).optionalFieldOf("max_grade", 0.20).forGetter(DepositProfile::maxGrade),
-            Codec.intRange(1, 3).optionalFieldOf("drill_tier", 1).forGetter(DepositProfile::drillTier)
+            Codec.intRange(1, 5).optionalFieldOf("drill_tier", 1).forGetter(DepositProfile::drillTier)
     ).apply(instance, DepositProfile::new));
 
     public DepositProfile {

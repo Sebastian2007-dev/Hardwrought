@@ -28,9 +28,10 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
 
 /**
- * The forge — the smith's hearth. Eight refractory bricks in hand line it, once; anything else opens
- * it, with its fuel, the pieces lying in it and how hot it is. A bare hand that takes a glowing piece
- * out still gets burnt for it.
+ * The forge — the smith's hearth. Eight refractory bricks in hand line it, once; a flint and steel,
+ * a fire charge or lighting sticks light the coal in it; anything else opens it, with its fuel, the
+ * pieces lying in it and how hot it is. A bare hand that takes a glowing piece out still gets burnt
+ * for it, and so do feet that stand in the fire.
  */
 public class ForgeBlock extends Block implements EntityBlock {
     public static final BooleanProperty LIT = BooleanProperty.create("lit");
@@ -40,16 +41,19 @@ public class ForgeBlock extends Block implements EntityBlock {
      * 0 is a forge on its own; see {@link ForgeMultiblock#partIndex}.
      */
     public static final IntegerProperty PART = IntegerProperty.create("part", 0, ForgeMultiblock.MAX_PART);
+    /** How full the pit is with coal, 0 for an empty hearth; see {@link ForgeBlockEntity#fill}. */
+    public static final IntegerProperty FUEL = IntegerProperty.create("fuel", 0, 4);
     public static final int LINING_BRICKS = 8;
 
     public ForgeBlock(Properties properties) {
         super(properties);
-        registerDefaultState(stateDefinition.any().setValue(LIT, false).setValue(LINED, false).setValue(PART, 0));
+        registerDefaultState(stateDefinition.any().setValue(LIT, false).setValue(LINED, false).setValue(PART, 0)
+                .setValue(FUEL, 0));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(LIT, LINED, PART);
+        builder.add(LIT, LINED, PART, FUEL);
     }
 
     /** Ticks of fire one item of fuel is worth, or 0 where it is not fuel for a forge. */
@@ -59,9 +63,15 @@ public class ForgeBlock extends Block implements EntityBlock {
         return 0;
     }
 
+    /** Whether this lights a forge: a flint and steel, a fire charge, or the lighting sticks. */
+    public static boolean lights(ItemStack stack) {
+        return stack.is(Items.FLINT_AND_STEEL) || stack.is(Items.FIRE_CHARGE) || stack.is(ModItems.LIGHTING_STICKS);
+    }
+
     @Override
     protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                           Player player, InteractionHand hand, BlockHitResult hit) {
+        if (lights(stack)) return light(stack, level, pos, player, hand);
         if (!stack.is(ModItems.REFRACTORY_BRICK)) return InteractionResult.TRY_WITH_EMPTY_HAND;
         if (!(level.getBlockEntity(pos) instanceof ForgeBlockEntity)) return InteractionResult.PASS;
         ForgeMultiblock.Structure structure = ForgeMultiblock.getOrForm(level, pos);
@@ -81,6 +91,42 @@ public class ForgeBlock extends Block implements EntityBlock {
         if (!keep) stack.shrink(LINING_BRICKS);
         level.playSound(null, pos, SoundEvents.STONE_PLACE, SoundSource.BLOCKS, 1.0f, 0.8f);
         return InteractionResult.SUCCESS;
+    }
+
+    /**
+     * Sets the coal in the pit alight. Coal laid in a forge does not catch by itself; once lit, the
+     * fire takes the next coal as each one burns down, and goes out when there is none left.
+     */
+    private InteractionResult light(ItemStack stack, Level level, BlockPos pos, Player player, InteractionHand hand) {
+        if (!(level.getBlockEntity(pos) instanceof ForgeBlockEntity forge)) return InteractionResult.PASS;
+        if (forge.burnTicks() > 0) return InteractionResult.TRY_WITH_EMPTY_HAND;
+        if (level.isClientSide()) return InteractionResult.SUCCESS;
+        ForgeMultiblock.getOrForm(level, pos);
+        if (!forge.working().ignite()) {
+            if (player instanceof ServerPlayer worker) {
+                worker.sendSystemMessage(Component.translatable("message.hardwrought.forge_needs_fuel"), true);
+            }
+            return InteractionResult.FAIL;
+        }
+        if (stack.is(Items.FIRE_CHARGE)) {
+            level.playSound(null, pos, SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 1.0f, 1.0f);
+            if (!player.getAbilities().instabuild) stack.shrink(1);
+        } else {
+            level.playSound(null, pos, SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 1.0f,
+                    level.getRandom().nextFloat() * 0.4f + 0.8f);
+            stack.hurtAndBreak(1, player, hand == InteractionHand.MAIN_HAND
+                    ? net.minecraft.world.entity.EquipmentSlot.MAINHAND : net.minecraft.world.entity.EquipmentSlot.OFFHAND);
+        }
+        return InteractionResult.SUCCESS;
+    }
+
+    /** Standing in a burning hearth burns, carefully or not. */
+    @Override
+    public void stepOn(Level level, BlockPos pos, BlockState state, net.minecraft.world.entity.Entity entity) {
+        if (state.getValue(LIT) && !entity.fireImmune() && level instanceof ServerLevel server) {
+            entity.hurtServer(server, level.damageSources().hotFloor(), 1.0f);
+        }
+        super.stepOn(level, pos, state, entity);
     }
 
     /** Opens the forge: its fuel, its pieces, and how hot it is. Any block of a joined forge opens the whole. */

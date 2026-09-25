@@ -15,7 +15,8 @@ import java.util.Locale;
 /**
  * The primitive countermeasure of specification section 18.3. Carbon dioxide and a thin atmosphere
  * give no warning of their own, so without an instrument a player only ever sees symptoms. Carrying
- * this lamp turns the air readings on in the HUD, and using it reports the exact values once.
+ * this lamp turns the warnings on in the HUD, and using it reports what the air around the player's
+ * head is made of.
  *
  * <p>It is deliberately the simplest step of the progression the section describes. Fuel, a gauze
  * flame that reacts to methane on its own, and the later detectors belong to the technology
@@ -49,12 +50,14 @@ public final class SafetyLampItem extends Item {
             serverPlayer.sendSystemMessage(Component.translatable("message.hardwrought.safety_lamp_reading",
                     String.format(Locale.ROOT, "%.1f", gases.oxygen() * 100),
                     String.format(Locale.ROOT, "%.2f", gases.carbonDioxide() * 100),
-                    String.format(Locale.ROOT, "%.2f", gases.methane() * 100)));
+                    String.format(Locale.ROOT, "%.2f", gases.methane() * 100),
+                    String.format(Locale.ROOT, "%.0f", gases.carbonMonoxide() * 1_000_000)));
             if (gases.explosive()) {
                 serverPlayer.sendSystemMessage(Component.translatable("message.hardwrought.safety_lamp_firedamp")
                         .withStyle(ChatFormatting.RED));
             } else if (gases.oxygen() < GasMixture.OXYGEN_DANGEROUS
-                    || gases.carbonDioxide() > GasMixture.CARBON_DIOXIDE_SEVERE) {
+                    || gases.carbonDioxide() > GasMixture.CARBON_DIOXIDE_SEVERE
+                    || gases.carbonMonoxide() >= GasMixture.CARBON_MONOXIDE_SEVERE) {
                 serverPlayer.sendSystemMessage(Component.translatable("message.hardwrought.safety_lamp_bad_air")
                         .withStyle(ChatFormatting.GOLD));
             }

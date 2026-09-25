@@ -1,10 +1,10 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
-    "axle": "minecraft:block/stripped_oak_log",
-    "arm": "minecraft:block/oak_planks",
-    "grip": "minecraft:block/stripped_spruce_log",
-    "particle": "minecraft:block/oak_planks"
+    "axle": "hardwrought:block/hardwrought/shaft_side",
+    "arm": "hardwrought:block/hardwrought/machine_boards",
+    "grip": "hardwrought:block/hardwrought/dark_handle",
+    "particle": "hardwrought:block/hardwrought/machine_boards"
   },
   "elements": [
     {

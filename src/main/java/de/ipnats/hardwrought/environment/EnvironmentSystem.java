@@ -30,8 +30,12 @@ import java.util.UUID;
 
 /**
  * Milestone-3 environment: the unified model of specification section 13. It answers what the air at
- * a position is made of, how warm it is and how much wind reaches it, and it owns the hazards that
- * belong to the world rather than to a player: methane ignition and fires that run out of oxygen.
+ * a position is made of, how warm it is and how much wind reaches it.
+ *
+ * <p>The air itself is in the world, as gas blocks (see {@link GasBlock}): what a player breathes is
+ * whatever is in the block their head is in. This system lets the fires, the breath and the coal
+ * seams around the players put their gas out ({@link GasSources}). Rooms are still scanned, but only
+ * for what is a property of a room: how warm it is and how well it keeps its warmth.
  *
  * <p>Effects on a player — stamina, fatigue, body temperature, damage — stay in the survival system,
  * which reads the typed {@link EnvironmentReading} from here. That keeps the dependency one-way.
@@ -49,49 +53,21 @@ public final class EnvironmentSystem {
     /** The catch-up applied when a room has been unattended for a long time. */
     private static final double MAX_CATCH_UP_SECONDS = 600.0;
 
-    // Balancing starting values, expressed per second and divided by the room volume in blocks.
-    //
-    // Calibrated against the leak rate below, which is what decides where a room settles:
-    //   equilibrium oxygen = 0.209 - (rate / volume) / SEALED_VENTILATION
-    // A sealed 30-block hut therefore settles just at the impaired threshold and stays survivable,
-    // a 15-block chamber gets dangerous, and a coffin-sized 8-block box still kills. Breathing has
-    // to be the slow part; a fire is what makes air disappear quickly.
-    private static final double BREATH_OXYGEN = 0.005;
-    private static final double BREATH_CARBON_DIOXIDE = 0.003;
-    private static final double COMBUSTION_OXYGEN = 0.030;
-    private static final double COMBUSTION_CARBON_DIOXIDE = 0.025;
-    private static final double COMBUSTION_SMOKE = 0.22;
+    /** Degrees a room warms per unit of fire in it, divided by its volume. */
     private static final double COMBUSTION_HEAT = 800.0;
     private static final double MAX_ROOM_HEAT = 45.0;
-    /**
-     * Section 18.3: a deep, coal-bearing pocket fills slowly. A fully coal-lined 27-block room needs
-     * roughly a minute of standing still to reach the flammability window, bare rock several times
-     * that. It has to be a hazard a player can walk away from, not an instant bomb.
-     */
-    private static final double METHANE_SEEP = 0.020;
-    private static final double SEALED_VENTILATION = 0.004;
-    /**
-     * Section 18: ventilation is a matter of degree, not something a room either has or has not. A
-     * grille, a fence or an open door bounds the room and still exchanges air, so the opening area
-     * raises the exchange rate relative to the volume behind it. Calibrated so that one open door
-     * turns over the air of an ordinary room in well under a minute: with the door open there is
-     * nothing in the way, and the room simply breathes with the outside.
-     */
-    private static final double APERTURE_VENTILATION = 1.20;
     private static final double TEMPERATURE_RELAXATION = 0.10;
     private static final int MIN_EFFECTIVE_VOLUME = 8;
-    /** Section 19: a flame needs oxygen. Below this the fires in the room go out. */
+    /** Section 19: a flame needs oxygen. Air thinner than this, high up, will not keep one alight. */
     public static final double FIRE_MINIMUM_OXYGEN = 0.130;
     /**
-     * Not every flame eats the same amount of air. An open fire or lava is the full measure; a
-     * campfire or a furnace carries its own smoke column upward and burns contained, so it takes
-     * much less; a torch or a candle barely counts.
+     * Not every flame warms a room the same. An open fire or lava is the full measure; a campfire or a
+     * furnace sends most of its heat up with its fumes; a torch or a candle barely counts.
      */
     private static final double WEAK_FLAME_WEIGHT = 0.15;
     private static final double CONTAINED_FLAME_WEIGHT = 0.40;
-    /** How much rock has to sit above a room before it counts as a deep cave at all. */
-    private static final int METHANE_MIN_COVER = 24;
-    private static final int METHANE_FULL_COVER = 84;
+    /** One block of a forge's open bed of coal. Every block of a joined hearth burns. */
+    public static final double FORGE_FLAME_WEIGHT = 0.50;
 
     private final MinecraftServer server;
     private final CoreSaveData save;
@@ -110,11 +86,12 @@ public final class EnvironmentSystem {
         this.save = save;
         this.scheduler = scheduler;
         scheduler.register("hardwrought:environment_cells", SimulationTier.MEDIUM, this::tickCells);
+        scheduler.register("hardwrought:gas_sources", SimulationTier.SLOW, this::tickGasSources);
     }
 
     private record Tracked(String key, RoomScan scan, long scannedTick, BlockPos scannedAt) { }
 
-    /** One enclosed space. Geometry comes from a scan, the atmosphere is carried over time. */
+    /** One enclosed space. Geometry comes from a scan, its warmth is carried over time. */
     private static final class EnvironmentCell {
         private final String key;
         private long origin;
@@ -125,13 +102,11 @@ public final class EnvironmentSystem {
         private double insulation;
         private double coalExposure;
         private List<BlockPos> combustionSources;
-        private GasMixture gases;
         private double temperature;
         private long updatedTick;
 
         private EnvironmentCell(String key, CellAtmosphere saved, long tick) {
             this.key = key;
-            this.gases = saved == null ? GasMixture.OUTDOOR : saved.gases();
             this.temperature = saved == null ? 15.0 : saved.temperature();
             this.updatedTick = saved == null ? tick : saved.updatedTick();
             this.combustionSources = List.of();
@@ -149,45 +124,6 @@ public final class EnvironmentSystem {
             coalExposure = scan.coalExposure();
             combustionSources = scan.combustionSources();
         }
-
-        private double heightFraction(double y) {
-            int height = ceilingY - floorY;
-            if (height <= 0) return 0.5;
-            return Math.max(0, Math.min(1, (y - floorY) / height));
-        }
-    }
-
-    /**
-     * Where the oxygen of a sealed space of this size settles with this many occupants breathing and
-     * nothing burning. Not clamped, so a value below zero means the space simply runs out of air.
-     * This is the relationship the breathing rates are calibrated against and the tests assert.
-     */
-    public static double ventilationRate(int volumeBlocks, double apertureArea) {
-        double volume = Math.max(MIN_EFFECTIVE_VOLUME, volumeBlocks);
-        return Math.min(1.0, SEALED_VENTILATION + APERTURE_VENTILATION * apertureArea / volume);
-    }
-
-    public static double equilibriumOxygen(int volumeBlocks, int occupants, double apertureArea,
-                                           double combustion) {
-        double volume = Math.max(MIN_EFFECTIVE_VOLUME, volumeBlocks);
-        double use = (occupants * BREATH_OXYGEN + combustion * COMBUSTION_OXYGEN) / volume;
-        return GasMixture.OUTDOOR_OXYGEN - use / ventilationRate(volumeBlocks, apertureArea);
-    }
-
-    public static double equilibriumOxygen(int volumeBlocks, int occupants) {
-        return equilibriumOxygen(volumeBlocks, occupants, 0, 0);
-    }
-
-    /** The same relationship for carbon dioxide, which is what usually becomes dangerous first. */
-    public static double equilibriumCarbonDioxide(int volumeBlocks, int occupants, double apertureArea,
-                                                  double combustion) {
-        double volume = Math.max(MIN_EFFECTIVE_VOLUME, volumeBlocks);
-        double produced = (occupants * BREATH_CARBON_DIOXIDE + combustion * COMBUSTION_CARBON_DIOXIDE) / volume;
-        return GasMixture.OUTDOOR_CARBON_DIOXIDE + produced / ventilationRate(volumeBlocks, apertureArea);
-    }
-
-    public static double equilibriumCarbonDioxide(int volumeBlocks, int occupants) {
-        return equilibriumCarbonDioxide(volumeBlocks, occupants, 0, 0);
     }
 
     // ---------------------------------------------------------------- public reading
@@ -196,17 +132,19 @@ public final class EnvironmentSystem {
     public EnvironmentReading reading(ServerPlayer player) {
         Tracked tracked = resolve(player);
         double wind = wind(player.level(), player.blockPosition());
-        if (tracked.key == null) {
-            return EnvironmentReading.outdoor(outdoorTemperature(player.level(), player.blockPosition()), wind);
+        if (tracked.key == null || cells.get(tracked.key) == null) {
+            return EnvironmentReading.outdoor(breathed(player),
+                    outdoorTemperature(player.level(), player.blockPosition()), wind);
         }
         EnvironmentCell cell = cells.get(tracked.key);
-        if (cell == null) {
-            return EnvironmentReading.outdoor(outdoorTemperature(player.level(), player.blockPosition()), wind);
-        }
-        // A sealed room shields its occupants from the wind outside it. The air is sampled at the
-        // player's own head height, because the heavy and light gases do not sit evenly.
-        GasMixture local = cell.gases.at(cell.heightFraction(player.getEyePosition().y));
-        return new EnvironmentReading(local, cell.temperature, wind * 0.1, true, cell.volume, cell.insulation);
+        // A sealed room shields its occupants from the wind outside it.
+        return new EnvironmentReading(breathed(player), cell.temperature, wind * 0.1, true, cell.volume,
+                cell.insulation);
+    }
+
+    /** The air in the block the player's head is in: the gas there, and the air outside at that height. */
+    private static GasMixture breathed(ServerPlayer player) {
+        return Gases.sample(player.level(), BlockPos.containing(player.getEyePosition()));
     }
 
     /**
@@ -252,24 +190,31 @@ public final class EnvironmentSystem {
     // ---------------------------------------------------------------- simulation
 
     private void tickCells() {
-        Map<String, Integer> occupants = new HashMap<>();
         Map<String, ServerPlayer> witness = new HashMap<>();
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (player.isSpectator()) continue;
             Tracked tracked = resolve(player);
             if (tracked.key == null) continue;
-            occupants.merge(tracked.key, 1, Integer::sum);
             witness.putIfAbsent(tracked.key, player);
         }
         for (var entry : witness.entrySet()) {
             EnvironmentCell cell = cells.get(entry.getKey());
             if (cell == null) continue;
             ServerLevel level = entry.getValue().level();
-            updateCell(cell, level, occupants.getOrDefault(entry.getKey(), 0));
-            applyHazards(cell, level);
-            save.setCellAtmosphere(cell.key, new CellAtmosphere(cell.gases, cell.temperature, cell.updatedTick));
+            updateCell(cell, level);
+            save.setCellAtmosphere(cell.key, new CellAtmosphere(cell.temperature, cell.updatedTick));
         }
         for (ServerPlayer player : server.getPlayerList().getPlayers()) sendSnapshot(player);
+    }
+
+    /** Section 18: the fires, the breath and the coal seams around every player let out their gas. */
+    private void tickGasSources() {
+        Map<ServerLevel, List<ServerPlayer>> byLevel = new HashMap<>();
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            if (player.isSpectator()) continue;
+            byLevel.computeIfAbsent(player.level(), level -> new ArrayList<>()).add(player);
+        }
+        byLevel.forEach((level, players) -> GasSources.pass(level, players, level.getRandom()));
     }
 
     private Tracked resolve(ServerPlayer player) {
@@ -292,7 +237,7 @@ public final class EnvironmentSystem {
         return tracked;
     }
 
-    private void updateCell(EnvironmentCell cell, ServerLevel level, int occupants) {
+    private void updateCell(EnvironmentCell cell, ServerLevel level) {
         long now = scheduler.ticks();
         double seconds = Math.min(MAX_CATCH_UP_SECONDS, Math.max(0, now - cell.updatedTick) / 20.0);
         cell.updatedTick = now;
@@ -300,16 +245,6 @@ public final class EnvironmentSystem {
 
         double combustion = combustionWeight(level, cell);
         double volume = Math.max(MIN_EFFECTIVE_VOLUME, cell.volume);
-        double oxygenUse = (occupants * BREATH_OXYGEN + combustion * COMBUSTION_OXYGEN) / volume * seconds;
-        double carbonDioxide = (occupants * BREATH_CARBON_DIOXIDE + combustion * COMBUSTION_CARBON_DIOXIDE)
-                / volume * seconds;
-        double smoke = combustion * COMBUSTION_SMOKE / volume * seconds;
-        double methane = methaneSeep(level, cell) / volume * seconds;
-
-        GasMixture next = cell.gases.add(-oxygenUse, carbonDioxide, methane, smoke);
-        double ventilation = 1.0 - Math.pow(1.0 - ventilationRate(cell.volume, cell.apertureArea), seconds);
-        cell.gases = next.ventilate(ventilation);
-
         double outdoor = outdoorTemperature(level, BlockPos.of(cell.origin));
         double heat = Math.min(MAX_ROOM_HEAT, combustion * COMBUSTION_HEAT / volume) * (0.4 + 0.6 * cell.insulation);
         double target = outdoor + heat;
@@ -329,84 +264,7 @@ public final class EnvironmentSystem {
         return weight;
     }
 
-    /**
-     * Depth is measured as the rock actually covering the room, not as an absolute height, so the
-     * model behaves the same in a normal world, a superflat one and any later vertical world.
-     */
-    private double methaneSeep(ServerLevel level, EnvironmentCell cell) {
-        BlockPos origin = BlockPos.of(cell.origin);
-        if (!level.hasChunkAt(origin)) return 0;
-        int surface = level.getHeight(Heightmap.Types.MOTION_BLOCKING, origin.getX(), origin.getZ());
-        int cover = surface - origin.getY();
-        if (cover <= METHANE_MIN_COVER) return 0;
-        double depth = clamp((cover - METHANE_MIN_COVER) / (double) (METHANE_FULL_COVER - METHANE_MIN_COVER), 0, 1);
-        return METHANE_SEEP * depth * (0.25 + 0.75 * cell.coalExposure);
-    }
-
-    /** Section 18.3 and 19: the two hazards that belong to the world, not to a single player. */
-    private void applyHazards(EnvironmentCell cell, ServerLevel level) {
-        // Firedamp gathers against the roof, so a flame high up sets it off while one on the floor
-        // may sit below it entirely. That is the whole reason a safety lamp is held up.
-        BlockPos flame = null;
-        for (BlockPos pos : cell.combustionSources) {
-            if (!level.hasChunkAt(pos)) continue;
-            if (!RoomScan.isCombustionSource(level.getBlockState(pos))) continue;
-            if (cell.gases.at(cell.heightFraction(pos.getY() + 0.5)).explosive()) {
-                flame = pos;
-                break;
-            }
-        }
-        if (flame != null) {
-            ignite(cell, level, flame);
-            return;
-        }
-        if (cell.gases.oxygen() < FIRE_MINIMUM_OXYGEN) extinguish(cell, level);
-    }
-
-    private void ignite(EnvironmentCell cell, ServerLevel level, BlockPos at) {
-        double local = cell.gases.at(cell.heightFraction(at.getY() + 0.5)).methane();
-        double excess = (local - GasMixture.METHANE_EXPLOSIVE_MIN)
-                / (GasMixture.METHANE_EXPLOSIVE_MAX - GasMixture.METHANE_EXPLOSIVE_MIN);
-        float power = (float) (2.0 + 4.0 * clamp(excess, 0, 1));
-        level.explode(null, at.getX() + 0.5, at.getY() + 0.5, at.getZ() + 0.5, power,
-                Level.ExplosionInteraction.BLOCK);
-        // The blast burns the gas and the oxygen it used; smoke is what stays behind.
-        cell.gases = new GasMixture(cell.gases.oxygen() * 0.55, cell.gases.carbonDioxide() + 0.01,
-                0, Math.min(1, cell.gases.smoke() + 0.5));
-    }
-
-    private void extinguish(EnvironmentCell cell, ServerLevel level) {
-        List<BlockPos> remaining = new ArrayList<>();
-        for (BlockPos pos : cell.combustionSources) {
-            if (!level.hasChunkAt(pos)) {
-                remaining.add(pos);
-                continue;
-            }
-            BlockState state = level.getBlockState(pos);
-            if (state.is(Blocks.FIRE) || state.is(Blocks.SOUL_FIRE)) {
-                level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
-                level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.6f, 1.0f);
-                continue;
-            }
-            if (state.hasProperty(BlockStateProperties.LIT) && state.getValue(BlockStateProperties.LIT)
-                    && (state.getBlock() instanceof CampfireBlock || state.is(Blocks.FURNACE)
-                    || state.is(Blocks.BLAST_FURNACE) || state.is(Blocks.SMOKER))) {
-                level.setBlockAndUpdate(pos, state.setValue(BlockStateProperties.LIT, false));
-                level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.6f, 1.0f);
-                continue;
-            }
-            remaining.add(pos);
-        }
-        cell.combustionSources = List.copyOf(remaining);
-    }
-
-    /**
-     * How much air one burning block takes.
-     *
-     * <p>Vanilla has no unlit torch, so a torch is never taken away from a player here. It keeps
-     * burning and keeps consuming air; a light source that can go out belongs to the lighting
-     * progression of section 20.
-     */
+    /** How much one burning block warms the room it is in. */
     public static double flameWeight(BlockState state) {
         if (state.is(Blocks.TORCH) || state.is(Blocks.WALL_TORCH) || state.is(Blocks.SOUL_TORCH)
                 || state.is(Blocks.SOUL_WALL_TORCH) || state.is(net.minecraft.tags.BlockTags.CANDLES)
@@ -417,24 +275,8 @@ public final class EnvironmentSystem {
                 || state.is(Blocks.FURNACE) || state.is(Blocks.BLAST_FURNACE) || state.is(Blocks.SMOKER)) {
             return CONTAINED_FLAME_WEIGHT;
         }
+        if (RoomScan.isForgeFire(state)) return FORGE_FLAME_WEIGHT;
         return 1.0;
-    }
-
-    /**
-     * Replaces the atmosphere of the sealed space a player is standing in. Operator tooling for
-     * balancing and testing a simulation whose interesting states otherwise take minutes to reach.
-     * Returns false when the player is not in a sealed space, because open air has no cell to set.
-     */
-    public boolean overrideAtmosphere(ServerPlayer player, GasMixture gases) {
-        Tracked tracked = resolve(player);
-        if (tracked.key == null) return false;
-        EnvironmentCell cell = cells.get(tracked.key);
-        if (cell == null) return false;
-        cell.gases = gases;
-        cell.updatedTick = scheduler.ticks();
-        save.setCellAtmosphere(cell.key, new CellAtmosphere(cell.gases, cell.temperature, cell.updatedTick));
-        sendSnapshot(player);
-        return true;
     }
 
     // ---------------------------------------------------------------- diagnostics
@@ -455,18 +297,13 @@ public final class EnvironmentSystem {
                     Altitude.tooThinToBurn(y) ? " | too thin for an open fire" : "");
         });
         registry.register("hardwrought:atmosphere", DiagnosticRegistry.Channel.GAS, (level, pos) -> {
-            RoomScan scan = RoomScan.scan(level, pos);
-            if (!scan.sealed()) return "open air, outside baseline applies";
-            EnvironmentCell cell = cells.get(cellKey(level, scan));
-            if (cell == null) {
-                return String.format(Locale.ROOT, "%s %d blocks, not simulated yet",
-                        scan.enclosure() == RoomScan.Enclosure.LARGE ? "large space" : "enclosed",
-                        scan.volume());
-            }
+            BlockState state = level.getBlockState(pos);
+            GasMixture air = Gases.sample(level, pos);
             return String.format(Locale.ROOT,
-                    "O2=%.2f%% CO2=%.3f%% CH4=%.3f%% smoke=%.2f volume=%d insulation=%.2f",
-                    cell.gases.oxygen() * 100, cell.gases.carbonDioxide() * 100,
-                    cell.gases.methane() * 100, cell.gases.smoke(), cell.volume, cell.insulation);
+                    "gas CO2=%d CO=%d CH4=%d of %d | O2=%.2f%% CO2=%.2f%% CH4=%.2f%% CO=%.0fppm",
+                    Gases.units(state, Gas.CARBON_DIOXIDE), Gases.units(state, Gas.CARBON_MONOXIDE),
+                    Gases.units(state, Gas.METHANE), Gas.CAPACITY, air.oxygen() * 100, air.carbonDioxide() * 100,
+                    air.methane() * 100, air.carbonMonoxide() * 1_000_000);
         });
         registry.register("hardwrought:room_temperature", DiagnosticRegistry.Channel.TEMPERATURE, (level, pos) -> {
             RoomScan scan = RoomScan.scan(level, pos);

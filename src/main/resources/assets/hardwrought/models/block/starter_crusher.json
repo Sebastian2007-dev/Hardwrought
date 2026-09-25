@@ -2,11 +2,11 @@
   "parent": "minecraft:block/block",
   "__comment": "Placeholder look from vanilla textures: a timber frame, stone jaws showing on top.",
   "textures": {
-    "frame": "minecraft:block/stripped_oak_log",
-    "planks": "minecraft:block/oak_planks",
-    "jaw": "minecraft:block/grindstone_side",
-    "floor": "minecraft:block/cobblestone",
-    "particle": "minecraft:block/cobblestone"
+    "frame": "hardwrought:block/hardwrought/shaft_side",
+    "planks": "hardwrought:block/hardwrought/machine_boards",
+    "jaw": "hardwrought:block/hardwrought/crusher_jaw",
+    "floor": "hardwrought:block/hardwrought/forge_base",
+    "particle": "hardwrought:block/hardwrought/forge_base"
   },
   "elements": [
     {

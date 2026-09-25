@@ -55,6 +55,12 @@ public final class CoreLifecycle {
                         new de.ipnats.hardwrought.core.networking.MeltingPointPayload(
                                 de.ipnats.hardwrought.metallurgy.Smelting.itemMeltingPoints(runtime.materials())));
             }
+            // And what every food brings to a diet, so the compendium can say it.
+            if (runtime != null && net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
+                    .canSend(handler.player, de.ipnats.hardwrought.core.networking.FoodNutrientsPayload.TYPE)) {
+                net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(handler.player,
+                        new de.ipnats.hardwrought.core.networking.FoodNutrientsPayload(runtime.foodNutrition()));
+            }
             if (runtime == null) return;
             // The first time a player is seen they are given what the mod assumes they start with.
             // Every time after that, only the guarantee that they are wearing a pack at all — which
@@ -74,6 +80,7 @@ public final class CoreLifecycle {
                 runtime.survival().disconnect(handler.player.getUUID());
                 runtime.combat().disconnect(handler.player.getUUID());
                 runtime.environment().disconnect(handler.player.getUUID());
+                de.ipnats.hardwrought.environment.GasPush.forget(handler.player.getUUID());
             }
             // Half-finished work on a log or a bench is not carried over a reconnect.
             de.ipnats.hardwrought.progression.LogWorking.forget(handler.player.getUUID());

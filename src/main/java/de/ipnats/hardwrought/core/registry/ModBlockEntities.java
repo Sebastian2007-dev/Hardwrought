@@ -32,6 +32,24 @@ public final class ModBlockEntities {
                     new BlockEntityType<>(de.ipnats.hardwrought.machinery.StarterCrusherBlockEntity::new,
                             Set.of(ModBlocks.STARTER_CRUSHER)));
 
+    /** An ore drill's catch and how far the next piece has got. */
+    public static final BlockEntityType<de.ipnats.hardwrought.machinery.OreDrillBlockEntity> ORE_DRILL =
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Hardwrought.id("ore_drill"),
+                    new BlockEntityType<>(de.ipnats.hardwrought.machinery.OreDrillBlockEntity::new,
+                            Set.of(ModBlocks.ORE_DRILL)));
+
+    /** A rig's borehole, its tank of oil and its store of gas. */
+    public static final BlockEntityType<de.ipnats.hardwrought.oil.DrillingRigBlockEntity> DRILLING_RIG =
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Hardwrought.id("drilling_rig"),
+                    new BlockEntityType<>(de.ipnats.hardwrought.oil.DrillingRigBlockEntity::new,
+                            Set.of(ModBlocks.DRILLING_RIG)));
+
+    /** A still's charge, bottles, products and the batch on the boil. */
+    public static final BlockEntityType<de.ipnats.hardwrought.chemistry.StillBlockEntity> STILL =
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Hardwrought.id("still"),
+                    new BlockEntityType<>(de.ipnats.hardwrought.chemistry.StillBlockEntity::new,
+                            Set.of(ModBlocks.STILL)));
+
     /** The grid of a nailed bench, kept between one use and the next. */
     public static final BlockEntityType<de.ipnats.hardwrought.progression.KeptGridBlockEntity> KEPT_GRID =
             Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Hardwrought.id("kept_grid"),

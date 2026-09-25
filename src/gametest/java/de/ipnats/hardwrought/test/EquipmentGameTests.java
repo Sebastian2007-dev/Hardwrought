@@ -280,6 +280,31 @@ public final class EquipmentGameTests {
         throw new AssertionError("No pack page in the player's own menu");
     }
 
+    @GameTest
+    public void theScrollWheelMovesOneItemAtATime(GameTestHelper helper) {
+        ServerPlayer player = survivor(helper);
+        var chest = new net.minecraft.world.SimpleContainer(27);
+        var menu = net.minecraft.world.inventory.ChestMenu.threeRows(7, player.getInventory(), chest);
+        player.containerMenu = menu;
+        player.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 5));
+        int belt = 27 + 27;
+        helper.assertTrue(de.ipnats.hardwrought.equipment.ScrollTransfer.scroll(player, 7, belt, true),
+                "Scrolling down over a stack on the belt sends one item across");
+        helper.assertTrue(player.getInventory().getItem(0).getCount() == 4 && chest.getItem(0).getCount() == 1,
+                "one item, into the chest, got " + player.getInventory().getItem(0) + " / " + chest.getItem(0));
+        de.ipnats.hardwrought.equipment.ScrollTransfer.scroll(player, 7, belt, true);
+        helper.assertTrue(chest.getItem(0).getCount() == 2 && chest.getItem(1).isEmpty(),
+                "the next one joins it rather than starting a stack of its own");
+        helper.assertTrue(de.ipnats.hardwrought.equipment.ScrollTransfer.scroll(player, 7, 0, false),
+                "Scrolling up over the chest's stack pulls one more of its kind in");
+        helper.assertTrue(chest.getItem(0).getCount() == 3 && player.getInventory().getItem(0).getCount() == 2,
+                "out of the player's own grid");
+        helper.assertFalse(de.ipnats.hardwrought.equipment.ScrollTransfer.scroll(player, 8, belt, true),
+                "A notch meant for another screen does nothing");
+        player.containerMenu = player.inventoryMenu;
+        helper.succeed();
+    }
+
     private static ServerPlayer survivor(GameTestHelper helper) {
         return (ServerPlayer) helper.makeMockServerPlayer(GameType.SURVIVAL);
     }

@@ -58,6 +58,8 @@ public final class ToolParts {
         IRON("iron", () -> Items.IRON_INGOT, Part.values()),
         GOLD("gold", () -> Items.GOLD_INGOT, Part.PICKAXE_HEAD, Part.AXE_HEAD, Part.SHOVEL_HEAD,
                 Part.HOE_HEAD, Part.SWORD_BLADE),
+        COPPER("copper", () -> Items.COPPER_INGOT, Part.PICKAXE_HEAD, Part.AXE_HEAD, Part.SHOVEL_HEAD,
+                Part.HOE_HEAD, Part.SWORD_BLADE),
         BRONZE("bronze", () -> ModItems.BRONZE_INGOT, Part.PICKAXE_HEAD, Part.AXE_HEAD);
 
         private final String material;

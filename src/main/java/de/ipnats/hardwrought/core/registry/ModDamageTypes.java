@@ -17,6 +17,9 @@ public final class ModDamageTypes {
     /** Section 18.1 and 18.2: too little oxygen, or too much carbon dioxide. */
     public static final ResourceKey<DamageType> BAD_AIR =
             ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("bad_air"));
+    /** Carbon monoxide: poisoning, not suffocation, and armor is no help against it either. */
+    public static final ResourceKey<DamageType> CARBON_MONOXIDE =
+            ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("carbon_monoxide"));
     /** Section 18.4: smoke inhalation. */
     public static final ResourceKey<DamageType> SMOKE =
             ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("smoke"));

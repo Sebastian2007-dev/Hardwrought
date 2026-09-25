@@ -139,15 +139,18 @@ public final class MetalGameTests {
                     metal.id() + " needs the same drill in the rock table as in its own");
         }
 
-        // A first drill on sedimentary rock reaches tin and nothing radioactive.
+        // An iron drill on sedimentary rock reaches tin somewhere, and nothing that needs a better frame.
         int x = 0;
         while (Geology.rockAt(4242L, x, 0) != RockType.SEDIMENTARY) x += Geology.REGION_SIZE_BLOCKS;
-        DrillYield basic = DrillYield.forChunk(4242L, profiles, x, 0, DrillTier.BASIC);
-        List<Identifier> reachable = basic.entries().stream().map(DrillYield.Entry::ore).toList();
-        helper.assertTrue(reachable.contains(Hardwrought.id("tin_ore")),
-                "A basic drill brings up tin");
-        helper.assertFalse(reachable.contains(Hardwrought.id("aluminum_ore")),
-                "but not the metals that need a better machine");
+        boolean tin = false;
+        for (int chunk = 0; chunk < 12; chunk++) {
+            DrillYield iron = DrillYield.forChunk(4242L, profiles, x + chunk * 16, 0, DrillTier.IRON);
+            List<Identifier> reachable = iron.entries().stream().map(DrillYield.Entry::ore).toList();
+            tin |= reachable.contains(Hardwrought.id("tin_ore"));
+            helper.assertFalse(reachable.contains(Hardwrought.id("aluminum_ore")),
+                    "An iron drill does not reach the metals that need a better machine");
+        }
+        helper.assertTrue(tin, "An iron drill brings up tin");
         helper.succeed();
     }
 

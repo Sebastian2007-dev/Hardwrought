@@ -1,6 +1,7 @@
 {
   "values": [
     "hardwrought:bad_air",
-    "hardwrought:smoke"
+    "hardwrought:smoke",
+    "hardwrought:carbon_monoxide"
   ]
 }

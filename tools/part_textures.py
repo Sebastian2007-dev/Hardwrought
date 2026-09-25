@@ -18,6 +18,7 @@ PARTS = {
     "iron": ["pickaxe_head", "axe_head", "shovel_head", "hoe_head", "sword_blade",
              "dagger_blade", "greatsword_blade", "halberd_head", "hammer_head"],
     "gold": ["pickaxe_head", "axe_head", "shovel_head", "hoe_head", "sword_blade"],
+    "copper": ["pickaxe_head", "axe_head", "shovel_head", "hoe_head", "sword_blade"],
     "bronze": ["pickaxe_head", "axe_head"],
 }
 
@@ -95,6 +96,7 @@ CUSTOM_MASKS = {
 PALETTES = {
     "iron": [(54, 58, 63), (139, 145, 150), (191, 197, 200), (238, 241, 241)],
     "gold": [(112, 72, 13), (211, 151, 26), (249, 211, 58), (255, 245, 157)],
+    "copper": [(99, 45, 29), (180, 90, 60), (231, 124, 86), (252, 177, 144)],
     "bronze": [(84, 43, 26), (145, 78, 43), (202, 124, 69), (238, 171, 102)],
 }
 
@@ -114,7 +116,7 @@ def recolour(pixel, metal):
 
 
 def vanilla_part(metal, part):
-    source_metal = "golden" if metal == "gold" else "iron"
+    source_metal = {"gold": "golden", "copper": "copper"}.get(metal, "iron")
     source = Image.open(VANILLA / f"{source_metal}_{VANILLA_TOOL[part]}.png").convert("RGBA")
     output = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
     for y in range(16):

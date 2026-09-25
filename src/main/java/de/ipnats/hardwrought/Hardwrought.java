@@ -52,6 +52,7 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.smithing.ToolParts.initialize();
 		de.ipnats.hardwrought.core.registry.ModBlockEntities.initialize();
 		de.ipnats.hardwrought.smithing.ForgeMenu.initialize();
+		de.ipnats.hardwrought.chemistry.StillMenu.initialize();
 		de.ipnats.hardwrought.core.registry.ModEffects.initialize();
 		ModCreativeTabs.initialize();
 		DataResourceLoader.get().registerReloadListener(id("materials"), new MaterialDefinitions());

@@ -98,7 +98,7 @@ public final class Forging {
                     new ItemStack(resultItem).getHoverName()), true);
             return false;
         }
-        if (tooCold(player, held)) return false;
+        if (!Smithing.isIngot(recipe.input()) && tooCold(player, held)) return false;
         if (held.getCount() < recipe.count()) {
             player.sendSystemMessage(Component.translatable("message.hardwrought.forging_needs_more",
                     recipe.count(), held.getHoverName()), true);
@@ -120,9 +120,10 @@ public final class Forging {
      * One blow. It puts right whatever is wrong where it lands — as much as the hammer covers, see
      * {@link Hammers} — takes a little
      * heat out of the piece, and is counted: a blow that found nothing to put right is a wasted one.
-     * On metal below working heat a blow does nothing at all — cold iron does not move under a hammer
-     * — and is not counted either; the piece has to go back to the fire. The last blow that makes the
-     * shape right turns the piece into what it was becoming.
+     * Raw metal being consolidated into an ingot still has to remain above working heat. Finished
+     * ingots can be shaped at any temperature; when a tool part is struck above the top of its ideal
+     * range, the blow still moves metal but strains the finished quality. The last blow that makes
+     * the shape right turns the piece into what it was becoming.
      */
     public static boolean strike(ServerPlayer player, BlockPos anvil, int x, int y) {
         ServerLevel level = player.level();
@@ -133,12 +134,6 @@ public final class Forging {
         var runtime = CoreLifecycle.find(level.getServer());
         long now = level.getGameTime();
 
-        double temperature = Heat.of(piece, now);
-        if (tooCold(player, piece)) {
-            level.playSound(null, anvil, SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.2f, 1.6f);
-            return false;
-        }
-
         // A piece split apart in the inventory is no longer the metal the work began with.
         Smithing.Recipe recipe = Smithing.recipeFor(piece.getItem(), state.result());
         if (recipe != null && piece.getCount() != recipe.count()) {
@@ -147,12 +142,19 @@ public final class Forging {
             return false;
         }
 
+        double temperature = Heat.of(piece, now);
+        if (recipe != null && !Smithing.isIngot(recipe.input()) && tooCold(player, piece)) {
+            level.playSound(null, anvil, SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.2f, 1.6f);
+            return false;
+        }
+        boolean tooHot = recipe != null && recipe.part() && aboveWorkingRange(piece, temperature, runtime);
+
         Mask before = state.currentMask();
         Mask after = before.strike(x, y, state.targetMask(), Hammers.reach(player.getMainHandItem()));
         boolean useful = after.mismatch(state.targetMask()) < before.mismatch(state.targetMask());
         float cap = Anvils.craftsmanshipCap(level.getBlockState(anvil));
         Anvils.strikeWear(level, anvil);
-        ForgingState next = state.struck(after, useful, cap);
+        ForgingState next = state.struck(after, useful, cap, tooHot);
         piece.set(ModDataComponents.FORGING_STATE, next);
         if (temperature > Heat.AMBIENT) {
             piece.set(ModDataComponents.HEAT, new Heat((float) Math.max(Heat.AMBIENT,
@@ -241,8 +243,8 @@ public final class Forging {
     }
 
     /**
-     * Whether the piece is below its working heat. Tells the player so, because a hammer bouncing off
-     * cold metal without a word would look like a bug.
+     * Whether raw metal is below its working heat. Ingot recipes deliberately bypass this check.
+     * Tells the player because a hammer bouncing off a cold raw lump without a word looks like a bug.
      */
     private static boolean tooCold(ServerPlayer player, ItemStack piece) {
         var runtime = CoreLifecycle.find(player.level().getServer());
@@ -251,6 +253,13 @@ public final class Forging {
         if (range == null || Heat.of(piece, player.level().getGameTime()) >= range[0]) return false;
         player.sendSystemMessage(Component.translatable("message.hardwrought.forging_too_cold"), true);
         return true;
+    }
+
+    private static boolean aboveWorkingRange(ItemStack piece, double temperature,
+                                             de.ipnats.hardwrought.core.CoreRuntime runtime) {
+        if (runtime == null) return false;
+        double[] range = Smithing.workingRange(piece.getItem(), runtime.materials());
+        return range != null && temperature > range[1];
     }
 
     private static boolean atAnvil(ServerPlayer player, BlockPos anvil) {

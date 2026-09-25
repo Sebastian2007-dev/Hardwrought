@@ -2,6 +2,7 @@ package de.ipnats.hardwrought.client.smithing;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import de.ipnats.hardwrought.smithing.ForgeBlock;
 import de.ipnats.hardwrought.smithing.ForgeBlockEntity;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -21,8 +22,8 @@ import java.util.List;
 
 /**
  * The pieces lying in the coals of a forge, flat. A forge on its own shows its one piece in the
- * middle of the bed; a joined forge keeps all its pieces in the controller at the bottom corner, and
- * that block draws them one to each block of the top layer, so they lie spread across the whole bed.
+ * middle of the bed; a joined forge keeps all its pieces in the controller at the north-west corner,
+ * and that block draws them one to each block of the hearth, so they lie spread across the whole bed.
  */
 public class ForgeRenderer implements BlockEntityRenderer<ForgeBlockEntity, ForgeRenderer.State> {
     private final ItemModelResolver resolver;
@@ -57,13 +58,17 @@ public class ForgeRenderer implements BlockEntityRenderer<ForgeBlockEntity, Forg
         if (layout != 0 && !forge.isController()) return;
         int side = layout == 2 ? 3 : layout == 1 ? 2 : 1;
         int seed = (int) forge.getBlockPos().asLong();
+        // The pieces lie on the coal, however high it is heaped; in an empty pit, on the ash.
+        var block = forge.getBlockState();
+        int fuel = block.hasProperty(ForgeBlock.FUEL) ? block.getValue(ForgeBlock.FUEL) : 0;
+        float bed = (fuel == 0 ? 6 : 6 + 2 * fuel) / 16.0f + 0.03f;
         for (int i = 0; i < ForgeBlockEntity.metalSlots(layout); i++) {
             ItemStack stack = forge.items().get(ForgeBlockEntity.FIRST_METAL + i);
             if (stack.isEmpty()) continue;
             ItemStackRenderState item = new ItemStackRenderState();
             resolver.updateForTopItem(item, stack, ItemDisplayContext.FIXED, forge.getLevel(), null, seed + i);
             state.items.add(item);
-            state.places.add(new float[] {i % side + 0.5f, side - 1 + 0.76f, i / side + 0.5f, i * 90.0f});
+            state.places.add(new float[] {i % side + 0.5f, bed, i / side + 0.5f, i * 90.0f});
         }
     }
 

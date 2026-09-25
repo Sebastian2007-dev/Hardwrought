@@ -116,21 +116,13 @@ public final class VerticalWorldGameTests {
     }
 
     @GameTest
-    public void aRoomCanOnlyBeAiredOutWithWhatIsOutsideIt(GameTestHelper helper) {
-        GasMixture spent = new GasMixture(0.14, 0.03, 0.0, 0.0);
-        GasMixture thin = Altitude.outsideAir(900);
-        GasMixture aired = spent;
-        for (int step = 0; step < 200; step++) aired = aired.ventilate(0.5, thin);
-        helper.assertTrue(Math.abs(aired.oxygen() - thin.oxygen()) < 0.001,
-                "Airing a room out at altitude settles at the thin air outside it");
-        helper.assertTrue(aired.oxygen() < GasMixture.OUTDOOR_OXYGEN,
-                "not at the sea-level air the room has no access to");
-
-        GasMixture atSeaLevel = spent;
-        for (int step = 0; step < 200; step++) atSeaLevel = atSeaLevel.ventilate(0.5);
-        helper.assertTrue(Math.abs(atSeaLevel.oxygen() - GasMixture.OUTDOOR_OXYGEN) < 0.001,
-                "while the plain call still means ordinary outside air");
-        expectFailure(() -> spent.ventilate(0.5, null));
+    public void theAirHighUpIsThinWithOrWithoutGasInIt(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos high = new BlockPos(0, 900, 0);
+        helper.assertTrue(de.ipnats.hardwrought.environment.Gases.sample(level, high).equals(Altitude.outsideAir(900)),
+                "Air with no gas in it is the air outside at that height, thin as it is");
+        helper.assertTrue(de.ipnats.hardwrought.environment.Gases.sample(level, high).oxygen() < GasMixture.OUTDOOR_OXYGEN,
+                "not the sea-level air nobody up there can get at");
         helper.succeed();
     }
 

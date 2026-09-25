@@ -175,7 +175,9 @@ public class ForgingScreen extends Screen {
         Mask target = state != null ? state.targetMask() : ItemPixels.mask(targetPixels);
         Mask current = state != null ? state.currentMask() : ItemPixels.mask(sourcePixels);
         double temperature = Heat.of(piece, now());
+        Smithing.Recipe recipe = Smithing.recipeFor(piece.getItem(), result);
         double[] range = workingRange(piece);
+        boolean ingotWork = recipe != null && Smithing.isIngot(recipe.input());
         // Tinted, not painted over: the piece's own shading has to stay readable while it glows.
         float glow = (float) Math.clamp((temperature - 450.0) / 1200.0, 0.0, 0.45);
 
@@ -221,20 +223,28 @@ public class ForgingScreen extends Screen {
         graphics.item(new ItemStack(resultItem), ix, iy);
         graphics.text(font, new ItemStack(resultItem).getHoverName(), ix + 20, iy + 4, TEXT, false);
         iy += 24;
-        boolean cold = range != null && temperature < range[0];
+        boolean cold = !ingotWork && range != null && temperature < range[0];
+        boolean tooHot = recipe != null && recipe.part() && range != null && temperature > range[1];
         graphics.text(font, Component.translatable("gui.hardwrought.forging.temperature",
-                String.format(Locale.ROOT, "%.0f", temperature)), ix, iy, cold ? WARN : heatColour(glow), false);
+                String.format(Locale.ROOT, "%.0f", temperature)), ix, iy, cold || tooHot ? WARN : heatColour(glow), false);
         iy += 11;
         if (range != null) {
-            graphics.text(font, Component.translatable("gui.hardwrought.forging.workable",
-                    String.format(Locale.ROOT, "%.0f", range[0]), String.format(Locale.ROOT, "%.0f", range[1])),
-                    ix, iy, FADED, false);
+            Component heatRange = ingotWork && recipe.part()
+                    ? Component.translatable("gui.hardwrought.forging.optimal_max",
+                            String.format(Locale.ROOT, "%.0f", range[1]))
+                    : Component.translatable("gui.hardwrought.forging.workable",
+                            String.format(Locale.ROOT, "%.0f", range[0]), String.format(Locale.ROOT, "%.0f", range[1]));
+            graphics.text(font, heatRange, ix, iy, FADED, false);
             iy += 11;
-            drawHeatBar(graphics, ix, iy, temperature, range);
+            drawHeatBar(graphics, ix, iy, temperature,
+                    ingotWork && recipe.part() ? new double[] { 0, range[1] } : range);
             iy += 10;
         }
         if (cold) {
             graphics.text(font, Component.translatable("gui.hardwrought.forging.too_cold"), ix, iy, WARN, false);
+            iy += 11;
+        } else if (tooHot) {
+            graphics.text(font, Component.translatable("gui.hardwrought.forging.too_hot"), ix, iy, WARN, false);
             iy += 11;
         }
         iy += 4;
@@ -245,11 +255,15 @@ public class ForgingScreen extends Screen {
             graphics.text(font, Component.translatable("gui.hardwrought.forging.strikes", state.strikes(),
                     state.strikes() - state.good()), ix, iy, FADED, false);
             iy += 11;
-            Smithing.Recipe recipe = Smithing.recipeFor(piece.getItem(), result);
             // Only once there is work to judge: before the first blow there is nothing to say.
             if (recipe != null && recipe.part() && state.strikes() > 0) {
                 graphics.text(font, Component.translatable("gui.hardwrought.forging.craftsmanship",
                         Math.round(state.craftsmanship() * 100)), ix, iy, FADED, false);
+                iy += 11;
+                if (state.overheated() > 0) {
+                    graphics.text(font, Component.translatable("gui.hardwrought.forging.overheated",
+                            state.overheated()), ix, iy, WARN, false);
+                }
             }
         } else {
             graphics.textWithWordWrap(font, Component.translatable("gui.hardwrought.forging.hint"), ix, iy,

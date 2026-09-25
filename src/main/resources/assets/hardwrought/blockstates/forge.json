@@ -1,436 +1,636 @@
 {
-  "variants": {
-    "lined=false,lit=false,part=0": {
-      "model": "hardwrought:block/forge"
-    },
-    "lined=false,lit=false,part=1": {
-      "model": "hardwrought:block/forge/part_1"
-    },
-    "lined=false,lit=false,part=2": {
-      "model": "hardwrought:block/forge/part_2"
-    },
-    "lined=false,lit=false,part=3": {
-      "model": "hardwrought:block/forge/part_3"
-    },
-    "lined=false,lit=false,part=4": {
-      "model": "hardwrought:block/forge/part_4"
-    },
-    "lined=false,lit=false,part=5": {
-      "model": "hardwrought:block/forge/part_5"
-    },
-    "lined=false,lit=false,part=6": {
-      "model": "hardwrought:block/forge/part_6"
-    },
-    "lined=false,lit=false,part=7": {
-      "model": "hardwrought:block/forge/part_7"
-    },
-    "lined=false,lit=false,part=8": {
-      "model": "hardwrought:block/forge/part_8"
-    },
-    "lined=false,lit=false,part=9": {
-      "model": "hardwrought:block/forge/part_9"
-    },
-    "lined=false,lit=false,part=10": {
-      "model": "hardwrought:block/forge/part_10"
-    },
-    "lined=false,lit=false,part=11": {
-      "model": "hardwrought:block/forge/part_11"
-    },
-    "lined=false,lit=false,part=12": {
-      "model": "hardwrought:block/forge/part_12"
-    },
-    "lined=false,lit=false,part=13": {
-      "model": "hardwrought:block/forge/part_13"
-    },
-    "lined=false,lit=false,part=14": {
-      "model": "hardwrought:block/forge/part_14"
-    },
-    "lined=false,lit=false,part=15": {
-      "model": "hardwrought:block/forge/part_15"
-    },
-    "lined=false,lit=false,part=16": {
-      "model": "hardwrought:block/forge/part_16"
-    },
-    "lined=false,lit=false,part=17": {
-      "model": "hardwrought:block/forge/part_17"
-    },
-    "lined=false,lit=false,part=18": {
-      "model": "hardwrought:block/forge/part_18"
-    },
-    "lined=false,lit=false,part=19": {
-      "model": "hardwrought:block/forge/part_19"
-    },
-    "lined=false,lit=false,part=20": {
-      "model": "hardwrought:block/forge/part_20"
-    },
-    "lined=false,lit=false,part=21": {
-      "model": "hardwrought:block/forge/part_21"
-    },
-    "lined=false,lit=false,part=22": {
-      "model": "hardwrought:block/forge"
-    },
-    "lined=false,lit=false,part=23": {
-      "model": "hardwrought:block/forge/part_23"
-    },
-    "lined=false,lit=false,part=24": {
-      "model": "hardwrought:block/forge/part_24"
-    },
-    "lined=false,lit=false,part=25": {
-      "model": "hardwrought:block/forge/part_25"
-    },
-    "lined=false,lit=false,part=26": {
-      "model": "hardwrought:block/forge/part_26"
-    },
-    "lined=false,lit=false,part=27": {
-      "model": "hardwrought:block/forge/part_27"
-    },
-    "lined=false,lit=false,part=28": {
-      "model": "hardwrought:block/forge/part_28"
-    },
-    "lined=false,lit=false,part=29": {
-      "model": "hardwrought:block/forge/part_29"
-    },
-    "lined=false,lit=false,part=30": {
-      "model": "hardwrought:block/forge/part_30"
-    },
-    "lined=false,lit=false,part=31": {
-      "model": "hardwrought:block/forge/part_31"
-    },
-    "lined=false,lit=false,part=32": {
-      "model": "hardwrought:block/forge/part_32"
-    },
-    "lined=false,lit=false,part=33": {
-      "model": "hardwrought:block/forge/part_33"
-    },
-    "lined=false,lit=false,part=34": {
-      "model": "hardwrought:block/forge/part_34"
-    },
-    "lined=false,lit=false,part=35": {
-      "model": "hardwrought:block/forge/part_35"
-    },
-    "lined=false,lit=true,part=0": {
-      "model": "hardwrought:block/forge_lit"
-    },
-    "lined=false,lit=true,part=1": {
-      "model": "hardwrought:block/forge/part_1_lit"
-    },
-    "lined=false,lit=true,part=2": {
-      "model": "hardwrought:block/forge/part_2_lit"
-    },
-    "lined=false,lit=true,part=3": {
-      "model": "hardwrought:block/forge/part_3_lit"
-    },
-    "lined=false,lit=true,part=4": {
-      "model": "hardwrought:block/forge/part_4_lit"
-    },
-    "lined=false,lit=true,part=5": {
-      "model": "hardwrought:block/forge/part_5_lit"
-    },
-    "lined=false,lit=true,part=6": {
-      "model": "hardwrought:block/forge/part_6_lit"
-    },
-    "lined=false,lit=true,part=7": {
-      "model": "hardwrought:block/forge/part_7_lit"
-    },
-    "lined=false,lit=true,part=8": {
-      "model": "hardwrought:block/forge/part_8_lit"
-    },
-    "lined=false,lit=true,part=9": {
-      "model": "hardwrought:block/forge/part_9_lit"
-    },
-    "lined=false,lit=true,part=10": {
-      "model": "hardwrought:block/forge/part_10_lit"
-    },
-    "lined=false,lit=true,part=11": {
-      "model": "hardwrought:block/forge/part_11_lit"
-    },
-    "lined=false,lit=true,part=12": {
-      "model": "hardwrought:block/forge/part_12_lit"
-    },
-    "lined=false,lit=true,part=13": {
-      "model": "hardwrought:block/forge/part_13_lit"
-    },
-    "lined=false,lit=true,part=14": {
-      "model": "hardwrought:block/forge/part_14_lit"
-    },
-    "lined=false,lit=true,part=15": {
-      "model": "hardwrought:block/forge/part_15_lit"
-    },
-    "lined=false,lit=true,part=16": {
-      "model": "hardwrought:block/forge/part_16_lit"
-    },
-    "lined=false,lit=true,part=17": {
-      "model": "hardwrought:block/forge/part_17_lit"
-    },
-    "lined=false,lit=true,part=18": {
-      "model": "hardwrought:block/forge/part_18_lit"
-    },
-    "lined=false,lit=true,part=19": {
-      "model": "hardwrought:block/forge/part_19_lit"
-    },
-    "lined=false,lit=true,part=20": {
-      "model": "hardwrought:block/forge/part_20_lit"
-    },
-    "lined=false,lit=true,part=21": {
-      "model": "hardwrought:block/forge/part_21_lit"
-    },
-    "lined=false,lit=true,part=22": {
-      "model": "hardwrought:block/forge_lit"
-    },
-    "lined=false,lit=true,part=23": {
-      "model": "hardwrought:block/forge/part_23_lit"
-    },
-    "lined=false,lit=true,part=24": {
-      "model": "hardwrought:block/forge/part_24_lit"
-    },
-    "lined=false,lit=true,part=25": {
-      "model": "hardwrought:block/forge/part_25_lit"
-    },
-    "lined=false,lit=true,part=26": {
-      "model": "hardwrought:block/forge/part_26_lit"
-    },
-    "lined=false,lit=true,part=27": {
-      "model": "hardwrought:block/forge/part_27_lit"
-    },
-    "lined=false,lit=true,part=28": {
-      "model": "hardwrought:block/forge/part_28_lit"
-    },
-    "lined=false,lit=true,part=29": {
-      "model": "hardwrought:block/forge/part_29_lit"
-    },
-    "lined=false,lit=true,part=30": {
-      "model": "hardwrought:block/forge/part_30_lit"
-    },
-    "lined=false,lit=true,part=31": {
-      "model": "hardwrought:block/forge/part_31_lit"
-    },
-    "lined=false,lit=true,part=32": {
-      "model": "hardwrought:block/forge/part_32_lit"
-    },
-    "lined=false,lit=true,part=33": {
-      "model": "hardwrought:block/forge/part_33_lit"
-    },
-    "lined=false,lit=true,part=34": {
-      "model": "hardwrought:block/forge/part_34_lit"
-    },
-    "lined=false,lit=true,part=35": {
-      "model": "hardwrought:block/forge/part_35_lit"
-    },
-    "lined=true,lit=false,part=0": {
-      "model": "hardwrought:block/forge_lined"
-    },
-    "lined=true,lit=false,part=1": {
-      "model": "hardwrought:block/forge/part_1_lined"
-    },
-    "lined=true,lit=false,part=2": {
-      "model": "hardwrought:block/forge/part_2_lined"
-    },
-    "lined=true,lit=false,part=3": {
-      "model": "hardwrought:block/forge/part_3_lined"
-    },
-    "lined=true,lit=false,part=4": {
-      "model": "hardwrought:block/forge/part_4_lined"
-    },
-    "lined=true,lit=false,part=5": {
-      "model": "hardwrought:block/forge/part_5_lined"
-    },
-    "lined=true,lit=false,part=6": {
-      "model": "hardwrought:block/forge/part_6_lined"
-    },
-    "lined=true,lit=false,part=7": {
-      "model": "hardwrought:block/forge/part_7_lined"
-    },
-    "lined=true,lit=false,part=8": {
-      "model": "hardwrought:block/forge/part_8_lined"
-    },
-    "lined=true,lit=false,part=9": {
-      "model": "hardwrought:block/forge/part_9_lined"
-    },
-    "lined=true,lit=false,part=10": {
-      "model": "hardwrought:block/forge/part_10_lined"
-    },
-    "lined=true,lit=false,part=11": {
-      "model": "hardwrought:block/forge/part_11_lined"
-    },
-    "lined=true,lit=false,part=12": {
-      "model": "hardwrought:block/forge/part_12_lined"
-    },
-    "lined=true,lit=false,part=13": {
-      "model": "hardwrought:block/forge/part_13_lined"
-    },
-    "lined=true,lit=false,part=14": {
-      "model": "hardwrought:block/forge/part_14_lined"
-    },
-    "lined=true,lit=false,part=15": {
-      "model": "hardwrought:block/forge/part_15_lined"
-    },
-    "lined=true,lit=false,part=16": {
-      "model": "hardwrought:block/forge/part_16_lined"
-    },
-    "lined=true,lit=false,part=17": {
-      "model": "hardwrought:block/forge/part_17_lined"
-    },
-    "lined=true,lit=false,part=18": {
-      "model": "hardwrought:block/forge/part_18_lined"
-    },
-    "lined=true,lit=false,part=19": {
-      "model": "hardwrought:block/forge/part_19_lined"
-    },
-    "lined=true,lit=false,part=20": {
-      "model": "hardwrought:block/forge/part_20_lined"
-    },
-    "lined=true,lit=false,part=21": {
-      "model": "hardwrought:block/forge/part_21_lined"
-    },
-    "lined=true,lit=false,part=22": {
-      "model": "hardwrought:block/forge_lined"
-    },
-    "lined=true,lit=false,part=23": {
-      "model": "hardwrought:block/forge/part_23_lined"
-    },
-    "lined=true,lit=false,part=24": {
-      "model": "hardwrought:block/forge/part_24_lined"
-    },
-    "lined=true,lit=false,part=25": {
-      "model": "hardwrought:block/forge/part_25_lined"
-    },
-    "lined=true,lit=false,part=26": {
-      "model": "hardwrought:block/forge/part_26_lined"
-    },
-    "lined=true,lit=false,part=27": {
-      "model": "hardwrought:block/forge/part_27_lined"
-    },
-    "lined=true,lit=false,part=28": {
-      "model": "hardwrought:block/forge/part_28_lined"
-    },
-    "lined=true,lit=false,part=29": {
-      "model": "hardwrought:block/forge/part_29_lined"
-    },
-    "lined=true,lit=false,part=30": {
-      "model": "hardwrought:block/forge/part_30_lined"
-    },
-    "lined=true,lit=false,part=31": {
-      "model": "hardwrought:block/forge/part_31_lined"
-    },
-    "lined=true,lit=false,part=32": {
-      "model": "hardwrought:block/forge/part_32_lined"
-    },
-    "lined=true,lit=false,part=33": {
-      "model": "hardwrought:block/forge/part_33_lined"
-    },
-    "lined=true,lit=false,part=34": {
-      "model": "hardwrought:block/forge/part_34_lined"
-    },
-    "lined=true,lit=false,part=35": {
-      "model": "hardwrought:block/forge/part_35_lined"
-    },
-    "lined=true,lit=true,part=0": {
-      "model": "hardwrought:block/forge_lined_lit"
-    },
-    "lined=true,lit=true,part=1": {
-      "model": "hardwrought:block/forge/part_1_lined_lit"
-    },
-    "lined=true,lit=true,part=2": {
-      "model": "hardwrought:block/forge/part_2_lined_lit"
-    },
-    "lined=true,lit=true,part=3": {
-      "model": "hardwrought:block/forge/part_3_lined_lit"
-    },
-    "lined=true,lit=true,part=4": {
-      "model": "hardwrought:block/forge/part_4_lined_lit"
-    },
-    "lined=true,lit=true,part=5": {
-      "model": "hardwrought:block/forge/part_5_lined_lit"
-    },
-    "lined=true,lit=true,part=6": {
-      "model": "hardwrought:block/forge/part_6_lined_lit"
-    },
-    "lined=true,lit=true,part=7": {
-      "model": "hardwrought:block/forge/part_7_lined_lit"
-    },
-    "lined=true,lit=true,part=8": {
-      "model": "hardwrought:block/forge/part_8_lined_lit"
-    },
-    "lined=true,lit=true,part=9": {
-      "model": "hardwrought:block/forge/part_9_lined_lit"
-    },
-    "lined=true,lit=true,part=10": {
-      "model": "hardwrought:block/forge/part_10_lined_lit"
-    },
-    "lined=true,lit=true,part=11": {
-      "model": "hardwrought:block/forge/part_11_lined_lit"
-    },
-    "lined=true,lit=true,part=12": {
-      "model": "hardwrought:block/forge/part_12_lined_lit"
-    },
-    "lined=true,lit=true,part=13": {
-      "model": "hardwrought:block/forge/part_13_lined_lit"
-    },
-    "lined=true,lit=true,part=14": {
-      "model": "hardwrought:block/forge/part_14_lined_lit"
-    },
-    "lined=true,lit=true,part=15": {
-      "model": "hardwrought:block/forge/part_15_lined_lit"
-    },
-    "lined=true,lit=true,part=16": {
-      "model": "hardwrought:block/forge/part_16_lined_lit"
-    },
-    "lined=true,lit=true,part=17": {
-      "model": "hardwrought:block/forge/part_17_lined_lit"
-    },
-    "lined=true,lit=true,part=18": {
-      "model": "hardwrought:block/forge/part_18_lined_lit"
-    },
-    "lined=true,lit=true,part=19": {
-      "model": "hardwrought:block/forge/part_19_lined_lit"
-    },
-    "lined=true,lit=true,part=20": {
-      "model": "hardwrought:block/forge/part_20_lined_lit"
-    },
-    "lined=true,lit=true,part=21": {
-      "model": "hardwrought:block/forge/part_21_lined_lit"
-    },
-    "lined=true,lit=true,part=22": {
-      "model": "hardwrought:block/forge_lined_lit"
-    },
-    "lined=true,lit=true,part=23": {
-      "model": "hardwrought:block/forge/part_23_lined_lit"
-    },
-    "lined=true,lit=true,part=24": {
-      "model": "hardwrought:block/forge/part_24_lined_lit"
-    },
-    "lined=true,lit=true,part=25": {
-      "model": "hardwrought:block/forge/part_25_lined_lit"
-    },
-    "lined=true,lit=true,part=26": {
-      "model": "hardwrought:block/forge/part_26_lined_lit"
-    },
-    "lined=true,lit=true,part=27": {
-      "model": "hardwrought:block/forge/part_27_lined_lit"
-    },
-    "lined=true,lit=true,part=28": {
-      "model": "hardwrought:block/forge/part_28_lined_lit"
-    },
-    "lined=true,lit=true,part=29": {
-      "model": "hardwrought:block/forge/part_29_lined_lit"
-    },
-    "lined=true,lit=true,part=30": {
-      "model": "hardwrought:block/forge/part_30_lined_lit"
-    },
-    "lined=true,lit=true,part=31": {
-      "model": "hardwrought:block/forge/part_31_lined_lit"
-    },
-    "lined=true,lit=true,part=32": {
-      "model": "hardwrought:block/forge/part_32_lined_lit"
-    },
-    "lined=true,lit=true,part=33": {
-      "model": "hardwrought:block/forge/part_33_lined_lit"
-    },
-    "lined=true,lit=true,part=34": {
-      "model": "hardwrought:block/forge/part_34_lined_lit"
-    },
-    "lined=true,lit=true,part=35": {
-      "model": "hardwrought:block/forge/part_35_lined_lit"
+  "multipart": [
+    {
+      "when": {
+        "lined": "false",
+        "lit": "false",
+        "part": "0|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "false",
+        "part": "1"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_1"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "false",
+        "part": "2"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_2"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "false",
+        "part": "3"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_3"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "false",
+        "part": "4"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_4"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "false",
+        "part": "5"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_5"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "false",
+        "part": "6"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_6"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "false",
+        "part": "7"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_7"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "false",
+        "part": "8"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_8"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "false",
+        "part": "9"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_9"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "false",
+        "part": "10"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_10"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "false",
+        "part": "11"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_11"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "false",
+        "part": "12"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_12"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "false",
+        "part": "13"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_13"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "true",
+        "part": "0|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "true",
+        "part": "1"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_1_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "true",
+        "part": "2"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_2_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "true",
+        "part": "3"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_3_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "true",
+        "part": "4"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_4_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "true",
+        "part": "5"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_5_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "true",
+        "part": "6"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_6_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "true",
+        "part": "7"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_7_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "true",
+        "part": "8"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_8_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "true",
+        "part": "9"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_9_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "true",
+        "part": "10"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_10_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "true",
+        "part": "11"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_11_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "true",
+        "part": "12"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_12_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "false",
+        "lit": "true",
+        "part": "13"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_13_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "false",
+        "part": "0|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge_lined"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "false",
+        "part": "1"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_1_lined"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "false",
+        "part": "2"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_2_lined"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "false",
+        "part": "3"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_3_lined"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "false",
+        "part": "4"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_4_lined"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "false",
+        "part": "5"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_5_lined"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "false",
+        "part": "6"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_6_lined"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "false",
+        "part": "7"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_7_lined"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "false",
+        "part": "8"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_8_lined"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "false",
+        "part": "9"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_9_lined"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "false",
+        "part": "10"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_10_lined"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "false",
+        "part": "11"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_11_lined"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "false",
+        "part": "12"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_12_lined"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "false",
+        "part": "13"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_13_lined"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "true",
+        "part": "0|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge_lined_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "true",
+        "part": "1"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_1_lined_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "true",
+        "part": "2"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_2_lined_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "true",
+        "part": "3"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_3_lined_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "true",
+        "part": "4"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_4_lined_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "true",
+        "part": "5"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_5_lined_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "true",
+        "part": "6"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_6_lined_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "true",
+        "part": "7"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_7_lined_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "true",
+        "part": "8"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_8_lined_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "true",
+        "part": "9"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_9_lined_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "true",
+        "part": "10"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_10_lined_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "true",
+        "part": "11"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_11_lined_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "true",
+        "part": "12"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_12_lined_lit"
+      }
+    },
+    {
+      "when": {
+        "lined": "true",
+        "lit": "true",
+        "part": "13"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/part_13_lined_lit"
+      }
+    },
+    {
+      "when": {
+        "fuel": "1",
+        "lit": "false"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/bed_1"
+      }
+    },
+    {
+      "when": {
+        "fuel": "1",
+        "lit": "true"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/bed_1_lit"
+      }
+    },
+    {
+      "when": {
+        "fuel": "2",
+        "lit": "false"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/bed_2"
+      }
+    },
+    {
+      "when": {
+        "fuel": "2",
+        "lit": "true"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/bed_2_lit"
+      }
+    },
+    {
+      "when": {
+        "fuel": "3",
+        "lit": "false"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/bed_3"
+      }
+    },
+    {
+      "when": {
+        "fuel": "3",
+        "lit": "true"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/bed_3_lit"
+      }
+    },
+    {
+      "when": {
+        "fuel": "4",
+        "lit": "false"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/bed_4"
+      }
+    },
+    {
+      "when": {
+        "fuel": "4",
+        "lit": "true"
+      },
+      "apply": {
+        "model": "hardwrought:block/forge/bed_4_lit"
+      }
     }
-  }
+  ]
 }

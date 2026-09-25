@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "running=false": {
+      "model": "hardwrought:block/still"
+    },
+    "running=true": {
+      "model": "hardwrought:block/still"
+    }
+  }
+}

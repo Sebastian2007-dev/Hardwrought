@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "P": "hardwrought:iron_pickaxe_head",
+    "S": "hardwrought:shaft",
+    "C": "minecraft:chest"
+  },
+  "pattern": [
+    "ICI",
+    "ISI",
+    "IPI"
+  ],
+  "result": {
+    "id": "hardwrought:ore_drill"
+  }
+}

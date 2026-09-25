@@ -52,6 +52,60 @@ public final class MachineryClientGameTest implements FabricClientGameTest {
             context.waitTicks(40);
             world.getConnection().waitForChunksRender();
             context.takeScreenshot("hardwrought-machinery");
+
+            // Milestone 11: a rig on a crank box, and a still over a campfire with a charge in it.
+            BlockPos[] still = new BlockPos[1];
+            world.getServer().runOnServer(server -> {
+                var player = server.getPlayerList().getPlayers().getFirst();
+                var level = player.level();
+                BlockPos base = player.blockPosition().north(5).above();
+                level.setBlockAndUpdate(base.west(2), ModBlocks.CRANK_BOX.defaultBlockState().setValue(CrankBoxBlock.TURNING, true));
+                level.setBlockAndUpdate(base.west(2).above(), ModBlocks.DRILLING_RIG.defaultBlockState());
+                level.setBlockAndUpdate(base.east(2), net.minecraft.world.level.block.Blocks.CAMPFIRE.defaultBlockState()
+                        .setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.LIT, true));
+                level.setBlockAndUpdate(base.east(2).above(), ModBlocks.STILL.defaultBlockState());
+                // An ore drill: a titanium frame round its head, a bronze block in it, a crank box under it.
+                BlockPos head = base.north(3).above();
+                level.setBlockAndUpdate(head.below(), ModBlocks.CRANK_BOX.defaultBlockState().setValue(CrankBoxBlock.TURNING, true));
+                level.setBlockAndUpdate(head, ModBlocks.ORE_DRILL.defaultBlockState());
+                var frame = de.ipnats.hardwrought.machinery.OreDrillBlockEntity.framePositions(head);
+                for (int i = 0; i < frame.size(); i++) {
+                    level.setBlockAndUpdate(frame.get(i), (i == 4 ? ModBlocks.DRILL_FRAME_BRONZE
+                            : ModBlocks.DRILL_FRAME_TITANIUM).defaultBlockState());
+                }
+                still[0] = base.east(2).above();
+                var entity = (de.ipnats.hardwrought.chemistry.StillBlockEntity) level.getBlockEntity(still[0]);
+                entity.setItem(de.ipnats.hardwrought.chemistry.StillBlockEntity.CHARGE,
+                        new net.minecraft.world.item.ItemStack(de.ipnats.hardwrought.core.registry.ModItems.CRUDE_OIL_BUCKET));
+                entity.setItem(de.ipnats.hardwrought.chemistry.StillBlockEntity.BOTTLES,
+                        new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.GLASS_BOTTLE, 3));
+                entity.setItem(de.ipnats.hardwrought.chemistry.StillBlockEntity.FIRST_OUTPUT,
+                        de.ipnats.hardwrought.chemistry.Purity.with(new net.minecraft.world.item.ItemStack(
+                                de.ipnats.hardwrought.core.registry.ModItems.RAW_SULFUR), 0.68));
+            });
+            context.waitTicks(60);
+            world.getConnection().waitForChunksRender();
+            context.takeScreenshot("hardwrought-oil-rig-and-still");
+            world.getServer().runOnServer(server -> {
+                var player = server.getPlayerList().getPlayers().getFirst();
+                player.openMenu((de.ipnats.hardwrought.chemistry.StillBlockEntity) player.level().getBlockEntity(still[0]));
+            });
+            context.waitTicks(10);
+            context.takeScreenshot("hardwrought-still-screen");
+            context.runOnClient(client -> client.player.closeContainer());
+            // The compendium's view of the drill, whole and then its bottom layer on its own.
+            var rig = de.ipnats.hardwrought.knowledge.Multiblocks.ORE_DRILL_RIG;
+            var viewer = context.computeOnClient(client -> {
+                var screen = new de.ipnats.hardwrought.client.knowledge.MultiblockScreen(null, rig, rig.blocks());
+                client.gui.setScreen(screen);
+                return screen;
+            });
+            context.waitTicks(10);
+            context.takeScreenshot("hardwrought-multiblock-view");
+            context.runOnClient(client -> viewer.stepLayer(1));
+            context.waitTicks(5);
+            context.takeScreenshot("hardwrought-multiblock-layer");
+            context.runOnClient(client -> client.gui.setScreen(null));
         }
         // The Ultra switch sits under the game mode when a world is made.
         context.runOnClient(client -> net.minecraft.client.gui.screens.worldselection.CreateWorldScreen.openFresh(client, null));

@@ -7,7 +7,9 @@
 		"CreateWorldGameTabMixin",
 		"DeathScreenMixin",
 		"FluidRendererMixin",
+		"GuiGraphicsExtractorAccessor",
 		"InventoryScreenMixin",
+		"MinecraftGasPushMixin",
 		"RecipeBookScreenAccessor"
 	],
 	"injectors": {

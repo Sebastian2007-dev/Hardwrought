@@ -22,7 +22,8 @@
       "de.ipnats.hardwrought.test.FirecraftGameTests",
       "de.ipnats.hardwrought.test.MachineryGameTests",
       "de.ipnats.hardwrought.test.KineticsGameTests",
-      "de.ipnats.hardwrought.test.SmithingGameTests"
+      "de.ipnats.hardwrought.test.SmithingGameTests",
+      "de.ipnats.hardwrought.test.OilGameTests"
     ],
     "fabric-client-gametest": [
       "de.ipnats.hardwrought.test.CoreClientGameTest",

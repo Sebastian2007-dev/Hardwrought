@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": "hardwrought:chromium_ingot",
+    "S": "minecraft:stick"
+  },
+  "pattern": [
+    "ISI",
+    "S S",
+    "ISI"
+  ],
+  "result": {
+    "id": "hardwrought:drill_frame_chromium",
+    "count": 4
+  }
+}

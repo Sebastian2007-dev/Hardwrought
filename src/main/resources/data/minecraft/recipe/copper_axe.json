@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_transmute",
+  "category": "equipment",
+  "input": "hardwrought:copper_axe_head",
+  "material": "minecraft:stick",
+  "material_count": {
+    "min": 2,
+    "max": 2
+  },
+  "result": {
+    "id": "minecraft:copper_axe"
+  }
+}

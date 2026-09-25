@@ -1,9 +1,10 @@
 {
   "parent": "hardwrought:block/forge/part_4_shape",
   "textures": {
-    "side": "hardwrought:block/forge/small_side",
+    "side0": "hardwrought:block/forge/small_side_0",
+    "side1": "hardwrought:block/forge/small_side_1",
     "rim": "minecraft:block/bricks",
-    "bed": "minecraft:block/coal_block",
+    "floor": "hardwrought:block/forge/hearth_floor",
     "bottom": "minecraft:block/cobblestone",
     "particle": "minecraft:block/bricks"
   }

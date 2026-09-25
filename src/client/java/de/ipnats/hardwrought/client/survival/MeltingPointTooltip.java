@@ -13,10 +13,7 @@ import net.minecraft.resources.Identifier;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * How hot an ore has to get, and which furnace gets it there, said on the ore itself. A furnace
- * that quietly refuses its load is only fair if the player could have seen that coming.
- */
+/** How hot a metal is and the range in which it can be worked, said briefly on the item itself. */
 public final class MeltingPointTooltip {
     private static Map<Identifier, Double> points = Map.of();
 
@@ -39,10 +36,14 @@ public final class MeltingPointTooltip {
             } else {
                 double from = melting * de.ipnats.hardwrought.smithing.Smithing.WORKING_MIN;
                 double to = melting * de.ipnats.hardwrought.smithing.Smithing.WORKING_MAX;
-                lines.add(Component.translatable("gui.hardwrought.forging.workable",
-                        String.format(Locale.ROOT, "%.0f", from), String.format(Locale.ROOT, "%.0f", to))
-                        .withStyle(ChatFormatting.DARK_GRAY));
-                lines.add(heatNeeded(from).withStyle(ChatFormatting.DARK_GRAY));
+                if (de.ipnats.hardwrought.smithing.Smithing.isIngot(stack.getItem())) {
+                    lines.add(Component.translatable("gui.hardwrought.forging.optimal_max",
+                            String.format(Locale.ROOT, "%.0f", to)).withStyle(ChatFormatting.DARK_GRAY));
+                } else {
+                    lines.add(Component.translatable("gui.hardwrought.forging.workable",
+                            String.format(Locale.ROOT, "%.0f", from), String.format(Locale.ROOT, "%.0f", to))
+                            .withStyle(ChatFormatting.DARK_GRAY));
+                }
             }
         });
     }

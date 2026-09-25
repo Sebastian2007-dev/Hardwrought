@@ -1,9 +1,9 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
-    "bearing": "minecraft:block/stripped_oak_log",
-    "face": "minecraft:block/stripped_oak_log_top",
-    "particle": "minecraft:block/oak_planks"
+    "bearing": "hardwrought:block/hardwrought/shaft_side",
+    "face": "hardwrought:block/hardwrought/shaft_end",
+    "particle": "hardwrought:block/hardwrought/machine_boards"
   },
   "elements": [
     {

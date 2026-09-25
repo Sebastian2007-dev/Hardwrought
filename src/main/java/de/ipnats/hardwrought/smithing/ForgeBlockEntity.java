@@ -33,7 +33,6 @@ import net.minecraft.world.level.storage.ValueOutput;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.OptionalDouble;
 
 /**
  * The smith's hearth: a bed of burning coal, a place for fuel and places for the pieces lying in it.
@@ -43,12 +42,15 @@ import java.util.OptionalDouble;
  * on a turning shaft takes it to 2000 °C; a lining of refractory brick keeps that heat in and takes it
  * to 3500 °C, as hot as anything in the game gets.
  *
+ * <p>Coal laid in it has to be lit, and once lit the fire keeps itself going on whatever fuel is
+ * there, whether or not anything lies in it to be heated, until the last coal is burnt.
+ *
  * <p>A forge is slow and patient. Coal lasts four times as long as in a furnace, the fire comes up
  * slowly and the pieces follow it slowly; but whatever lies in the forge keeps its heat for as long as
  * it lies there, so a smith can take one piece out at a time and work it while the rest wait.
  *
  * <p>How many places there are depends on how big the forge is built (see {@link ForgeMultiblock}):
- * one fuel and one metal place on its own, one and four as a 2×2×2, four and nine as a 3×3×3. The
+ * one fuel and one metal place on its own, one and four as a 2×2, four and nine as a 3×3. The
  * places of a joined forge all live in its controller; the other blocks hold nothing.
  */
 public class ForgeBlockEntity extends BlockEntity implements Container, ExtendedMenuProvider<Integer> {
@@ -109,7 +111,7 @@ public class ForgeBlockEntity extends BlockEntity implements Container, Extended
 
     // ---- layout -------------------------------------------------------------------------------
 
-    /** 0 on its own, 1 for the 2×2×2, 2 for the 3×3×3. */
+    /** 0 on its own, 1 for the 2×2, 2 for the 3×3. */
     public int layout() {
         return isMultiblockPart() ? multiblockSize : 0;
     }
@@ -180,6 +182,13 @@ public class ForgeBlockEntity extends BlockEntity implements Container, Extended
         return false;
     }
 
+    /** Puts the fire out, as a room without the air for it does. The fuel still in the places stays. */
+    public void extinguish() {
+        ForgeBlockEntity target = working();
+        target.burnTicks = 0;
+        target.changed();
+    }
+
     /** Lights the fire directly, for tests and commands: as if this many ticks of fuel had caught. */
     public void addFuel(int ticks) {
         ForgeBlockEntity target = working();
@@ -200,21 +209,31 @@ public class ForgeBlockEntity extends BlockEntity implements Container, Extended
             ForgeMultiblock.dissolve(level, structure);
             structure = null;
         } else if (structure != null && level.getGameTime() % 20 == 0) {
-            ForgeMultiblock.applyParts(level, structure);
+            structure = ForgeMultiblock.grow(server, structure);
+            if (structure != null && !pos.equals(structure.controller())) return;
+            if (structure != null) ForgeMultiblock.applyParts(level, structure);
+        }
+        if (structure == null && !forge.isMultiblockPart() && state.getValue(ForgeBlock.PART) != 0) {
+            // Drawn as part of a forge that no longer stands, or of one of the old three-high ones.
+            ForgeMultiblock.setPart(level, pos, 0);
         }
         int layout = forge.layout();
 
-        if (forge.burnTicks > 0) forge.burnTicks--;
-        if (forge.burnTicks <= 0 && forge.hasMetal(layout)) forge.catchFuel(layout);
+        boolean burning = forge.burnTicks > 0;
+        if (burning) forge.burnTicks--;
+        // A fire that is going takes the next coal as the last one burns down; a cold one waits to be lit.
+        if (burning && forge.burnTicks <= 0) forge.catchFuel(layout);
         forge.lastTarget = (int) Math.round(forge.target(level, pos, level.getBlockState(pos)));
         forge.temperature += (forge.lastTarget - forge.temperature) * FIRE_RESPONSE;
 
         boolean lit = forge.burnTicks > 0;
+        int fill = forge.fillLevel(layout);
         BlockState now = level.getBlockState(pos);
         if (structure != null) {
-            ForgeMultiblock.syncLit(level, structure, lit);
-        } else if (now.getBlock() instanceof ForgeBlock && now.getValue(ForgeBlock.LIT) != lit) {
-            level.setBlock(pos, now.setValue(ForgeBlock.LIT, lit), Block.UPDATE_ALL);
+            ForgeMultiblock.syncFire(level, structure, lit, fill);
+        } else if (now.getBlock() instanceof ForgeBlock
+                && (now.getValue(ForgeBlock.LIT) != lit || now.getValue(ForgeBlock.FUEL) != fill)) {
+            level.setBlock(pos, now.setValue(ForgeBlock.LIT, lit).setValue(ForgeBlock.FUEL, fill), Block.UPDATE_ALL);
         }
         if (level.getGameTime() % HEATING_INTERVAL == 0) forge.heatPieces(server, layout);
         if (level.getGameTime() % 20 == 0) {
@@ -230,8 +249,8 @@ public class ForgeBlockEntity extends BlockEntity implements Container, Extended
         return false;
     }
 
-    /** Takes one item of fuel into the fire. Only when there is metal to heat: an empty hearth waits. */
-    private void catchFuel(int layout) {
+    /** Takes one item of fuel into the fire. Returns false where there was none to take. */
+    private boolean catchFuel(int layout) {
         for (int i = 0; i < fuelSlots(layout); i++) {
             ItemStack fuel = items.get(i);
             int value = ForgeBlock.fuelValue(fuel);
@@ -239,13 +258,49 @@ public class ForgeBlockEntity extends BlockEntity implements Container, Extended
             burnTicks = burnTotal = value * FUEL_STRETCH;
             fuel.shrink(1);
             changed();
-            return;
+            return true;
         }
+        return false;
     }
 
     /**
-     * Brings every piece a step closer to the fire's heat, never past the top of its working range,
-     * and keeps whatever it already has: nothing lying in a forge cools.
+     * Lights the coal in a cold forge: the first coal catches at once. Returns false where the fire is
+     * already going or there is nothing in the pit to light.
+     */
+    public boolean ignite() {
+        ForgeBlockEntity target = working();
+        return target.burnTicks <= 0 && target.catchFuel(target.layout());
+    }
+
+    /** How full the pit looks, 0 to 4: the coal lying in it, and the one burning if there is one. */
+    int fillLevel(int layout) {
+        int coal = burnTicks > 0 ? 1 : 0;
+        for (int i = 0; i < fuelSlots(layout); i++) {
+            ItemStack fuel = items.get(i);
+            // A block of coal is as much coal as ten.
+            coal += fuel.getCount() * ForgeBlock.fuelValue(fuel) / ForgeBlock.fuelValue(new ItemStack(net.minecraft.world.item.Items.COAL));
+        }
+        return fill(coal, fuelSlots(layout));
+    }
+
+    /**
+     * The fill level for this much coal in a forge with this many fuel places. The first coal already
+     * shows; the pit is brimming only when its places are well over half full.
+     */
+    public static int fill(int coal, int fuelPlaces) {
+        if (coal <= 0) return 0;
+        int eighths = coal * 8;
+        int capacity = 64 * fuelPlaces;
+        if (eighths <= capacity) return 1;
+        if (eighths <= capacity * 3) return 2;
+        if (eighths <= capacity * 5) return 3;
+        return 4;
+    }
+
+    /**
+     * Brings every piece a step closer to the fire's actual heat and keeps whatever it already has:
+     * nothing lying in a forge cools. The working range controls whether a piece can be hammered;
+     * it is not a temperature ceiling for a hotter forge.
      */
     private void heatPieces(ServerLevel level, int layout) {
         var runtime = CoreLifecycle.find(level.getServer());
@@ -259,9 +314,7 @@ public class ForgeBlockEntity extends BlockEntity implements Container, Extended
             double current = heat == null ? Heat.AMBIENT : heat.celsius();
             double next = current;
             if (temperature > current) {
-                OptionalDouble melting = Smithing.meltingPoint(piece.getItem(), runtime.materials());
-                double ceiling = melting.isPresent() ? melting.getAsDouble() * Smithing.WORKING_MAX : temperature;
-                next = Math.max(current, Math.min(ceiling, current + (temperature - current) * PIECE_RESPONSE));
+                next = current + (temperature - current) * PIECE_RESPONSE;
             }
             // Stamped until the next pass: a piece's heat only starts falling after its stamp, so
             // until then it holds exactly, and taken out it starts cooling from where it was.
@@ -496,13 +549,20 @@ public class ForgeBlockEntity extends BlockEntity implements Container, Extended
         long controller = input.getLongOr("multiblock_controller", Long.MIN_VALUE);
         multiblockController = controller == Long.MIN_VALUE ? null : BlockPos.of(controller);
         multiblockSize = input.getByteOr("multiblock_size", (byte) 0);
+        if (input.getIntOr("layout_version", 0) < 2) {
+            // Forges used to be built three high. That is no longer a shape, so every block of one is
+            // on its own again and the flat layers join up anew. The controller keeps everything that
+            // lay in it; what its single places cannot hold is handed out on a later tick.
+            multiblockController = null;
+            multiblockSize = 0;
+        }
     }
 
     @Override
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
         ContainerHelper.saveAllItems(output, items, true);
-        output.putInt("layout_version", 1);
+        output.putInt("layout_version", 2);
         output.putInt("burn", burnTicks);
         output.putInt("burn_total", burnTotal);
         output.putDouble("temperature", temperature);

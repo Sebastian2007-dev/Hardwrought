@@ -2,8 +2,8 @@
   "parent": "minecraft:block/cube_bottom_top",
   "__comment": "Turning: the top face changes so the block says what it is doing without a renderer.",
   "textures": {
-    "top": "minecraft:block/stripped_oak_log",
-    "bottom": "minecraft:block/oak_planks",
-    "side": "minecraft:block/oak_planks"
+    "top": "hardwrought:block/hardwrought/crank_case_turning",
+    "bottom": "hardwrought:block/hardwrought/crank_case_side",
+    "side": "hardwrought:block/hardwrought/crank_case_side"
   }
 }

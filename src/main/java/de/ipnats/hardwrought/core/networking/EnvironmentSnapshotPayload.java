@@ -15,7 +15,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 public record EnvironmentSnapshotPayload(GasMixture gases, double temperature, double wind,
                                          boolean sealed, int volume,
                                          boolean instrumented) implements CustomPacketPayload {
-    public static final Type<EnvironmentSnapshotPayload> TYPE = new Type<>(Hardwrought.id("environment_snapshot_v1"));
+    public static final Type<EnvironmentSnapshotPayload> TYPE = new Type<>(Hardwrought.id("environment_snapshot_v2"));
     public static final StreamCodec<RegistryFriendlyByteBuf, EnvironmentSnapshotPayload> CODEC = new StreamCodec<>() {
         @Override
         public EnvironmentSnapshotPayload decode(RegistryFriendlyByteBuf buffer) {
@@ -30,7 +30,7 @@ public record EnvironmentSnapshotPayload(GasMixture gases, double temperature, d
             buffer.writeDouble(payload.gases.oxygen());
             buffer.writeDouble(payload.gases.carbonDioxide());
             buffer.writeDouble(payload.gases.methane());
-            buffer.writeDouble(payload.gases.smoke());
+            buffer.writeDouble(payload.gases.carbonMonoxide());
             buffer.writeDouble(payload.temperature);
             buffer.writeDouble(payload.wind);
             buffer.writeBoolean(payload.sealed);

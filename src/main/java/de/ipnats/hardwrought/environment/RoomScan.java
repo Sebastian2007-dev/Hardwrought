@@ -138,6 +138,10 @@ public record RoomScan(Enclosure enclosure, BlockPos origin, int volume, double 
                 }
                 if (blocksFace(level, pos, state, direction)
                         || blocksFace(level, next, neighbour, direction.getOpposite())) {
+                    // A forge is a solid block the fill never enters, but its fire burns in the room.
+                    if (isForgeFire(neighbour) && combustion.size() < MAX_COMBUSTION_SOURCES) {
+                        combustion.add(next.immutable());
+                    }
                     if (boundarySamples < MAX_BOUNDARY_SAMPLES) {
                         insulationSum += insulationOf(neighbour);
                         if (isCoalBearing(neighbour)) coalSamples++;
@@ -235,7 +239,13 @@ public record RoomScan(Enclosure enclosure, BlockPos origin, int volume, double 
         if (state.is(Blocks.FURNACE) || state.is(Blocks.BLAST_FURNACE) || state.is(Blocks.SMOKER)) {
             return state.getOptionalValue(BlockStateProperties.LIT).orElse(false);
         }
-        return false;
+        return isForgeFire(state);
+    }
+
+    /** A burning forge block: an open bed of coal, whose fumes go into the room unless a hood takes them. */
+    public static boolean isForgeFire(BlockState state) {
+        return state.getBlock() instanceof de.ipnats.hardwrought.smithing.ForgeBlock
+                && state.getValue(de.ipnats.hardwrought.smithing.ForgeBlock.LIT);
     }
 
     /**

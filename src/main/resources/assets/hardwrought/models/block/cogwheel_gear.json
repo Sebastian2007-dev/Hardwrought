@@ -1,9 +1,9 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
-    "axle": "minecraft:block/stripped_oak_log",
-    "wheel": "minecraft:block/spruce_planks",
-    "particle": "minecraft:block/spruce_planks"
+    "axle": "hardwrought:block/hardwrought/shaft_side",
+    "wheel": "hardwrought:block/hardwrought/gear_wood",
+    "particle": "hardwrought:block/hardwrought/gear_wood"
   },
   "elements": [
     {

@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.InputConstants;
 import de.ipnats.hardwrought.Hardwrought;
 import de.ipnats.hardwrought.core.networking.SleepRequestPayload;
 import de.ipnats.hardwrought.core.networking.SurvivalSnapshotPayload;
-import de.ipnats.hardwrought.survival.PlayerVitals;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -33,7 +32,7 @@ public final class SurvivalHud {
     public static final int PANEL_X = 10;
     public static final int PANEL_Y = 10;
     public static final int PANEL_WIDTH = 122;
-    public static final int PANEL_HEIGHT = 167;
+    public static final int PANEL_HEIGHT = 136;
     /** The first free pixel under the panel, border included. */
     public static final int PANEL_BOTTOM = PANEL_Y + PANEL_HEIGHT;
 
@@ -133,51 +132,34 @@ public final class SurvivalHud {
         graphics.fill(x - 4, y - 4, x + width + 4, y + PANEL_HEIGHT, 0xA6080B0E);
         graphics.fill(x - 3, y - 3, x + width + 3, y - 2, 0x805D6972);
 
-        // Hunger reads off the vanilla bar as well, but only in shanks and only up to the point the
-        // bar calls full. The reserve above that, and the exact figure, are worth a row of their own.
-        graphics.text(client.font, I18n.get("hud.hardwrought.calories"), x, y, 0xFFE8EDF0, true);
-        thinBar(graphics, x, y + 12, width, values.calories(), PlayerVitals.MAX_CALORIES,
-                calorieColor(values.calories()));
-        String calories = String.format(Locale.ROOT, "%.0f / %.0f kcal", values.calories(),
-                PlayerVitals.MAX_CALORIES);
-        graphics.text(client.font, calories, x + (width - client.font.width(calories)) / 2,
-                y + 19, 0xFFC9D0D4, false);
-
-        graphics.text(client.font, I18n.get("hud.hardwrought.fatigue"), x, y + 34, 0xFFE8EDF0, true);
-        thinBar(graphics, x, y + 46, width, values.fatigue(), 100,
+        graphics.text(client.font, I18n.get("hud.hardwrought.fatigue"), x, y, 0xFFE8EDF0, true);
+        thinBar(graphics, x, y + 12, width, values.fatigue(), 100,
                 fatigueColor(values.fatigue()));
         String fatigue = String.format(Locale.ROOT, "%.0f / 100", values.fatigue());
         graphics.text(client.font, fatigue, x + (width - client.font.width(fatigue)) / 2,
-                y + 53, 0xFFC9D0D4, false);
+                y + 20, 0xFFC9D0D4, false);
 
-        graphics.text(client.font, I18n.get("hud.hardwrought.temperature"), x, y + 68,
+        graphics.text(client.font, I18n.get("hud.hardwrought.temperature"), x, y + 32,
                 0xFFE8EDF0, true);
-        temperatureBar(graphics, x, y + 80, width, values.bodyTemperature());
+        temperatureBar(graphics, x, y + 44, width, values.bodyTemperature());
         String temperature = String.format(Locale.ROOT, "%.1f °C", values.bodyTemperature());
         graphics.text(client.font, temperature, x + (width - client.font.width(temperature)) / 2,
-                y + 90, temperatureTextColor(values.bodyTemperature()), false);
+                y + 52, temperatureTextColor(values.bodyTemperature()), false);
 
-        graphics.text(client.font, I18n.get("hud.hardwrought.stress"), x, y + 102, 0xFFE8EDF0, true);
-        thinBar(graphics, x, y + 114, width, values.stress(), 100, fatigueColor(values.stress()));
+        graphics.text(client.font, I18n.get("hud.hardwrought.stress"), x, y + 64, 0xFFE8EDF0, true);
+        thinBar(graphics, x, y + 76, width, values.stress(), 100, fatigueColor(values.stress()));
         String stress = String.format(Locale.ROOT, "%.0f / 100", values.stress());
         graphics.text(client.font, stress, x + (width - client.font.width(stress)) / 2,
-                y + 121, 0xFFC9D0D4, false);
+                y + 84, 0xFFC9D0D4, false);
 
         // Carry weight is only a fair rule if a player can see where they stand against it.
-        graphics.text(client.font, I18n.get("hud.hardwrought.carried"), x, y + 136, 0xFFE8EDF0, true);
+        graphics.text(client.font, I18n.get("hud.hardwrought.carried"), x, y + 96, 0xFFE8EDF0, true);
         double capacity = Math.max(0.001, values.capacityKg());
         double ratio = values.carriedKg() / capacity;
-        thinBar(graphics, x, y + 148, width, Math.min(ratio, 1.0), 1.0, loadColor(ratio));
+        thinBar(graphics, x, y + 108, width, Math.min(ratio, 1.0), 1.0, loadColor(ratio));
         String carried = String.format(Locale.ROOT, "%.1f / %.0f kg", values.carriedKg(), capacity);
         graphics.text(client.font, carried, x + (width - client.font.width(carried)) / 2,
-                y + 155, ratio > 1.0 ? 0xFFF3A66B : 0xFFC9D0D4, false);
-    }
-
-    /** Green on a full reserve, amber as it goes, red once starvation is the next thing to happen. */
-    private static int calorieColor(double calories) {
-        double ratio = clamp(calories / PlayerVitals.MAX_CALORIES, 0, 1);
-        if (ratio > 0.5) return lerpColor(0xFFD9B45A, 0xFF70C98B, (ratio - 0.5) / 0.5);
-        return lerpColor(0xFFD15B62, 0xFFD9B45A, ratio / 0.5);
+                y + 116, ratio > 1.0 ? 0xFFF3A66B : 0xFFC9D0D4, false);
     }
 
     /** Green while the load is free, amber once it starts to tell, red when it is telling loudly. */

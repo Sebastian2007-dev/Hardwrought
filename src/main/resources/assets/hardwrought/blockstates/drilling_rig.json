@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "running=false": {
+      "model": "hardwrought:block/drilling_rig"
+    },
+    "running=true": {
+      "model": "hardwrought:block/drilling_rig"
+    }
+  }
+}

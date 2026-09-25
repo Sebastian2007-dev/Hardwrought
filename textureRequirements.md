@@ -207,13 +207,12 @@ Es gelten die **Regeln fuer GUI-Sprites** aus dem Kompendium-Abschnitt oben, mit
 Leiste haengt direkt am Vanilla-Inventarrahmen und muss zu ihm passen, nicht zum Kompendium. Also die
 gedeckten Grau- und Brauntoene des Vanilla-Inventars aufgreifen statt des dunklen Buchpapiers.
 
-## Milestone 10: Antrieb und Starter Crusher (offen)
+## Milestone 10: Antrieb und Starter Crusher (umgesetzt)
 
-Die Blockmodelle und Itemdarstellungen funktionieren, besitzen aber noch keine eigenen
-Oberflaechentexturen. Die Items rendern ihre jeweiligen Blockmodelle; deshalb werden **keine
-separaten 16x16-Item-Sprites** benoetigt. Gezeichnet werden die Blocktexturen, die anschliessend in
-den vorhandenen Modell-JSONs anstelle der aktuellen `minecraft:block/...`-Referenzen eingetragen
-werden.
+Die Blockmodelle und Itemdarstellungen verwenden nun eigene, Vanilla-nahe 16x16-Oberflaechen.
+Erzeugt werden sie reproduzierbar von `tools/vanilla_style_block_textures.py`; die Stilquelle und
+Vorschau liegen unter `art_source/machinery/`. Die Items rendern weiterhin ihre Blockmodelle und
+brauchen deshalb keine separaten Item-Sprites.
 
 | Modell | Derzeit verwendete Vanilla-Texturen | Was es sein soll |
 | --- | --- | --- |

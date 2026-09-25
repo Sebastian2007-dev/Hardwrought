@@ -122,6 +122,16 @@
     },
     "hardwrought:brick_furnace",
     "hardwrought:starter_crusher",
-    "hardwrought:forge"
+    "hardwrought:forge",
+    "hardwrought:forge_hood",
+    "hardwrought:gas_pipe",
+    "hardwrought:drilling_rig",
+    "hardwrought:still",
+    "hardwrought:ore_drill",
+    "hardwrought:drill_frame_bronze",
+    "hardwrought:drill_frame_iron",
+    "hardwrought:drill_frame_nickel",
+    "hardwrought:drill_frame_chromium",
+    "hardwrought:drill_frame_titanium"
   ]
 }

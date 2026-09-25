@@ -29,6 +29,7 @@ PARTS = {
     "iron": ["pickaxe_head", "axe_head", "shovel_head", "hoe_head", "sword_blade", "dagger_blade",
              "greatsword_blade", "halberd_head", "hammer_head"],
     "gold": ["pickaxe_head", "axe_head", "shovel_head", "hoe_head", "sword_blade"],
+    "copper": ["pickaxe_head", "axe_head", "shovel_head", "hoe_head", "sword_blade"],
     "bronze": ["pickaxe_head", "axe_head"],
 }
 

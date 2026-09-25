@@ -7,8 +7,12 @@ import de.ipnats.hardwrought.core.events.CoreLifecycle;
 import de.ipnats.hardwrought.core.networking.EnvironmentSnapshotPayload;
 import de.ipnats.hardwrought.core.registry.ModItems;
 import de.ipnats.hardwrought.core.save.CoreSaveData;
+import de.ipnats.hardwrought.core.registry.ModBlocks;
 import de.ipnats.hardwrought.environment.CellAtmosphere;
+import de.ipnats.hardwrought.environment.Gas;
 import de.ipnats.hardwrought.environment.GasMixture;
+import de.ipnats.hardwrought.environment.GasSources;
+import de.ipnats.hardwrought.environment.Gases;
 import de.ipnats.hardwrought.environment.EnvironmentSystem;
 import de.ipnats.hardwrought.environment.RoomScan;
 import de.ipnats.hardwrought.core.simulation.SimulationScheduler;
@@ -32,8 +36,8 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 public final class EnvironmentGameTests {
     private static final ResourceKey<DamageType> BAD_AIR =
             ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("bad_air"));
-    private static final ResourceKey<DamageType> SMOKE =
-            ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("smoke"));
+    private static final ResourceKey<DamageType> CARBON_MONOXIDE =
+            ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("carbon_monoxide"));
     /** Built clear of the test structure so the scan never meets the test blocks themselves. */
     private static final int WORKSPACE_OFFSET = 24;
 
@@ -51,27 +55,43 @@ public final class EnvironmentGameTests {
 
         var clamped = new GasMixture(99, -4, Double.NaN, 7);
         helper.assertTrue(clamped.oxygen() == GasMixture.MAX_OXYGEN && clamped.carbonDioxide() == 0
-                        && clamped.methane() == 0 && clamped.smoke() == 1,
+                        && clamped.methane() == 0 && clamped.carbonMonoxide() == GasMixture.MAX_CARBON_MONOXIDE,
                 "Every operation stays inside the declared bounds");
         helper.assertTrue(GasMixture.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString(
-                        "{\"oxygen\":0.9,\"carbon_dioxide\":0,\"methane\":0,\"smoke\":0}")).error().isPresent(),
+                        "{\"oxygen\":0.9,\"carbon_dioxide\":0,\"methane\":0,\"carbon_monoxide\":0}")).error().isPresent(),
                 "A saved value outside the bounds is rejected rather than clamped silently");
         helper.succeed();
     }
 
     @GameTest
-    public void ventilationConvergesOnOutsideAir(GameTestHelper helper) {
-        var spent = new GasMixture(0.09, 0.06, 0.02, 0.8);
-        var once = spent.ventilate(0.5);
-        helper.assertTrue(once.oxygen() > spent.oxygen() && once.carbonDioxide() < spent.carbonDioxide()
-                        && once.methane() < spent.methane() && once.smoke() < spent.smoke(),
-                "Ventilation moves every value toward the outside air");
-        var mixture = spent;
-        for (int step = 0; step < 200; step++) mixture = mixture.ventilate(0.5);
-        helper.assertTrue(Math.abs(mixture.oxygen() - GasMixture.OUTDOOR_OXYGEN) < 1.0E-6
-                        && mixture.smoke() < 1.0E-6,
-                "Repeated ventilation converges on the outside baseline");
-        helper.assertTrue(spent.ventilate(0).equals(spent), "No ventilation changes nothing");
+    public void eightUnitsLandOnTheThresholdsOfEachGas(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos pos = workspace(helper);
+        try {
+            level.setBlock(pos, Gases.with(Blocks.AIR.defaultBlockState(), Gas.CARBON_DIOXIDE, 8), 2);
+            GasMixture full = Gases.sample(level, pos);
+            helper.assertTrue(full.carbonDioxide() > GasMixture.CARBON_DIOXIDE_LETHAL - 0.001,
+                    "A block full of carbon dioxide is lethal to breathe: " + full.carbonDioxide());
+            level.setBlock(pos, Gases.with(Blocks.AIR.defaultBlockState(), Gas.CARBON_DIOXIDE, 1), 2);
+            GasMixture one = Gases.sample(level, pos);
+            helper.assertTrue(one.carbonDioxide() >= GasMixture.CARBON_DIOXIDE_NOTICEABLE
+                            && one.carbonDioxide() < GasMixture.CARBON_DIOXIDE_SEVERE,
+                    "One unit is just noticeable");
+            helper.assertTrue(one.oxygen() < GasMixture.OUTDOOR_OXYGEN, "and pushes a little oxygen out");
+            for (int units = 1; units <= Gas.CAPACITY; units++) {
+                level.setBlock(pos, Gases.with(Blocks.AIR.defaultBlockState(), Gas.METHANE, units), 2);
+                boolean explosive = Gases.sample(level, pos).explosive();
+                helper.assertTrue(explosive == (units >= 3 && units <= 7),
+                        "Methane is explosive from three to seven units, not at " + units);
+            }
+            level.setBlock(pos, Gases.with(Blocks.AIR.defaultBlockState(), Gas.CARBON_MONOXIDE, 8), 2);
+            helper.assertTrue(Gases.sample(level, pos).carbonMonoxideStress() == 1.0,
+                    "A block full of carbon monoxide is lethal");
+            level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+            helper.assertTrue(Gases.sample(level, pos).equals(GasMixture.OUTDOOR), "Plain air is outside air");
+        } finally {
+            level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+        }
         helper.succeed();
     }
 
@@ -150,23 +170,23 @@ public final class EnvironmentGameTests {
         var data = CoreSaveData.TYPE.constructor().get();
         helper.assertTrue(data.cellAtmosphere("minecraft:overworld@1") == null,
                 "A room with no history reports nothing rather than a guessed value");
-        var stale = new CellAtmosphere(new GasMixture(0.12, 0.03, 0.01, 0.2), 24.5, 100);
+        var stale = new CellAtmosphere(24.5, 100);
         data.setCellAtmosphere("minecraft:overworld@1", stale);
         var encoded = CoreSaveData.CODEC.encodeStart(JsonOps.INSTANCE, data).getOrThrow();
         var decoded = CoreSaveData.CODEC.parse(JsonOps.INSTANCE, encoded).getOrThrow();
         helper.assertTrue(stale.equals(decoded.cellAtmosphere("minecraft:overworld@1")),
-                "A room keeps the air it built up across a restart");
+                "A room keeps the warmth it built up across a restart");
 
         for (int index = 0; index < CoreSaveData.MAX_SAVED_CELLS + 40; index++) {
             data.setCellAtmosphere("minecraft:overworld@" + index,
-                    new CellAtmosphere(GasMixture.OUTDOOR, 15, 200 + index));
+                    new CellAtmosphere(15, 200 + index));
         }
         helper.assertTrue(data.savedCellCount() <= CoreSaveData.MAX_SAVED_CELLS,
                 "The saved room table is bounded rather than growing forever");
         helper.assertTrue(data.cellAtmosphere("minecraft:overworld@1") == null,
                 "The room unvisited longest is the one that is forgotten");
-        expectFailure(() -> new CellAtmosphere(null, 0, 0));
-        expectFailure(() -> new CellAtmosphere(GasMixture.OUTDOOR, Double.NaN, 0));
+        expectFailure(() -> new CellAtmosphere(Double.NaN, 0));
+        expectFailure(() -> new CellAtmosphere(15, -1));
         helper.succeed();
     }
 
@@ -177,8 +197,8 @@ public final class EnvironmentGameTests {
         helper.assertTrue(lines.stream().noneMatch(line -> line.startsWith("GAS | unavailable")),
                 "The gas channel has a real provider once the environment model exists");
         helper.assertTrue(lines.stream().anyMatch(line -> line.startsWith("GAS | ")
-                        && (line.contains("open air") || line.contains("O2=") || line.contains("not simulated yet"))),
-                "The gas channel reports measured air, an open space, or that it has not simulated one yet");
+                        && line.contains("O2=") && line.contains("of " + Gas.CAPACITY)),
+                "The gas channel reports the gas block at the position and the air it makes");
         helper.assertTrue(lines.stream().anyMatch(line -> line.startsWith("TEMPERATURE | ")
                         && (line.contains("wind=") || line.contains("room=") || line.contains("outdoor="))),
                 "The temperature channel reports the room model");
@@ -191,10 +211,10 @@ public final class EnvironmentGameTests {
     public void gasDamageTypesAreRegisteredAndBypassArmor(GameTestHelper helper) {
         var registry = helper.getLevel().registryAccess().lookupOrThrow(Registries.DAMAGE_TYPE);
         var badAir = registry.get(BAD_AIR).orElse(null);
-        var smoke = registry.get(SMOKE).orElse(null);
-        helper.assertTrue(badAir != null && smoke != null,
+        var poison = registry.get(CARBON_MONOXIDE).orElse(null);
+        helper.assertTrue(badAir != null && poison != null,
                 "Section 18 hazards have their own damage types, so a death message names the cause");
-        helper.assertTrue(badAir.is(DamageTypeTags.BYPASSES_ARMOR) && smoke.is(DamageTypeTags.BYPASSES_ARMOR),
+        helper.assertTrue(badAir.is(DamageTypeTags.BYPASSES_ARMOR) && poison.is(DamageTypeTags.BYPASSES_ARMOR),
                 "Armor cannot keep a gas out");
         helper.succeed();
     }
@@ -331,9 +351,6 @@ public final class EnvironmentGameTests {
                     "An open trapdoor is still a wall: the space stays a room");
             helper.assertTrue(opened.apertureArea() == 1.0 && opened.volume() == closed.volume(),
                     "It counts as a whole opening and the room keeps its size");
-            helper.assertTrue(EnvironmentSystem.ventilationRate(opened.volume(), opened.apertureArea())
-                            > 10 * EnvironmentSystem.ventilationRate(closed.volume(), closed.apertureArea()),
-                    "and the room exchanges its air many times faster with the trapdoor open than shut");
 
             // A grille bounds the room too, but less of it is actually gap.
             level.setBlockAndUpdate(wall, Blocks.OAK_FENCE.defaultBlockState());
@@ -414,74 +431,265 @@ public final class EnvironmentGameTests {
     }
 
     @GameTest
-    public void apertureVentilationKeepsARoomLiveable(GameTestHelper helper) {
-        double openDoor = RoomScan.apertureWeight(Blocks.OAK_DOOR.defaultBlockState()
-                .setValue(BlockStateProperties.OPEN, true));
-        helper.assertTrue(EnvironmentSystem.ventilationRate(27, openDoor)
-                        > EnvironmentSystem.ventilationRate(27, 0),
-                "An opening raises how fast a room exchanges air");
-        helper.assertTrue(EnvironmentSystem.ventilationRate(512, openDoor)
-                        < EnvironmentSystem.ventilationRate(27, openDoor),
-                "while the same opening does less for a far larger space");
-
-        helper.assertTrue(EnvironmentSystem.equilibriumOxygen(8, 1, 0, 0) < GasMixture.OXYGEN_LETHAL
-                        && EnvironmentSystem.equilibriumCarbonDioxide(8, 1, 0, 0)
-                        > GasMixture.CARBON_DIOXIDE_LETHAL,
-                "A shut box of 8 blocks is lethal on both counts");
-
-        // With the door open there is nothing in the way: the room breathes with the outside.
-        helper.assertTrue(GasMixture.OUTDOOR_OXYGEN
-                        - EnvironmentSystem.equilibriumOxygen(30, 1, openDoor, 0) < 0.005,
-                "An open door leaves an ordinary room within half a percent of outside air");
-        helper.assertTrue(GasMixture.OUTDOOR_OXYGEN
-                        - EnvironmentSystem.equilibriumOxygen(8, 1, openDoor, 0) < 0.005,
-                "and does the same for the smallest one");
-        helper.assertTrue(EnvironmentSystem.equilibriumCarbonDioxide(30, 1, openDoor, 0)
-                        < GasMixture.CARBON_DIOXIDE_NOTICEABLE,
-                "so its carbon dioxide never even becomes noticeable");
-
-        // Section 19: a fire indoors has to be ventilated, not merely enclosed.
+    public void aFireWarmsARoomByWhatKindOfFireItIs(GameTestHelper helper) {
         double campfire = EnvironmentSystem.flameWeight(Blocks.CAMPFIRE.defaultBlockState()
                 .setValue(BlockStateProperties.LIT, true));
-        helper.assertTrue(EnvironmentSystem.equilibriumOxygen(30, 1, 0, campfire)
-                        < EnvironmentSystem.FIRE_MINIMUM_OXYGEN,
-                "A campfire in a shut room uses the air up until it goes out");
-        helper.assertTrue(EnvironmentSystem.equilibriumOxygen(30, 1, openDoor, campfire)
-                        > EnvironmentSystem.FIRE_MINIMUM_OXYGEN,
-                "With the door open it keeps burning");
         helper.assertTrue(campfire < EnvironmentSystem.flameWeight(Blocks.FIRE.defaultBlockState()),
-                "A contained fire burns less air than an open one");
+                "A contained fire warms a room less than an open one");
         helper.assertTrue(EnvironmentSystem.flameWeight(Blocks.TORCH.defaultBlockState()) < campfire,
                 "and a torch less again");
         helper.succeed();
     }
 
-    @GameTest
-    public void gasesLayerByTheirWeight(GameTestHelper helper) {
-        var mixture = new GasMixture(0.20, 0.04, 0.04, 0.4);
-        var floor = mixture.at(0);
-        var ceiling = mixture.at(1);
-        helper.assertTrue(floor.carbonDioxide() > ceiling.carbonDioxide(),
-                "Carbon dioxide is heavier than air and pools in the low places");
-        helper.assertTrue(ceiling.methane() > floor.methane(),
-                "Methane is lighter than air and gathers against the roof");
-        helper.assertTrue(ceiling.smoke() > floor.smoke(), "Smoke rises with the heat that makes it");
-        helper.assertTrue(floor.oxygen() == ceiling.oxygen(),
-                "Oxygen is close enough to air to stay evenly mixed");
-        helper.assertTrue(Math.abs(mixture.at(0.5).carbonDioxide() - mixture.carbonDioxide()) < 1.0E-9,
-                "Half way up is the stored average");
-        helper.assertTrue(Math.abs((floor.carbonDioxide() + ceiling.carbonDioxide()) / 2
-                        - mixture.carbonDioxide()) < 1.0E-9,
-                "Sampling a height creates no gas and destroys none");
-        helper.assertTrue(mixture.at(-5).equals(floor) && mixture.at(9).equals(ceiling),
-                "A height outside the space is clamped, never extrapolated");
+    @GameTest(maxTicks = 200)
+    public void carbonDioxideSinksAndGathersIntoFullBlocks(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos base = workspace(helper);
+        buildShell(level, base, Blocks.STONE.defaultBlockState());
+        BlockPos floor = base.below();
+        level.setBlockAndUpdate(floor, Gases.with(Blocks.AIR.defaultBlockState(), Gas.CARBON_DIOXIDE, 7));
+        level.setBlockAndUpdate(base.above(), Gases.with(Blocks.AIR.defaultBlockState(), Gas.CARBON_DIOXIDE, 2));
+        helper.runAfterDelay(150, () -> {
+            try {
+                // Random ticks may break a unit or two down meanwhile, and that rises: it is counted apart.
+                int decayed = decayedIn(level, base);
+                helper.assertTrue(Gases.units(level.getBlockState(floor), Gas.CARBON_DIOXIDE) + decayed >= 8,
+                        "Two falling onto seven make eight: " + level.getBlockState(floor));
+                helper.assertTrue(countIn(level, base, Gas.CARBON_DIOXIDE, 1) == 0
+                                && countIn(level, base, Gas.CARBON_DIOXIDE, 0) == 0,
+                        "Nothing of it is left above the floor");
+                helper.assertTrue(countIn(level, base, Gas.CARBON_DIOXIDE, -1) + decayed == 9,
+                        "and the one left over lies beside it on the floor: nothing is lost or made");
+                helper.assertTrue(gasBlocksIn(level, base, -1) == 2,
+                        "It gathers into as few blocks as it fits in, not a film over the floor");
+            } finally {
+                clearShell(level, base);
+            }
+            helper.succeed();
+        });
+    }
 
-        // Why a safety lamp is held up: the average can be below the window while the roof is not.
-        var lean = new GasMixture(0.20, 0, 0.040, 0);
-        helper.assertFalse(lean.explosive(), "On average this space is below the flammability window");
-        helper.assertTrue(lean.at(1).explosive(), "but against the roof it is inside it");
-        helper.assertFalse(lean.at(0).explosive(), "and down at the floor there is almost nothing");
+    @GameTest(maxTicks = 300)
+    public void methaneRisesPastCarbonDioxide(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos base = workspace(helper);
+        buildShell(level, base, Blocks.STONE.defaultBlockState());
+        level.setBlockAndUpdate(base.below(), Gases.with(Blocks.AIR.defaultBlockState(), Gas.METHANE, 4));
+        level.setBlockAndUpdate(base, Gases.with(Blocks.AIR.defaultBlockState(), Gas.CARBON_DIOXIDE, 8));
+        helper.runAfterDelay(250, () -> {
+            try {
+                helper.assertTrue(countIn(level, base, Gas.METHANE, 1) == 4,
+                        "The light gas ends up against the roof, all four units of it");
+                helper.assertTrue(countIn(level, base, Gas.CARBON_DIOXIDE, -1) + decayedIn(level, base) == 8,
+                        "and the heavy one on the floor, all eight units of it, bar what has broken down");
+            } finally {
+                clearShell(level, base);
+            }
+            helper.succeed();
+        });
+    }
+
+    @GameTest(maxTicks = 60)
+    public void lightGasRisesWithoutJumpingToTheClouds(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos pos = workspace(helper);
+        int ceiling = de.ipnats.hardwrought.environment.GasBlock.cloudCeiling(level);
+        helper.assertTrue(ceiling > pos.getY() + 24 && ceiling <= level.getMaxY(),
+                "There is enough open sky below the clouds for the rising-gas test");
+        BlockPos under = new BlockPos(pos.getX(), ceiling, pos.getZ());
+        level.setBlockAndUpdate(pos, Gases.with(Blocks.AIR.defaultBlockState(), Gas.METHANE, 5));
+        helper.runAfterDelay(3, () -> {
+            helper.assertTrue(Gases.units(level.getBlockState(pos), Gas.METHANE) == 4
+                            && Gases.units(level.getBlockState(pos.above()), Gas.METHANE) == 1,
+                    "Methane releases one unit into the block above instead of moving as one jumping block");
+        });
+        helper.runAfterDelay(30, () -> {
+            try {
+                helper.assertTrue(Gases.total(level.getBlockState(pos)) == 0,
+                        "With nothing above it, methane rises");
+                int nearby = 0;
+                for (int y = 0; y <= 24; y++) {
+                    nearby += Gases.units(level.getBlockState(pos.above(y)), Gas.METHANE);
+                }
+                for (BlockPos near : BlockPos.betweenClosed(under.offset(-3, -3, -3), under.offset(3, 0, 3))) {
+                    helper.assertTrue(Gases.units(level.getBlockState(near), Gas.METHANE) == 0,
+                            "Rising methane must not teleport to the cloud layer");
+                }
+                helper.assertTrue(nearby == 5,
+                        "All five methane units should still be in the rising plume, found " + nearby);
+            } finally {
+                for (int y = 0; y <= 24; y++) {
+                    BlockPos rising = pos.above(y);
+                    if (Gases.isGas(level.getBlockState(rising))) {
+                        level.setBlock(rising, Blocks.AIR.defaultBlockState(), 2);
+                    }
+                }
+                for (BlockPos near : BlockPos.betweenClosed(under.offset(-3, -3, -3), under.offset(3, 0, 3))) {
+                    if (Gases.isGas(level.getBlockState(near))) level.setBlock(near, Blocks.AIR.defaultBlockState(), 2);
+                }
+            }
+            helper.succeed();
+        });
+    }
+
+    @GameTest
+    public void gasCanBePushedABlockAlong(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos base = workspace(helper);
+        buildShell(level, base, Blocks.STONE.defaultBlockState());
+        BlockPos from = base.offset(-1, -1, 0);
+        try {
+            level.setBlock(from, Gases.with(Blocks.AIR.defaultBlockState(), Gas.CARBON_DIOXIDE, 5), 2);
+            helper.assertTrue(de.ipnats.hardwrought.environment.GasPush.push(level, from, Direction.EAST) == 5,
+                    "A push moves the whole block of gas");
+            helper.assertTrue(Gases.total(level.getBlockState(from)) == 0
+                            && Gases.units(level.getBlockState(from.east()), Gas.CARBON_DIOXIDE) == 5,
+                    "one block the way it was pushed");
+            level.setBlock(from.east(2), Gases.with(Blocks.AIR.defaultBlockState(), Gas.CARBON_DIOXIDE, 6), 2);
+            helper.assertTrue(de.ipnats.hardwrought.environment.GasPush.push(level, from.east(), Direction.EAST) == 2,
+                    "Into a gas block it goes only as far as there is room");
+            helper.assertTrue(Gases.units(level.getBlockState(from.east()), Gas.CARBON_DIOXIDE) == 3,
+                    "and the rest stays behind");
+            helper.assertTrue(de.ipnats.hardwrought.environment.GasPush.push(level, from.east(2), Direction.EAST) == 0,
+                    "Against a wall it goes nowhere");
+        } finally {
+            clearShell(level, base);
+        }
         helper.succeed();
+    }
+
+    @GameTest
+    public void carbonDioxideBreaksDownIntoALighterGas(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos base = workspace(helper);
+        buildShell(level, base, Blocks.STONE.defaultBlockState());
+        BlockPos pos = base.below();
+        try {
+            level.setBlock(pos, Gases.with(Blocks.AIR.defaultBlockState(), Gas.CARBON_DIOXIDE, 8), 2);
+            for (int tick = 0; tick < 400 && Gases.units(level.getBlockState(pos), Gas.DECAYED_CARBON_DIOXIDE) == 0; tick++) {
+                level.getBlockState(pos).randomTick(level, pos, level.getRandom());
+            }
+            BlockState after = level.getBlockState(pos);
+            helper.assertTrue(Gases.units(after, Gas.DECAYED_CARBON_DIOXIDE) > 0,
+                    "Left lying, carbon dioxide breaks down into the light kind");
+            helper.assertTrue(Gases.total(after) == 8, "unit for unit: nothing is lost or made");
+            helper.assertTrue(Gas.DECAYED_CARBON_DIOXIDE.drift() == Direction.UP,
+                    "and that rises where carbon dioxide sank");
+            level.setBlock(pos, Gases.with(Blocks.AIR.defaultBlockState(), Gas.DECAYED_CARBON_DIOXIDE, 8), 2);
+            helper.assertTrue(Math.abs(Gases.sample(level, pos).carbonDioxide() - 0.0804) < 1.0E-6,
+                    "Breathed, it is carbon dioxide all the same");
+        } finally {
+            clearShell(level, base);
+        }
+        helper.succeed();
+    }
+
+    @GameTest
+    public void acidRainPoisonsWhatGrows(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos pos = workspace(helper);
+        try {
+            level.setBlock(pos.below(), Blocks.GRASS_BLOCK.defaultBlockState(), 2);
+            level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+            helper.assertTrue(de.ipnats.hardwrought.environment.AcidRain.poison(level, pos)
+                            && level.getBlockState(pos.below()).is(Blocks.DIRT),
+                    "Grass under acid rain dies back to dirt");
+
+            level.setBlock(pos.below(), Blocks.FARMLAND.defaultBlockState(), 2);
+            level.setBlock(pos, Blocks.WHEAT.defaultBlockState()
+                    .setValue(net.minecraft.world.level.block.CropBlock.AGE, 3), 2);
+            de.ipnats.hardwrought.environment.AcidRain.poison(level, pos);
+            helper.assertTrue(level.getBlockState(pos).getValue(net.minecraft.world.level.block.CropBlock.AGE) == 2,
+                    "A crop withers back a stage");
+            level.setBlock(pos, Blocks.WHEAT.defaultBlockState(), 2);
+            de.ipnats.hardwrought.environment.AcidRain.poison(level, pos);
+            helper.assertTrue(level.getBlockState(pos).isAir(), "and a seedling dies");
+
+            level.setBlock(pos.below(), Blocks.OAK_LEAVES.defaultBlockState(), 2);
+            de.ipnats.hardwrought.environment.AcidRain.poison(level, pos);
+            helper.assertTrue(level.getBlockState(pos.below()).isAir(), "A wild tree loses its leaves");
+            level.setBlock(pos.below(), Blocks.OAK_LEAVES.defaultBlockState()
+                    .setValue(BlockStateProperties.PERSISTENT, true), 2);
+            helper.assertFalse(de.ipnats.hardwrought.environment.AcidRain.poison(level, pos),
+                    "but leaves someone placed are left alone");
+        } finally {
+            level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+            level.setBlock(pos.below(), Blocks.AIR.defaultBlockState(), 2);
+        }
+        helper.succeed();
+    }
+
+    @GameTest
+    public void leavesTakeUpCarbonDioxideButNotMethane(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos base = workspace(helper);
+        buildShell(level, base, Blocks.OAK_LEAVES.defaultBlockState()
+                .setValue(BlockStateProperties.PERSISTENT, true));
+        BlockPos pos = base.below();
+        try {
+            BlockState mixed = Gases.with(Gases.with(Blocks.AIR.defaultBlockState(), Gas.CARBON_DIOXIDE, 3),
+                    Gas.METHANE, 2);
+            level.setBlock(pos, mixed, 2);
+            level.getBlockState(pos).randomTick(level, pos, level.getRandom());
+            BlockState after = level.getBlockState(pos);
+            helper.assertTrue(Gases.units(after, Gas.CARBON_DIOXIDE)
+                            + Gases.units(after, Gas.DECAYED_CARBON_DIOXIDE) == 2,
+                    "Leaves take up a unit of carbon dioxide");
+            helper.assertTrue(Gases.units(after, Gas.METHANE) == 2, "but leave methane alone");
+        } finally {
+            clearShell(level, base);
+        }
+        helper.succeed();
+    }
+
+    @GameTest
+    public void aFireInAirFullOfGasGoesOut(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos base = workspace(helper);
+        buildShell(level, base, Blocks.STONE.defaultBlockState());
+        BlockPos fire = base.below();
+        try {
+            level.setBlock(fire, Blocks.CAMPFIRE.defaultBlockState().setValue(BlockStateProperties.LIT, true), 2);
+            level.setBlock(fire.above(), Gases.with(Blocks.AIR.defaultBlockState(), Gas.CARBON_DIOXIDE,
+                    GasSources.SMOTHERING), 2);
+            GasSources.burnAt(level, fire, level.getRandom());
+            helper.assertFalse(level.getBlockState(fire).getValue(BlockStateProperties.LIT),
+                    "A campfire under a block that full of gas has no air to burn and goes out");
+            level.setBlock(fire.above(), Blocks.AIR.defaultBlockState(), 2);
+            level.setBlock(fire, Blocks.CAMPFIRE.defaultBlockState().setValue(BlockStateProperties.LIT, true), 2);
+            // Pass by pass until the first unit comes out; in the game the gas drifts off between passes.
+            for (int pass = 0; pass < 60 && Gases.total(level.getBlockState(fire.above())) == 0; pass++) {
+                GasSources.burnAt(level, fire, level.getRandom());
+            }
+            helper.assertTrue(level.getBlockState(fire).getValue(BlockStateProperties.LIT),
+                    "In clean air it keeps burning");
+            helper.assertTrue(Gases.total(level.getBlockState(fire.above())) > 0,
+                    "and lets its fumes out above itself");
+        } finally {
+            clearShell(level, base);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(maxTicks = 100)
+    public void firedampGoesOffAtAFlame(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos base = workspace(helper);
+        buildShell(level, base, Blocks.OBSIDIAN.defaultBlockState());
+        // Firedamp gathers against the roof, so it is a flame held up there that sets it off.
+        level.setBlock(base.offset(1, 1, 0), Blocks.WALL_TORCH.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.WallTorchBlock.FACING, Direction.WEST), 2);
+        level.setBlockAndUpdate(base.above(), Gases.with(Blocks.AIR.defaultBlockState(), Gas.METHANE, 5));
+        helper.runAfterDelay(60, () -> {
+            try {
+                helper.assertTrue(countIn(level, base, Gas.METHANE, -1) + countIn(level, base, Gas.METHANE, 0)
+                                + countIn(level, base, Gas.METHANE, 1) == 0,
+                        "Methane that reaches a flame burns, all of the pocket at once");
+            } finally {
+                clearShell(level, base);
+            }
+            helper.succeed();
+        });
     }
 
     @GameTest(maxTicks = 200)
@@ -518,33 +726,6 @@ public final class EnvironmentGameTests {
         helper.succeed();
     }
 
-    @GameTest
-    public void breathingIsCalibratedAgainstRoomSize(GameTestHelper helper) {
-        double hut = EnvironmentSystem.equilibriumOxygen(30, 1);
-        double chamber = EnvironmentSystem.equilibriumOxygen(15, 1);
-        double coffin = EnvironmentSystem.equilibriumOxygen(8, 1);
-        helper.assertTrue(hut > GasMixture.OXYGEN_IMPAIRED,
-                "A sealed hut of about 30 blocks must stay breathable indefinitely");
-        helper.assertTrue(chamber < GasMixture.OXYGEN_IMPAIRED && chamber > GasMixture.OXYGEN_LETHAL,
-                "A small sealed chamber gets bad without becoming a death trap on its own");
-        helper.assertTrue(coffin < GasMixture.OXYGEN_LETHAL,
-                "A coffin-sized sealed box still kills");
-        helper.assertTrue(EnvironmentSystem.equilibriumOxygen(30, 4) < hut,
-                "More occupants use the same air up faster");
-
-        helper.assertTrue(EnvironmentSystem.equilibriumCarbonDioxide(30, 1)
-                        < GasMixture.CARBON_DIOXIDE_SEVERE,
-                "The same hut must not sit permanently in severe carbon dioxide");
-        helper.assertTrue(EnvironmentSystem.equilibriumCarbonDioxide(8, 1)
-                        > GasMixture.CARBON_DIOXIDE_LETHAL,
-                "while the sealed box is lethal on carbon dioxide too");
-
-        double large = EnvironmentSystem.equilibriumOxygen(RoomScan.MAX_VOLUME, 1);
-        helper.assertTrue(large > GasMixture.OXYGEN_IMPAIRED,
-                "A large cave is tracked but its air is never used up by breathing alone");
-        helper.succeed();
-    }
-
     // ---------------------------------------------------------------- helpers
 
     private static BlockPos workspace(GameTestHelper helper) {
@@ -572,6 +753,34 @@ public final class EnvironmentGameTests {
                 }
             }
         }
+    }
+
+    /** Units of a gas in one layer of the 3x3x3 interior of a shell: -1 the floor, 0 the middle, 1 the roof. */
+    private static int countIn(ServerLevel level, BlockPos base, Gas gas, int layer) {
+        int units = 0;
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                units += Gases.units(level.getBlockState(base.offset(x, layer, z)), gas);
+            }
+        }
+        return units;
+    }
+
+    /** Carbon dioxide that has broken down, anywhere in the interior of a shell. */
+    private static int decayedIn(ServerLevel level, BlockPos base) {
+        int units = 0;
+        for (int layer = -1; layer <= 1; layer++) units += countIn(level, base, Gas.DECAYED_CARBON_DIOXIDE, layer);
+        return units;
+    }
+
+    private static int gasBlocksIn(ServerLevel level, BlockPos base, int layer) {
+        int blocks = 0;
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                if (Gases.isGas(level.getBlockState(base.offset(x, layer, z)))) blocks++;
+            }
+        }
+        return blocks;
     }
 
     private static void expectFailure(Runnable action) {

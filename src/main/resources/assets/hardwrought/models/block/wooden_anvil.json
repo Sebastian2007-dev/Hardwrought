@@ -2,9 +2,9 @@
   "parent": "minecraft:block/block",
   "__comment": "A hardwood stump, end grain up. The anvil a smith has before iron.",
   "textures": {
-    "side": "minecraft:block/oak_log",
-    "top": "minecraft:block/stripped_oak_log_top",
-    "particle": "minecraft:block/oak_log"
+    "side": "hardwrought:block/hardwrought/wooden_anvil_side",
+    "top": "hardwrought:block/hardwrought/wooden_anvil_top",
+    "particle": "hardwrought:block/hardwrought/wooden_anvil_side"
   },
   "elements": [
     {

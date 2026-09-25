@@ -83,6 +83,12 @@ public final class ModItems {
     public static final Item FORGE = register("forge",
             properties -> new BlockItem(ModBlocks.FORGE, properties),
             new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item FORGE_HOOD = register("forge_hood",
+            properties -> new BlockItem(ModBlocks.FORGE_HOOD, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item GAS_PIPE = register("gas_pipe",
+            properties -> new BlockItem(ModBlocks.GAS_PIPE, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
     public static final Item BELLOWS = register("bellows",
             properties -> new BlockItem(ModBlocks.BELLOWS, properties),
             new Item.Properties().useBlockDescriptionPrefix());
@@ -166,11 +172,65 @@ public final class ModItems {
     public static final Item WINDMILL = register("windmill",
             properties -> new BlockItem(ModBlocks.WINDMILL, properties),
             new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item ORE_DRILL = register("ore_drill",
+            properties -> new BlockItem(ModBlocks.ORE_DRILL, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item DRILL_FRAME_BRONZE = register("drill_frame_bronze",
+            properties -> new BlockItem(ModBlocks.DRILL_FRAME_BRONZE, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item DRILL_FRAME_IRON = register("drill_frame_iron",
+            properties -> new BlockItem(ModBlocks.DRILL_FRAME_IRON, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item DRILL_FRAME_NICKEL = register("drill_frame_nickel",
+            properties -> new BlockItem(ModBlocks.DRILL_FRAME_NICKEL, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item DRILL_FRAME_CHROMIUM = register("drill_frame_chromium",
+            properties -> new BlockItem(ModBlocks.DRILL_FRAME_CHROMIUM, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item DRILL_FRAME_TITANIUM = register("drill_frame_titanium",
+            properties -> new BlockItem(ModBlocks.DRILL_FRAME_TITANIUM, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    // Milestone 11: oil and chemistry.
+    public static final Item DRILLING_RIG = register("drilling_rig",
+            properties -> new BlockItem(ModBlocks.DRILLING_RIG, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item STILL = register("still",
+            properties -> new BlockItem(ModBlocks.STILL, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    /** A bucket of crude oil off a rig. Not poured out anywhere: it goes into a still. */
+    public static final Item CRUDE_OIL_BUCKET = register("crude_oil_bucket", Item::new,
+            new Item.Properties().stacksTo(1).craftRemainder(net.minecraft.world.item.Items.BUCKET));
+    public static final Item GAS_CANISTER = register("gas_canister", Item::new,
+            new Item.Properties().stacksTo(16));
+    /** Natural gas off a rig. Burns in a furnace for a long time, and gives its canister back. */
+    public static final Item NATURAL_GAS_CANISTER = register("natural_gas_canister", Item::new,
+            new Item.Properties().stacksTo(1).craftRemainder(GAS_CANISTER)
+                    .cookingFuel(fuel("time_natural_gas_canister")));
+    /** The fractions of crude oil, section 62. */
+    public static final Item LIGHT_FRACTION = register("light_fraction", Item::new,
+            new Item.Properties().stacksTo(16).craftRemainder(net.minecraft.world.item.Items.GLASS_BOTTLE));
+    public static final Item FUEL_FRACTION = register("fuel_fraction", Item::new,
+            new Item.Properties().stacksTo(16).craftRemainder(net.minecraft.world.item.Items.GLASS_BOTTLE)
+                    .cookingFuel(fuel("time_fuel_fraction")));
+    public static final Item HEAVY_OIL = register("heavy_oil", Item::new,
+            new Item.Properties().stacksTo(16).craftRemainder(net.minecraft.world.item.Items.GLASS_BOTTLE));
+    public static final Item BITUMEN = register("bitumen", Item::new, new Item.Properties());
+    /** The chemical raw materials of section 64, each with its purity (section 65). */
+    public static final Item RAW_SULFUR = register("raw_sulfur", Item::new, new Item.Properties());
+    public static final Item SULFUR = register("sulfur", Item::new, new Item.Properties());
+    public static final Item SALT = register("salt", Item::new, new Item.Properties());
     /** Section 73: laid round two parallel shafts, it makes them turn together. */
     public static final Item BELT = register("belt", de.ipnats.hardwrought.machinery.BeltItem::new,
             new Item.Properties().stacksTo(16));
 
     private ModItems() {
+    }
+
+    /** A burn time kept as data, the way vanilla keeps coal's, under {@code context_int_provider/cooking}. */
+    private static net.minecraft.resources.ResourceKey<net.minecraft.world.level.storage.loot.providers.number.ints.ContextIntProvider>
+            fuel(String name) {
+        return net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.CONTEXT_INT_PROVIDER,
+                de.ipnats.hardwrought.Hardwrought.id("cooking/" + name));
     }
 
     private static <T extends Item> T register(String name, Function<Item.Properties, T> factory,

@@ -68,7 +68,8 @@ public final class Journal {
                     List.of(Hardwrought.id("iron_hatchet"), Hardwrought.id("iron_pickaxe")),
                     List.of(vanilla("iron_ingot"))),
             new JournalEntry(Hardwrought.id("fire_and_water"),
-                    List.of(Hardwrought.id("forge"), Hardwrought.id("bellows")),
+                    List.of(Hardwrought.id("forge"), Hardwrought.id("forge_hood"), Hardwrought.id("gas_pipe"),
+                            Hardwrought.id("bellows")),
                     List.of(Hardwrought.id("iron_pickaxe_head"), Hardwrought.id("iron_axe_head"),
                             Hardwrought.id("iron_sword_blade"), Hardwrought.id("iron_pickaxe"),
                             Hardwrought.id("iron_hatchet"))),
@@ -86,7 +87,18 @@ public final class Journal {
             new JournalEntry(Hardwrought.id("nails_for_the_bench"),
                     List.of(Hardwrought.id("nailed_workbench"), Hardwrought.id("bronze_nails"),
                             Hardwrought.id("hammer")),
-                    List.of(Hardwrought.id("bronze_ingot")))
+                    List.of(Hardwrought.id("bronze_ingot"))),
+            // The ore drill: once there is a line to drive it and bronze to frame it.
+            new JournalEntry(Hardwrought.id("down_through_the_rock"),
+                    List.of(Hardwrought.id("ore_drill"), Hardwrought.id("drill_frame_bronze"),
+                            Hardwrought.id("drill_frame_iron")),
+                    List.of(Hardwrought.id("starter_crusher"), Hardwrought.id("nailed_workbench"))),
+            // Milestone 11: once a line can be turned by water or wind, it is strong enough to bore
+            // with — and what is under the sedimentary rock is worth boring for.
+            new JournalEntry(Hardwrought.id("black_gold"),
+                    List.of(Hardwrought.id("drilling_rig"), Hardwrought.id("still"),
+                            Hardwrought.id("gas_canister")),
+                    List.of(Hardwrought.id("water_wheel"), Hardwrought.id("windmill")))
     );
 
     /** Whether the running world is an Ultra one; set when the server starts. */

@@ -44,6 +44,8 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.SMITHING_GLOVES);
                         output.accept(ModItems.WOODEN_ANVIL);
                         output.accept(ModItems.FORGE);
+                        output.accept(ModItems.FORGE_HOOD);
+                        output.accept(ModItems.GAS_PIPE);
                         output.accept(ModItems.BELLOWS);
                         output.accept(ModItems.COGWHEEL);
                         output.accept(ModItems.LARGE_COGWHEEL);
@@ -63,6 +65,24 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.CRANK_BOX);
                         output.accept(ModItems.HAND_CRANK);
                         output.accept(ModItems.STARTER_CRUSHER);
+                        output.accept(ModItems.ORE_DRILL);
+                        output.accept(ModItems.DRILL_FRAME_BRONZE);
+                        output.accept(ModItems.DRILL_FRAME_IRON);
+                        output.accept(ModItems.DRILL_FRAME_NICKEL);
+                        output.accept(ModItems.DRILL_FRAME_CHROMIUM);
+                        output.accept(ModItems.DRILL_FRAME_TITANIUM);
+                        output.accept(ModItems.DRILLING_RIG);
+                        output.accept(ModItems.STILL);
+                        output.accept(ModItems.CRUDE_OIL_BUCKET);
+                        output.accept(ModItems.GAS_CANISTER);
+                        output.accept(ModItems.NATURAL_GAS_CANISTER);
+                        output.accept(ModItems.LIGHT_FRACTION);
+                        output.accept(ModItems.FUEL_FRACTION);
+                        output.accept(ModItems.HEAVY_OIL);
+                        output.accept(ModItems.BITUMEN);
+                        output.accept(ModItems.RAW_SULFUR);
+                        output.accept(ModItems.SULFUR);
+                        output.accept(ModItems.SALT);
 
                         // Primitive tools and weapons, ordered by material progression.
                         output.accept(ModItems.FLINT_DAGGER);

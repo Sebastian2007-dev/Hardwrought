@@ -35,6 +35,7 @@ public final class CoreClientGameTest implements FabricClientGameTest {
             context.runOnClient(client -> SurvivalHud.setDetailsVisible(true));
             context.waitFor(client -> SurvivalHud.detailsVisible());
             context.takeScreenshot("hardwrought-milestone-1-survival-hud");
+            verifyNutrition(context, world);
             verifyAcceleratedSleep(context, world);
             verifyDaytimeBedSleep(context, world);
             verifyCombatFeedback(context, world);
@@ -746,12 +747,41 @@ public final class CoreClientGameTest implements FabricClientGameTest {
         });
     }
 
+    /** The diet screen, and what a food brings as the compendium tells it once the food is known. */
+    private static void verifyNutrition(ClientGameTestContext context,
+                                        net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
+        world.getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            var runtime = CoreLifecycle.require(server);
+            // A little of everything out of balance, so the screen has each state to show.
+            runtime.survival().setVitalsForTesting(player, runtime.survival().vitals(player)
+                    .withNutrition(new de.ipnats.hardwrought.survival.Nutrition(88, 55, 22, 60, 45)));
+            runtime.knowledge().study(player, net.minecraft.world.item.Items.COOKED_BEEF);
+        });
+        context.waitFor(client -> SurvivalHud.snapshot() != null && SurvivalHud.snapshot().nutrition().protein() > 80);
+        context.waitFor(client -> de.ipnats.hardwrought.client.survival.NutritionScreen.nutrientsOf(
+                net.minecraft.resources.Identifier.withDefaultNamespace("cooked_beef")) != null);
+        context.runOnClient(client -> client.gui.setScreen(new de.ipnats.hardwrought.client.survival.NutritionScreen()));
+        context.waitTicks(5);
+        context.takeScreenshot("hardwrought-nutrition-screen");
+        context.runOnClient(client -> de.ipnats.hardwrought.client.knowledge.CompendiumClient.openRecipes(
+                net.minecraft.world.item.Items.COOKED_BEEF));
+        context.waitFor(client -> de.ipnats.hardwrought.client.knowledge.CompendiumClient.page() != null);
+        context.waitTicks(5);
+        context.takeScreenshot("hardwrought-nutrition-compendium");
+        context.runOnClient(client -> client.gui.setScreen(null));
+        world.getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            var runtime = CoreLifecycle.require(server);
+            runtime.survival().setVitalsForTesting(player, runtime.survival().vitals(player)
+                    .withNutrition(de.ipnats.hardwrought.survival.Nutrition.START));
+        });
+    }
+
     private static void verifySealedRoomAndCarriedLight(ClientGameTestContext context,
                                                         net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
         world.getServer().runOnServer(server -> shell(server, net.minecraft.world.level.block.Blocks.STONE));
         context.waitFor(client -> EnvironmentHud.snapshot() != null && EnvironmentHud.snapshot().sealed(), 600);
-        context.waitFor(client -> EnvironmentHud.snapshot().gases().oxygen()
-                < GasMixture.OUTDOOR_OXYGEN - 0.0005, 600);
         context.runOnClient(client -> {
             if (EnvironmentHud.snapshot().instrumented()) {
                 throw new AssertionError("Bad air must not be readable without an instrument");
@@ -792,14 +822,17 @@ public final class CoreClientGameTest implements FabricClientGameTest {
                                           net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
         float before = world.getServer().computeOnServer(
                 server -> server.getPlayerList().getPlayers().getFirst().getHealth());
-        context.runOnClient(client -> client.player.connection.sendCommand("hardwrought air set oxygen 0.01"));
+        // The room full of carbon dioxide, eight units in every block: the air in it is lethal.
+        world.getServer().runOnServer(server -> fillRoom(server, 8));
+        context.waitFor(client -> EnvironmentHud.snapshot().gases().oxygen()
+                < GasMixture.OUTDOOR_OXYGEN - 0.0005, 600);
         world.getServer().waitFor(server -> server.getPlayerList().getPlayers().getFirst().getHealth() < before, 400);
         // The combat feed must name the real cause: suffocation, not a blunt impact.
         context.waitFor(client -> CombatHud.snapshot() != null
                 && CombatHud.snapshot().event() == CombatEvent.HIT
                 && CombatHud.snapshot().damageType() == CombatDamageType.SUFFOCATION, 400);
         context.takeScreenshot("hardwrought-milestone-3-suffocation");
-        context.runOnClient(client -> client.player.connection.sendCommand("hardwrought air set oxygen 0.209"));
+        world.getServer().runOnServer(server -> fillRoom(server, 0));
         world.getServer().runOnServer(server -> {
             var player = server.getPlayerList().getPlayers().getFirst();
             player.setHealth(player.getMaxHealth());
@@ -807,6 +840,23 @@ public final class CoreClientGameTest implements FabricClientGameTest {
     }
 
     /** A 5x5x5 hull with a 3x3x3 interior around the player; AIR as the wall removes it again. */
+    /** Sets every block inside the shell to this many units of carbon dioxide, or back to air. */
+    private static void fillRoom(net.minecraft.server.MinecraftServer server, int units) {
+        var player = server.getPlayerList().getPlayers().getFirst();
+        var level = player.level();
+        var base = player.blockPosition();
+        var air = net.minecraft.world.level.block.Blocks.AIR.defaultBlockState();
+        var fill = units == 0 ? air : de.ipnats.hardwrought.environment.Gases.with(air,
+                de.ipnats.hardwrought.environment.Gas.CARBON_DIOXIDE, units);
+        for (int x = -1; x <= 1; x++) {
+            for (int y = 0; y <= 2; y++) {
+                for (int z = -1; z <= 1; z++) {
+                    level.setBlockAndUpdate(base.offset(x, y, z), fill);
+                }
+            }
+        }
+    }
+
     private static void shell(net.minecraft.server.MinecraftServer server,
                               net.minecraft.world.level.block.Block wall) {
         var player = server.getPlayerList().getPlayers().getFirst();

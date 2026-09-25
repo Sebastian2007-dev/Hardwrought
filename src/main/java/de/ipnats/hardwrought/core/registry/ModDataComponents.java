@@ -50,6 +50,16 @@ public final class ModDataComponents {
                     .networkSynchronized(net.minecraft.core.BlockPos.STREAM_CODEC)
                     .build());
 
+    /**
+     * Section 65: how pure a chemical raw material is, 0 to 1. Sulfur out of a still is not the same
+     * thing as sulfur that has been refined, and later processes will ask which one they are given.
+     */
+    public static final DataComponentType<Float> PURITY =
+            register("purity", DataComponentType.<Float>builder()
+                    .persistent(com.mojang.serialization.Codec.floatRange(0.0f, 1.0f))
+                    .networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.FLOAT)
+                    .build());
+
     private ModDataComponents() { }
 
     private static <T> DataComponentType<T> register(String name, DataComponentType<T> type) {

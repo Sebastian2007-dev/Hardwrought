@@ -102,10 +102,12 @@ public final class NailedWorkbenchTextureGenerator {
         out.setRGB(3 + Math.floorMod(seed / 7, 9), 9, barkDark);
 
         if (front) {
-            // Small forged heads are enough to identify the joined tier; the log remains dominant.
-            nail(out, 3, 3);
+            // Three irregularly placed, round hammered heads identify the joined tier. Their cool
+            // highlight keeps them legible as iron instead of reading as holes in the timber, and
+            // the asymmetric placement avoids making a face on the front of the block.
+            nail(out, 2, 2);
             nail(out, 11, 3);
-            nail(out, 6, 6);
+            nail(out, 6, 5);
         }
         return out;
     }
@@ -120,9 +122,13 @@ public final class NailedWorkbenchTextureGenerator {
     }
 
     private static void nail(BufferedImage image, int x, int y) {
-        image.setRGB(x, y, 0xff555957);
-        if (x + 1 < 16) image.setRGB(x + 1, y, 0xff2c302f);
-        if (y + 1 < 16) image.setRGB(x, y + 1, 0xff323534);
+        // A five-pixel diamond reads round at native resolution. The bright centre is deliberately
+        // small and desaturated: forged iron, not a shiny screw or a black cavity in the wood.
+        image.setRGB(x + 1, y, 0xff626966);
+        image.setRGB(x, y + 1, 0xff555c59);
+        image.setRGB(x + 1, y + 1, 0xffaeb7b2);
+        image.setRGB(x + 2, y + 1, 0xff343938);
+        image.setRGB(x + 1, y + 2, 0xff292e2d);
     }
 
     private static void line(BufferedImage image, int x1, int y1, int x2, int y2, int color) {

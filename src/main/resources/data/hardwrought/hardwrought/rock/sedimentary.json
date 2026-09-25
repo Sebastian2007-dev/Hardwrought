@@ -23,7 +23,7 @@
       "max_radius": 52,
       "min_grade": 0.04,
       "max_grade": 0.18,
-      "drill_tier": 1
+      "drill_tier": 2
     },
     {
       "ore": "minecraft:lapis_ore",
@@ -34,7 +34,7 @@
       "max_radius": 30,
       "min_grade": 0.02,
       "max_grade": 0.14,
-      "drill_tier": 2
+      "drill_tier": 3
     },
     {
       "ore": "hardwrought:tin_ore",
@@ -45,7 +45,7 @@
       "max_radius": 28,
       "min_grade": 0.02,
       "max_grade": 0.16,
-      "drill_tier": 1
+      "drill_tier": 2
     },
     {
       "ore": "hardwrought:zinc_ore",
@@ -56,7 +56,7 @@
       "max_radius": 28,
       "min_grade": 0.02,
       "max_grade": 0.16,
-      "drill_tier": 1
+      "drill_tier": 2
     },
     {
       "ore": "hardwrought:lead_ore",
@@ -67,7 +67,7 @@
       "max_radius": 28,
       "min_grade": 0.02,
       "max_grade": 0.16,
-      "drill_tier": 1
+      "drill_tier": 2
     },
     {
       "ore": "hardwrought:manganese_ore",
@@ -78,7 +78,7 @@
       "max_radius": 28,
       "min_grade": 0.02,
       "max_grade": 0.16,
-      "drill_tier": 2
+      "drill_tier": 3
     },
     {
       "ore": "hardwrought:magnesium_ore",
@@ -89,7 +89,7 @@
       "max_radius": 28,
       "min_grade": 0.02,
       "max_grade": 0.16,
-      "drill_tier": 2
+      "drill_tier": 3
     },
     {
       "ore": "hardwrought:aluminum_ore",
@@ -100,7 +100,7 @@
       "max_radius": 28,
       "min_grade": 0.02,
       "max_grade": 0.16,
-      "drill_tier": 2
+      "drill_tier": 3
     }
   ]
 }

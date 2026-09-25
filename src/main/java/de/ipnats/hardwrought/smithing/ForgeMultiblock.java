@@ -13,7 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Finds and operates the two forge structures: a solid 2x2x2 and a hollow 3x3x3.
+ * Finds and operates the two forge structures: a flat 2x2 and a flat 3x3 hearth, one block high.
+ *
+ * <p>Flat, so the smith can see what lies in the coals from where they stand, and so a hood hung
+ * above it (see {@link ForgeHoodBlock}) can take the fumes away.
  *
  * <p>A joined forge has one fire and one set of places, both kept in its controller, the block at
  * the lowest corner. When it forms, whatever lay in the single forges is gathered there; when it
@@ -21,10 +24,13 @@ import java.util.List;
  * block, and only what finds no room is put out on the ground. Nothing is ever lost or doubled.
  */
 public final class ForgeMultiblock {
-    /** The highest {@link ForgeBlock#PART}: 1-8 are the small forge, 9-35 the large one. */
+    /**
+     * The highest {@link ForgeBlock#PART}: 1-4 are the small forge, 5-13 the large one. The range
+     * stays as wide as it was when forges were built three high, so blocks saved then still load.
+     */
     public static final int MAX_PART = 35;
     private static final int SMALL_FIRST = 1;
-    private static final int LARGE_FIRST = 9;
+    private static final int LARGE_FIRST = 5;
 
     private ForgeMultiblock() {}
 
@@ -60,27 +66,20 @@ public final class ForgeMultiblock {
         }
     }
 
-    /** The part number of the block at this offset from the controller, the lowest corner. */
-    public static int partIndex(Size size, int x, int y, int z) {
-        return size == Size.SMALL ? SMALL_FIRST + x + 2 * z + 4 * y : LARGE_FIRST + x + 3 * z + 9 * y;
-    }
-
-    /** Whether a block with this part number shows the bed of coals. */
-    public static boolean isTop(int part) {
-        if (part <= 0) return true;
-        if (part < LARGE_FIRST) return (part - SMALL_FIRST) / 4 == 1;
-        return (part - LARGE_FIRST) / 9 == 2;
+    /** The part number of the block at this offset from the controller, the north-west corner. */
+    public static int partIndex(Size size, int x, int z) {
+        return size == Size.SMALL ? SMALL_FIRST + x + 2 * z : LARGE_FIRST + x + 3 * z;
     }
 
     /** Gives every block of the structure its part of the big model. Changes nothing when already right. */
     public static void applyParts(Level level, Structure structure) {
         for (BlockPos pos : structure.members) {
             BlockPos offset = pos.subtract(structure.controller);
-            setPart(level, pos, partIndex(structure.size, offset.getX(), offset.getY(), offset.getZ()));
+            setPart(level, pos, partIndex(structure.size, offset.getX(), offset.getZ()));
         }
     }
 
-    private static void setPart(Level level, BlockPos pos, int part) {
+    static void setPart(Level level, BlockPos pos, int part) {
         var state = level.getBlockState(pos);
         if (state.getBlock() instanceof ForgeBlock && state.getValue(ForgeBlock.PART) != part) {
             level.setBlock(pos, state.setValue(ForgeBlock.PART, part), Block.UPDATE_CLIENTS);
@@ -104,17 +103,20 @@ public final class ForgeMultiblock {
         return structure(size, forge.multiblockController());
     }
 
-    /** Detects the 26-block shell first, then the solid 8-block cube. */
+    /** Detects the nine-block hearth first, then the four-block one. */
     public static Structure find(Level level, BlockPos member) {
         for (Size size : new Size[]{Size.LARGE, Size.SMALL}) {
-            for (int x = 0; x < size.edge; x++) {
-                for (int y = 0; y < size.edge; y++) {
-                    for (int z = 0; z < size.edge; z++) {
-                        BlockPos controller = member.offset(-x, -y, -z);
-                        Structure candidate = structure(size, controller);
-                        if (matches(level, candidate)) return candidate;
-                    }
-                }
+            Structure found = find(level, member, size);
+            if (found != null) return found;
+        }
+        return null;
+    }
+
+    private static Structure find(Level level, BlockPos member, Size size) {
+        for (int x = 0; x < size.edge; x++) {
+            for (int z = 0; z < size.edge; z++) {
+                Structure candidate = structure(size, member.offset(-x, 0, -z));
+                if (matches(level, candidate)) return candidate;
             }
         }
         return null;
@@ -124,24 +126,43 @@ public final class ForgeMultiblock {
         for (BlockPos member : structure.members) {
             if (!(level.getBlockState(member).getBlock() instanceof ForgeBlock)) return false;
         }
-        if (structure.size == Size.LARGE) {
-            BlockPos center = structure.controller.offset(1, 1, 1);
-            if (!level.getBlockState(center).isAir()) return false;
-        }
         return true;
     }
 
     private static Structure structure(Size size, BlockPos controller) {
-        List<BlockPos> members = new ArrayList<>(size == Size.SMALL ? 8 : 26);
-        for (int y = 0; y < size.edge; y++) {
-            for (int z = 0; z < size.edge; z++) {
-                for (int x = 0; x < size.edge; x++) {
-                    if (size == Size.LARGE && x == 1 && y == 1 && z == 1) continue;
-                    members.add(controller.offset(x, y, z));
-                }
+        List<BlockPos> members = new ArrayList<>(size.edge * size.edge);
+        for (int z = 0; z < size.edge; z++) {
+            for (int x = 0; x < size.edge; x++) {
+                members.add(controller.offset(x, 0, z));
             }
         }
         return new Structure(size, controller.immutable(), List.copyOf(members));
+    }
+
+    /**
+     * A small hearth that has been built out to three by three becomes the large one. Without this
+     * the four blocks that joined first would keep the other five out for good. Only blocks that are
+     * free or already part of this hearth are taken; a neighbouring forge is never broken up for it.
+     * Returns the structure that stands afterwards, or null where none does.
+     */
+    public static Structure grow(ServerLevel level, Structure structure) {
+        if (structure.size != Size.SMALL) return structure;
+        Structure large = null;
+        for (int x = 0; x < Size.LARGE.edge && large == null; x++) {
+            for (int z = 0; z < Size.LARGE.edge && large == null; z++) {
+                Structure candidate = structure(Size.LARGE, structure.controller.offset(-x, 0, -z));
+                if (candidate.members.containsAll(structure.members) && matches(level, candidate)) large = candidate;
+            }
+        }
+        if (large == null) return structure;
+        for (BlockPos pos : large.members) {
+            if (structure.members.contains(pos)) continue;
+            if (!(level.getBlockEntity(pos) instanceof ForgeBlockEntity forge) || forge.isMultiblockPart()) {
+                return structure;
+            }
+        }
+        dissolve(level, structure);
+        return form(level, large) ? large : null;
     }
 
     private static boolean form(ServerLevel level, Structure structure) {
@@ -168,7 +189,7 @@ public final class ForgeMultiblock {
             if (!controller.place(stack, structure.size.layout())) drop(level, structure.controller.above(structure.size.edge), stack);
         }
         applyParts(level, structure);
-        syncLit(level, structure, burn > 0);
+        syncFire(level, structure, burn > 0, level.getBlockState(structure.controller).getValue(ForgeBlock.FUEL));
         return true;
     }
 
@@ -203,11 +224,13 @@ public final class ForgeMultiblock {
         return false;
     }
 
-    public static void syncLit(Level level, Structure structure, boolean lit) {
+    /** Whether it burns and how full its pit is, the same on every block, so the hearth reads as one. */
+    public static void syncFire(Level level, Structure structure, boolean lit, int fill) {
         for (BlockPos pos : structure.members) {
             var state = level.getBlockState(pos);
-            if (state.getBlock() instanceof ForgeBlock && state.getValue(ForgeBlock.LIT) != lit) {
-                level.setBlock(pos, state.setValue(ForgeBlock.LIT, lit), Block.UPDATE_ALL);
+            if (state.getBlock() instanceof ForgeBlock
+                    && (state.getValue(ForgeBlock.LIT) != lit || state.getValue(ForgeBlock.FUEL) != fill)) {
+                level.setBlock(pos, state.setValue(ForgeBlock.LIT, lit).setValue(ForgeBlock.FUEL, fill), Block.UPDATE_ALL);
             }
         }
     }

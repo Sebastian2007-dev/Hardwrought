@@ -85,6 +85,7 @@ public final class CoreRuntime {
         water.registerDiagnostics(diagnostics);
         groundwater.registerDiagnostics(diagnostics);
         Geology.registerDiagnostics(diagnostics);
+        de.ipnats.hardwrought.oil.Oilfield.registerDiagnostics(diagnostics, save);
         knowledge = new KnowledgeSystem(server, save, scheduler);
         knowledge.registerDiagnostics(diagnostics);
         equipment = new de.ipnats.hardwrought.equipment.EquipmentSystem(server, save);
@@ -96,6 +97,12 @@ public final class CoreRuntime {
         if (!server.tickRateManager().runsNormally()) return;
         scheduler.tick();
         save.setTicks(scheduler.ticks());
+    }
+
+    /** The world's saved state, for the systems that keep a little of it: how much a reservoir has given. */
+    public CoreSaveData saveData() {
+        ServerThread.require(server);
+        return save;
     }
 
     public SimulationScheduler scheduler() {

@@ -1,8 +1,8 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
-    "belt": "minecraft:block/brown_wool",
-    "particle": "minecraft:block/brown_wool"
+    "belt": "hardwrought:block/hardwrought/leather_belt",
+    "particle": "hardwrought:block/hardwrought/leather_belt"
   },
   "elements": [
     {

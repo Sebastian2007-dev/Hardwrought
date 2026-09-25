@@ -1,9 +1,9 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
-    "spar": "minecraft:block/dark_oak_log",
-    "cloth": "minecraft:block/white_wool",
-    "particle": "minecraft:block/white_wool"
+    "spar": "hardwrought:block/hardwrought/dark_handle",
+    "cloth": "hardwrought:block/hardwrought/sailcloth",
+    "particle": "hardwrought:block/hardwrought/sailcloth"
   },
   "elements": [
     {

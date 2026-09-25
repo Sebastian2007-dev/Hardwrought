@@ -1,9 +1,11 @@
 {
   "parent": "hardwrought:block/forge/part_13_shape",
   "textures": {
-    "side": "hardwrought:block/forge/large_side_lined",
+    "side0": "hardwrought:block/forge/large_side_0_lined",
+    "side1": "hardwrought:block/forge/large_side_1_lined",
+    "side2": "hardwrought:block/forge/large_side_2_lined",
     "rim": "minecraft:block/mud_bricks",
-    "bed": "minecraft:block/coal_block",
+    "floor": "hardwrought:block/forge/hearth_floor",
     "bottom": "minecraft:block/cobblestone",
     "particle": "minecraft:block/mud_bricks"
   }

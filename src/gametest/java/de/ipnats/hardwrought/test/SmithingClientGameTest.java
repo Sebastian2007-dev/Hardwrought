@@ -85,7 +85,7 @@ public final class SmithingClientGameTest implements FabricClientGameTest {
             context.takeScreenshot("hardwrought-smithing-work");
             context.runOnClient(client -> client.gui.setScreen(null));
 
-            // The joined forges: a burning 2x2x2 on the left, a cold 3x3x3 on the right.
+            // The joined forges: a burning 2x2 on the left, a cold 3x3 under a hood on the right.
             BlockPos[] forges = new BlockPos[2];
             world.getServer().runOnServer(server -> {
                 var player = server.getPlayerList().getPlayers().getFirst();
@@ -98,16 +98,28 @@ public final class SmithingClientGameTest implements FabricClientGameTest {
                 forges[0] = small;
                 forges[1] = large;
                 for (int x = 0; x < 3; x++) {
-                    for (int y = 0; y < 3; y++) {
-                        for (int z = 0; z < 3; z++) {
-                            if (x < 2 && y < 2 && z < 2) {
-                                level.setBlockAndUpdate(small.offset(x, y, z), ModBlocks.FORGE.defaultBlockState());
-                            }
-                            if (x != 1 || y != 1 || z != 1) {
-                                level.setBlockAndUpdate(large.offset(x, y, z), ModBlocks.FORGE.defaultBlockState());
-                            }
+                    for (int z = 0; z < 3; z++) {
+                        if (x < 2 && z < 2) {
+                            level.setBlockAndUpdate(small.offset(x, 0, z), ModBlocks.FORGE.defaultBlockState());
                         }
+                        level.setBlockAndUpdate(large.offset(x, 0, z), ModBlocks.FORGE.defaultBlockState());
                     }
+                }
+                // A canopy of nine hoods over it, and a pipe off its middle that bends away at the top.
+                java.util.List<BlockPos> flue = new java.util.ArrayList<>();
+                for (int x = 0; x < 3; x++) {
+                    for (int z = 0; z < 3; z++) flue.add(large.offset(x, 2, z));
+                }
+                flue.add(large.offset(1, 3, 1));
+                flue.add(large.offset(1, 4, 1));
+                flue.add(large.offset(2, 4, 1));
+                for (BlockPos pos : flue) {
+                    level.setBlockAndUpdate(pos, (pos.getY() == large.getY() + 2 ? ModBlocks.FORGE_HOOD
+                            : ModBlocks.GAS_PIPE).defaultBlockState());
+                }
+                for (BlockPos pos : flue) {
+                    level.setBlockAndUpdate(pos, net.minecraft.world.level.block.Block.updateFromNeighbourShapes(
+                            level.getBlockState(pos), level, pos));
                 }
                 var smallForge = de.ipnats.hardwrought.smithing.ForgeMultiblock.getOrForm(level, small);
                 de.ipnats.hardwrought.smithing.ForgeMultiblock.controller(level, smallForge).addFuel(16000);
@@ -126,6 +138,17 @@ public final class SmithingClientGameTest implements FabricClientGameTest {
             context.waitTicks(40);
             world.getConnection().waitForChunksRender();
             context.takeScreenshot("hardwrought-smithing-forge-multiblocks");
+            // The canopy and its pipe, looked at from beside and a little below.
+            context.runOnClient(client -> {
+                client.player.setXRot(-12.0f);
+                client.player.setYRot(client.player.getYRot() + 22.0f);
+            });
+            context.waitTicks(5);
+            context.takeScreenshot("hardwrought-smithing-forge-hood-canopy");
+            context.runOnClient(client -> {
+                client.player.setXRot(20.0f);
+                client.player.setYRot(client.player.getYRot() - 22.0f);
+            });
 
             for (int which = 0; which < 2; which++) {
                 BlockPos at = forges[which];

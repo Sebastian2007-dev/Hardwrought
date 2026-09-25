@@ -50,8 +50,8 @@ def gui_scale(scale):
 def parts():
     axle = box([6, 0, 6], [10, 16, 10], "#axle")
     # Small gear: a disc with eight teeth, two of the teeth bars turned 45 degrees.
-    model("cogwheel_gear", {"axle": "minecraft:block/stripped_oak_log", "wheel": "minecraft:block/spruce_planks",
-                            "particle": "minecraft:block/spruce_planks"}, [
+    model("cogwheel_gear", {"axle": "hardwrought:block/hardwrought/shaft_side", "wheel": "hardwrought:block/hardwrought/gear_wood",
+                            "particle": "hardwrought:block/hardwrought/gear_wood"}, [
         axle,
         box([3, 6.5, 3], [13, 9.5, 13], "#wheel"),
         box([3, 6.5, 3], [13, 9.5, 13], "#wheel", rotation=45),
@@ -67,8 +67,8 @@ def parts():
     for angle in (None, 45, 22.5, -22.5):
         large.append(box([-8, 7, 6.5], [24, 9, 9.5], "#wheel", rotation=angle))
         large.append(box([6.5, 7, -8], [9.5, 9, 24], "#wheel", rotation=angle))
-    model("large_cogwheel_gear", {"axle": "minecraft:block/stripped_oak_log", "wheel": "minecraft:block/spruce_planks",
-                                  "particle": "minecraft:block/spruce_planks"}, large, display=gui_scale(0.35))
+    model("large_cogwheel_gear", {"axle": "hardwrought:block/hardwrought/shaft_side", "wheel": "hardwrought:block/hardwrought/gear_wood",
+                                  "particle": "hardwrought:block/hardwrought/gear_wood"}, large, display=gui_scale(0.35))
     # Water wheel: hub, eight spokes, eight paddles, three blocks across.
     wheel = [box([5, 0, 5], [11, 16, 11], "#axle")]
     for angle in (None, 45):
@@ -78,12 +78,12 @@ def parts():
         wheel.append(box([-16, 2, 4], [-10, 14, 12], "#paddle", rotation=angle))
         wheel.append(box([4, 2, 26], [12, 14, 32], "#paddle", rotation=angle))
         wheel.append(box([4, 2, -16], [12, 14, -10], "#paddle", rotation=angle))
-    model("water_wheel_rim", {"axle": "minecraft:block/stripped_oak_log", "spoke": "minecraft:block/oak_planks",
-                              "paddle": "minecraft:block/spruce_planks", "particle": "minecraft:block/oak_planks"},
+    model("water_wheel_rim", {"axle": "hardwrought:block/hardwrought/shaft_side", "spoke": "hardwrought:block/hardwrought/machine_boards",
+                              "paddle": "hardwrought:block/hardwrought/wet_paddle", "particle": "hardwrought:block/hardwrought/machine_boards"},
           wheel, display=gui_scale(0.25))
     # Sails: four spars with a cloth on one side of each, drawn scaled up to five blocks across.
-    model("windmill_sails", {"spar": "minecraft:block/dark_oak_log", "cloth": "minecraft:block/white_wool",
-                             "particle": "minecraft:block/white_wool"}, [
+    model("windmill_sails", {"spar": "hardwrought:block/hardwrought/dark_handle", "cloth": "hardwrought:block/hardwrought/sailcloth",
+                             "particle": "hardwrought:block/hardwrought/sailcloth"}, [
         box([5, 0, 5], [11, 16, 11], "#spar"),
         box([-16, 9, 7], [32, 11, 9], "#spar"),
         box([7, 9, -16], [9, 11, 32], "#spar"),
@@ -92,7 +92,7 @@ def parts():
         box([-1, 10, 12], [7, 11, 32], "#cloth"),
         box([9, 10, -16], [17, 11, 4], "#cloth"),
     ], display=gui_scale(0.25))
-    model("belt_strip", {"belt": "minecraft:block/brown_wool", "particle": "minecraft:block/brown_wool"}, [
+    model("belt_strip", {"belt": "hardwrought:block/hardwrought/leather_belt", "particle": "hardwrought:block/hardwrought/leather_belt"}, [
         box([0, 7.5, 6], [16, 8.5, 10], "#belt"),
     ])
     for part in ("cogwheel_gear", "large_cogwheel_gear", "water_wheel_rim", "windmill_sails", "belt_strip"):
@@ -102,12 +102,13 @@ def parts():
 def blocks():
     # Gears are drawn wholly by their renderer; the block keeps only its particles.
     for name in ("cogwheel", "large_cogwheel"):
-        write(ASSETS / f"models/block/{name}.json", {"textures": {"particle": "minecraft:block/spruce_planks"}})
+        write(ASSETS / f"models/block/{name}.json", {"textures": {"particle": "hardwrought:block/hardwrought/gear_wood"}})
         write(ASSETS / f"blockstates/{name}.json", {"variants": {
             f"axis={axis}": {"model": f"hardwrought:block/{name}"} for axis in ("x", "y", "z")}})
     write(ASSETS / "models/block/gearbox.json", {
         "parent": "minecraft:block/cube_column",
-        "textures": {"side": "minecraft:block/barrel_side", "end": "minecraft:block/barrel_bottom"}})
+        "textures": {"side": "hardwrought:block/hardwrought/gearbox_side",
+                     "end": "hardwrought:block/hardwrought/gearbox_end"}})
     write(ASSETS / "blockstates/gearbox.json", {"variants": {"": {"model": "hardwrought:block/gearbox"}}})
     # The wheel's hub stands in two bearings, like a shaft's.
     variants = {}
@@ -115,7 +116,7 @@ def blocks():
         variants[f"axis=x,waterlogged={w}"] = {"model": "hardwrought:block/shaft", "x": 90, "y": 90}
         variants[f"axis=z,waterlogged={w}"] = {"model": "hardwrought:block/shaft", "x": 90}
     write(ASSETS / "blockstates/water_wheel.json", {"variants": variants})
-    model("windmill", {"housing": "minecraft:block/dark_oak_planks", "particle": "minecraft:block/dark_oak_planks"}, [
+    model("windmill", {"housing": "hardwrought:block/hardwrought/gearbox_side", "particle": "hardwrought:block/hardwrought/gearbox_side"}, [
         box([4, 4, 8], [12, 12, 16], "#housing"),
     ])
     write(ASSETS / "blockstates/windmill.json", {"variants": {

@@ -261,7 +261,7 @@ public final class Geology {
      * One stable value per region and purpose. The same mix as the water table uses, so a region
      * answers the same way for the life of a world without anything being written down.
      */
-    private static long hash(long seed, int regionX, int regionZ, int salt) {
+    static long hash(long seed, int regionX, int regionZ, int salt) {
         long hash = seed * 0x9E3779B97F4A7C15L
                 + regionX * 0xC2B2AE3D27D4EB4FL
                 + regionZ * 0x165667B19E3779F9L

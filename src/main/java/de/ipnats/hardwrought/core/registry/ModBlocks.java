@@ -61,6 +61,44 @@ public final class ModBlocks {
     public static final de.ipnats.hardwrought.machinery.StarterCrusherBlock STARTER_CRUSHER = register(
             "starter_crusher", de.ipnats.hardwrought.machinery.StarterCrusherBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.COBBLESTONE).noOcclusion());
+    /** The head of an ore drill; see {@code OreDrillBlockEntity}. */
+    public static final de.ipnats.hardwrought.machinery.OreDrillBlock ORE_DRILL = register("ore_drill",
+            de.ipnats.hardwrought.machinery.OreDrillBlock::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(4.0f, 6.0f));
+    public static final de.ipnats.hardwrought.machinery.DrillFrameBlock DRILL_FRAME_BRONZE = register("drill_frame_bronze",
+            properties -> new de.ipnats.hardwrought.machinery.DrillFrameBlock(
+                    de.ipnats.hardwrought.geology.DrillTier.BRONZE, properties),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BARS).strength(3.0f + 0, 6.0f)
+                    .requiresCorrectToolForDrops());
+    public static final de.ipnats.hardwrought.machinery.DrillFrameBlock DRILL_FRAME_IRON = register("drill_frame_iron",
+            properties -> new de.ipnats.hardwrought.machinery.DrillFrameBlock(
+                    de.ipnats.hardwrought.geology.DrillTier.IRON, properties),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BARS).strength(3.0f + 1, 6.0f)
+                    .requiresCorrectToolForDrops());
+    public static final de.ipnats.hardwrought.machinery.DrillFrameBlock DRILL_FRAME_NICKEL = register("drill_frame_nickel",
+            properties -> new de.ipnats.hardwrought.machinery.DrillFrameBlock(
+                    de.ipnats.hardwrought.geology.DrillTier.NICKEL, properties),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BARS).strength(3.0f + 2, 6.0f)
+                    .requiresCorrectToolForDrops());
+    public static final de.ipnats.hardwrought.machinery.DrillFrameBlock DRILL_FRAME_CHROMIUM = register("drill_frame_chromium",
+            properties -> new de.ipnats.hardwrought.machinery.DrillFrameBlock(
+                    de.ipnats.hardwrought.geology.DrillTier.CHROMIUM, properties),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BARS).strength(3.0f + 3, 6.0f)
+                    .requiresCorrectToolForDrops());
+    public static final de.ipnats.hardwrought.machinery.DrillFrameBlock DRILL_FRAME_TITANIUM = register("drill_frame_titanium",
+            properties -> new de.ipnats.hardwrought.machinery.DrillFrameBlock(
+                    de.ipnats.hardwrought.geology.DrillTier.TITANIUM, properties),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BARS).strength(3.0f + 4, 6.0f)
+                    .requiresCorrectToolForDrops());
+    /** Section 60: bores down to a reservoir and pumps it; see {@code DrillingRigBlock}. */
+    public static final de.ipnats.hardwrought.oil.DrillingRigBlock DRILLING_RIG = register("drilling_rig",
+            de.ipnats.hardwrought.oil.DrillingRigBlock::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(4.0f, 6.0f).noOcclusion());
+    /** Section 62: a copper pot still over a fire; see {@code StillBlock}. */
+    public static final de.ipnats.hardwrought.chemistry.StillBlock STILL = register("still",
+            de.ipnats.hardwrought.chemistry.StillBlock::new,
+            BlockBehaviour.Properties.of().strength(2.5f, 6.0f).requiresCorrectToolForDrops()
+                    .sound(net.minecraft.world.level.block.SoundType.COPPER).noOcclusion());
     /** Section 38: the first anvil, a hardwood stump. Wears out; see {@code WoodenAnvilBlock}. */
     public static final de.ipnats.hardwrought.smithing.WoodenAnvilBlock WOODEN_ANVIL = register("wooden_anvil",
             de.ipnats.hardwrought.smithing.WoodenAnvilBlock::new,
@@ -70,6 +108,25 @@ public final class ModBlocks {
             de.ipnats.hardwrought.smithing.ForgeBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS).lightLevel(
                     state -> state.getValue(de.ipnats.hardwrought.smithing.ForgeBlock.LIT) ? 12 : 0));
+    /**
+     * Gas in the world: carbon dioxide, methane and carbon monoxide, up to eight units a block. Walked
+     * and seen through; never placed by hand and never dropped. See {@code GasBlock}.
+     */
+    public static final de.ipnats.hardwrought.environment.GasBlock GAS = register("gas",
+            de.ipnats.hardwrought.environment.GasBlock::new,
+            BlockBehaviour.Properties.of().replaceable().noCollision().noOcclusion().noLootTable()
+                    .pushReaction(net.minecraft.world.level.material.PushReaction.POPPED)
+                    .isSuffocating((state, level, pos) -> false).isViewBlocking((state, level, pos, box) -> false)
+                    .noTerrainParticles());
+    /** Hung over a forge, takes its smoke and spent air out of the room; see {@code ForgeHoodBlock}. */
+    public static final de.ipnats.hardwrought.smithing.ForgeHoodBlock FORGE_HOOD = register("forge_hood",
+            de.ipnats.hardwrought.smithing.ForgeHoodBlock::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS).noOcclusion());
+    /** Carries what a hood catches to wherever its open end is; see {@code GasPipeBlock}. */
+    public static final de.ipnats.hardwrought.smithing.GasPipeBlock GAS_PIPE = register("gas_pipe",
+            de.ipnats.hardwrought.smithing.GasPipeBlock::new,
+            BlockBehaviour.Properties.of().strength(1.5f, 6.0f).requiresCorrectToolForDrops()
+                    .sound(net.minecraft.world.level.block.SoundType.COPPER).noOcclusion());
     /** Blows a forge beside it hotter, while something turns it. */
     public static final de.ipnats.hardwrought.smithing.BellowsBlock BELLOWS = register("bellows",
             de.ipnats.hardwrought.smithing.BellowsBlock::new,

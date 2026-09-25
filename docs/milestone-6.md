@@ -89,19 +89,8 @@ a body under the chunk  weighs its own ore up fivefold, and the chunk works fast
 the drill's tier        decides how much of that it can reach
 ```
 
-| Tier | Reaches | Out of ordinary rock |
-| --- | --- | --- |
-| Basic | coal, iron, copper | one piece per 30 s |
-| Reinforced | + gold, redstone, lapis | per 20 s |
-| Deep | + diamond, emerald | per 15 s |
-
-Which tier an ore needs is stated per deposit in the rock profile (`drill_tier`), so it is a datapack
-decision like everything else. Reaching a rare ore is not the same as it being common: an emerald
-stays at its own weight in the table, it merely becomes possible.
-
-The rules are in place and tested. **The machine that uses them — the multiblock itself, its frame
-tiers, its inventory and its power — is the next piece of work**; `DrillYield.forChunk` is what it
-will roll against.
+Since then the drill has five tiers and a chunk-by-chunk mix of ores, and the machine exists; see
+[ore-drill.md](ore-drill.md).
 
 ## Prospecting
 
@@ -138,8 +127,7 @@ ORE | volcanic region | rich in minecraft:copper_ore, grade 21.8% here (core 24.
 
 ## Not in this milestone
 
-- **The drill machine.** The rules are here and tested; the multiblock that uses them — its frame
-  tiers, its inventory, its power — is not built yet.
+- **The drill machine.** Built later; see [ore-drill.md](ore-drill.md).
 - **Ore generation of our own.** Where ore blocks sit is vanilla's business again. If the rich ground
   should one day also *look* different — larger clusters, surface indicators — that is a worldgen
   change to make deliberately, and separately.

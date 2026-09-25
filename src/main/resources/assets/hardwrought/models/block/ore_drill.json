@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "brace": "hardwrought:block/hardwrought/iron_brace",
+    "steel": "hardwrought:block/hardwrought/drill_steel",
+    "particle": "hardwrought:block/hardwrought/drill_steel"
+  },
+  "elements": [
+    {"from": [1, 13, 1], "to": [15, 16, 15], "faces": {"north": {"texture": "#brace"}, "south": {"texture": "#brace"}, "east": {"texture": "#brace"}, "west": {"texture": "#brace"}, "up": {"texture": "#brace"}, "down": {"texture": "#brace"}}},
+    {"from": [3, 7, 3], "to": [13, 13, 13], "faces": {"north": {"texture": "#steel"}, "south": {"texture": "#steel"}, "east": {"texture": "#steel"}, "west": {"texture": "#steel"}, "up": {"texture": "#steel"}, "down": {"texture": "#steel"}}},
+    {"from": [4, 5, 4], "to": [12, 7, 12], "faces": {"north": {"texture": "#brace"}, "south": {"texture": "#brace"}, "east": {"texture": "#brace"}, "west": {"texture": "#brace"}, "up": {"texture": "#brace"}, "down": {"texture": "#brace"}}},
+    {"from": [6, 0, 6], "to": [10, 5, 10], "faces": {"north": {"texture": "#steel"}, "south": {"texture": "#steel"}, "east": {"texture": "#steel"}, "west": {"texture": "#steel"}, "up": {"texture": "#steel"}, "down": {"texture": "#steel"}}}
+  ]
+}

@@ -2,23 +2,22 @@ package de.ipnats.hardwrought.survival;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import de.ipnats.hardwrought.core.registry.FoodNutritionDefinition;
 
-/** Persistent, server-authoritative survival values for one player. */
-public record PlayerVitals(double stamina, double hydration, double calories, double protein,
-                           double carbohydrates, double fat, double micronutrients,
+/**
+ * Persistent, server-authoritative survival values for one player.
+ *
+ * <p>How full a player is lives on the vanilla hunger bar; what they have been eating lives here, as
+ * {@link Nutrition}. Worlds saved while hunger was still counted in calories keep loading: the old
+ * energy and nutrient fields are simply no longer read, and the diet starts from the middle.
+ */
+public record PlayerVitals(double stamina, double hydration, Nutrition nutrition,
                            double fatigue, double bodyTemperature, double wetness, double stress) {
     public static final double MAX_STAMINA = 100.0;
     public static final double MAX_HYDRATION = 100.0;
-    public static final double MAX_CALORIES = 2400.0;
     private static final Codec<PlayerVitals> RAW_CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.DOUBLE.fieldOf("stamina").forGetter(PlayerVitals::stamina),
             Codec.DOUBLE.fieldOf("hydration").forGetter(PlayerVitals::hydration),
-            Codec.DOUBLE.fieldOf("calories").forGetter(PlayerVitals::calories),
-            Codec.DOUBLE.fieldOf("protein").forGetter(PlayerVitals::protein),
-            Codec.DOUBLE.fieldOf("carbohydrates").forGetter(PlayerVitals::carbohydrates),
-            Codec.DOUBLE.fieldOf("fat").forGetter(PlayerVitals::fat),
-            Codec.DOUBLE.fieldOf("micronutrients").forGetter(PlayerVitals::micronutrients),
+            Nutrition.CODEC.optionalFieldOf("nutrition", Nutrition.START).forGetter(PlayerVitals::nutrition),
             Codec.DOUBLE.fieldOf("fatigue").forGetter(PlayerVitals::fatigue),
             Codec.DOUBLE.fieldOf("body_temperature").forGetter(PlayerVitals::bodyTemperature),
             Codec.DOUBLE.fieldOf("wetness").forGetter(PlayerVitals::wetness),
@@ -30,52 +29,43 @@ public record PlayerVitals(double stamina, double hydration, double calories, do
             : com.mojang.serialization.DataResult.error(() -> "Invalid survival value"));
 
     public static PlayerVitals defaults() {
-        return new PlayerVitals(100, 100, 2000, 70, 260, 70, 100, 15, 37, 0, 0);
+        return new PlayerVitals(100, 100, Nutrition.START, 15, 37, 0, 0);
     }
 
     public PlayerVitals normalized() {
         return new PlayerVitals(clamp(stamina, 0, 100), clamp(hydration, 0, 100),
-                clamp(calories, 0, 2400), clamp(protein, 0, 120), clamp(carbohydrates, 0, 360),
-                clamp(fat, 0, 120), clamp(micronutrients, 0, 100), clamp(fatigue, 0, 100),
+                nutrition == null ? Nutrition.START : nutrition.clamped(), clamp(fatigue, 0, 100),
                 clamp(bodyTemperature, 30, 43), clamp(wetness, 0, 1), clamp(stress, 0, 100));
     }
 
     public PlayerVitals withStress(double value) {
-        return new PlayerVitals(stamina, hydration, calories, protein, carbohydrates, fat,
-                micronutrients, fatigue, bodyTemperature, wetness, value).normalized();
+        return new PlayerVitals(stamina, hydration, nutrition, fatigue, bodyTemperature, wetness, value).normalized();
     }
 
     public PlayerVitals withFatigue(double value) {
-        return new PlayerVitals(stamina, hydration, calories, protein, carbohydrates, fat,
-                micronutrients, value, bodyTemperature, wetness, stress).normalized();
+        return new PlayerVitals(stamina, hydration, nutrition, value, bodyTemperature, wetness, stress).normalized();
     }
 
     public PlayerVitals withStamina(double value) {
-        return new PlayerVitals(value, hydration, calories, protein, carbohydrates, fat,
-                micronutrients, fatigue, bodyTemperature, wetness, stress).normalized();
+        return new PlayerVitals(value, hydration, nutrition, fatigue, bodyTemperature, wetness, stress).normalized();
     }
 
     public PlayerVitals withHydration(double value) {
-        return new PlayerVitals(stamina, value, calories, protein, carbohydrates, fat,
-                micronutrients, fatigue, bodyTemperature, wetness, stress).normalized();
+        return new PlayerVitals(stamina, value, nutrition, fatigue, bodyTemperature, wetness, stress).normalized();
+    }
+
+    public PlayerVitals withNutrition(Nutrition value) {
+        return new PlayerVitals(stamina, hydration, value, fatigue, bodyTemperature, wetness, stress).normalized();
     }
 
     public PlayerVitals drink(double amount) {
-        return new PlayerVitals(stamina, hydration + amount, calories, protein, carbohydrates, fat,
-                micronutrients, fatigue, bodyTemperature, wetness, stress).normalized();
+        return withHydration(hydration + amount);
     }
 
-    public PlayerVitals eat(int nutrition, float saturation) {
-        return new PlayerVitals(stamina, hydration + nutrition * 0.35, calories + nutrition * 115.0,
-                protein + nutrition * 2.0, carbohydrates + nutrition * 5.0,
-                fat + saturation * 1.5, micronutrients + nutrition * 0.6,
-                fatigue, bodyTemperature, wetness, stress).normalized();
-    }
-
-    public PlayerVitals eat(FoodNutritionDefinition food) {
-        return new PlayerVitals(stamina, hydration + food.hydration(), calories + food.calories(),
-                protein + food.protein(), carbohydrates + food.carbohydrates(), fat + food.fat(),
-                micronutrients + food.micronutrients(), fatigue, bodyTemperature, wetness, stress).normalized();
+    /** What eating something brings: its nutrients, as much of them as the body takes in, and its water. */
+    public PlayerVitals eat(Nutrition food, double water, double absorbed) {
+        return new PlayerVitals(stamina, hydration + water, nutrition.plus(food, absorbed), fatigue,
+                bodyTemperature, wetness, stress).normalized();
     }
 
     public static double clamp(double value, double min, double max) {
@@ -84,12 +74,10 @@ public record PlayerVitals(double stamina, double hydration, double calories, do
     }
 
     private boolean valid() {
-        return finite(stamina, hydration, calories, protein, carbohydrates, fat, micronutrients,
-                fatigue, bodyTemperature, wetness, stress)
+        return finite(stamina, hydration, fatigue, bodyTemperature, wetness, stress)
+                && nutrition != null && nutrition.valid()
                 && stamina >= 0 && stamina <= 100 && hydration >= 0 && hydration <= 100
-                && calories >= 0 && calories <= 2400 && protein >= 0 && protein <= 120
-                && carbohydrates >= 0 && carbohydrates <= 360 && fat >= 0 && fat <= 120
-                && micronutrients >= 0 && micronutrients <= 100 && fatigue >= 0 && fatigue <= 100
+                && fatigue >= 0 && fatigue <= 100
                 && bodyTemperature >= 30 && bodyTemperature <= 43 && wetness >= 0 && wetness <= 1
                 && stress >= 0 && stress <= 100;
     }

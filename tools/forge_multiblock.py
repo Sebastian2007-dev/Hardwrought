@@ -1,10 +1,13 @@
-"""Generates the joined forge: one big brick furnace drawn across 8 or 26 forge blocks.
+"""Generates the joined forge: one flat brick hearth drawn across 2x2 or 3x3 forge blocks.
 
 Every block of a formed forge carries a ``part`` number (see ForgeMultiblock.partIndex). Its model
-shows only the faces on the outside of the whole structure, and each outer face takes its share of
-one big side texture: brick walls with stone corners, a stone plinth and coping, and a fire mouth
-in the middle of the bottom row that glows while the forge burns. The top layer is one shared pit
-of coals with a rim only along the outer edge.
+shows only the faces on the outside of the whole hearth, and each outer face takes its tile of one
+long side strip: brick with stone corners, a stone plinth and coping, and a fire mouth in the middle
+that glows while the forge burns. The top is one shared pit with a rim only along the outer edge.
+
+The pit is drawn empty - a floor of ash - and the bed of coal is a second model laid into it by the
+blockstate, at one of four heights, so the hearth visibly fills up as fuel goes in. A forge on its
+own is part 0 and is drawn the same way.
 
 Run from the repository root:  python tools/forge_multiblock.py
 """
@@ -21,7 +24,10 @@ ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "src/main/resources/assets/hardwrought"
 JAR = Path.home() / ".gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-clientonly-deobf/26.3/minecraft-clientonly-deobf-26.3.jar"
 
-SMALL_FIRST, LARGE_FIRST, MAX_PART = 1, 9, 35
+SMALL_FIRST, LARGE_FIRST, MAX_PART = 1, 5, 35
+# How deep the pit is: its floor, and the top of the bed at each fill level of ForgeBlock.FUEL.
+FLOOR = 6
+BED_TOPS = {1: 8, 2: 10, 3: 12, 4: 14}
 
 
 def vanilla(name):
@@ -44,32 +50,33 @@ def shade(color, factor):
 
 
 def side_texture(edge, lined, lit):
+    """The whole side of the hearth: 16 * edge wide, one block high."""
     n = 16 * edge
-    brick = tiled(vanilla("mud_bricks" if lined else "bricks"), n)
-    stone = tiled(vanilla("stone_bricks"), n)
-    cobble = tiled(vanilla("cobblestone"), n)
+    h = 16
+    brick = tiled(vanilla("mud_bricks" if lined else "bricks"), n).crop((0, 0, n, h))
+    stone = tiled(vanilla("stone_bricks"), n).crop((0, 0, n, h))
+    cobble = tiled(vanilla("cobblestone"), n).crop((0, 0, n, h))
     img = brick.copy()
     px = img.load()
     sp, cp = stone.load(), cobble.load()
-    for y in range(n):
+    for y in range(h):
         for x in range(n):
-            if y >= n - 3:                      # plinth
+            if y >= h - 3:                      # plinth
                 px[x, y] = cp[x, y]
             elif y < 2:                         # coping
                 px[x, y] = shade(sp[x, y], 0.95 if y == 0 else 0.8)
             elif x < 2 or x >= n - 2:           # corner quoins
                 px[x, y] = shade(sp[x, y], 0.9)
 
-    # The fire mouth: an arch standing on the plinth, in the middle of the bottom row.
-    width = 10 if edge == 2 else 12
-    height = 10 if edge == 2 else 12
+    # The fire mouth: a low arch standing on the plinth, in the middle of the side.
+    width = 8 if edge <= 2 else 10
+    height = 8
     left = n // 2 - width // 2
-    bottom = n - 3                              # first plinth row
+    bottom = h - 3                              # first plinth row
     top = bottom - height
     radius = width / 2
     cx = n / 2 - 0.5
     rng = random.Random(edge * 7 + lined * 3 + lit)
-
     def inside(x, y, grow=0.0):
         if x < left - grow or x > left + width - 1 + grow or y >= bottom or y < top - grow:
             return False
@@ -78,7 +85,7 @@ def side_texture(edge, lined, lit):
             return True
         return ((x - cx) ** 2 + (y - arch_y) ** 2) <= (radius - 0.5 + grow) ** 2
 
-    for y in range(n):
+    for y in range(h):
         for x in range(n):
             if inside(x, y):
                 depth = (bottom - y) / height   # 0 at the floor, 1 at the crown
@@ -102,48 +109,63 @@ def side_texture(edge, lined, lit):
     return img
 
 
-def big_uv(face, edge, b, lo, hi):
-    """The rectangle of the big side texture a face covers, in model uv units (0-16)."""
-    n = 16 * edge
-    bx, by, bz = b
+def hearth_floor():
+    """Cold ash and cinders at the bottom of an empty pit."""
+    base = vanilla("cobblestone")
+    rng = random.Random(38)
+    out = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            r, g, b, a = base.getpixel((x, y))
+            v = int((r + g + b) / 3 * 0.42)
+            color = (v + 4, v + 2, v, 255)
+            roll = rng.random()
+            if roll < 0.10:
+                color = (150, 146, 140, 255)          # pale ash
+            elif roll < 0.14:
+                color = (18, 16, 16, 255)             # a cinder
+            out.putpixel((x, y), color)
+    return out
+
+
+def tiles(strip, edge):
+    return [strip.crop((16 * i, 0, 16 * i + 16, 16)) for i in range(edge)]
+
+
+def tile_uv(face, edge, b, lo, hi):
+    """Which tile of the side strip a face shows, and the rectangle of it, in uv units (0-16)."""
+    bx, bz = b
     x0, y0, z0 = lo
     x1, y1, z1 = hi
-    v = (n - (by * 16 + y1), n - (by * 16 + y0))
+    v = (16 - y1, 16 - y0)
     if face == "north":
-        u = (n - (bx * 16 + x1), n - (bx * 16 + x0))
+        tile, u = edge - 1 - bx, (16 - x1, 16 - x0)
     elif face == "south":
-        u = (bx * 16 + x0, bx * 16 + x1)
+        tile, u = bx, (x0, x1)
     elif face == "west":
-        u = (bz * 16 + z0, bz * 16 + z1)
+        tile, u = bz, (z0, z1)
     else:
-        u = (n - (bz * 16 + z1), n - (bz * 16 + z0))
-    scale = 16 / n
-    return [round(u[0] * scale, 4), round(v[0] * scale, 4), round(u[1] * scale, 4), round(v[1] * scale, 4)]
+        tile, u = edge - 1 - bz, (16 - z1, 16 - z0)
+    return tile, [u[0], v[0], u[1], v[1]]
 
 
 def outer_faces(edge, b, lo, hi, outer):
     faces = {}
     for face in outer:
-        faces[face] = {"uv": big_uv(face, edge, b, lo, hi), "texture": "#side", "cullface": face}
+        tile, uv = tile_uv(face, edge, b, lo, hi)
+        faces[face] = {"uv": uv, "texture": f"#side{tile}", "cullface": face}
     return faces
 
 
 def part_model(edge, b):
-    bx, by, bz = b
+    bx, bz = b
     last = edge - 1
     outer = [f for f, on in (("north", bz == 0), ("south", bz == last), ("west", bx == 0), ("east", bx == last)) if on]
     elements = []
-    if by < last:
-        faces = outer_faces(edge, b, (0, 0, 0), (16, 16, 16), outer)
-        if by == 0:
-            faces["down"] = {"uv": [0, 0, 16, 16], "texture": "#bottom", "cullface": "down"}
-        if faces:
-            elements.append({"from": [0, 0, 0], "to": [16, 16, 16], "faces": faces})
-        return elements
-
-    body = outer_faces(edge, b, (0, 0, 0), (16, 12, 16), outer)
-    body["up"] = {"uv": [0, 0, 16, 16], "texture": "#bed"}
-    elements.append({"from": [0, 0, 0], "to": [16, 12, 16], "faces": body})
+    body = outer_faces(edge, b, (0, 0, 0), (16, FLOOR, 16), outer)
+    body["up"] = {"uv": [0, 0, 16, 16], "texture": "#floor"}
+    body["down"] = {"uv": [0, 0, 16, 16], "texture": "#bottom", "cullface": "down"}
+    elements.append({"from": [0, 0, 0], "to": [16, FLOOR, 16], "faces": body})
 
     def rim(lo, hi, own, inner):
         faces = outer_faces(edge, b, lo, hi, own)
@@ -151,33 +173,36 @@ def part_model(edge, b):
         x1, _, z1 = hi
         faces["up"] = {"uv": [x0, z0, x1, z1], "texture": "#rim", "cullface": "up"}
         span = (x1 - x0) if inner in ("north", "south") else (z1 - z0)
-        faces[inner] = {"uv": [0, 0, span, 4], "texture": "#rim"}
+        faces[inner] = {"uv": [0, 0, span, 16 - FLOOR], "texture": "#rim"}
         elements.append({"from": list(lo), "to": list(hi), "faces": faces})
 
     if bz == 0:
-        rim((0, 12, 0), (16, 16, 3), ["north"] + [f for f in ("west", "east") if f in outer], "south")
+        rim((0, FLOOR, 0), (16, 16, 3), ["north"] + [f for f in ("west", "east") if f in outer], "south")
     if bz == last:
-        rim((0, 12, 13), (16, 16, 16), ["south"] + [f for f in ("west", "east") if f in outer], "north")
+        rim((0, FLOOR, 13), (16, 16, 16), ["south"] + [f for f in ("west", "east") if f in outer], "north")
     z_lo = 3 if bz == 0 else 0
     z_hi = 13 if bz == last else 16
     if bx == 0:
-        rim((0, 12, z_lo), (3, 16, z_hi), ["west"], "east")
+        rim((0, FLOOR, z_lo), (3, 16, z_hi), ["west"], "east")
     if bx == last:
-        rim((13, 12, z_lo), (16, 16, z_hi), ["east"], "west")
+        rim((13, FLOOR, z_lo), (16, 16, z_hi), ["east"], "west")
     return elements
 
 
+def bed_model(top):
+    """The coal lying in the pit, up to this height. Only its top shows; the rim hides the rest."""
+    return {"from": [0, FLOOR, 0], "to": [16, top, 16],
+            "faces": {"up": {"uv": [0, 0, 16, 16], "texture": "#bed"}}}
+
+
 def parts():
-    for y in range(2):
-        for z in range(2):
-            for x in range(2):
-                yield SMALL_FIRST + x + 2 * z + 4 * y, 2, (x, y, z)
-    for y in range(3):
-        for z in range(3):
-            for x in range(3):
-                if (x, y, z) == (1, 1, 1):
-                    continue
-                yield LARGE_FIRST + x + 3 * z + 9 * y, 3, (x, y, z)
+    yield 0, 1, (0, 0)
+    for z in range(2):
+        for x in range(2):
+            yield SMALL_FIRST + x + 2 * z, 2, (x, z)
+    for z in range(3):
+        for x in range(3):
+            yield LARGE_FIRST + x + 3 * z, 3, (x, z)
 
 
 def suffix(lined, lit):
@@ -191,16 +216,22 @@ def main():
     model_dir.mkdir(parents=True, exist_ok=True)
     for old in model_dir.glob("part_*.json"):
         old.unlink()
+    for old in tex_dir.glob("*_side*.png"):
+        old.unlink()
+    for old in model_dir.glob("bed_*.json"):
+        old.unlink()
+    hearth_floor().save(tex_dir / "hearth_floor.png")
 
-    for edge, name in ((2, "small"), (3, "large")):
+    for edge, name in ((1, "single"), (2, "small"), (3, "large")):
         for lined in (False, True):
             for lit in (False, True):
-                side_texture(edge, lined, lit).save(tex_dir / f"{name}_side{suffix(lined, lit)}.png")
+                for i, tile in enumerate(tiles(side_texture(edge, lined, lit), edge)):
+                    tile.save(tex_dir / f"{name}_side_{i}{suffix(lined, lit)}.png")
 
     known = {}
     for part, edge, b in parts():
         known[part] = True
-        name = "small" if edge == 2 else "large"
+        name = {1: "single", 2: "small", 3: "large"}[edge]
         (model_dir / f"part_{part}_shape.json").write_text(json.dumps({
             "parent": "minecraft:block/block",
             "__comment": f"Generated by tools/forge_multiblock.py: block {b} of the {name} forge.",
@@ -209,30 +240,54 @@ def main():
         for lined in (False, True):
             for lit in (False, True):
                 brick = "minecraft:block/mud_bricks" if lined else "minecraft:block/bricks"
-                (model_dir / f"part_{part}{suffix(lined, lit)}.json").write_text(json.dumps({
+                textures = {f"side{i}": f"hardwrought:block/forge/{name}_side_{i}{suffix(lined, lit)}"
+                            for i in range(edge)}
+                textures.update({
+                    "rim": brick,
+                    "floor": "hardwrought:block/forge/hearth_floor",
+                    "bottom": "minecraft:block/cobblestone",
+                    "particle": brick,
+                })
+                # The forge on its own keeps its old model names; its item is drawn from them.
+                target = (ASSETS / "models/block" / f"forge{suffix(lined, lit)}.json" if part == 0
+                          else model_dir / f"part_{part}{suffix(lined, lit)}.json")
+                target.write_text(json.dumps({
                     "parent": f"hardwrought:block/forge/part_{part}_shape",
-                    "textures": {
-                        "side": f"hardwrought:block/forge/{name}_side{suffix(lined, lit)}",
-                        "rim": brick,
-                        "bed": "minecraft:block/magma" if lit else "minecraft:block/coal_block",
-                        "bottom": "minecraft:block/cobblestone",
-                        "particle": brick,
-                    },
+                    "textures": textures,
                 }, indent=2) + "\n", encoding="utf-8")
 
-    variants = {}
+    for level, top in BED_TOPS.items():
+        for lit in (False, True):
+            (model_dir / f"bed_{level}{suffix(False, lit)}.json").write_text(json.dumps({
+                "parent": "minecraft:block/block",
+                "__comment": "Generated by tools/forge_multiblock.py: the coal in the pit.",
+                "textures": {
+                    "bed": "hardwrought:block/hardwrought/coal_bed_hot" if lit else "hardwrought:block/hardwrought/coal_bed",
+                    "particle": "hardwrought:block/hardwrought/coal_bed",
+                },
+                "elements": [bed_model(top)],
+            }, indent=2) + "\n", encoding="utf-8")
+
+    # Multipart: the hearth by its part, and the bed laid into it by how much fuel there is.
+    single = "|".join(str(part) for part in range(MAX_PART + 1) if part == 0 or part not in known)
+    multipart = []
     for lined in (False, True):
         for lit in (False, True):
-            for part in range(MAX_PART + 1):
-                key = f"lined={str(lined).lower()},lit={str(lit).lower()},part={part}"
-                if part in known:
-                    model = f"hardwrought:block/forge/part_{part}{suffix(lined, lit)}"
-                else:
-                    model = f"hardwrought:block/forge{suffix(lined, lit)}"
-                variants[key] = {"model": model}
-    (ASSETS / "blockstates/forge.json").write_text(json.dumps({"variants": variants}, indent=2) + "\n",
+            flags = {"lined": str(lined).lower(), "lit": str(lit).lower()}
+            multipart.append({"when": {**flags, "part": single},
+                              "apply": {"model": f"hardwrought:block/forge{suffix(lined, lit)}"}})
+            for part in sorted(known):
+                if part == 0:
+                    continue
+                multipart.append({"when": {**flags, "part": str(part)},
+                                  "apply": {"model": f"hardwrought:block/forge/part_{part}{suffix(lined, lit)}"}})
+    for level in BED_TOPS:
+        for lit in (False, True):
+            multipart.append({"when": {"fuel": str(level), "lit": str(lit).lower()},
+                              "apply": {"model": f"hardwrought:block/forge/bed_{level}{suffix(False, lit)}"}})
+    (ASSETS / "blockstates/forge.json").write_text(json.dumps({"multipart": multipart}, indent=2) + "\n",
                                                    encoding="utf-8")
-    print(f"{len(known)} parts, {len(variants)} states")
+    print(f"{len(known)} parts, {len(multipart)} multipart cases")
 
 
 if __name__ == "__main__":

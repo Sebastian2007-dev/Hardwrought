@@ -21,7 +21,8 @@ public abstract class ItemStackMixin {
                                      CallbackInfoReturnable<ItemStack> callback) {
         ItemStack stack = (ItemStack) (Object) this;
         if (!level.isClientSide() && entity instanceof ServerPlayer player
-                && (stack.has(DataComponents.FOOD) || stack.has(DataComponents.POTION_CONTENTS))) {
+                && (stack.has(DataComponents.FOOD) || stack.has(DataComponents.POTION_CONTENTS)
+                || stack.is(net.minecraft.world.item.Items.MILK_BUCKET))) {
             var runtime = CoreLifecycle.find(player.level().getServer());
             if (runtime != null) {
                 runtime.survival().consumeFood(player, stack);

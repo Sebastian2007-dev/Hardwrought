@@ -4,6 +4,6 @@
   "textures": {
     "side": "hardwrought:block/wooden_anvil_side_split",
     "top": "hardwrought:block/wooden_anvil_top_split",
-    "particle": "minecraft:block/oak_log"
+    "particle": "hardwrought:block/hardwrought/wooden_anvil_side"
   }
 }

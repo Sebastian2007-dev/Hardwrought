@@ -221,30 +221,36 @@ public final class GeologyGameTests {
         int z = 0;
         while (Geology.rockAt(SEED, x, z) != RockType.GRANITE) x += Geology.REGION_SIZE_BLOCKS;
 
-        DrillYield basic = DrillYield.forChunk(SEED, profiles, x, z, DrillTier.BASIC);
-        List<Identifier> reachable = basic.entries().stream().map(DrillYield.Entry::ore).toList();
-        helper.assertTrue(reachable.contains(Identifier.withDefaultNamespace("iron_ore")),
-                "A first drill on granite brings up the iron the early game runs on");
-        helper.assertFalse(reachable.contains(Identifier.withDefaultNamespace("emerald_ore"))
-                        || reachable.contains(Identifier.withDefaultNamespace("gold_ore")),
-                "but not what the rock keeps for a better machine");
-
-        DrillYield deep = DrillYield.forChunk(SEED, profiles, x, z, DrillTier.DEEP);
-        List<Identifier> deepOres = deep.entries().stream().map(DrillYield.Entry::ore).toList();
-        helper.assertTrue(deepOres.contains(Identifier.withDefaultNamespace("emerald_ore")),
-                "The deep drill reaches the rare ore in the same rock");
-        helper.assertTrue(deep.entries().stream()
-                        .filter(entry -> entry.ore().getPath().equals("emerald_ore"))
-                        .findFirst().orElseThrow().weight()
-                        < deep.entries().stream()
-                        .filter(entry -> entry.ore().getPath().equals("iron_ore"))
-                        .findFirst().orElseThrow().weight(),
-                "and it stays the rare one: reaching it is not the same as it being common");
-        helper.assertTrue(deep.intervalTicks() < DrillTier.BASIC.intervalTicks(),
-                "A better drill also works faster");
-        helper.assertTrue(basic.roll(helper.getLevel().getRandom()) != null,
-                "Rolling the table really produces an ore");
-        helper.assertFalse(basic.barren(), "and granite is not barren to a first drill");
+        // Every chunk of the region, one after the other: the first tier only ever reaches coal and iron,
+        // the last reaches the rare ores too, and the chunks do not all hold the same mix.
+        java.util.Set<List<DrillYield.Entry>> mixes = new java.util.HashSet<>();
+        double iron = 0;
+        double emerald = 0;
+        int working = 0;
+        int chunks = 0;
+        for (int cx = 0; cx < Geology.REGION_SIZE_BLOCKS; cx += 16) {
+            for (int cz = 0; cz < Geology.REGION_SIZE_BLOCKS; cz += 16) {
+                int bx = Geology.regionX(x) * Geology.REGION_SIZE_BLOCKS + cx;
+                int bz = Geology.regionZ(z) * Geology.REGION_SIZE_BLOCKS + cz;
+                chunks++;
+                DrillYield first = DrillYield.forChunk(SEED, profiles, bx, bz, DrillTier.BRONZE);
+                for (DrillYield.Entry entry : first.entries()) {
+                    helper.assertTrue(entry.ore().getPath().equals("coal_ore") || entry.ore().getPath().equals("iron_ore"),
+                            "A bronze drill reaches coal and iron and nothing else, not " + entry.ore());
+                }
+                if (!first.barren()) working++;
+                DrillYield last = DrillYield.forChunk(SEED, profiles, bx, bz, DrillTier.TITANIUM);
+                mixes.add(last.entries());
+                iron += last.share(Identifier.withDefaultNamespace("iron_ore"));
+                emerald += last.share(Identifier.withDefaultNamespace("emerald_ore"));
+                helper.assertTrue(last.intervalTicks() < DrillTier.BRONZE.intervalTicks(),
+                        "A better drill also works faster");
+            }
+        }
+        helper.assertTrue(working > chunks * 0.7, "A first drill finds something in most of granite: " + working + "/" + chunks);
+        helper.assertTrue(mixes.size() > chunks / 2, "Chunks hold their own mixes of ore: " + mixes.size() + "/" + chunks);
+        helper.assertTrue(emerald > 0, "The last drill reaches the emerald in the rock");
+        helper.assertTrue(emerald < iron, "and it stays the rare one: reaching it is not the same as it being common");
 
         // Standing on a real body is what makes a drill worth siting carefully.
         OreDeposit found = null;
@@ -255,22 +261,17 @@ public final class GeologyGameTests {
         helper.assertTrue(found != null, "There is a body for a drill to stand on");
         final OreDeposit body = found;
         DrillYield onBody = DrillYield.forChunk(SEED, profiles, body.centre().getX(),
-                body.centre().getZ(), DrillTier.DEEP);
-        int weightHere = onBody.entries().stream()
-                .filter(entry -> entry.ore().equals(body.ore())).findFirst().orElseThrow().weight();
-        DrillYield elsewhere = DrillYield.forChunk(SEED, profiles,
-                body.centre().getX() + 4096, body.centre().getZ() + 4096, DrillTier.DEEP);
-        helper.assertTrue(weightHere > 1, "The ore under the drill comes up far more often");
-        helper.assertTrue(onBody.intervalTicks() < DrillTier.DEEP.intervalTicks(),
+                body.centre().getZ(), DrillTier.TITANIUM);
+        helper.assertTrue(onBody.share(body.ore()) > 0.3, "The ore under the drill comes up far more often: "
+                + onBody.share(body.ore()));
+        helper.assertTrue(onBody.intervalTicks() < DrillTier.TITANIUM.intervalTicks(),
                 "and a chunk with a body in it works faster than bare rock");
-        helper.assertTrue(elsewhere.intervalTicks() >= onBody.intervalTicks(),
-                "which bare rock somewhere else does not");
 
         expectFailure(() -> DrillYield.forChunk(SEED, profiles, 0, 0, null));
         expectFailure(() -> new DrillYield.Entry(Identifier.withDefaultNamespace("iron_ore"), 0));
-        helper.assertTrue(DrillTier.byName("deep") == DrillTier.DEEP
-                        && DrillTier.byLevel(1) == DrillTier.BASIC,
-                "Tiers round trip by name and by level");
+        helper.assertTrue(DrillTier.byName("titanium") == DrillTier.TITANIUM
+                        && DrillTier.byLevel(1) == DrillTier.BRONZE && DrillTier.values().length == 5,
+                "Five tiers, round tripping by name and by level");
         expectFailure(() -> DrillTier.byLevel(9));
         helper.succeed();
     }

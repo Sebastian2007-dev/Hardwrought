@@ -10,6 +10,10 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import de.ipnats.hardwrought.core.networking.SortInventoryPayload;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.AbstractCraftingMenu;
@@ -162,5 +166,77 @@ public abstract class AbstractContainerScreenMixin extends Screen {
             CompendiumClient.openUsages(stack.getItem());
             callback.setReturnValue(true);
         }
+    }
+
+    /**
+     * A middle click over a slot sorts that slot's grid — outside creative, where the middle click
+     * still copies the stack. The server does the sorting; see {@code InventorySorting}.
+     */
+    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
+    private void hardwrought$sortOnMiddleClick(MouseButtonEvent event, boolean doubled,
+                                               CallbackInfoReturnable<Boolean> callback) {
+        if (event.button() != InputConstants.MOUSE_BUTTON_MIDDLE || hoveredSlot == null) return;
+        if (minecraft == null || minecraft.player == null) return;
+        if (minecraft.player.isCreative() || minecraft.player.isSpectator()) return;
+        if (!ClientPlayNetworking.canSend(SortInventoryPayload.TYPE)) return;
+        ClientPlayNetworking.send(new SortInventoryPayload(menu.containerId, hoveredSlot.index));
+        callback.setReturnValue(true);
+    }
+
+    // ---------------------------------------------------------------- Mouse Tweaks
+
+    @Shadow
+    protected abstract void slotClicked(Slot slot, int slotId, int button,
+                                        net.minecraft.world.inventory.ContainerInput input);
+
+    /** The slots a shift-drag has already moved, so passing over one twice moves it once. */
+    @Unique private final java.util.Set<Integer> hardwrought$dragged = new java.util.HashSet<>();
+    @Unique private boolean hardwrought$shiftDragging;
+
+    /**
+     * One notch of the wheel over a stack moves one item of it: down sends one to the other side,
+     * up pulls one more of the same kind in. The server does the moving; see {@code ScrollTransfer}.
+     * The creative screen keeps its wheel for scrolling its item list.
+     */
+    @Inject(method = "mouseScrolled", at = @At("HEAD"), cancellable = true)
+    private void hardwrought$scrollOneItem(double x, double y, double scrollX, double scrollY,
+                                           CallbackInfoReturnable<Boolean> callback) {
+        if (scrollY == 0 || hoveredSlot == null || !hoveredSlot.hasItem() || !menu.getCarried().isEmpty()) return;
+        if ((Object) this instanceof net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen) return;
+        if (!ClientPlayNetworking.canSend(de.ipnats.hardwrought.core.networking.ScrollMovePayload.TYPE)) return;
+        ClientPlayNetworking.send(new de.ipnats.hardwrought.core.networking.ScrollMovePayload(
+                menu.containerId, hoveredSlot.index, scrollY < 0));
+        callback.setReturnValue(true);
+    }
+
+    /** A shift-click starts a shift-drag: the slot clicked is moved by the click itself. */
+    @Inject(method = "mouseClicked", at = @At("HEAD"))
+    private void hardwrought$startShiftDrag(MouseButtonEvent event, boolean doubled,
+                                            CallbackInfoReturnable<Boolean> callback) {
+        hardwrought$dragged.clear();
+        hardwrought$shiftDragging = event.button() == InputConstants.MOUSE_BUTTON_LEFT && event.hasShiftDown()
+                && menu.getCarried().isEmpty();
+        if (hardwrought$shiftDragging && hoveredSlot != null) hardwrought$dragged.add(hoveredSlot.index);
+    }
+
+    /** Dragging on with shift held moves every further stack the cursor passes over, as a shift-click would. */
+    @Inject(method = "mouseDragged", at = @At("HEAD"), cancellable = true)
+    private void hardwrought$shiftDrag(MouseButtonEvent event, double dragX, double dragY,
+                                       CallbackInfoReturnable<Boolean> callback) {
+        if (!hardwrought$shiftDragging || event.button() != InputConstants.MOUSE_BUTTON_LEFT) return;
+        if (!event.hasShiftDown() || !menu.getCarried().isEmpty()) return;
+        Slot slot = hoveredSlot;
+        if (slot != null && slot.hasItem() && hardwrought$dragged.add(slot.index)) {
+            slotClicked(slot, slot.index, InputConstants.MOUSE_BUTTON_LEFT,
+                    net.minecraft.world.inventory.ContainerInput.QUICK_MOVE);
+        }
+        callback.setReturnValue(true);
+    }
+
+    @Inject(method = "mouseReleased", at = @At("HEAD"))
+    private void hardwrought$endShiftDrag(MouseButtonEvent event, CallbackInfoReturnable<Boolean> callback) {
+        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) return;
+        hardwrought$shiftDragging = false;
+        hardwrought$dragged.clear();
     }
 }

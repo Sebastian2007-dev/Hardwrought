@@ -1,9 +1,9 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
-    "side": "minecraft:block/stripped_oak_log",
-    "end": "minecraft:block/stripped_oak_log_top",
-    "particle": "minecraft:block/stripped_oak_log"
+    "side": "hardwrought:block/hardwrought/shaft_side",
+    "end": "hardwrought:block/hardwrought/shaft_end",
+    "particle": "hardwrought:block/hardwrought/shaft_side"
   },
   "elements": [
     {

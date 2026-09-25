@@ -63,6 +63,8 @@ public class CompendiumScreen extends Screen {
     private static final int BUTTON_HEIGHT = 18;
     /** The row the back button and the page arrows sit on, inside the paper's bottom edge. */
     private static final int CONTROLS_Y = PAPER_BOTTOM - 4 - BUTTON_HEIGHT;
+    /** Where the button into a structure's view starts, beside the back button. */
+    private static final int STRUCTURE_BUTTON_OFFSET = 58;
     /** Nothing on a page is drawn below this, so it can never run into the controls. */
     private static final int CONTENT_BOTTOM = CONTROLS_Y - 4;
 
@@ -275,6 +277,20 @@ public class CompendiumScreen extends Screen {
         page = Math.floorMod(page + direction, Math.max(1, pages));
     }
 
+    /**
+     * Whether this page is about a food. The left page of a food is kept for what it brings to a
+     * diet, so where it is found is listed on the right page alone.
+     */
+    private boolean foodPage() {
+        return mode != CompendiumPagePayload.MODE_SHELF && mode != CompendiumPagePayload.MODE_JOURNAL
+                && mode != MODE_HOME
+                && de.ipnats.hardwrought.client.survival.NutritionScreen.nutrientsOf(subject) != null;
+    }
+
+    private int sourcesPerPage() {
+        return foodPage() ? SOURCE_ROWS : SOURCE_ROWS * 2;
+    }
+
     private int pageCount() {
         if (mode == MODE_HOME) return 1;
         CompendiumPagePayload current = CompendiumClient.page();
@@ -287,7 +303,8 @@ public class CompendiumScreen extends Screen {
         }
         int method = effectiveMethod(current);
         if (method == CompendiumPagePayload.METHOD_LOOT) {
-            return Math.max(1, (current.sources().size() + SOURCE_ROWS * 2 - 1) / (SOURCE_ROWS * 2));
+            int perPage = sourcesPerPage();
+            return Math.max(1, (current.sources().size() + perPage - 1) / perPage);
         }
         return Math.max(1, recipePages(recipesFor(current, method)).size());
     }
@@ -362,7 +379,7 @@ public class CompendiumScreen extends Screen {
             int headingY = top + (mode == CompendiumPagePayload.MODE_SHELF ? SHELF_HEADING_TOP : TABS_TOP);
             wrapInk(graphics, heading(), headingX, headingY, CONTENT_WIDTH, TEXT_COLOR);
             if (mode != CompendiumPagePayload.MODE_SHELF && current != null
-                    && effectiveMethod(current) != CompendiumPagePayload.METHOD_LOOT) {
+                    && (effectiveMethod(current) != CompendiumPagePayload.METHOD_LOOT || foodPage())) {
                 int below = headingY + font.split(heading(), CONTENT_WIDTH).size() * LINE_HEIGHT + 6;
                 drawProperties(graphics, current, headingX, below);
             }
@@ -390,6 +407,11 @@ public class CompendiumScreen extends Screen {
     private void drawBookControls(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         drawBookButton(graphics, leftContentX(), top + CONTROLS_Y, 54, 18,
                 Component.translatable("gui.hardwrought.compendium.back"), mouseX, mouseY);
+        if (structure() != null) {
+            drawBookButton(graphics, leftContentX() + STRUCTURE_BUTTON_OFFSET, top + CONTROLS_Y,
+                    CONTENT_WIDTH - STRUCTURE_BUTTON_OFFSET, 18,
+                    Component.translatable("gui.hardwrought.multiblock.open"), mouseX, mouseY);
+        }
         if (pageCount() > 1) {
             drawBookButton(graphics, rightContentX(), top + CONTROLS_Y, 22, 18,
                     Component.literal("‹"), mouseX, mouseY);
@@ -425,6 +447,37 @@ public class CompendiumScreen extends Screen {
                         List.of(Component.translatable(methodKey(method))), mouseX, mouseY);
             }
         }
+    }
+
+    /**
+     * The structure this page's subject is built into, once the player has studied a block of every
+     * kind in it; null on any other page. The server lists the structure's blocks after the subject.
+     */
+    private de.ipnats.hardwrought.knowledge.Multiblocks.Multiblock structure() {
+        if (mode != CompendiumPagePayload.MODE_RECIPES && mode != CompendiumPagePayload.MODE_USAGES) return null;
+        CompendiumPagePayload current = CompendiumClient.page();
+        if (current == null || subject == null) return null;
+        java.util.Set<Identifier> known = studiedOnPage(current);
+        for (var multiblock : de.ipnats.hardwrought.knowledge.Multiblocks.containing(subject)) {
+            if (MultiblockScreen.readable(multiblock, known)) return multiblock;
+        }
+        return null;
+    }
+
+    private static java.util.Set<Identifier> studiedOnPage(CompendiumPagePayload current) {
+        java.util.Set<Identifier> known = new java.util.HashSet<>();
+        for (CompendiumPagePayload.Entry entry : current.entries()) {
+            if (entry.level() >= de.ipnats.hardwrought.knowledge.KnowledgeLevel.STUDIED.ordinal()) known.add(entry.id());
+        }
+        return known;
+    }
+
+    /** Opens the structure view of this page, where there is one to open. */
+    public boolean openStructure() {
+        var multiblock = structure();
+        if (multiblock == null) return false;
+        minecraft.gui.setScreen(new MultiblockScreen(this, multiblock, studiedOnPage(CompendiumClient.page())));
+        return true;
     }
 
     private static String methodKey(int method) {
@@ -625,17 +678,51 @@ public class CompendiumScreen extends Screen {
      * there with question marks in it, so the player knows there is something to find out.
      */
     private void drawProperties(GuiGraphicsExtractor graphics, CompendiumPagePayload current, int x, int y) {
-        Double melting = de.ipnats.hardwrought.client.survival.MeltingPointTooltip.meltingPoint(subject);
-        if (melting == null) return;
         boolean studied = !current.entries().isEmpty()
                 && current.entries().getFirst().level() >= de.ipnats.hardwrought.knowledge.KnowledgeLevel.STUDIED.ordinal();
+        Double melting = de.ipnats.hardwrought.client.survival.MeltingPointTooltip.meltingPoint(subject);
+        if (melting != null) {
+            graphics.fill(x, y, x + CONTENT_WIDTH, y + 1, RULE_COLOR);
+            y += 5;
+            String degrees = studied ? String.format(java.util.Locale.ROOT, "%.0f", melting) : "???";
+            y = wrapLines(graphics, Component.translatable("tooltip.hardwrought.melting_point", degrees), x, y, TEXT_COLOR);
+            if (studied) {
+                Item item = BuiltInRegistries.ITEM.getValue(subject);
+                Component source = item != null && !de.ipnats.hardwrought.metallurgy.Smelting.isCast(item)
+                        ? de.ipnats.hardwrought.client.survival.MeltingPointTooltip.heatNeeded(
+                                melting * de.ipnats.hardwrought.smithing.Smithing.WORKING_MIN)
+                        : de.ipnats.hardwrought.client.survival.MeltingPointTooltip.furnaceNeeded(melting);
+                y = wrapLines(graphics, source, x, y, FADED_COLOR);
+            }
+        }
+        var food = de.ipnats.hardwrought.client.survival.NutritionScreen.nutrientsOf(subject);
+        if (food != null) drawNutrients(graphics, food, studied, x, y);
+    }
+
+    /**
+     * What a food brings to each of the five nutrients, in points of their 0-100 levels, and the
+     * water in it. Found out the way everything else in the book is: by studying it, which eating it
+     * does.
+     */
+    private void drawNutrients(GuiGraphicsExtractor graphics, de.ipnats.hardwrought.core.registry.FoodNutritionDefinition food,
+                               boolean studied, int x, int y) {
         graphics.fill(x, y, x + CONTENT_WIDTH, y + 1, RULE_COLOR);
         y += 5;
-        String degrees = studied ? String.format(java.util.Locale.ROOT, "%.0f", melting) : "???";
-        y = wrapLines(graphics, Component.translatable("tooltip.hardwrought.melting_point", degrees), x, y, TEXT_COLOR);
-        if (studied) {
-            wrapLines(graphics, de.ipnats.hardwrought.client.survival.MeltingPointTooltip.furnaceNeeded(melting),
-                    x, y, FADED_COLOR);
+        ink(graphics, Component.translatable("gui.hardwrought.compendium.nutrients"), x, y, TEXT_COLOR);
+        y += LINE_HEIGHT;
+        var nutrients = food.nutrients();
+        for (de.ipnats.hardwrought.survival.Nutrient nutrient : de.ipnats.hardwrought.survival.Nutrient.values()) {
+            double amount = nutrients.get(nutrient);
+            String value = studied ? String.format(java.util.Locale.ROOT, "+%.0f", amount) : "???";
+            ink(graphics, Component.translatable(nutrient.translationKey()), x + 4, y, FADED_COLOR);
+            ink(graphics, Component.literal(value), x + CONTENT_WIDTH - font.width(value), y,
+                    studied && amount > 0 ? TEXT_COLOR : FADED_COLOR);
+            y += LINE_HEIGHT;
+        }
+        if (studied && food.hydration() != 0) {
+            String water = String.format(java.util.Locale.ROOT, "%+.0f", food.hydration());
+            ink(graphics, Component.translatable("gui.hardwrought.compendium.water"), x + 4, y, FADED_COLOR);
+            ink(graphics, Component.literal(water), x + CONTENT_WIDTH - font.width(water), y, 0xFF6FA8DC);
         }
     }
 
@@ -785,11 +872,11 @@ public class CompendiumScreen extends Screen {
                     rightContentX(), top + CARDS_TOP + 4, CONTENT_WIDTH, FADED_COLOR);
             return;
         }
-        int perPage = SOURCE_ROWS * 2;
+        int perPage = sourcesPerPage();
         int first = page * perPage;
         for (int index = 0; index < perPage && first + index < sources.size(); index++) {
             CompendiumPagePayload.Source source = sources.get(first + index);
-            int originX = index < SOURCE_ROWS ? leftContentX() : rightContentX();
+            int originX = foodPage() || index >= SOURCE_ROWS ? rightContentX() : leftContentX();
             int y = top + SOURCES_TOP + index % SOURCE_ROWS * SOURCE_HEIGHT;
             ItemStack icon = LootSourceLabels.icon(source);
             boolean known = source.kind() != LootSources.KIND_BLOCK || source.level() > 0;
@@ -834,15 +921,27 @@ public class CompendiumScreen extends Screen {
         }
     }
 
-    /** Draws one recipe slot, cycling through the options where an ingredient is a whole tag. */
+    /**
+     * Draws one recipe slot, cycling through the options where an ingredient is a whole tag. Only the
+     * options the player already knows take part: "any log" shown as a log they have seen tells them
+     * what is wanted, and a turn through shadows of logs they have never met tells them nothing. Only
+     * where they know none of them are the shadows cycled, as the one hint there is.
+     */
     private void option(GuiGraphicsExtractor graphics, CompendiumPagePayload.Slot slot, int x, int y) {
         if (slot.isEmpty()) {
             drawSlotBackground(graphics, x, y);
             return;
         }
-        int index = (int) ((System.currentTimeMillis() / CYCLE_MILLIS) % slot.options().size());
-        CompendiumPagePayload.Known known = slot.options().get(index);
+        List<CompendiumPagePayload.Known> shown = knownOptions(slot);
+        int index = (int) ((System.currentTimeMillis() / CYCLE_MILLIS) % shown.size());
+        CompendiumPagePayload.Known known = shown.get(index);
         slot(graphics, x, y, known.stack(), known.level() > 0);
+    }
+
+    /** The options of a slot the player knows, or all of them where they know none. */
+    static List<CompendiumPagePayload.Known> knownOptions(CompendiumPagePayload.Slot slot) {
+        List<CompendiumPagePayload.Known> known = slot.options().stream().filter(option -> option.level() > 0).toList();
+        return known.isEmpty() ? slot.options() : known;
     }
 
     private void slot(GuiGraphicsExtractor graphics, int x, int y, ItemStack stack, boolean known) {
@@ -903,6 +1002,10 @@ public class CompendiumScreen extends Screen {
         }
         if (inside(event.x(), event.y(), leftContentX(), top + CONTROLS_Y, 54, 18)) {
             goBack();
+            return true;
+        }
+        if (inside(event.x(), event.y(), leftContentX() + STRUCTURE_BUTTON_OFFSET, top + CONTROLS_Y,
+                CONTENT_WIDTH - STRUCTURE_BUTTON_OFFSET, 18) && openStructure()) {
             return true;
         }
         if (pageCount() > 1) {

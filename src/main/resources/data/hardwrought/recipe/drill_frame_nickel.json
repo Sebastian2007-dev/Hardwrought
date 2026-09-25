@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": "hardwrought:nickel_ingot",
+    "S": "minecraft:stick"
+  },
+  "pattern": [
+    "ISI",
+    "S S",
+    "ISI"
+  ],
+  "result": {
+    "id": "hardwrought:drill_frame_nickel",
+    "count": 4
+  }
+}

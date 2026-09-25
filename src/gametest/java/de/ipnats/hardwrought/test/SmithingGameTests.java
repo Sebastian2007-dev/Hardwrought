@@ -6,6 +6,8 @@ import de.ipnats.hardwrought.core.registry.ModBlocks;
 import de.ipnats.hardwrought.core.registry.ModDataComponents;
 import de.ipnats.hardwrought.core.registry.ModItems;
 import de.ipnats.hardwrought.machinery.CrankBoxBlock;
+import de.ipnats.hardwrought.metallurgy.Metal;
+import de.ipnats.hardwrought.metallurgy.ModMetals;
 import de.ipnats.hardwrought.smithing.Anvils;
 import de.ipnats.hardwrought.smithing.ForgeBlock;
 import de.ipnats.hardwrought.smithing.ForgeBlockEntity;
@@ -255,18 +257,24 @@ public final class SmithingGameTests {
         Mask bar = square(2, 6, 13, 9);
         ForgingState clean = new ForgingState(BuiltInRegistries.ITEM.getKey(pickHead()), lump, bar, 1.0f);
         ForgingState sloppy = clean;
+        ForgingState overheated = clean;
         for (int blow = 0; blow < 6; blow++) {
             clean = clean.struck(clean.currentMask().strike(3, 5, bar), true, 1.0f);
             sloppy = sloppy.struck(sloppy.currentMask(), false, 1.0f);
+            overheated = overheated.struck(overheated.currentMask().strike(3, 5, bar), true, 1.0f, true);
         }
         helper.assertTrue(clean.craftsmanship() > sloppy.craftsmanship() + 0.4f,
                 "Blows that land where they are needed make far better work than wasted ones: "
                         + clean.craftsmanship() + " vs " + sloppy.craftsmanship());
+        helper.assertTrue(overheated.overheated() == 6
+                        && clean.craftsmanship() > overheated.craftsmanship() + 0.2f,
+                "Even accurate blows strain an overheated tool piece: "
+                        + clean.craftsmanship() + " vs " + overheated.craftsmanship());
         helper.succeed();
     }
 
     @GameTest
-    public void aHammerDoesNothingToColdMetal(GameTestHelper helper) {
+    public void ingotsCanBeWorkedAtAnyTemperatureButExcessHeatCostsQuality(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
         BlockPos anvil = player.blockPosition().relative(player.getDirection());
@@ -278,20 +286,40 @@ public final class SmithingGameTests {
             player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.RAW_IRON));
             helper.assertFalse(Forging.begin(player, new ForgingPayloads.Begin(anvil,
                             BuiltInRegistries.ITEM.getKey(Items.IRON_INGOT), lump.toArray(), bar.toArray())),
-                    "Cold raw iron cannot even be started on");
+                    "Cold raw metal still has to be heated before it can become an ingot");
 
-            ItemStack hot = new ItemStack(Items.RAW_IRON);
-            hot.set(ModDataComponents.HEAT, new Heat(1200f, level.getGameTime()));
+            ItemStack raw = new ItemStack(Items.RAW_IRON);
+            raw.set(ModDataComponents.HEAT, new Heat(1200f, level.getGameTime()));
+            player.setItemInHand(InteractionHand.OFF_HAND, raw);
+            helper.assertTrue(Forging.begin(player, new ForgingPayloads.Begin(anvil,
+                    BuiltInRegistries.ITEM.getKey(Items.IRON_INGOT), lump.toArray(), bar.toArray())),
+                    "Hot raw metal can be started as an ingot");
+            player.getOffhandItem().set(ModDataComponents.HEAT, new Heat(400f, level.getGameTime()));
+            helper.assertFalse(Forging.strike(player, anvil, 3, 5),
+                    "and the unfinished raw-metal job still stops when it cools");
+            Forging.cancel(player);
+
+            Mask head = square(1, 3, 14, 5);
+            player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.IRON_INGOT, 3));
+            helper.assertTrue(Forging.begin(player, new ForgingPayloads.Begin(anvil,
+                            BuiltInRegistries.ITEM.getKey(pickHead()), bar.toArray(), head.toArray())),
+                    "Ingots can be started as a tool part even while cold");
+            helper.assertTrue(Forging.strike(player, anvil, 3, 4),
+                    "and temperature does not prevent an ingot from being worked");
+            helper.assertTrue(player.getOffhandItem().get(ModDataComponents.FORGING_STATE).overheated() == 0,
+                    "a cold blow carries no overheating penalty");
+            Forging.cancel(player);
+
+            ItemStack hot = new ItemStack(Items.IRON_INGOT, 3);
+            hot.set(ModDataComponents.HEAT, new Heat(1600f, level.getGameTime()));
             player.setItemInHand(InteractionHand.OFF_HAND, hot);
             helper.assertTrue(Forging.begin(player, new ForgingPayloads.Begin(anvil,
-                    BuiltInRegistries.ITEM.getKey(Items.IRON_INGOT), lump.toArray(), bar.toArray())), "Hot, it can");
+                    BuiltInRegistries.ITEM.getKey(pickHead()), bar.toArray(), head.toArray())), "Hot, it can");
             ItemStack piece = player.getOffhandItem();
-            piece.set(ModDataComponents.HEAT, new Heat(400f, level.getGameTime()));
-            Mask shapeBefore = piece.get(ModDataComponents.FORGING_STATE).currentMask();
-            helper.assertFalse(Forging.strike(player, anvil, 3, 5), "A blow on metal gone cold does nothing");
-            ForgingState after = player.getOffhandItem().get(ModDataComponents.FORGING_STATE);
-            helper.assertTrue(after.strikes() == 0 && after.currentMask().mismatch(shapeBefore) == 0,
-                    "no shape changes and no blow is counted");
+            helper.assertTrue(Forging.strike(player, anvil, 3, 4),
+                    "A tool piece above its ideal range still moves");
+            helper.assertTrue(piece.get(ModDataComponents.FORGING_STATE).overheated() == 1,
+                    "but the overheated blow is recorded against its quality");
         } finally {
             player.getInventory().clearContent();
             level.setBlock(anvil, Blocks.AIR.defaultBlockState(), 2);
@@ -357,7 +385,7 @@ public final class SmithingGameTests {
         helper.succeed();
     }
 
-    @GameTest(maxTicks = 480)
+    @GameTest(maxTicks = 660)
     public void theForgeGetsHotterWithABellowsAndALiningAndHeatsWhatLiesInIt(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos forgePos = helper.absolutePos(new BlockPos(2, 1, 2));
@@ -378,11 +406,20 @@ public final class SmithingGameTests {
         helper.assertTrue(forge.target(level, forgePos, level.getBlockState(forgePos)) == ForgeBlockEntity.LINED_BELLOWS_C,
                 "and lined with refractory brick it reaches the most any fire here can");
 
-        helper.assertTrue(forge.place(new ItemStack(Items.RAW_IRON), 0), "Raw iron goes into the metal place");
-        helper.runAfterDelay(420, () -> {
+        // Return to the ordinary 1300 °C forge for the heating check. Aluminum used to stop dead at
+        // its 660 °C melting point because the working range was incorrectly used as a heat ceiling.
+        level.setBlockAndUpdate(forgePos, level.getBlockState(forgePos).setValue(ForgeBlock.LINED, false));
+        level.setBlockAndUpdate(bellows.east(), Blocks.AIR.defaultBlockState());
+        helper.assertTrue(forge.target(level, forgePos, level.getBlockState(forgePos)) == ForgeBlockEntity.BASE_C,
+                "Without driven air or lining it is an ordinary 1300 degree forge again");
+        helper.assertTrue(forge.place(new ItemStack(ModMetals.raw(Metal.ALUMINUM)), 0),
+                "Raw aluminum goes into the metal place");
+        helper.runAfterDelay(600, () -> {
             double celsius = Heat.of(forge.getItem(ForgeBlockEntity.FIRST_METAL), level.getGameTime());
-            helper.assertTrue(celsius > 1000, "The raw iron lying in it has come up to working heat: " + celsius);
-            helper.assertTrue(celsius <= 1538 * Smithing.WORKING_MAX + 1, "and not past it");
+            helper.assertTrue(celsius > 800,
+                    "Raw aluminum follows the forge past its old 660 degree ceiling: " + celsius);
+            helper.assertTrue(celsius <= forge.temperature() + 1,
+                    "and the workpiece never becomes hotter than the fire heating it");
             for (BlockPos pos : List.of(forgePos, bellows, bellows.east())) {
                 level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
             }
@@ -449,7 +486,7 @@ public final class SmithingGameTests {
     }
 
     @GameTest(maxTicks = 80)
-    public void whatLiesInAForgeKeepsItsHeatAndCoalOnlyBurnsForMetal(GameTestHelper helper) {
+    public void whatLiesInAForgeKeepsItsHeatAndCoalOnlyBurnsOnceLit(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos pos = helper.absolutePos(new BlockPos(1, 1, 1));
         level.setBlockAndUpdate(pos, ModBlocks.FORGE.defaultBlockState());
@@ -459,15 +496,19 @@ public final class SmithingGameTests {
                 "Coal does not go where the metal lies");
         helper.assertFalse(forge.canPlaceItem(1, new ItemStack(Items.COAL)),
                 "A forge on its own has a single fuel place");
+        ItemStack bar = new ItemStack(Items.IRON_INGOT);
+        bar.set(ModDataComponents.HEAT, new Heat(1000f, level.getGameTime() - 2000));
+        forge.setItem(ForgeBlockEntity.FIRST_METAL, bar);
         helper.runAfterDelay(20, () -> {
             helper.assertTrue(forge.getItem(0).getCount() == 3 && forge.burnTicks() == 0,
-                    "An empty hearth does not burn its coal");
-            ItemStack bar = new ItemStack(Items.IRON_INGOT);
-            bar.set(ModDataComponents.HEAT, new Heat(1000f, level.getGameTime() - 2000));
-            forge.setItem(ForgeBlockEntity.FIRST_METAL, bar);
+                    "Coal laid in a forge does not catch by itself, metal or not");
+            helper.assertTrue(level.getBlockState(pos).getValue(ForgeBlock.FUEL) == 1,
+                    "but the pit shows it lying there");
+            helper.assertTrue(forge.ignite(), "Lit, the coal catches");
+            helper.assertFalse(forge.ignite(), "and a fire that is going cannot be lit again");
             helper.runAfterDelay(30, () -> {
                 helper.assertTrue(forge.getItem(0).getCount() == 2 && forge.burnTicks() > 1600,
-                        "With metal in it, one coal catches and burns four times as long as in a furnace");
+                        "One coal catches and burns four times as long as in a furnace");
                 double celsius = Heat.of(forge.getItem(ForgeBlockEntity.FIRST_METAL), level.getGameTime());
                 helper.assertTrue(celsius >= 999, "A piece lying in the forge does not cool: " + celsius);
                 level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
@@ -477,26 +518,60 @@ public final class SmithingGameTests {
     }
 
     @GameTest
-    public void eightForgesMakeASharedTwoByTwoByTwoForge(GameTestHelper helper) {
+    public void theForgePitFillsWithItsCoal(GameTestHelper helper) {
+        helper.assertTrue(ForgeBlockEntity.fill(0, 1) == 0, "No coal, an empty pit");
+        helper.assertTrue(ForgeBlockEntity.fill(1, 1) == 1, "The first coal already shows");
+        helper.assertTrue(ForgeBlockEntity.fill(16, 1) == 2 && ForgeBlockEntity.fill(32, 1) == 3,
+                "and the pit fills up step by step");
+        helper.assertTrue(ForgeBlockEntity.fill(64, 1) == 4, "until a full place heaps it to the rim");
+        helper.assertTrue(ForgeBlockEntity.fill(64, 4) == 2,
+                "A large hearth takes more coal to fill than a single one");
+        ServerLevel level = helper.getLevel();
+        BlockPos pos = helper.absolutePos(new BlockPos(1, 1, 1));
+        level.setBlockAndUpdate(pos, ModBlocks.FORGE.defaultBlockState());
+        helper.assertTrue(((ForgeBlockEntity) level.getBlockEntity(pos)).place(new ItemStack(Items.COAL, 64), 0),
+                "Coal goes in");
+        helper.runAfterDelay(2, () -> {
+            helper.assertTrue(level.getBlockState(pos).getValue(ForgeBlock.FUEL) == 4, "and the pit is full");
+            helper.succeed();
+        });
+    }
+
+    @GameTest
+    public void standingInABurningForgeBurns(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos pos = helper.absolutePos(new BlockPos(1, 1, 1));
+        level.setBlockAndUpdate(pos, ModBlocks.FORGE.defaultBlockState());
+        var cow = helper.spawn(net.minecraft.world.entity.EntityTypes.COW, new BlockPos(1, 2, 1));
+        float full = cow.getHealth();
+        ModBlocks.FORGE.stepOn(level, pos, level.getBlockState(pos), cow);
+        helper.assertTrue(cow.getHealth() == full, "A cold forge is only brick to stand on");
+        level.setBlockAndUpdate(pos, level.getBlockState(pos).setValue(ForgeBlock.LIT, true));
+        ModBlocks.FORGE.stepOn(level, pos, level.getBlockState(pos), cow);
+        helper.assertTrue(cow.getHealth() < full, "A burning one burns the feet standing in it");
+        cow.discard();
+        helper.succeed();
+    }
+
+    @GameTest
+    public void fourForgesMakeASharedTwoByTwoHearth(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos corner = helper.absolutePos(new BlockPos(1, 1, 1));
         for (int x = 0; x < 2; x++) {
-            for (int y = 0; y < 2; y++) {
-                for (int z = 0; z < 2; z++) {
-                    level.setBlockAndUpdate(corner.offset(x, y, z), ModBlocks.FORGE.defaultBlockState());
-                }
+            for (int z = 0; z < 2; z++) {
+                level.setBlockAndUpdate(corner.offset(x, 0, z), ModBlocks.FORGE.defaultBlockState());
             }
         }
 
-        ForgeMultiblock.Structure structure = ForgeMultiblock.getOrForm(level, corner.offset(1, 1, 1));
-        helper.assertTrue(structure != null, "Eight forge blocks form a multiblock");
-        helper.assertTrue(structure.size() == ForgeMultiblock.Size.SMALL
+        ForgeMultiblock.Structure structure = ForgeMultiblock.getOrForm(level, corner.offset(1, 0, 1));
+        helper.assertTrue(structure != null, "Four forge blocks side by side form a multiblock");
+        helper.assertTrue(structure.size() == ForgeMultiblock.Size.SMALL && structure.members().size() == 4
                         && structure.fuelSlots() == 1 && structure.metalSlots() == 4,
-                "The 2x2x2 forge has one fuel place and four metal places");
-        helper.assertTrue(level.getBlockState(corner.offset(1, 1, 1)).getValue(ForgeBlock.PART) == 8,
-                "Each block knows its part of the big furnace model");
+                "The 2x2 hearth has one fuel place and four metal places");
+        helper.assertTrue(level.getBlockState(corner.offset(1, 0, 1)).getValue(ForgeBlock.PART) == 4,
+                "Each block knows its part of the big hearth model");
         ForgeBlockEntity controller = ForgeMultiblock.controller(level, structure);
-        ForgeBlockEntity farPart = (ForgeBlockEntity) level.getBlockEntity(corner.offset(1, 1, 1));
+        ForgeBlockEntity farPart = (ForgeBlockEntity) level.getBlockEntity(corner.offset(1, 0, 1));
         helper.assertTrue(farPart.working() == controller, "Any block of it opens the one shared forge");
         for (int i = 0; i < 4; i++) {
             ItemStack piece = new ItemStack(Items.RAW_IRON);
@@ -515,16 +590,14 @@ public final class SmithingGameTests {
         helper.assertTrue(forgeSlots == 1 + 4, "Its screen shows one fuel and four metal places, got " + forgeSlots);
 
         int before = countItems(level, corner, 2);
-        level.destroyBlock(corner.offset(1, 1, 1), false);
+        level.destroyBlock(corner.offset(1, 0, 1), false);
         for (int x = 0; x < 2; x++) {
-            for (int y = 0; y < 2; y++) {
-                for (int z = 0; z < 2; z++) {
-                    if (level.getBlockEntity(corner.offset(x, y, z)) instanceof ForgeBlockEntity part) {
-                        helper.assertTrue(ForgeMultiblock.getOrForm(level, part.getBlockPos()) == null,
-                                "A broken forge falls apart into single hearths");
-                        helper.assertTrue(part.getBlockState().getValue(ForgeBlock.PART) == 0,
-                                "A single hearth is drawn as one again");
-                    }
+            for (int z = 0; z < 2; z++) {
+                if (level.getBlockEntity(corner.offset(x, 0, z)) instanceof ForgeBlockEntity part) {
+                    helper.assertTrue(ForgeMultiblock.getOrForm(level, part.getBlockPos()) == null,
+                            "A broken forge falls apart into single hearths");
+                    helper.assertTrue(part.getBlockState().getValue(ForgeBlock.PART) == 0,
+                            "A single hearth is drawn as one again");
                 }
             }
         }
@@ -535,26 +608,21 @@ public final class SmithingGameTests {
     }
 
     @GameTest
-    public void twentySixForgesMakeAHollowThreeByThreeByThreeForge(GameTestHelper helper) {
+    public void nineForgesMakeAThreeByThreeHearth(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos corner = helper.absolutePos(new BlockPos(1, 1, 1));
-        BlockPos center = corner.offset(1, 1, 1);
+        BlockPos center = corner.offset(1, 0, 1);
         for (int x = 0; x < 3; x++) {
-            for (int y = 0; y < 3; y++) {
-                for (int z = 0; z < 3; z++) {
-                    BlockPos pos = corner.offset(x, y, z);
-                    level.setBlockAndUpdate(pos, pos.equals(center) ? Blocks.AIR.defaultBlockState()
-                            : ModBlocks.FORGE.defaultBlockState());
-                }
+            for (int z = 0; z < 3; z++) {
+                level.setBlockAndUpdate(corner.offset(x, 0, z), ModBlocks.FORGE.defaultBlockState());
             }
         }
 
-        ForgeMultiblock.Structure structure = ForgeMultiblock.getOrForm(level, corner.offset(2, 2, 2));
-        helper.assertTrue(structure != null, "The hollow forge shell forms a multiblock");
-        helper.assertTrue(structure.size() == ForgeMultiblock.Size.LARGE && structure.members().size() == 26
+        ForgeMultiblock.Structure structure = ForgeMultiblock.getOrForm(level, corner.offset(2, 0, 2));
+        helper.assertTrue(structure != null, "Nine forge blocks side by side form a multiblock");
+        helper.assertTrue(structure.size() == ForgeMultiblock.Size.LARGE && structure.members().size() == 9
                         && structure.fuelSlots() == 4 && structure.metalSlots() == 9,
-                "The 3x3x3 shell of twenty-six blocks has four fuel and nine metal places");
-        helper.assertTrue(level.getBlockState(center).isAir(), "Its middle remains completely free");
+                "The 3x3 hearth has four fuel and nine metal places");
         ForgeBlockEntity controller = ForgeMultiblock.controller(level, structure);
         for (int i = 0; i < 9; i++) {
             ItemStack piece = new ItemStack(Items.RAW_IRON);
@@ -569,8 +637,6 @@ public final class SmithingGameTests {
         }
         controller.addFuel(1600);
 
-        level.setBlockAndUpdate(center, Blocks.STONE.defaultBlockState());
-        helper.assertFalse(ForgeMultiblock.matches(level, structure), "A filled middle is no forge chamber");
         ForgeMultiblock.dissolve(level, structure);
         int fuel = 0;
         int stacks = 0;
@@ -581,6 +647,139 @@ public final class SmithingGameTests {
         }
         helper.assertTrue(fuel == 1600 && stacks == 13,
                 "Falling apart keeps every stack and the fire once, got " + stacks + " / " + fuel);
+        helper.assertTrue(level.getBlockEntity(center) instanceof ForgeBlockEntity, "The middle is a forge too");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void aTwoByTwoBuiltOutToThreeByThreeBecomesTheLargeHearth(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos corner = helper.absolutePos(new BlockPos(1, 1, 1));
+        for (int x = 0; x < 2; x++) {
+            for (int z = 0; z < 2; z++) {
+                level.setBlockAndUpdate(corner.offset(x, 0, z), ModBlocks.FORGE.defaultBlockState());
+            }
+        }
+        ForgeMultiblock.Structure small = ForgeMultiblock.getOrForm(level, corner);
+        helper.assertTrue(small != null && small.size() == ForgeMultiblock.Size.SMALL, "The 2x2 forms first");
+        ForgeMultiblock.controller(level, small).place(new ItemStack(Items.COAL, 3), 1);
+        for (int x = 0; x < 3; x++) {
+            for (int z = 0; z < 3; z++) {
+                if (x < 2 && z < 2) continue;
+                level.setBlockAndUpdate(corner.offset(x, 0, z), ModBlocks.FORGE.defaultBlockState());
+            }
+        }
+        ForgeMultiblock.Structure grown = ForgeMultiblock.grow(level, small);
+        helper.assertTrue(grown != null && grown.size() == ForgeMultiblock.Size.LARGE,
+                "Built out to three by three, it joins up as the large hearth");
+        int coal = ForgeMultiblock.controller(level, grown).items().stream()
+                .filter(stack -> stack.is(Items.COAL)).mapToInt(ItemStack::getCount).sum();
+        helper.assertTrue(coal == 3, "and what lay in the small one is in the large one: " + coal);
+        helper.succeed();
+    }
+
+    @GameTest(maxTicks = 80)
+    public void hoodsJoinAndAPipeTakesTheirGasToItsOpenEnd(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos hood = helper.absolutePos(new BlockPos(2, 3, 2));
+        java.util.List<BlockPos> placed = java.util.List.of(hood, hood.west(), hood.above(), hood.above(2),
+                hood.above(2).east());
+        for (BlockPos pos : placed) {
+            var block = pos.equals(hood) || pos.equals(hood.west()) ? ModBlocks.FORGE_HOOD : ModBlocks.GAS_PIPE;
+            level.setBlockAndUpdate(pos, block.defaultBlockState());
+        }
+        for (BlockPos pos : placed) {
+            level.setBlockAndUpdate(pos, net.minecraft.world.level.block.Block.updateFromNeighbourShapes(
+                    level.getBlockState(pos), level, pos));
+        }
+        var joined = level.getBlockState(hood);
+        helper.assertTrue(joined.getValue(de.ipnats.hardwrought.smithing.ForgeHoodBlock.WEST)
+                        && level.getBlockState(hood.west()).getValue(de.ipnats.hardwrought.smithing.ForgeHoodBlock.EAST),
+                "Two hoods side by side join into one canopy");
+        helper.assertTrue(joined.getValue(de.ipnats.hardwrought.smithing.ForgeHoodBlock.UP),
+                "and the one under the pipe is joined to it");
+        var box = level.getBlockState(hood.above()).getShape(level, hood.above()).bounds();
+        helper.assertTrue(Math.abs(box.getXsize() - 6.0 / 16.0) < 1.0E-6 && box.getYsize() == 1.0,
+                "A pipe can be aimed at and broken: its box is as wide as it is drawn, got " + box);
+        BlockPos end = hood.above(2).east(2);
+        helper.assertTrue(end.equals(de.ipnats.hardwrought.environment.Flues.outlet(level, hood.west())),
+                "What either hood catches comes out at the open end of the pipe, round its bend");
+
+        BlockPos under = hood.below();
+        level.setBlockAndUpdate(under, de.ipnats.hardwrought.environment.Gases.with(Blocks.AIR.defaultBlockState(),
+                de.ipnats.hardwrought.environment.Gas.CARBON_MONOXIDE, 4));
+        helper.runAfterDelay(60, () -> {
+            helper.assertTrue(de.ipnats.hardwrought.environment.Gases.total(level.getBlockState(under)) == 0,
+                    "Gas rising into the canopy is drawn up the flue instead of pooling under it");
+            for (BlockPos pos : placed) level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+            helper.succeed();
+        });
+    }
+
+    @GameTest
+    public void aCanopyDrawsTwoBlocksForEveryHood(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos hood = helper.absolutePos(new BlockPos(3, 5, 3));
+        java.util.List<BlockPos> placed = java.util.List.of(hood, hood.west(), hood.above(), hood.above().east());
+        for (BlockPos pos : placed) {
+            level.setBlockAndUpdate(pos, (pos.getY() == hood.getY() ? ModBlocks.FORGE_HOOD : ModBlocks.GAS_PIPE)
+                    .defaultBlockState());
+        }
+        for (BlockPos pos : placed) {
+            level.setBlockAndUpdate(pos, net.minecraft.world.level.block.Block.updateFromNeighbourShapes(
+                    level.getBlockState(pos), level, pos));
+        }
+        helper.assertTrue(de.ipnats.hardwrought.environment.Flues.reach(2) == 4, "Two hoods draw four blocks");
+        BlockPos near = hood.below(3);
+        BlockPos far = hood.below().east(7);
+        var co2 = de.ipnats.hardwrought.environment.Gas.CARBON_DIOXIDE;
+        level.setBlock(near, de.ipnats.hardwrought.environment.Gases.with(Blocks.AIR.defaultBlockState(), co2, 5), 2);
+        level.setBlock(far, de.ipnats.hardwrought.environment.Gases.with(Blocks.AIR.defaultBlockState(), co2, 5), 2);
+        try {
+            int moved = de.ipnats.hardwrought.environment.Flues.draw(level, hood, new java.util.HashSet<>());
+            helper.assertTrue(moved == 5 && de.ipnats.hardwrought.environment.Gases.total(level.getBlockState(near)) == 0,
+                    "Gas three blocks under the canopy is drawn in: moved " + moved);
+            helper.assertTrue(de.ipnats.hardwrought.environment.Gases.units(level.getBlockState(far), co2) == 5,
+                    "Gas seven blocks away is out of its reach");
+            helper.assertTrue(de.ipnats.hardwrought.environment.Gases.units(level.getBlockState(hood.above().east(2)), co2) == 5,
+                    "and what it drew comes out at the open end of the pipe");
+        } finally {
+            for (BlockPos pos : placed) level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+            for (BlockPos pos : java.util.List.of(near, far, hood.above().east(2))) {
+                level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest
+    public void aHoodTakesTheFumesOfAForge(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos forgePos = helper.absolutePos(new BlockPos(1, 1, 1));
+        level.setBlockAndUpdate(forgePos, ModBlocks.FORGE.defaultBlockState().setValue(ForgeBlock.LIT, true));
+        var lit = level.getBlockState(forgePos);
+        helper.assertTrue(de.ipnats.hardwrought.environment.RoomScan.isCombustionSource(lit),
+                "A burning forge burns in the room it stands in");
+        helper.assertTrue(de.ipnats.hardwrought.environment.GasSources.flueTop(level, forgePos) == null,
+                "Without a hood its fumes go into the room");
+        BlockPos hood = forgePos.above(2).east();
+        level.setBlockAndUpdate(hood, ModBlocks.FORGE_HOOD.defaultBlockState());
+        level.setBlockAndUpdate(hood.above(), ModBlocks.FORGE_HOOD.defaultBlockState());
+        helper.assertTrue(de.ipnats.hardwrought.smithing.ForgeHoodBlock.vents(level, forgePos),
+                "A hood two above and one aside still covers it");
+        helper.assertTrue(hood.above(2).equals(de.ipnats.hardwrought.environment.GasSources.flueTop(level, forgePos)),
+                "and the fumes come out at the top of the flue stacked on it");
+        level.setBlock(forgePos.above(), de.ipnats.hardwrought.environment.Gases.with(Blocks.AIR.defaultBlockState(),
+                de.ipnats.hardwrought.environment.Gas.CARBON_DIOXIDE, 8), 2);
+        de.ipnats.hardwrought.environment.GasSources.burnAt(level, forgePos, level.getRandom());
+        helper.assertTrue(level.getBlockState(forgePos).getValue(ForgeBlock.LIT),
+                "A hooded forge draws its own air and is not smothered by the gas around it");
+        level.setBlock(forgePos.above(), Blocks.AIR.defaultBlockState(), 2);
+        level.setBlockAndUpdate(hood.above(), Blocks.AIR.defaultBlockState());
+        level.setBlockAndUpdate(forgePos.above(2).east(), Blocks.AIR.defaultBlockState());
+        level.setBlockAndUpdate(forgePos.above(4), ModBlocks.FORGE_HOOD.defaultBlockState());
+        helper.assertFalse(de.ipnats.hardwrought.smithing.ForgeHoodBlock.vents(level, forgePos),
+                "A hood four blocks up is too far away to catch anything");
         helper.succeed();
     }
 

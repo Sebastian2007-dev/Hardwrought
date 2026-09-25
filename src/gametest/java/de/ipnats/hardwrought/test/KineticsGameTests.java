@@ -213,6 +213,72 @@ public final class KineticsGameTests {
         helper.succeed();
     }
 
+    @GameTest(maxTicks = 420)
+    public void anOreDrillIsAsDeepAsTheWeakestBlockOfItsFrame(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos base = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE);
+        BlockPos head = base.above();
+        List<BlockPos> used = new ArrayList<>();
+        place(level, used, base, ModBlocks.CRANK_BOX.defaultBlockState().setValue(CrankBoxBlock.TURNING, true));
+        place(level, used, head, ModBlocks.ORE_DRILL.defaultBlockState());
+        var drill = (de.ipnats.hardwrought.machinery.OreDrillBlockEntity) level.getBlockEntity(head);
+        List<BlockPos> frame = de.ipnats.hardwrought.machinery.OreDrillBlockEntity.framePositions(head);
+        for (int i = 0; i < frame.size() - 1; i++) place(level, used, frame.get(i), ModBlocks.DRILL_FRAME_IRON.defaultBlockState());
+        drill.lookOverFrameNow();
+        helper.assertTrue(drill.tier() == null, "With one frame block missing it is no drill");
+        place(level, used, frame.getLast(), ModBlocks.DRILL_FRAME_BRONZE.defaultBlockState());
+        drill.lookOverFrameNow();
+        helper.assertTrue(drill.tier() == de.ipnats.hardwrought.geology.DrillTier.BRONZE,
+                "Complete, it is as good as its weakest block: one bronze frame in sixteen iron ones makes a bronze drill");
+        helper.assertTrue(drill.yield().entries().stream().allMatch(entry ->
+                        entry.ore().getPath().equals("coal_ore") || entry.ore().getPath().equals("iron_ore")),
+                "and it reaches coal and iron only");
+        helper.assertTrue(Math.abs(Kinetics.speed(level, head)) == CrankBoxBlock.SPEED, "The crank box under it drives it");
+        boolean barren = drill.yield().barren();
+        helper.runAfterDelay(de.ipnats.hardwrought.geology.DrillTier.BRONZE.intervalTicks() / 2 + 40, () -> {
+            try {
+                if (!barren) {
+                    helper.assertFalse(drill.isEmpty(), "Turned, it brings ore up out of the chunk");
+                    var ore = drill.getItem(0);
+                    helper.assertTrue(ore.is(net.minecraft.world.item.Items.COAL_ORE) || ore.is(net.minecraft.world.item.Items.IRON_ORE),
+                            "and it is ore of the chunk it stands on: " + ore);
+                }
+            } finally {
+                clear(level, used);
+            }
+            helper.succeed();
+        });
+    }
+
+    @GameTest
+    public void aFinishedDrillIsDrawnAsOneMachineAndWorkedFromAnyBlock(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos head = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE + 1);
+        List<BlockPos> used = new ArrayList<>();
+        try {
+            place(level, used, head, ModBlocks.ORE_DRILL.defaultBlockState());
+            List<BlockPos> frame = de.ipnats.hardwrought.machinery.OreDrillBlockEntity.framePositions(head);
+            for (BlockPos pos : frame) place(level, used, pos, ModBlocks.DRILL_FRAME_NICKEL.defaultBlockState());
+            // No look over by hand: the last frame block set down finishes the drill on its own.
+            helper.assertTrue(level.getBlockState(head).getValue(de.ipnats.hardwrought.machinery.OreDrillBlock.FORMED),
+                    "The last frame block closes the head in");
+            for (int i = 0; i < frame.size(); i++) {
+                int part = level.getBlockState(frame.get(i)).getValue(de.ipnats.hardwrought.machinery.DrillFrameBlock.PART);
+                helper.assertTrue(part == i + 1, "Every frame block knows its part of the drill: " + frame.get(i) + " is " + part);
+                helper.assertTrue(de.ipnats.hardwrought.machinery.OreDrillBlockEntity.headOf(frame.get(i), part).equals(head),
+                        "and finds the head from it, so using it works the drill");
+            }
+            level.setBlockAndUpdate(frame.get(12), Blocks.AIR.defaultBlockState());
+            helper.assertFalse(level.getBlockState(head).getValue(de.ipnats.hardwrought.machinery.OreDrillBlock.FORMED),
+                    "Taking one block out opens the drill up again");
+            helper.assertTrue(level.getBlockState(frame.get(0)).getValue(de.ipnats.hardwrought.machinery.DrillFrameBlock.PART) == 0,
+                    "and the rest are loose frames");
+        } finally {
+            clear(level, used);
+        }
+        helper.succeed();
+    }
+
     private static void place(ServerLevel level, List<BlockPos> used, BlockPos pos, net.minecraft.world.level.block.state.BlockState state) {
         level.setBlockAndUpdate(pos, state);
         used.add(pos.immutable());

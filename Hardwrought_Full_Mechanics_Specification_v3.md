@@ -4904,7 +4904,7 @@ hardwrought/
 
 - heat treatment
 
-** Milestone 10 – Mechanical Age**
+# Milestone 10 – Mechanical Age**
 
 - crank
 
@@ -4918,7 +4918,7 @@ hardwrought/
 
 - windmill
 
-*# Milestone 11 – Oil & Chemistry**
+# Milestone 11 – Oil & Chemistry**
 
 - oil reservoirs
 
@@ -4930,7 +4930,7 @@ hardwrought/
 
 - chemical feedstocks
 
-** Milestone 12 – Steam**
+# Milestone 12 – Steam**
 
 - boiler
 
@@ -4940,7 +4940,7 @@ hardwrought/
 
 - steam engines
 
-** Milestone 13 – Electricity**
+# Milestone 13 – Electricity**
 
 - generator
 
@@ -4950,7 +4950,7 @@ hardwrought/
 
 - motor
 
-** Milestone 14 – Seasons & Ecology**
+# Milestone 14 – Seasons & Ecology**
 
 - spring
 
@@ -4964,7 +4964,7 @@ hardwrought/
 
 - farming
 
-** Milestone 15 – Adaptation**
+# Milestone 15 – Adaptation**
 
 - cardio
 
@@ -4978,7 +4978,7 @@ hardwrought/
 
 - healing tolerance
 
-** Milestone 16 – Magic**
+# Milestone 16 – Magic**
 
 - rune system
 
@@ -4990,7 +4990,7 @@ hardwrought/
 
 - enchanting
 
-** Milestone 17 – Building Physics**
+# Milestone 17 – Building Physics**
 
 - support
 
@@ -5000,7 +5000,7 @@ hardwrought/
 
 - leaf collision
 
-** Milestone 18 – Multiplayer Balance**
+# Milestone 18 – Multiplayer Balance
 
 - boss scaling
 
@@ -5012,7 +5012,7 @@ hardwrought/
 
 - server performance
 
-** Milestone 19 – Advanced Industry**
+# Milestone 19 – Advanced Industry**
 
 - high-end metallurgy
 
@@ -5022,7 +5022,7 @@ hardwrought/
 
 - advanced fluids
 
-** Milestone 20 – Arcane Engineering**
+# Milestone 20 – Arcane Engineering**
 
 - magic + technology
 
@@ -5030,7 +5030,7 @@ hardwrought/
 
 - hybrid machines
 
-** Milestone 21 – Endgame**
+# Milestone 21 – Endgame**
 
 Still open for detailed design.
 

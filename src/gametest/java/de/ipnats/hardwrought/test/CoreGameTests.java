@@ -89,7 +89,7 @@ public final class CoreGameTests {
         helper.assertTrue(runtime.materials().containsKey(Hardwrought.id("copper")), "Bundled materials loaded through datapack listener");
         helper.assertTrue(runtime.itemWeights().get(Hardwrought.id("filled_waterskin")) == 1.2,
                 "Bundled item mass is loaded through the datapack listener");
-        helper.assertTrue(runtime.foodNutrition().get(net.minecraft.resources.Identifier.withDefaultNamespace("apple")).calories() == 95,
+        helper.assertTrue(runtime.foodNutrition().get(net.minecraft.resources.Identifier.withDefaultNamespace("apple")).vitamins() == 5,
                 "Bundled food profile is loaded through the datapack listener");
         helper.assertTrue(runtime.materials().get(Hardwrought.id("copper")).tier() == 1, "Copper properties loaded");
         expectFailure(() -> runtime.materials().clear());
@@ -215,13 +215,15 @@ public final class CoreGameTests {
     public void survivalVitalsPersistAndClamp(GameTestHelper helper) {
         var data = CoreSaveData.TYPE.constructor().get();
         var id = java.util.UUID.randomUUID();
-        var changed = PlayerVitals.defaults().withStamina(-50).drink(500).eat(40, 20);
+        var changed = PlayerVitals.defaults().withStamina(-50).drink(500)
+                .eat(new de.ipnats.hardwrought.survival.Nutrition(60, 60, 60, 60, 60), 0, 1.0);
         data.setVitals(id, changed);
         var encoded = CoreSaveData.CODEC.encodeStart(JsonOps.INSTANCE, data).getOrThrow();
         var decoded = CoreSaveData.CODEC.parse(JsonOps.INSTANCE, encoded).getOrThrow().vitals(id);
         helper.assertTrue(decoded.stamina() == 0, "Stamina is clamped at zero");
         helper.assertTrue(decoded.hydration() == 100, "Hydration is clamped at maximum");
-        helper.assertTrue(decoded.calories() <= PlayerVitals.MAX_CALORIES, "Calories are bounded");
+        helper.assertTrue(decoded.nutrition().protein() == de.ipnats.hardwrought.survival.Nutrient.MAX,
+                "Nutrients are bounded");
         helper.assertTrue(PlayerVitals.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString("""
                 {"stamina":-1,"hydration":100,"calories":2000,"protein":70,"carbohydrates":260,
                  "fat":70,"micronutrients":100,"fatigue":15,"body_temperature":37,"wetness":0}
@@ -233,11 +235,12 @@ public final class CoreGameTests {
                         java.util.Map.of(net.minecraft.resources.Identifier.withDefaultNamespace("apple"), 2.75)) == 2.75,
                 "Datapack item mass overrides the category fallback");
         var apple = new de.ipnats.hardwrought.core.registry.FoodNutritionDefinition(
-                net.minecraft.resources.Identifier.withDefaultNamespace("apple"), 95, 0.5, 25, 0.3, 8, 4);
-        var fed = PlayerVitals.defaults().eat(apple);
-        helper.assertTrue(fed.carbohydrates() > PlayerVitals.defaults().carbohydrates()
+                net.minecraft.resources.Identifier.withDefaultNamespace("apple"), 0, 0, 6, 5, 3, 4);
+        var fed = PlayerVitals.defaults().eat(apple.nutrients(), apple.hydration(), 1.0);
+        helper.assertTrue(fed.nutrition().carbohydrates() > PlayerVitals.defaults().nutrition().carbohydrates()
+                        && fed.nutrition().protein() == PlayerVitals.defaults().nutrition().protein()
                         && fed.hydration() == PlayerVitals.defaults().hydration(),
-                "Food profiles update macros while bounded hydration remains valid");
+                "A food fills what it has and nothing else, while bounded hydration remains valid");
         expectFailure(() -> new de.ipnats.hardwrought.core.registry.FoodNutritionDefinition(
                 net.minecraft.resources.Identifier.withDefaultNamespace("apple"), -1, 0, 0, 0, 0, 0));
         expectFailure(() -> new de.ipnats.hardwrought.core.registry.ItemWeightDefinition(
@@ -261,8 +264,8 @@ public final class CoreGameTests {
 
     @GameTest
     public void survivalProtocolRoundTrip(GameTestHelper helper) {
-        var payload = new SurvivalSnapshotPayload(75, 60, 1800, 82, 31, 36.8,
-                12.5, 24, 45, true, 0.7, 12.5);
+        var payload = new SurvivalSnapshotPayload(75, 60, new de.ipnats.hardwrought.survival.Nutrition(20, 40, 60, 80, 95),
+                31, 36.8, 12.5, 24, 45, true, 0.7, 12.5);
         var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), helper.getLevel().registryAccess());
         try {
             SurvivalSnapshotPayload.CODEC.encode(buffer, payload);
@@ -300,6 +303,22 @@ public final class CoreGameTests {
     }
 
     @GameTest
+    public void sleepQualityFollowsTheNightThrough(GameTestHelper helper) {
+        double quality = 0.9;
+        quality = SurvivalSystem.adjustSleepQuality(quality, 0.3);
+        helper.assertTrue(quality < 0.9 && quality > 0.3,
+                "A night that turns bad is felt at once, but not all at once: " + quality);
+        for (int second = 0; second < 30; second++) quality = SurvivalSystem.adjustSleepQuality(quality, 0.3);
+        helper.assertTrue(Math.abs(quality - 0.3) < 0.01, "Within half a minute the sleep is as bad as the night");
+        for (int second = 0; second < 30; second++) quality = SurvivalSystem.adjustSleepQuality(quality, 0.95);
+        helper.assertTrue(Math.abs(quality - 0.95) < 0.01, "and it comes back when the trouble goes");
+        helper.assertTrue(SurvivalSystem.adjustSleepQuality(0.2, -5) >= 0.15
+                        && SurvivalSystem.adjustSleepQuality(0.99, 9) <= 1.0,
+                "It stays inside the bounds a sleep's quality has");
+        helper.succeed();
+    }
+
+    @GameTest
     public void oversleepingTurnsIntoRestlessness(GameTestHelper helper) {
         var rested = PlayerVitals.defaults().withStress(0);
         helper.assertTrue(rested.stress() == 0, "A new player carries no restlessness");
@@ -313,6 +332,8 @@ public final class CoreGameTests {
                  "fat":70,"micronutrients":100,"fatigue":15,"body_temperature":37,"wetness":0}
                 """)).getOrThrow();
         helper.assertTrue(legacy.stress() == 0, "A world saved before Milestone 3 still loads");
+        helper.assertTrue(legacy.nutrition().equals(de.ipnats.hardwrought.survival.Nutrition.START),
+                "and a world saved while hunger was still calories starts its diet from the middle");
         helper.assertTrue(PlayerVitals.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString("""
                 {"stamina":50,"hydration":100,"calories":2000,"protein":70,"carbohydrates":260,
                  "fat":70,"micronutrients":100,"fatigue":15,"body_temperature":37,"wetness":0,
@@ -331,7 +352,7 @@ public final class CoreGameTests {
         var full = PlayerVitals.defaults();
         var stressed = full.withStress(30);
         helper.assertTrue(stressed.stamina() == full.stamina() && stressed.fatigue() == full.fatigue()
-                        && stressed.hydration() == full.hydration() && stressed.calories() == full.calories(),
+                        && stressed.hydration() == full.hydration() && stressed.nutrition().equals(full.nutrition()),
                 "Setting restlessness changes nothing else");
         helper.succeed();
     }
@@ -384,50 +405,51 @@ public final class CoreGameTests {
     }
 
     @GameTest
-    public void hungerIsOneSystemAndItEmptiesOnItsOwn(GameTestHelper helper) {
-        // There used to be two hungers: calories nothing displayed and nothing enforced, and the
-        // vanilla shanks, which drained on their own schedule and meant nothing here.
-        helper.assertTrue(SurvivalSystem.shanks(PlayerVitals.MAX_CALORIES) == 20
-                        && SurvivalSystem.shanks(SurvivalSystem.BAR_FULL_CALORIES) == 20,
-                "A full reserve reads full, and so does the whole surplus above it");
-        helper.assertTrue(SurvivalSystem.shanks(0) == 0, "An empty one reads empty");
-        helper.assertTrue(SurvivalSystem.shanks(SurvivalSystem.BAR_FULL_CALORIES / 2) == 10,
-                "and half of it reads half");
-        helper.assertTrue(SurvivalSystem.shanks(-50) == 0 && SurvivalSystem.shanks(99999) == 20,
-                "Nonsense on either side still lands on the bar");
-
-        // The part the player asked about: doing nothing has to cost something, and on a scale they
-        // can feel within a day rather than a week.
-        double idleSeconds = PlayerVitals.MAX_CALORIES / SurvivalSystem.BASAL_CALORIES_PER_SECOND;
+    public void hungerIsTheVanillaBarAndItEmptiesOnItsOwn(GameTestHelper helper) {
+        // Doing nothing has to cost something, on a scale a player feels within a day or two: a full
+        // bar and its saturation are about thirty points, four exhaustion each.
+        double idleSeconds = 30 * 4 / (SurvivalSystem.BASAL_ENERGY_PER_SECOND * SurvivalSystem.EXHAUSTION_PER_ENERGY);
         helper.assertTrue(idleSeconds > 1200 && idleSeconds < 3600,
-                "A full belly burns away in between one and three Minecraft days of doing nothing: "
-                        + idleSeconds + "s");
-
-        var runtime = de.ipnats.hardwrought.core.events.CoreLifecycle.require(
-                helper.getLevel().getServer());
-        // Asked for in survival on purpose: the default mock is a creative one, and hunger stands
-        // back in creative so a builder does not starve mid-build.
-        net.minecraft.server.level.ServerPlayer player = (net.minecraft.server.level.ServerPlayer)
-                helper.makeMockServerPlayer(net.minecraft.world.level.GameType.SURVIVAL);
-        PlayerVitals starved = runtime.survival().vitals(player).normalized();
-        runtime.survival().applyHunger(player, new PlayerVitals(starved.stamina(),
-                starved.hydration(), 0, 0, 0, 0, 0, starved.fatigue(), starved.bodyTemperature(),
-                starved.wetness(), starved.stress()));
-        helper.assertTrue(player.getFoodData().getFoodLevel() == 0,
-                "An empty reserve empties the bar the player actually watches, and vanilla starves "
-                        + "them for it without a line of code here");
-
-        runtime.survival().applyHunger(player, PlayerVitals.defaults()
-                .withStamina(starved.stamina()));
-        helper.assertTrue(player.getFoodData().getFoodLevel() == 20,
-                "and a fed one fills it again");
-
-        // And a creative player keeps a full bar however empty the reserve behind it is.
-        net.minecraft.server.level.ServerPlayer builder = (net.minecraft.server.level.ServerPlayer)
-                helper.makeMockServerPlayer(net.minecraft.world.level.GameType.CREATIVE);
-        runtime.survival().applyHunger(builder, new PlayerVitals(100, 100, 0, 0, 0, 0, 0, 0, 37, 0, 0));
-        helper.assertTrue(builder.getFoodData().getFoodLevel() == 20,
-                "Creative keeps its full bar whatever the reserve says");
+                "A full belly empties in between one and three Minecraft days of doing nothing: " + idleSeconds + "s");
         helper.succeed();
     }
+
+    @GameTest
+    public void aDietHasToBeBalanced(GameTestHelper helper) {
+        var diet = de.ipnats.hardwrought.survival.Nutrition.START;
+        helper.assertTrue(diet.balanced(), "A new body starts balanced");
+        // About two Minecraft days of eating nothing brings the levels out of the band.
+        var hungry = diet.drained(3000, 0);
+        for (var nutrient : de.ipnats.hardwrought.survival.Nutrient.values()) {
+            helper.assertTrue(hungry.get(nutrient) < diet.get(nutrient), "The body uses up " + nutrient);
+        }
+        helper.assertFalse(hungry.balanced(), "and after two days of nothing it is no longer balanced");
+        helper.assertTrue(diet.drained(1200, 0).balanced(), "but one day of it is not yet enough to fall out");
+        helper.assertTrue(diet.drained(1, 5).carbohydrates() < diet.drained(1, 0).carbohydrates(),
+                "Work burns carbohydrates");
+
+        // Four days of living on steak alone: protein and fat run over while the rest runs out.
+        var steak = new de.ipnats.hardwrought.survival.Nutrition(12, 8, 0, 1, 0);
+        var carnivore = diet;
+        for (int meal = 0; meal < 24; meal++) carnivore = carnivore.plus(steak, 1.0).drained(200, 0);
+        helper.assertTrue(carnivore.high(de.ipnats.hardwrought.survival.Nutrient.PROTEIN),
+                "Steak alone is too much protein");
+        helper.assertTrue(carnivore.low(de.ipnats.hardwrought.survival.Nutrient.FIBER)
+                        && carnivore.low(de.ipnats.hardwrought.survival.Nutrient.CARBOHYDRATES),
+                "and too little of what it does not have");
+
+        var runtime = de.ipnats.hardwrought.core.events.CoreLifecycle.require(helper.getLevel().getServer());
+        net.minecraft.server.level.ServerPlayer player = (net.minecraft.server.level.ServerPlayer)
+                helper.makeMockServerPlayer(net.minecraft.world.level.GameType.SURVIVAL);
+        runtime.survival().setVitalsForTesting(player, PlayerVitals.defaults());
+        runtime.survival().consumeFood(player, new ItemStack(Items.CARROT));
+        var afterCarrot = runtime.survival().vitals(player).nutrition();
+        helper.assertTrue(afterCarrot.vitamins() == diet.vitamins() + 7 && afterCarrot.protein() == diet.protein(),
+                "Each food fills its own nutrients: a carrot is vitamins, not protein");
+        runtime.survival().consumeFood(player, new ItemStack(Items.MILK_BUCKET));
+        helper.assertTrue(runtime.survival().vitals(player).nutrition().fat() > afterCarrot.fat(),
+                "Milk counts as food too");
+        helper.succeed();
+    }
+
 }

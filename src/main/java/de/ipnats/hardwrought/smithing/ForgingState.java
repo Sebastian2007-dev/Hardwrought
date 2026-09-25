@@ -24,10 +24,11 @@ import java.util.List;
  * @param strikes every blow landed so far
  * @param good    blows that moved metal where it was wanted
  * @param initial how many squares were wrong when the work began, the measure of the whole job
- * @param cap     the best craftsmanship the poorest anvil used so far allows
+ * @param cap        the best craftsmanship the poorest anvil used so far allows
+ * @param overheated blows landed above the top of the metal's working range
  */
 public record ForgingState(Identifier result, List<Long> current, List<Long> target,
-                           int strikes, int good, int initial, float cap) {
+                           int strikes, int good, int initial, float cap, int overheated) {
     public static final Codec<ForgingState> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Identifier.CODEC.fieldOf("result").forGetter(ForgingState::result),
             Codec.LONG.listOf(4, 4).fieldOf("current").forGetter(ForgingState::current),
@@ -35,7 +36,8 @@ public record ForgingState(Identifier result, List<Long> current, List<Long> tar
             Codec.INT.fieldOf("strikes").forGetter(ForgingState::strikes),
             Codec.INT.fieldOf("good").forGetter(ForgingState::good),
             Codec.INT.fieldOf("initial").forGetter(ForgingState::initial),
-            Codec.FLOAT.fieldOf("cap").forGetter(ForgingState::cap)
+            Codec.FLOAT.fieldOf("cap").forGetter(ForgingState::cap),
+            Codec.INT.optionalFieldOf("overheated", 0).forGetter(ForgingState::overheated)
     ).apply(instance, ForgingState::new));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ForgingState> STREAM_CODEC = StreamCodec.of(
@@ -47,6 +49,7 @@ public record ForgingState(Identifier result, List<Long> current, List<Long> tar
                 buffer.writeVarInt(state.good);
                 buffer.writeVarInt(state.initial);
                 buffer.writeFloat(state.cap);
+                buffer.writeVarInt(state.overheated);
             },
             buffer -> {
                 Identifier result = buffer.readIdentifier();
@@ -55,17 +58,20 @@ public record ForgingState(Identifier result, List<Long> current, List<Long> tar
                 for (int word = 0; word < 4; word++) current[word] = buffer.readLong();
                 for (int word = 0; word < 4; word++) target[word] = buffer.readLong();
                 return new ForgingState(result, List.of(current), List.of(target), buffer.readVarInt(),
-                        buffer.readVarInt(), buffer.readVarInt(), buffer.readFloat());
+                        buffer.readVarInt(), buffer.readVarInt(), buffer.readFloat(), buffer.readVarInt());
             });
 
     public ForgingState {
         current = List.copyOf(current);
         target = List.copyOf(target);
         if (current.size() != 4 || target.size() != 4) throw new IllegalArgumentException("A shape is four words");
+        strikes = Math.max(0, strikes);
+        good = Math.max(0, Math.min(strikes, good));
+        overheated = Math.max(0, Math.min(strikes, overheated));
     }
 
     public ForgingState(Identifier result, Mask current, Mask target, float cap) {
-        this(result, current.words(), target.words(), 0, 0, current.mismatch(target), cap);
+        this(result, current.words(), target.words(), 0, 0, current.mismatch(target), cap, 0);
     }
 
     public Mask currentMask() {
@@ -88,8 +94,8 @@ public record ForgingState(Identifier result, List<Long> current, List<Long> tar
 
     /**
      * Section 38's craftsmanship: how much of the hammering was to the point, and how economically it
-     * was done. Capped by the poorest anvil the piece has been worked on. Cold metal does not come into
-     * it: a hammer does nothing to metal below working heat, so no blow on it is ever counted.
+     * was done. Capped by the poorest anvil the piece has been worked on. Metal struck above the top
+     * of its ideal range still moves, but every such blow strains the result.
      *
      * <p>Every blow moves at most nine squares, so a job of {@code initial} wrong squares cannot be
      * done in fewer than a ninth as many blows; doing it in a third as many counts as full economy.
@@ -99,12 +105,17 @@ public record ForgingState(Identifier result, List<Long> current, List<Long> tar
         double accuracy = good / (double) strikes;
         double ideal = Math.max(1.0, initial / 3.0);
         double economy = Math.min(1.0, ideal / strikes);
-        double value = 0.20 + 0.55 * accuracy + 0.25 * economy;
+        double thermalCare = 1.0 - 0.50 * overheated / strikes;
+        double value = (0.20 + 0.55 * accuracy + 0.25 * economy) * thermalCare;
         return (float) Math.clamp(value, 0.0, cap);
     }
 
     public ForgingState struck(Mask now, boolean useful, float anvilCap) {
+        return struck(now, useful, anvilCap, false);
+    }
+
+    public ForgingState struck(Mask now, boolean useful, float anvilCap, boolean tooHot) {
         return new ForgingState(result, now.words(), target, strikes + 1, good + (useful ? 1 : 0),
-                initial, Math.min(cap, anvilCap));
+                initial, Math.min(cap, anvilCap), overheated + (tooHot ? 1 : 0));
     }
 }

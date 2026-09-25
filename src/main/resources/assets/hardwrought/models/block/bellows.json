@@ -2,10 +2,11 @@
   "parent": "minecraft:block/block",
   "__comment": "Two boards with leather pleated between them and a nozzle facing north.",
   "textures": {
-    "board": "minecraft:block/oak_planks",
-    "leather": "minecraft:block/brown_wool",
-    "nozzle": "minecraft:block/iron_block",
-    "particle": "minecraft:block/oak_planks"
+    "board": "hardwrought:block/hardwrought/machine_boards",
+    "leather": "hardwrought:block/hardwrought/bellows_leather",
+    "nozzle_side": "hardwrought:block/hardwrought/bellows_nozzle_side",
+    "nozzle_end": "hardwrought:block/hardwrought/bellows_nozzle_end",
+    "particle": "hardwrought:block/hardwrought/machine_boards"
   },
   "elements": [
     {
@@ -214,7 +215,7 @@
             10,
             4
           ],
-          "texture": "#nozzle"
+          "texture": "#nozzle_side"
         },
         "west": {
           "uv": [
@@ -223,7 +224,7 @@
             10,
             4
           ],
-          "texture": "#nozzle"
+          "texture": "#nozzle_side"
         },
         "up": {
           "uv": [
@@ -232,7 +233,7 @@
             10,
             4
           ],
-          "texture": "#nozzle"
+          "texture": "#nozzle_side"
         },
         "down": {
           "uv": [
@@ -241,16 +242,16 @@
             10,
             4
           ],
-          "texture": "#nozzle"
+          "texture": "#nozzle_side"
         },
         "north": {
           "uv": [
-            6,
             0,
-            10,
-            4
+            0,
+            16,
+            16
           ],
-          "texture": "#nozzle",
+          "texture": "#nozzle_end",
           "cullface": "north"
         }
       }

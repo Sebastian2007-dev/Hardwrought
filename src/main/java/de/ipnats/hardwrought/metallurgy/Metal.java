@@ -25,21 +25,21 @@ import java.util.Locale;
  * @param placeholder the vanilla ore this borrows its look from until it has art of its own
  */
 public enum Metal {
-    TIN("tin", -40, 90, 6, 8, Hardness.STONE, 1, Rock.SEDIMENTARY, "copper"),
-    ZINC("zinc", -40, 80, 5, 8, Hardness.STONE, 1, Rock.SEDIMENTARY, "iron"),
-    LEAD("lead", -60, 60, 5, 8, Hardness.STONE, 1, Rock.SEDIMENTARY, "coal"),
-    MANGANESE("manganese", -50, 60, 4, 7, Hardness.STONE, 2, Rock.SEDIMENTARY, "coal"),
-    MAGNESIUM("magnesium", -30, 70, 4, 7, Hardness.STONE, 2, Rock.SEDIMENTARY, "lapis"),
-    ALUMINUM("aluminum", 20, 130, 5, 9, Hardness.STONE, 2, Rock.SEDIMENTARY, "iron"),
-    NICKEL("nickel", -80, 20, 3, 6, Hardness.IRON, 2, Rock.VOLCANIC, "iron"),
-    COBALT("cobalt", -100, 0, 3, 5, Hardness.IRON, 2, Rock.VOLCANIC, "lapis"),
-    CHROMIUM("chromium", -120, -20, 3, 5, Hardness.IRON, 2, Rock.VOLCANIC, "emerald"),
-    MERCURY("mercury", -120, 0, 2, 4, Hardness.IRON, 3, Rock.VOLCANIC, "redstone"),
-    TITANIUM("titanium", -140, -20, 2, 5, Hardness.IRON, 3, Rock.GRANITE, "iron"),
-    TUNGSTEN("tungsten", -200, -60, 2, 4, Hardness.DIAMOND, 3, Rock.GRANITE, "diamond"),
-    URANIUM("uranium", -200, -40, 2, 4, Hardness.IRON, 3, Rock.GRANITE, "emerald"),
-    THORIUM("thorium", -220, -80, 2, 4, Hardness.IRON, 3, Rock.GRANITE, "emerald"),
-    PLATINUM("platinum", -220, -100, 1, 3, Hardness.DIAMOND, 3, Rock.VOLCANIC, "gold");
+    TIN("tin", -40, 90, 6, 8, Hardness.STONE, 2, Rock.SEDIMENTARY, "copper"),
+    ZINC("zinc", -40, 80, 5, 8, Hardness.STONE, 2, Rock.SEDIMENTARY, "iron"),
+    LEAD("lead", -60, 60, 5, 8, Hardness.STONE, 2, Rock.SEDIMENTARY, "coal"),
+    MANGANESE("manganese", -50, 60, 4, 7, Hardness.STONE, 3, Rock.SEDIMENTARY, "coal"),
+    MAGNESIUM("magnesium", -30, 70, 4, 7, Hardness.STONE, 3, Rock.SEDIMENTARY, "lapis"),
+    ALUMINUM("aluminum", 20, 130, 5, 9, Hardness.STONE, 3, Rock.SEDIMENTARY, "iron"),
+    NICKEL("nickel", -80, 20, 3, 6, Hardness.IRON, 3, Rock.VOLCANIC, "iron"),
+    COBALT("cobalt", -100, 0, 3, 5, Hardness.IRON, 4, Rock.VOLCANIC, "lapis"),
+    CHROMIUM("chromium", -120, -20, 3, 5, Hardness.IRON, 4, Rock.VOLCANIC, "emerald"),
+    MERCURY("mercury", -120, 0, 2, 4, Hardness.IRON, 4, Rock.VOLCANIC, "redstone"),
+    TITANIUM("titanium", -140, -20, 2, 5, Hardness.IRON, 5, Rock.GRANITE, "iron"),
+    TUNGSTEN("tungsten", -200, -60, 2, 4, Hardness.DIAMOND, 5, Rock.GRANITE, "diamond"),
+    URANIUM("uranium", -200, -40, 2, 4, Hardness.IRON, 5, Rock.GRANITE, "emerald"),
+    THORIUM("thorium", -220, -80, 2, 4, Hardness.IRON, 5, Rock.GRANITE, "emerald"),
+    PLATINUM("platinum", -220, -100, 1, 3, Hardness.DIAMOND, 5, Rock.VOLCANIC, "gold");
 
     /** Which pickaxe is hard enough. Vanilla already owns these lines, so they are reused. */
     public enum Hardness {
@@ -149,7 +149,7 @@ public enum Metal {
 
     /** True where a fire pit is enough: the metals the early game is allowed to reach. */
     public boolean smeltsInAFirePit() {
-        return hardness == Hardness.STONE && drillTier == 1;
+        return hardness == Hardness.STONE && drillTier <= 2;
     }
 
     public static Metal byId(String id) {

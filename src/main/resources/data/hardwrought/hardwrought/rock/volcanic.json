@@ -12,7 +12,7 @@
       "max_radius": 60,
       "min_grade": 0.06,
       "max_grade": 0.28,
-      "drill_tier": 1
+      "drill_tier": 2
     },
     {
       "ore": "minecraft:redstone_ore",
@@ -23,7 +23,7 @@
       "max_radius": 44,
       "min_grade": 0.04,
       "max_grade": 0.2,
-      "drill_tier": 2
+      "drill_tier": 3
     },
     {
       "ore": "minecraft:diamond_ore",
@@ -34,7 +34,7 @@
       "max_radius": 24,
       "min_grade": 0.01,
       "max_grade": 0.07,
-      "drill_tier": 3
+      "drill_tier": 4
     },
     {
       "ore": "hardwrought:nickel_ore",
@@ -45,7 +45,7 @@
       "max_radius": 28,
       "min_grade": 0.02,
       "max_grade": 0.16,
-      "drill_tier": 2
+      "drill_tier": 3
     },
     {
       "ore": "hardwrought:cobalt_ore",
@@ -56,7 +56,7 @@
       "max_radius": 28,
       "min_grade": 0.02,
       "max_grade": 0.16,
-      "drill_tier": 2
+      "drill_tier": 4
     },
     {
       "ore": "hardwrought:chromium_ore",
@@ -67,7 +67,7 @@
       "max_radius": 28,
       "min_grade": 0.02,
       "max_grade": 0.16,
-      "drill_tier": 2
+      "drill_tier": 4
     },
     {
       "ore": "hardwrought:mercury_ore",
@@ -78,7 +78,7 @@
       "max_radius": 28,
       "min_grade": 0.02,
       "max_grade": 0.16,
-      "drill_tier": 3
+      "drill_tier": 4
     },
     {
       "ore": "hardwrought:platinum_ore",
@@ -89,7 +89,7 @@
       "max_radius": 28,
       "min_grade": 0.02,
       "max_grade": 0.16,
-      "drill_tier": 3
+      "drill_tier": 5
     }
   ]
 }
