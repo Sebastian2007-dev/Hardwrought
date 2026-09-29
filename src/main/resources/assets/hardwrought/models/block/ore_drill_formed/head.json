@@ -6,7 +6,8 @@
     "particle": "hardwrought:block/hardwrought/drill_steel",
     "brace": "hardwrought:block/hardwrought/iron_brace",
     "steel": "hardwrought:block/hardwrought/drill_steel",
-    "gearbox": "hardwrought:block/hardwrought/gearbox_side"
+    "gearbox": "hardwrought:block/hardwrought/gearbox_side",
+    "mouth": "hardwrought:block/hardwrought/soot"
   },
   "elements": [
     {

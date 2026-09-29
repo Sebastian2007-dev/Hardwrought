@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "P P",
+    "P P"
+  ],
+  "key": {
+    "P": "hardwrought:titanium_plate"
+  },
+  "result": {
+    "id": "hardwrought:titanium_boots"
+  }
+}

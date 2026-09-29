@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    " B ",
+    "BGB",
+    " B "
+  ],
+  "key": {
+    "B": "hardwrought:refractory_brick",
+    "G": "minecraft:glass"
+  },
+  "result": {
+    "id": "hardwrought:smeltery_glass",
+    "count": 1
+  }
+}

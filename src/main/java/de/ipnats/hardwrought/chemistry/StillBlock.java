@@ -32,7 +32,9 @@ public class StillBlock extends Block implements EntityBlock {
     private static final VoxelShape SHAPE = Shapes.or(
             Block.box(2, 0, 2, 14, 10, 14),
             Block.box(5, 10, 5, 11, 14, 11),
-            Block.box(7, 14, 7, 9, 16, 9));
+            Block.box(7, 14, 7, 9, 16, 9),
+            // The arm the vapour leaves by.
+            Block.box(9, 14, 7, 15, 16, 9));
 
     public StillBlock(Properties properties) {
         super(properties);

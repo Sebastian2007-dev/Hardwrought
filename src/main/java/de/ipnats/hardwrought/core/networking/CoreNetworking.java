@@ -23,6 +23,17 @@ public final class CoreNetworking {
         PayloadTypeRegistry.serverboundPlay().register(ForgingPayloads.Strike.TYPE, ForgingPayloads.Strike.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ForgingPayloads.Cancel.TYPE, ForgingPayloads.Cancel.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SleepRequestPayload.TYPE, SleepRequestPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(OreDrillPayloads.Info.TYPE, OreDrillPayloads.Info.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(OreDrillPayloads.Watch.TYPE, OreDrillPayloads.Watch.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(OreDrillPayloads.Watch.TYPE, (payload, context) -> {
+            var player = context.player();
+            if (player.blockPosition().distSqr(payload.pos())
+                    > de.ipnats.hardwrought.machinery.OreDrillBlock.WATCH_RANGE_SQR) return;
+            if (player.level().getBlockEntity(payload.pos())
+                    instanceof de.ipnats.hardwrought.machinery.OreDrillBlockEntity drill) {
+                ServerPlayNetworking.send(player, drill.info(player, false));
+            }
+        });
         PayloadTypeRegistry.serverboundPlay().register(CompendiumRequestPayload.TYPE, CompendiumRequestPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(GasPushPayload.TYPE, GasPushPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(GasPushPayload.TYPE, (payload, context) ->

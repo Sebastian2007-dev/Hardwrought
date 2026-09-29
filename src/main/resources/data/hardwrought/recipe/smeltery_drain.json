@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "B B",
+    "B B",
+    "B B"
+  ],
+  "key": {
+    "B": "hardwrought:refractory_brick"
+  },
+  "result": {
+    "id": "hardwrought:smeltery_drain",
+    "count": 1
+  }
+}

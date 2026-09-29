@@ -1,7 +1,11 @@
 {
   "items": [
     "hardwrought:flint_dagger",
-    "hardwrought:iron_dagger"
+    "hardwrought:iron_dagger",
+    "hardwrought:steel_dagger",
+    "hardwrought:stainless_steel_dagger",
+    "hardwrought:titanium_dagger",
+    "hardwrought:tungsten_steel_dagger"
   ],
   "damage": {
     "slash": 0.35,

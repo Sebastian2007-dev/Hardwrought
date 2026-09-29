@@ -43,9 +43,18 @@ most chunks; now and then one holds nothing it can reach, and moving it a chunk 
 
 ## Using it
 
-Using the drill head opens its nine slots (hoppers draw from any side; nothing goes in), and says its
-tier and state in the action bar and what the chunk holds for it, share by share, in the chat. With
-the frame incomplete it says how many blocks are missing.
+The drill keeps nothing. The head is set down facing its placer, and the frame block in front of it
+carries a chute. Every piece of ore goes out through it: into whatever offers item storage just
+outside the chute (a chest, a hopper, any mod's pipe, through Fabric's transfer API), or onto the
+ground where nothing does. A full chest holds the piece back and stops the drill until there is room.
+
+It is driven by rotation into any side of the head. An electric motor (milestone 13) will be one
+more rotation source, so the drill needs nothing new to run on power.
+
+Using any block of the drill opens its screen: tier, state, rate, drive speed, where the ore goes,
+and every ore the chunk holds. Ores this frame reaches show their share of what comes up; the others
+show the tier they need. Ores the player has never met stay a black shape with "???". The screen asks
+for fresh numbers once a second while it is open.
 
 ## Recipes
 
@@ -54,7 +63,7 @@ held a crusher or a nailed bench.
 
 | Result | Recipe |
 | --- | --- |
-| Drill frame (4) | 4 ingots of its metal, 4 sticks |
+| Drill frame (2) | 5 rods of its metal, crossed: `R R` / ` R ` / `R R` |
 | Ore drill | 6 iron ingots, a chest, a shaft, an iron pickaxe head |
 
 ## Tests
@@ -65,3 +74,20 @@ less of it than iron, and a body under the drill dominates its table. `MetalGame
 reaches tin and not aluminium. `KineticsGameTests`: the drill is no drill with a frame block missing,
 is bronze with one bronze block among iron ones, is driven by a crank box underneath and brings up the
 chunk's ore. `MachineryClientGameTest` photographs it.
+
+## Finished look and use
+
+Once the frame is complete the drill is drawn as one machine: a casing round the head, a drive housing
+over it, a derrick with a crown on top. Each frame block carries a `part` (1–17, in the order of
+`OreDrillBlockEntity.framePositions`) and draws its piece of the whole in plate of its own metal, so a
+weaker block still shows. The head gets `formed=true`. Using any block of the finished drill opens it.
+Setting down the last frame block, or taking one out, reshapes the drill at once. Models come from
+`tools/ore_drill_formed.py`, which `tools/drill_assets.py` also runs.
+
+## Structure view in the compendium
+
+`knowledge/Multiblocks` lays out the ore drill and the hooded forge layer by layer. On the page of any
+of their blocks the compendium shows **View structure** once a block of every kind in it is studied.
+The view turns by dragging, zooms with the wheel and steps through the layers with ▲/▼ (the arrow keys
+work too). The whole structure is drawn finished; a single layer is drawn as the loose blocks that go in.
+Where several blocks will do, it cycles through the ones the player has studied.

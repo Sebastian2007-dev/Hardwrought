@@ -50,6 +50,10 @@ public class ForgingScreen extends Screen {
     private static final int TEXT = 0xFF404040;
     private static final int FADED = 0xFF606060;
     private static final int WARN = 0xFFB03020;
+    /** The choices: two to a row, and as many rows as the panel holds; the wheel scrolls the rest. */
+    private static final int CHOICE_TOP = 40;
+    private static final int CHOICE_ROW = 22;
+    private static final int CHOICE_ROWS = (PANEL_HEIGHT - CHOICE_TOP - 6) / CHOICE_ROW;
 
     private final BlockPos anvil;
     private final List<Identifier> results;
@@ -61,6 +65,8 @@ public class ForgingScreen extends Screen {
     /** What the piece is being turned into, once the work has begun from this screen. */
     private Item working;
     private net.minecraft.client.gui.components.Button cancel;
+    /** The first row of choices shown. */
+    private int scrollRow;
 
     public ForgingScreen(BlockPos anvil, List<Identifier> results) {
         super(Component.translatable("gui.hardwrought.forging"));
@@ -139,17 +145,63 @@ public class ForgingScreen extends Screen {
 
     private void drawChoice(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         graphics.text(font, Component.translatable("gui.hardwrought.forging.choose"), left + 10, top + 24, FADED, false);
-        for (int index = 0; index < results.size(); index++) {
-            int x = left + 10 + (index % 2) * 140;
-            int y = top + 40 + (index / 2) * 22;
+        for (int index = firstShown(); index < lastShown(); index++) {
+            int x = choiceX(index);
+            int y = choiceY(index);
             boolean hovered = mouseX >= x && mouseX < x + 136 && mouseY >= y && mouseY < y + 20;
             drawRecess(graphics, x, y, 136, 20, hovered ? 0xFFE0E0E0 : PANEL);
             Item item = BuiltInRegistries.ITEM.getValue(results.get(index));
             graphics.item(new ItemStack(item), x + 2, y + 2);
             int cost = costOf(item);
             graphics.text(font, Component.translatable("gui.hardwrought.forging.cost", cost), x + 20, y + 6, FADED, false);
-            graphics.text(font, new ItemStack(item).getHoverName(), x + 40, y + 6, TEXT, false);
+            Component name = new ItemStack(item).getHoverName();
+            int room = 136 - 42;
+            if (font.width(name) > room) {
+                // Too long for its tile: cut short, and named in full when pointed at.
+                if (hovered) graphics.setComponentTooltipForNextFrame(font, List.of(name), mouseX, mouseY);
+                name = Component.literal(font.plainSubstrByWidth(name.getString(), room - font.width("…")) + "…");
+            }
+            graphics.text(font, name, x + 40, y + 6, TEXT, false);
         }
+        int rows = rows();
+        if (rows > CHOICE_ROWS) {
+            // Where in the list the reader is, down the right edge.
+            int trackTop = top + CHOICE_TOP;
+            int trackHeight = CHOICE_ROWS * CHOICE_ROW - 2;
+            int thumb = Math.max(8, trackHeight * CHOICE_ROWS / rows);
+            int thumbTop = trackTop + (trackHeight - thumb) * scrollRow / (rows - CHOICE_ROWS);
+            graphics.fill(left + PANEL_WIDTH - 9, trackTop, left + PANEL_WIDTH - 6, trackTop + trackHeight, PANEL_MID);
+            graphics.fill(left + PANEL_WIDTH - 9, thumbTop, left + PANEL_WIDTH - 6, thumbTop + thumb, PANEL_DARK);
+        }
+    }
+
+    private int rows() {
+        return (results.size() + 1) / 2;
+    }
+
+    private int firstShown() {
+        return scrollRow * 2;
+    }
+
+    private int lastShown() {
+        return Math.min(results.size(), (scrollRow + CHOICE_ROWS) * 2);
+    }
+
+    private int choiceX(int index) {
+        return left + 10 + (index % 2) * 140;
+    }
+
+    private int choiceY(int index) {
+        return top + CHOICE_TOP + (index / 2 - scrollRow) * CHOICE_ROW;
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (scrollY != 0 && finishedAs == null && !piece().has(ModDataComponents.FORGING_STATE) && results.size() > 1) {
+            scrollRow = Math.clamp(scrollRow + (scrollY > 0 ? -1 : 1), 0, Math.max(0, rows() - CHOICE_ROWS));
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     private int costOf(Item result) {
@@ -337,9 +389,9 @@ public class ForgingScreen extends Screen {
         ItemStack piece = piece();
         ForgingState state = piece.get(ModDataComponents.FORGING_STATE);
         if (state == null && results.size() > 1) {
-            for (int index = 0; index < results.size(); index++) {
-                int x = left + 10 + (index % 2) * 140;
-                int y = top + 40 + (index / 2) * 22;
+            for (int index = firstShown(); index < lastShown(); index++) {
+                int x = choiceX(index);
+                int y = choiceY(index);
                 if (event.x() >= x && event.x() < x + 136 && event.y() >= y && event.y() < y + 20) {
                     begin(results.get(index));
                     return true;

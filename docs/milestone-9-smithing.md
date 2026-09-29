@@ -49,8 +49,10 @@ to above 450 °C, tinted by temperature from dull red to yellow-white (`HeatLook
 synthetic recipe whose result is the piece itself; vanilla then does fuel, cook time and the brick
 furnace's slowness, and the complete inserted stack comes out together as hot as the furnace gets —
 never past the top of its working range. A real smelting recipe still consumes only one item per
-operation. Progress and quality on the piece survive the trip. A furnace too cold to reach the
-bottom of the working range does not heat it at all and burns no fuel on it.
+operation. Progress and quality on the piece survive the trip. Every furnace tops out at 1550 °C,
+just past iron: anything that melts hotter (titanium, chromium, platinum, tungsten and more) is not
+heated or cast in a furnace at all, and no fuel is burnt on it. Those go to the forge, and melt only
+in the smeltery.
 
 The raw-ore-to-ingot recipes are gone. Vanilla's recipe ids are kept (vanilla data refers to them):
 the raw-ore ids now cast powder, the ore-block ids roast the block down to raw ore. The campfire casts
@@ -58,14 +60,15 @@ only the soft metals (tin, lead, zinc) and bronze.
 
 **The forge** (`ForgeBlock`) is the hearth that goes further. Coal in, pieces laid in the coals by
 hand, taken out by hand. Its fire warms and cools gradually and the pieces follow it — which is what
-makes it the place to temper.
+makes it the place to temper. A piece in it heats to the top of its working range and stops there,
+however hot the fire is: the forge brings metal to forging heat, never to melting.
 
 | forge | heads for |
 | --- | --- |
 | plain | 1300 °C |
 | lined with 8 refractory bricks | 1600 °C |
 | with a worked bellows beside it | 2000 °C |
-| lined and blown | 3500 °C |
+| lined and blown | 2800 °C (tungsten forges from 1882 °C) |
 
 The bellows only blows while something turns it — a hand crank on it or a driven shaft into it.
 

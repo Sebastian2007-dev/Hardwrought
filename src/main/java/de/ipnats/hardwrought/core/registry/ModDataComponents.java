@@ -60,6 +60,13 @@ public final class ModDataComponents {
                     .networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.FLOAT)
                     .build());
 
+    /** How rusted a piece of plain steel is, from 0 to 1; see {@code Rust}. */
+    public static final DataComponentType<Float> RUST =
+            register("rust", DataComponentType.<Float>builder()
+                    .persistent(com.mojang.serialization.Codec.floatRange(0.0f, 1.0f))
+                    .networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.FLOAT)
+                    .build());
+
     private ModDataComponents() { }
 
     private static <T> DataComponentType<T> register(String name, DataComponentType<T> type) {

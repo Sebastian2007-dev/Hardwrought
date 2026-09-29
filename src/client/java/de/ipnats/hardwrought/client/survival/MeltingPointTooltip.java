@@ -53,17 +53,17 @@ public final class MeltingPointTooltip {
         return points.get(item);
     }
 
-    /** What gets a piece to working heat: a brick furnace, a furnace or a forge with a bellows, or more. */
-    public static net.minecraft.network.chat.MutableComponent heatNeeded(double workingMin) {
-        String source = workingMin <= Smelting.BRICK_FURNACE_MAX_C ? "brick_furnace"
-                : workingMin <= Smelting.FURNACE_MAX_C ? "furnace" : "blast_furnace";
+    /** What gets a piece to working heat: any furnace for iron and softer, else a forge, built up enough. */
+    public static net.minecraft.network.chat.MutableComponent heatNeeded(double melting) {
+        double workingMin = melting * de.ipnats.hardwrought.smithing.Smithing.WORKING_MIN;
+        String source = melting <= Smelting.FURNACE_MAX_C ? "furnace"
+                : workingMin <= de.ipnats.hardwrought.smithing.ForgeBlockEntity.LINED_C ? "forge" : "forge_bellows";
         return Component.translatable("tooltip.hardwrought.heats_in." + source);
     }
 
-    /** Which furnace is the coldest one that still melts something this hot. */
+    /** Where something this hot melts: any furnace for iron and softer, else only the smeltery. */
     public static net.minecraft.network.chat.MutableComponent furnaceNeeded(double melting) {
-        String furnace = melting <= Smelting.BRICK_FURNACE_MAX_C ? "brick_furnace"
-                : melting <= Smelting.FURNACE_MAX_C ? "furnace" : "blast_furnace";
-        return Component.translatable("tooltip.hardwrought.melts_in." + furnace);
+        return Component.translatable("tooltip.hardwrought.melts_in."
+                + (melting <= Smelting.FURNACE_MAX_C ? "furnace" : "smeltery"));
     }
 }

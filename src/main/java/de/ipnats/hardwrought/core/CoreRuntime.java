@@ -85,6 +85,7 @@ public final class CoreRuntime {
         water.registerDiagnostics(diagnostics);
         groundwater.registerDiagnostics(diagnostics);
         Geology.registerDiagnostics(diagnostics);
+        de.ipnats.hardwrought.building.BuildingPhysics.registerDiagnostics(diagnostics);
         de.ipnats.hardwrought.oil.Oilfield.registerDiagnostics(diagnostics, save);
         knowledge = new KnowledgeSystem(server, save, scheduler);
         knowledge.registerDiagnostics(diagnostics);

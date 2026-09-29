@@ -93,6 +93,7 @@ public final class WorldRecipes {
         register(de.ipnats.hardwrought.progression.NailDriving::worldRecipes);
         register(de.ipnats.hardwrought.metallurgy.Crushing::worldRecipes);
         register(de.ipnats.hardwrought.smithing.Smithing::worldRecipes);
+        register(de.ipnats.hardwrought.smeltery.MoltenMetals::worldRecipes);
         register(WorldRecipes::fireAndWater);
     }
 

@@ -689,8 +689,7 @@ public class CompendiumScreen extends Screen {
             if (studied) {
                 Item item = BuiltInRegistries.ITEM.getValue(subject);
                 Component source = item != null && !de.ipnats.hardwrought.metallurgy.Smelting.isCast(item)
-                        ? de.ipnats.hardwrought.client.survival.MeltingPointTooltip.heatNeeded(
-                                melting * de.ipnats.hardwrought.smithing.Smithing.WORKING_MIN)
+                        ? de.ipnats.hardwrought.client.survival.MeltingPointTooltip.heatNeeded(melting)
                         : de.ipnats.hardwrought.client.survival.MeltingPointTooltip.furnaceNeeded(melting);
                 y = wrapLines(graphics, source, x, y, FADED_COLOR);
             }

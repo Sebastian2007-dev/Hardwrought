@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:bronze_plate"
+  },
+  "pattern": [
+    "PPP"
+  ],
+  "result": {
+    "id": "hardwrought:item_pipe_bronze",
+    "count": 8
+  }
+}

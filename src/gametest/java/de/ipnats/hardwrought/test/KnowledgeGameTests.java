@@ -351,8 +351,9 @@ public final class KnowledgeGameTests {
                 "and a flint hatchet needs no bench at all");
 
         Item titanium = de.ipnats.hardwrought.metallurgy.ModMetals.ingot(de.ipnats.hardwrought.metallurgy.Metal.TITANIUM);
-        helper.assertTrue(stationOf.apply(titanium, "hardwrought:titanium_ingot_from_smelting") == Items.FURNACE,
-                "Titanium is too hot for a brick furnace, so its recipe shows the furnace it needs");
+        helper.assertTrue(stationOf.apply(titanium, "hardwrought:titanium_ingot_from_smelting")
+                        == de.ipnats.hardwrought.smeltery.SmelteryBlocks.CONTROLLER.asItem(),
+                "Titanium is too hot for any furnace, so its recipe points to the smeltery");
         Item tin = de.ipnats.hardwrought.metallurgy.ModMetals.ingot(de.ipnats.hardwrought.metallurgy.Metal.TIN);
         helper.assertTrue(stationOf.apply(tin, "hardwrought:tin_ingot_from_smelting")
                         == ModBlocks.BRICK_FURNACE.asItem(),

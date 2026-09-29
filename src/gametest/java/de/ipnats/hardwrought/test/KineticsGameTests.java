@@ -221,6 +221,9 @@ public final class KineticsGameTests {
         List<BlockPos> used = new ArrayList<>();
         place(level, used, base, ModBlocks.CRANK_BOX.defaultBlockState().setValue(CrankBoxBlock.TURNING, true));
         place(level, used, head, ModBlocks.ORE_DRILL.defaultBlockState());
+        // The head faces north: its chute is the frame block north of it, and a chest just beyond takes the ore.
+        BlockPos chest = head.north(2);
+        place(level, used, chest, Blocks.CHEST.defaultBlockState());
         var drill = (de.ipnats.hardwrought.machinery.OreDrillBlockEntity) level.getBlockEntity(head);
         List<BlockPos> frame = de.ipnats.hardwrought.machinery.OreDrillBlockEntity.framePositions(head);
         for (int i = 0; i < frame.size() - 1; i++) place(level, used, frame.get(i), ModBlocks.DRILL_FRAME_IRON.defaultBlockState());
@@ -238,10 +241,11 @@ public final class KineticsGameTests {
         helper.runAfterDelay(de.ipnats.hardwrought.geology.DrillTier.BRONZE.intervalTicks() / 2 + 40, () -> {
             try {
                 if (!barren) {
-                    helper.assertFalse(drill.isEmpty(), "Turned, it brings ore up out of the chunk");
-                    var ore = drill.getItem(0);
-                    helper.assertTrue(ore.is(net.minecraft.world.item.Items.COAL_ORE) || ore.is(net.minecraft.world.item.Items.IRON_ORE),
-                            "and it is ore of the chunk it stands on: " + ore);
+                    var box = (net.minecraft.world.level.block.entity.ChestBlockEntity) level.getBlockEntity(chest);
+                    helper.assertFalse(box.isEmpty(), "Turned, it brings ore up out of the chunk and into the chest");
+                    var ore = box.getItem(0);
+                    helper.assertTrue(ore.is(net.minecraft.world.item.Items.COAL) || ore.is(net.minecraft.world.item.Items.RAW_IRON),
+                            "and it is what the chunk's ore gives when mined, not the ore block: " + ore);
                 }
             } finally {
                 clear(level, used);
@@ -273,6 +277,75 @@ public final class KineticsGameTests {
                     "Taking one block out opens the drill up again");
             helper.assertTrue(level.getBlockState(frame.get(0)).getValue(de.ipnats.hardwrought.machinery.DrillFrameBlock.PART) == 0,
                     "and the rest are loose frames");
+        } finally {
+            clear(level, used);
+        }
+        helper.succeed();
+    }
+
+    @GameTest
+    public void anOreDrillPutsItsOreOutThroughItsChute(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos head = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE + 4);
+        List<BlockPos> used = new ArrayList<>();
+        try {
+            place(level, used, head, ModBlocks.ORE_DRILL.defaultBlockState()
+                    .setValue(de.ipnats.hardwrought.machinery.OreDrillBlock.FACING, net.minecraft.core.Direction.EAST));
+            var drill = (de.ipnats.hardwrought.machinery.OreDrillBlockEntity) level.getBlockEntity(head);
+            for (BlockPos pos : de.ipnats.hardwrought.machinery.OreDrillBlockEntity.framePositions(head)) {
+                place(level, used, pos, ModBlocks.DRILL_FRAME_TITANIUM.defaultBlockState());
+            }
+            helper.assertTrue(level.getBlockState(head.east())
+                    .getValue(de.ipnats.hardwrought.machinery.DrillFrameBlock.OUTPUT), "The block in front of the head carries the chute");
+            if (drill.yield().barren()) {
+                helper.succeed();
+                return;
+            }
+            // Nothing outside the chute: the ore falls to the ground in front of it.
+            drill.bringUpNow();
+            var dropped = level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+                    new net.minecraft.world.phys.AABB(head.east(2)).inflate(1.0));
+            helper.assertFalse(dropped.isEmpty(), "With nothing outside the chute the ore drops in front of it");
+            helper.assertTrue(dropped.stream().noneMatch(entity -> net.minecraft.core.registries.BuiltInRegistries.ITEM
+                            .getKey(entity.getItem().getItem()).getPath().endsWith("_ore")),
+                    "and it is raw ore, coal or gems, never an ore block: " + dropped.getFirst().getItem());
+            dropped.forEach(net.minecraft.world.entity.Entity::discard);
+            // A chest there takes it, and a full one holds the drill up.
+            BlockPos chest = head.east(2);
+            place(level, used, chest, Blocks.CHEST.defaultBlockState());
+            var box = (net.minecraft.world.level.block.entity.ChestBlockEntity) level.getBlockEntity(chest);
+            drill.bringUpNow();
+            helper.assertFalse(box.isEmpty(), "A chest in front of the chute takes the ore");
+            for (int slot = 0; slot < box.getContainerSize(); slot++) box.setItem(slot, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BEDROCK, 64));
+            drill.bringUpNow();
+            helper.assertFalse(drill.held().isEmpty(), "A full chest leaves the piece in the drill");
+            helper.assertTrue(drill.status() == de.ipnats.hardwrought.machinery.OreDrillBlockEntity.Status.BLOCKED,
+                    "and stops it until there is room");
+            box.clearContent();
+        } finally {
+            clear(level, used);
+        }
+        helper.succeed();
+    }
+
+    @GameTest
+    public void aShaftIntoAnyBlockOfAFinishedDrillTurnsItsHead(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos head = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE + 8);
+        List<BlockPos> used = new ArrayList<>();
+        try {
+            place(level, used, head, ModBlocks.ORE_DRILL.defaultBlockState());
+            List<BlockPos> frame = de.ipnats.hardwrought.machinery.OreDrillBlockEntity.framePositions(head);
+            for (BlockPos pos : frame) place(level, used, pos, ModBlocks.DRILL_FRAME_IRON.defaultBlockState());
+            // A shaft into the corner of the upper layer, from a crank box two blocks off: nowhere near the head.
+            BlockPos corner = head.offset(-1, 1, -1);
+            place(level, used, corner.west(), ModBlocks.SHAFT.defaultBlockState().setValue(ShaftBlock.AXIS, Direction.Axis.X));
+            place(level, used, corner.west(2), ModBlocks.CRANK_BOX.defaultBlockState().setValue(CrankBoxBlock.TURNING, true));
+            helper.assertTrue(Math.abs(Kinetics.speed(level, head)) == CrankBoxBlock.SPEED,
+                    "The frame carries the drive to the head: " + Kinetics.speed(level, head));
+            // Loose frames carry nothing.
+            level.setBlockAndUpdate(frame.get(12), Blocks.AIR.defaultBlockState());
+            helper.assertTrue(Kinetics.speed(level, head) == 0.0f, "Opened up, the frame no longer turns the head");
         } finally {
             clear(level, used);
         }

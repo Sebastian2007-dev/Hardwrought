@@ -202,8 +202,9 @@ public final class EnvironmentGameTests {
         helper.assertTrue(lines.stream().anyMatch(line -> line.startsWith("TEMPERATURE | ")
                         && (line.contains("wind=") || line.contains("room=") || line.contains("outdoor="))),
                 "The temperature channel reports the room model");
-        helper.assertTrue(lines.stream().anyMatch(line -> line.startsWith("STRUCTURE | unavailable")),
-                "Systems that still do not exist keep saying so");
+        helper.assertTrue(lines.stream().anyMatch(line -> line.startsWith("STRUCTURE | ")
+                        && !line.contains("unavailable")),
+                "The structure channel reports the statics of Milestone 17");
         helper.succeed();
     }
 

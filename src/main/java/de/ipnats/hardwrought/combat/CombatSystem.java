@@ -181,6 +181,9 @@ public final class CombatSystem {
             damage = amount * (1.0 - resistance);
         }
         damage *= attackerFactors(defender, source, weapon);
+        // Mob specification section 17: slimes shrug off blunt blows and give to cuts.
+        damage *= de.ipnats.hardwrought.mobs.MobTraits.incomingFactor(defender,
+                weaponHit ? weapon.damage() : null, CombatDamageType.classify(source));
         // Section 38: a blade forged well, and hardened, hits harder than the same blade made badly.
         damage *= de.ipnats.hardwrought.smithing.ForgeQuality.damageFactor(weaponStack);
         return (float) Math.max(0, damage);
@@ -263,7 +266,10 @@ public final class CombatSystem {
 
     /** A staggered fighter moves and swings slower until the penalty runs out. */
     public void stagger(LivingEntity entity, int ticks) {
-        if (entity == null || ticks <= 0) return;
+        if (entity == null) return;
+        // Mob specification sections 25, 27, 36, 37: the heavy hitters shake a stagger off.
+        ticks = de.ipnats.hardwrought.mobs.MobTraits.staggerTicks(entity, ticks);
+        if (ticks <= 0) return;
         AttributeModifiers.update(entity.getAttribute(Attributes.MOVEMENT_SPEED), STAGGER_MOVEMENT_MODIFIER,
                 STAGGER_PENALTY, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
         AttributeModifiers.update(entity.getAttribute(Attributes.ATTACK_SPEED), STAGGER_ATTACK_MODIFIER,

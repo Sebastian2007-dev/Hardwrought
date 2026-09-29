@@ -14,10 +14,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.IntegerProperty;
-import net.minecraft.world.level.block.state.properties.Property;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,9 +25,10 @@ import java.util.Set;
  * many of each, the right page shows it built. Dragging turns it, the wheel brings it nearer, and the
  * arrows under it take it apart layer by layer from the ground up.
  *
- * <p>Built whole it is drawn the way it looks once finished; a single layer is drawn as the loose
- * blocks that go into it, since that is what is put down. Where any of several blocks will do, the
- * view cycles through the ones the player has studied, and only those.
+ * <p>It is always drawn as the loose blocks that go into it, since that is what is put down, not the
+ * way it looks once finished. With one layer picked out, the others stay in view see-through, the
+ * fainter the further they are from it. Where any of several blocks will do, the view cycles through
+ * the ones the player has studied, and only those.
  */
 public class MultiblockScreen extends Screen {
     private static final int PANEL_WIDTH = 344;
@@ -50,6 +47,9 @@ public class MultiblockScreen extends Screen {
     private static final long CYCLE_MILLIS = 1000L;
     private static final float MIN_ZOOM = 0.5f;
     private static final float MAX_ZOOM = 3.0f;
+    /** How see-through the layer next to the picked one is; each further layer halves it. */
+    private static final float NEIGHBOUR_ALPHA = 0.4f;
+    private static final float FAINTEST_ALPHA = 0.05f;
 
     private static final int TEXT_COLOR = 0xFF1B120B;
     private static final int FADED_COLOR = 0xFF4A3522;
@@ -122,35 +122,25 @@ public class MultiblockScreen extends Screen {
     private List<MultiblockRenderState.Placed> blocks() {
         List<MultiblockRenderState.Placed> placed = new ArrayList<>();
         for (int y = 0; y < multiblock.height(); y++) {
-            if (layer >= 0 && y != layer) continue;
+            float alpha = alpha(y);
+            if (alpha < FAINTEST_ALPHA) continue;
             for (int z = 0; z < multiblock.depth(); z++) {
                 for (int x = 0; x < multiblock.width(); x++) {
                     char symbol = multiblock.at(x, y, z);
                     if (symbol == ' ') continue;
                     Block block = shown(symbol);
                     if (block == null) continue;
-                    BlockState state = block.defaultBlockState();
-                    if (layer < 0 && multiblock.formed().isPresent()) {
-                        state = finished(state, multiblock.formed().get().part(x, y, z));
-                    }
-                    placed.add(new MultiblockRenderState.Placed(new BlockPos(x, y, z), state));
+                    placed.add(new MultiblockRenderState.Placed(new BlockPos(x, y, z), block.defaultBlockState(), alpha));
                 }
             }
         }
         return placed;
     }
 
-    /** A block as it looks in the finished structure: told its part, and that the whole stands. */
-    private static BlockState finished(BlockState state, int part) {
-        for (Property<?> property : state.getProperties()) {
-            if (property instanceof IntegerProperty number && property.getName().equals("part")
-                    && number.getPossibleValues().contains(part)) {
-                state = state.setValue(number, part);
-            } else if (property instanceof BooleanProperty flag && property.getName().equals("formed")) {
-                state = state.setValue(flag, true);
-            }
-        }
-        return state;
+    /** How solidly a layer is drawn: whole with no layer picked, else fading away from the picked one. */
+    private float alpha(int y) {
+        if (layer < 0 || y == layer) return 1.0f;
+        return NEIGHBOUR_ALPHA * (float) Math.pow(0.5, Math.abs(y - layer) - 1);
     }
 
     // ---------------------------------------------------------------- drawing
@@ -179,8 +169,8 @@ public class MultiblockScreen extends Screen {
             if (block == null) continue;
             graphics.item(new ItemStack(block), x, y);
             Component line = Component.translatable("gui.hardwrought.multiblock.count", entry.getValue(), block.getName());
-            graphics.textWithWordWrap(font, line, x + 20, y + 4, CONTENT_WIDTH - 20, TEXT_COLOR, false);
-            y += LEGEND_ROW;
+            int below = graphics.textWithWordWrap(font, line, x + 20, y + 4, CONTENT_WIDTH - 20, TEXT_COLOR, false);
+            y = Math.max(y + LEGEND_ROW, below + 4);
         }
         if (multiblock.legend().values().stream().anyMatch(choice -> choice.size() > 1)) {
             y = graphics.textWithWordWrap(font, Component.translatable("gui.hardwrought.multiblock.any_of"),
@@ -208,9 +198,10 @@ public class MultiblockScreen extends Screen {
         int x1 = viewX1();
         int y1 = viewY1();
         int w = multiblock.width();
-        int h = layer < 0 ? multiblock.height() : 1;
+        int h = multiblock.height();
         int d = multiblock.depth();
-        // Big enough that the structure, turned any way, still fits the page at the nearest zoom of one.
+        // Big enough that the structure, turned any way, still fits the page at the nearest zoom of one;
+        // the same with a layer picked out, since the others still show around it.
         float across = (float) Math.sqrt(w * w + h * h + d * d);
         float scale = Math.min(x1 - x0, y1 - y0) / across * zoom;
         float centerY = layer < 0 ? multiblock.height() / 2.0f : layer + 0.5f;

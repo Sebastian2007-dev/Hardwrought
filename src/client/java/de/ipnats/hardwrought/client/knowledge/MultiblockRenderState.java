@@ -21,7 +21,12 @@ public record MultiblockRenderState(List<Placed> blocks, float yaw, float pitch,
                                     ScreenRectangle scissorArea, ScreenRectangle bounds)
         implements PictureInPictureRenderState {
 
-    public record Placed(BlockPos pos, BlockState state) { }
+    /** A block at its place; alpha below 1 draws it see-through, as a layer beside the one looked at. */
+    public record Placed(BlockPos pos, BlockState state, float alpha) {
+        public Placed(BlockPos pos, BlockState state) {
+            this(pos, state, 1.0f);
+        }
+    }
 
     public MultiblockRenderState(List<Placed> blocks, float yaw, float pitch, float centerX, float centerY,
                                  float centerZ, int x0, int y0, int x1, int y1, float scale) {

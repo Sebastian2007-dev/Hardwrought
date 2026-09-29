@@ -1,321 +1,291 @@
 {
-  "parent": "minecraft:block/block",
-  "textures": {
-    "spar": "hardwrought:block/hardwrought/dark_handle",
-    "cloth": "hardwrought:block/hardwrought/sailcloth",
-    "particle": "hardwrought:block/hardwrought/sailcloth"
-  },
-  "elements": [
-    {
-      "from": [
-        5,
-        0,
-        5
-      ],
-      "to": [
-        11,
-        16,
-        11
-      ],
-      "faces": {
-        "north": {
-          "texture": "#spar"
-        },
-        "south": {
-          "texture": "#spar"
-        },
-        "east": {
-          "texture": "#spar"
-        },
-        "west": {
-          "texture": "#spar"
-        },
-        "up": {
-          "texture": "#spar"
-        },
-        "down": {
-          "texture": "#spar"
-        }
-      }
-    },
-    {
-      "from": [
-        -16,
-        9,
-        7
-      ],
-      "to": [
-        32,
-        11,
-        9
-      ],
-      "faces": {
-        "north": {
-          "texture": "#spar"
-        },
-        "south": {
-          "texture": "#spar"
-        },
-        "east": {
-          "texture": "#spar"
-        },
-        "west": {
-          "texture": "#spar"
-        },
-        "up": {
-          "texture": "#spar"
-        },
-        "down": {
-          "texture": "#spar"
-        }
-      }
-    },
-    {
-      "from": [
-        7,
-        9,
-        -16
-      ],
-      "to": [
-        9,
-        11,
-        32
-      ],
-      "faces": {
-        "north": {
-          "texture": "#spar"
-        },
-        "south": {
-          "texture": "#spar"
-        },
-        "east": {
-          "texture": "#spar"
-        },
-        "west": {
-          "texture": "#spar"
-        },
-        "up": {
-          "texture": "#spar"
-        },
-        "down": {
-          "texture": "#spar"
-        }
-      }
-    },
-    {
-      "from": [
-        12,
-        10,
-        9
-      ],
-      "to": [
-        32,
-        11,
-        17
-      ],
-      "faces": {
-        "north": {
-          "texture": "#cloth"
-        },
-        "south": {
-          "texture": "#cloth"
-        },
-        "east": {
-          "texture": "#cloth"
-        },
-        "west": {
-          "texture": "#cloth"
-        },
-        "up": {
-          "texture": "#cloth"
-        },
-        "down": {
-          "texture": "#cloth"
-        }
-      }
-    },
-    {
-      "from": [
-        -16,
-        10,
-        -1
-      ],
-      "to": [
-        4,
-        11,
-        7
-      ],
-      "faces": {
-        "north": {
-          "texture": "#cloth"
-        },
-        "south": {
-          "texture": "#cloth"
-        },
-        "east": {
-          "texture": "#cloth"
-        },
-        "west": {
-          "texture": "#cloth"
-        },
-        "up": {
-          "texture": "#cloth"
-        },
-        "down": {
-          "texture": "#cloth"
-        }
-      }
-    },
-    {
-      "from": [
-        -1,
-        10,
-        12
-      ],
-      "to": [
-        7,
-        11,
-        32
-      ],
-      "faces": {
-        "north": {
-          "texture": "#cloth"
-        },
-        "south": {
-          "texture": "#cloth"
-        },
-        "east": {
-          "texture": "#cloth"
-        },
-        "west": {
-          "texture": "#cloth"
-        },
-        "up": {
-          "texture": "#cloth"
-        },
-        "down": {
-          "texture": "#cloth"
-        }
-      }
-    },
-    {
-      "from": [
-        9,
-        10,
-        -16
-      ],
-      "to": [
-        17,
-        11,
-        4
-      ],
-      "faces": {
-        "north": {
-          "texture": "#cloth"
-        },
-        "south": {
-          "texture": "#cloth"
-        },
-        "east": {
-          "texture": "#cloth"
-        },
-        "west": {
-          "texture": "#cloth"
-        },
-        "up": {
-          "texture": "#cloth"
-        },
-        "down": {
-          "texture": "#cloth"
-        }
-      }
-    }
-  ],
-  "display": {
-    "gui": {
-      "rotation": [
-        30,
-        45,
-        0
-      ],
-      "translation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        0.25,
-        0.25,
-        0.25
-      ]
-    },
-    "ground": {
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "translation": [
-        0,
-        3,
-        0
-      ],
-      "scale": [
-        0.2,
-        0.2,
-        0.2
-      ]
-    },
-    "fixed": {
-      "rotation": [
-        90,
-        0,
-        0
-      ],
-      "translation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        0.25,
-        0.25,
-        0.25
-      ]
-    },
-    "thirdperson_righthand": {
-      "rotation": [
-        75,
-        45,
-        0
-      ],
-      "translation": [
-        0,
-        2.5,
-        0
-      ],
-      "scale": [
-        0.15,
-        0.15,
-        0.15
-      ]
-    },
-    "firstperson_righthand": {
-      "rotation": [
-        0,
-        45,
-        0
-      ],
-      "translation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        0.175,
-        0.175,
-        0.175
-      ]
-    }
-  }
+	"format_version": "26.3",
+	"credit": "Made with Blockbench",
+	"textures": {
+		"0": "minecraft:block/spruce_planks",
+		"1": "minecraft:block/stripped_spruce_log",
+		"3": "minecraft:block/white_wool",
+		"particle": "#3"
+	},
+	"elements": [
+		{
+			"name": "Windmill axle",
+			"from": [6, 0, 6],
+			"to": [10, 16, 10],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 4, 16], "texture": "#1"},
+				"east": {"uv": [0, 0, 4, 16], "texture": "#1"},
+				"south": {"uv": [0, 0, 4, 16], "texture": "#1"},
+				"west": {"uv": [0, 0, 4, 16], "texture": "#1"},
+				"up": {"uv": [0, 0, 4, 4], "texture": "#1"},
+				"down": {"uv": [0, 0, 4, 4], "texture": "#1"}
+			}
+		},
+		{
+			"name": "Hub square",
+			"from": [4.5, 5, 4.5],
+			"to": [11.5, 11, 11.5],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 7, 6], "texture": "#0"},
+				"east": {"uv": [0, 0, 7, 6], "texture": "#0"},
+				"south": {"uv": [0, 0, 7, 6], "texture": "#0"},
+				"west": {"uv": [0, 0, 7, 6], "texture": "#0"},
+				"up": {"uv": [0, 0, 7, 7], "texture": "#0"},
+				"down": {"uv": [0, 0, 7, 7], "texture": "#0"}
+			}
+		},
+		{
+			"name": "Hub bevel",
+			"from": [5, 4.5, 5],
+			"to": [11, 11.5, 11],
+			"rotation": {"angle": 45, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 6, 7], "texture": "#0"},
+				"east": {"uv": [0, 0, 6, 7], "texture": "#0"},
+				"south": {"uv": [0, 0, 6, 7], "texture": "#0"},
+				"west": {"uv": [0, 0, 6, 7], "texture": "#0"},
+				"up": {"uv": [0, 0, 6, 6], "texture": "#0"},
+				"down": {"uv": [0, 0, 6, 6], "texture": "#0"}
+			}
+		},
+		{
+			"name": "Spar east",
+			"from": [8, 6.5, 7.1],
+			"to": [32, 9.5, 8.9],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 16, 3], "texture": "#1"},
+				"east": {"uv": [0, 0, 1.8, 3], "texture": "#1"},
+				"south": {"uv": [0, 0, 16, 3], "texture": "#1"},
+				"up": {"uv": [0, 0, 16, 1.8], "texture": "#1"},
+				"down": {"uv": [0, 0, 16, 1.8], "texture": "#1"}
+			}
+		},
+		{
+			"name": "Spar west",
+			"from": [-16, 6.5, 7.1],
+			"to": [8, 9.5, 8.9],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 16, 3], "texture": "#1"},
+				"south": {"uv": [0, 0, 16, 3], "texture": "#1"},
+				"west": {"uv": [0, 0, 1.8, 3], "texture": "#1"},
+				"up": {"uv": [0, 0, 16, 1.8], "texture": "#1"},
+				"down": {"uv": [0, 0, 16, 1.8], "texture": "#1"}
+			}
+		},
+		{
+			"name": "Spar south",
+			"from": [7.1, 6.5, 8],
+			"to": [8.9, 9.5, 32],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"east": {"uv": [0, 0, 16, 3], "texture": "#1"},
+				"south": {"uv": [0, 0, 1.8, 3], "texture": "#1"},
+				"west": {"uv": [0, 0, 16, 3], "texture": "#1"},
+				"up": {"uv": [0, 0, 1.8, 16], "texture": "#1"},
+				"down": {"uv": [0, 0, 1.8, 16], "texture": "#1"}
+			}
+		},
+		{
+			"name": "Spar north",
+			"from": [7.1, 6.5, -16],
+			"to": [8.9, 9.5, 8],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 1.8, 3], "texture": "#1"},
+				"east": {"uv": [0, 0, 16, 3], "texture": "#1"},
+				"west": {"uv": [0, 0, 16, 3], "texture": "#1"},
+				"up": {"uv": [0, 0, 1.8, 16], "texture": "#1"},
+				"down": {"uv": [0, 0, 1.8, 16], "texture": "#1"}
+			}
+		},
+		{
+			"name": "East sail inner",
+			"from": [12, 7.2, 9.2],
+			"to": [19, 8.2, 12.2],
+			"faces": {
+				"north": {"uv": [0, 0, 7, 1], "texture": "#3"},
+				"south": {"uv": [0, 0, 7, 1], "texture": "#3"},
+				"west": {"uv": [0, 0, 3, 1], "texture": "#3"},
+				"up": {"uv": [0, 0, 7, 3], "texture": "#3"},
+				"down": {"uv": [0, 0, 7, 3], "texture": "#3"}
+			}
+		},
+		{
+			"name": "East sail middle",
+			"from": [19, 7.2, 9.2],
+			"to": [25.5, 8.2, 14],
+			"faces": {
+				"north": {"uv": [0, 0, 6.5, 1], "texture": "#3"},
+				"south": {"uv": [0, 0, 6.5, 1], "texture": "#3"},
+				"west": {"uv": [0, 0, 4.8, 1], "texture": "#3"},
+				"up": {"uv": [0, 0, 6.5, 4.8], "texture": "#3"},
+				"down": {"uv": [0, 0, 6.5, 4.8], "texture": "#3"}
+			}
+		},
+		{
+			"name": "East sail outer",
+			"from": [25.5, 7.2, 9.2],
+			"to": [32, 8.2, 16],
+			"faces": {
+				"north": {"uv": [0, 0, 6.5, 1], "texture": "#3"},
+				"east": {"uv": [0, 0, 6.8, 1], "texture": "#3"},
+				"south": {"uv": [0, 0, 6.5, 1], "texture": "#3"},
+				"west": {"uv": [0, 0, 6.8, 1], "texture": "#3"},
+				"up": {"uv": [0, 0, 6.5, 6.8], "texture": "#3"},
+				"down": {"uv": [0, 0, 6.5, 6.8], "texture": "#3"}
+			}
+		},
+		{
+			"name": "West sail inner",
+			"from": [-3, 7.2, 3.8],
+			"to": [4, 8.2, 6.8],
+			"faces": {
+				"north": {"uv": [0, 0, 7, 1], "texture": "#3"},
+				"east": {"uv": [0, 0, 3, 1], "texture": "#3"},
+				"south": {"uv": [0, 0, 7, 1], "texture": "#3"},
+				"up": {"uv": [0, 0, 7, 3], "texture": "#3"},
+				"down": {"uv": [0, 0, 7, 3], "texture": "#3"}
+			}
+		},
+		{
+			"name": "West sail middle",
+			"from": [-9.5, 7.2, 2],
+			"to": [-3, 8.2, 6.8],
+			"faces": {
+				"north": {"uv": [0, 0, 6.5, 1], "texture": "#3"},
+				"east": {"uv": [0, 0, 4.8, 1], "texture": "#3"},
+				"south": {"uv": [0, 0, 6.5, 1], "texture": "#3"},
+				"up": {"uv": [0, 0, 6.5, 4.8], "texture": "#3"},
+				"down": {"uv": [0, 0, 6.5, 4.8], "texture": "#3"}
+			}
+		},
+		{
+			"name": "West sail outer",
+			"from": [-16, 7.2, 0],
+			"to": [-9.5, 8.2, 6.8],
+			"faces": {
+				"north": {"uv": [0, 0, 6.5, 1], "texture": "#3"},
+				"east": {"uv": [0, 0, 6.8, 1], "texture": "#3"},
+				"south": {"uv": [0, 0, 6.5, 1], "texture": "#3"},
+				"west": {"uv": [0, 0, 6.8, 1], "texture": "#3"},
+				"up": {"uv": [0, 0, 6.5, 6.8], "texture": "#3"},
+				"down": {"uv": [0, 0, 6.5, 6.8], "texture": "#3"}
+			}
+		},
+		{
+			"name": "South sail inner",
+			"from": [3.8, 7.2, 12],
+			"to": [6.8, 8.2, 19],
+			"faces": {
+				"north": {"uv": [0, 0, 3, 1], "texture": "#3"},
+				"east": {"uv": [0, 0, 7, 1], "texture": "#3"},
+				"west": {"uv": [0, 0, 7, 1], "texture": "#3"},
+				"up": {"uv": [0, 0, 3, 7], "texture": "#3"},
+				"down": {"uv": [0, 0, 3, 7], "texture": "#3"}
+			}
+		},
+		{
+			"name": "South sail middle",
+			"from": [2, 7.2, 19],
+			"to": [6.8, 8.2, 25.5],
+			"faces": {
+				"north": {"uv": [0, 0, 4.8, 1], "texture": "#3"},
+				"east": {"uv": [0, 0, 6.5, 1], "texture": "#3"},
+				"west": {"uv": [0, 0, 6.5, 1], "texture": "#3"},
+				"up": {"uv": [0, 0, 4.8, 6.5], "texture": "#3"},
+				"down": {"uv": [0, 0, 4.8, 6.5], "texture": "#3"}
+			}
+		},
+		{
+			"name": "South sail outer",
+			"from": [0, 7.2, 25.5],
+			"to": [6.8, 8.2, 32],
+			"faces": {
+				"north": {"uv": [0, 0, 6.8, 1], "texture": "#3"},
+				"east": {"uv": [0, 0, 6.5, 1], "texture": "#3"},
+				"south": {"uv": [0, 0, 6.8, 1], "texture": "#3"},
+				"west": {"uv": [0, 0, 6.5, 1], "texture": "#3"},
+				"up": {"uv": [0, 0, 6.8, 6.5], "texture": "#3"},
+				"down": {"uv": [0, 0, 6.8, 6.5], "texture": "#3"}
+			}
+		},
+		{
+			"name": "North sail inner",
+			"from": [9.2, 7.2, -3],
+			"to": [12.2, 8.2, 4],
+			"faces": {
+				"east": {"uv": [0, 0, 7, 1], "texture": "#3"},
+				"south": {"uv": [0, 0, 3, 1], "texture": "#3"},
+				"west": {"uv": [0, 0, 7, 1], "texture": "#3"},
+				"up": {"uv": [0, 0, 3, 7], "texture": "#3"},
+				"down": {"uv": [0, 0, 3, 7], "texture": "#3"}
+			}
+		},
+		{
+			"name": "North sail middle",
+			"from": [9.2, 7.2, -9.5],
+			"to": [14, 8.2, -3],
+			"faces": {
+				"east": {"uv": [0, 0, 6.5, 1], "texture": "#3"},
+				"south": {"uv": [0, 0, 4.8, 1], "texture": "#3"},
+				"west": {"uv": [0, 0, 6.5, 1], "texture": "#3"},
+				"up": {"uv": [0, 0, 4.8, 6.5], "texture": "#3"},
+				"down": {"uv": [0, 0, 4.8, 6.5], "texture": "#3"}
+			}
+		},
+		{
+			"name": "North sail outer",
+			"from": [9.2, 7.2, -16],
+			"to": [16, 8.2, -9.5],
+			"faces": {
+				"north": {"uv": [0, 0, 6.8, 1], "texture": "#3"},
+				"east": {"uv": [0, 0, 6.5, 1], "texture": "#3"},
+				"south": {"uv": [0, 0, 6.8, 1], "texture": "#3"},
+				"west": {"uv": [0, 0, 6.5, 1], "texture": "#3"},
+				"up": {"uv": [0, 0, 6.8, 6.5], "texture": "#3"},
+				"down": {"uv": [0, 0, 6.8, 6.5], "texture": "#3"}
+			}
+		}
+	],
+	"display": {
+		"gui": {"rotation": [30, 45, 0], "scale": [0.25, 0.25, 0.25]},
+		"ground": {"translation": [0, 3, 0], "scale": [0.2, 0.2, 0.2]},
+		"fixed": {"rotation": [90, 0, 0], "scale": [0.25, 0.25, 0.25]},
+		"thirdperson_righthand": {"rotation": [75, 45, 0], "translation": [0, 2.5, 0], "scale": [0.15, 0.15, 0.15]},
+		"firstperson_righthand": {"rotation": [0, 45, 0], "scale": [0.175, 0.175, 0.175]}
+	},
+	"groups": [
+		{
+			"name": "Axle",
+			"origin": [8, 8, 8],
+			"scope": 0,
+			"color": 0,
+			"children": [0]
+		},
+		{
+			"name": "Hub",
+			"origin": [8, 8, 8],
+			"scope": 0,
+			"color": 0,
+			"children": [1, 2]
+		},
+		{
+			"name": "Spars",
+			"origin": [8, 8, 8],
+			"scope": 0,
+			"color": 0,
+			"children": [3, 4, 5, 6]
+		},
+		{
+			"name": "Sails",
+			"origin": [8, 8, 8],
+			"scope": 0,
+			"color": 0,
+			"children": [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+		}
+	]
 }

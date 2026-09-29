@@ -100,15 +100,25 @@ public final class Multiblocks {
             legend('F', List.of(Hardwrought.id("forge")), 'H', List.of(Hardwrought.id("forge_hood"))),
             Optional.empty());
 
-    public static final List<Multiblock> ALL = List.of(ORE_DRILL_RIG, HOODED_FORGE);
+    /** The smallest smeltery: a tank one block wide and two high, a drain to pour from, glass to look in. */
+    public static final Multiblock SMELTERY = new Multiblock(Hardwrought.id("smeltery"),
+            List.of(List.of("BBB", "BBB", "BBB"), List.of("BCB", "B D", "BBB"), List.of("BGB", "G G", "BGB")),
+            legend('B', List.of(Hardwrought.id("smeltery_bricks")), 'C', List.of(Hardwrought.id("smeltery_controller")),
+                    'D', List.of(Hardwrought.id("smeltery_drain")), 'G', List.of(Hardwrought.id("smeltery_glass"))),
+            Optional.empty());
+
+    public static final List<Multiblock> ALL = List.of(ORE_DRILL_RIG, HOODED_FORGE, SMELTERY);
 
     private Multiblocks() { }
 
     /** The legend in the order it is written, so the compendium lists it the same way every time. */
-    private static Map<Character, List<Identifier>> legend(char a, List<Identifier> first, char b, List<Identifier> second) {
+    private static Map<Character, List<Identifier>> legend(Object... pairs) {
         Map<Character, List<Identifier>> legend = new LinkedHashMap<>();
-        legend.put(a, first);
-        legend.put(b, second);
+        for (int i = 0; i < pairs.length; i += 2) {
+            @SuppressWarnings("unchecked")
+            List<Identifier> blocks = (List<Identifier>) pairs[i + 1];
+            legend.put((Character) pairs[i], blocks);
+        }
         return java.util.Collections.unmodifiableMap(legend);
     }
 

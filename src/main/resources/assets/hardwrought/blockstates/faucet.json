@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "hardwrought:block/faucet"
+    },
+    "facing=east": {
+      "model": "hardwrought:block/faucet",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "hardwrought:block/faucet",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "hardwrought:block/faucet",
+      "y": 270
+    }
+  }
+}

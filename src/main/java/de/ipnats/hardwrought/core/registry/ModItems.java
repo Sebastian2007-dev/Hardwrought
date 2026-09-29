@@ -144,6 +144,10 @@ public final class ModItems {
     public static final Item SAFETY_LAMP = register("safety_lamp", SafetyLampItem::new,
             new Item.Properties().stacksTo(1));
 
+    /** Milestone 17: ties a built block to its neighbours, see {@code StructuralAnchorItem}. */
+    public static final Item STRUCTURAL_ANCHOR = register("structural_anchor",
+            de.ipnats.hardwrought.building.StructuralAnchorItem::new, new Item.Properties());
+
     // Milestone-72 groundwork. The bar that turns has no item at all: it is only ever drawn.
     public static final Item SHAFT = register("shaft",
             properties -> new BlockItem(ModBlocks.SHAFT, properties),
@@ -190,6 +194,21 @@ public final class ModItems {
     public static final Item DRILL_FRAME_TITANIUM = register("drill_frame_titanium",
             properties -> new BlockItem(ModBlocks.DRILL_FRAME_TITANIUM, properties),
             new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item ITEM_PIPE_BRONZE = register("item_pipe_bronze",
+            properties -> new BlockItem(ModBlocks.ITEM_PIPE_BRONZE, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item ITEM_PIPE_IRON = register("item_pipe_iron",
+            properties -> new BlockItem(ModBlocks.ITEM_PIPE_IRON, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item ITEM_PIPE_NICKEL = register("item_pipe_nickel",
+            properties -> new BlockItem(ModBlocks.ITEM_PIPE_NICKEL, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item ITEM_PIPE_CHROMIUM = register("item_pipe_chromium",
+            properties -> new BlockItem(ModBlocks.ITEM_PIPE_CHROMIUM, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item ITEM_PIPE_TITANIUM = register("item_pipe_titanium",
+            properties -> new BlockItem(ModBlocks.ITEM_PIPE_TITANIUM, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
     // Milestone 11: oil and chemistry.
     public static final Item DRILLING_RIG = register("drilling_rig",
             properties -> new BlockItem(ModBlocks.DRILLING_RIG, properties),
@@ -197,8 +216,12 @@ public final class ModItems {
     public static final Item STILL = register("still",
             properties -> new BlockItem(ModBlocks.STILL, properties),
             new Item.Properties().useBlockDescriptionPrefix());
-    /** A bucket of crude oil off a rig. Not poured out anywhere: it goes into a still. */
-    public static final Item CRUDE_OIL_BUCKET = register("crude_oil_bucket", Item::new,
+    /** Creative only: shows every ore in the chunk the player stands in. */
+    public static final Item ORE_SCANNER = register("ore_scanner", de.ipnats.hardwrought.geology.OreScannerItem::new,
+            new Item.Properties().stacksTo(1).rarity(net.minecraft.world.item.Rarity.EPIC));
+    /** A bucket of crude oil off a rig. It goes into a still, or is poured out as oil. */
+    public static final Item CRUDE_OIL_BUCKET = register("crude_oil_bucket",
+            properties -> new net.minecraft.world.item.BucketItem(de.ipnats.hardwrought.oil.ModFluids.CRUDE_OIL, properties),
             new Item.Properties().stacksTo(1).craftRemainder(net.minecraft.world.item.Items.BUCKET));
     public static final Item GAS_CANISTER = register("gas_canister", Item::new,
             new Item.Properties().stacksTo(16));

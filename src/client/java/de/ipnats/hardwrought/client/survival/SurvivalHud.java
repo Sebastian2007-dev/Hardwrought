@@ -40,6 +40,10 @@ public final class SurvivalHud {
     private static final int DROP_SPACING = 8;
     private static final int STAMINA_COLOR = 0xFF55C96B;
     private static final int WATER_COLOR = 0xFF49AEE8;
+    private static final int STAMINA_REGENERATION_COLOR = 0xFFFFD43B;
+    private static final int STAMINA_WINDED_COLOR = 0xFFE5572E;
+    private static final int WATER_THIRST_COLOR = 0xFF7C8A36;
+    private static final int WATER_REGENERATION_COLOR = 0xFFB4F2FF;
     private static SurvivalSnapshotPayload snapshot;
     private static boolean detailsVisible;
 
@@ -72,9 +76,9 @@ public final class SurvivalHud {
         int center = graphics.guiWidth() / 2;
         if (!client.player.isCreative()) {
             int dropY = graphics.guiHeight() - 49;
-            renderDrops(graphics, center - 91, dropY, snapshot.stamina(), STAMINA_COLOR);
+            renderDrops(graphics, center - 91, dropY, snapshot.stamina(), staminaColor(client.player));
             if (!client.player.isUnderWater()) {
-                renderDrops(graphics, center + 11, dropY, snapshot.hydration(), WATER_COLOR);
+                renderDrops(graphics, center + 11, dropY, snapshot.hydration(), waterColor(client.player));
             }
         }
 
@@ -85,6 +89,23 @@ public final class SurvivalHud {
             int textX = center - client.font.width(sleep) / 2;
             graphics.text(client.font, sleep, textX, graphics.guiHeight() - 72, 0xFFDCCFFF, true);
         }
+    }
+
+    /**
+     * The stamina drops show what is acting on the reserve, as vanilla's hearts show poison: orange-red
+     * while the player is winded, gold under stamina regeneration. A bad effect shows over a good one.
+     */
+    public static int staminaColor(net.minecraft.world.entity.player.Player player) {
+        if (player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.WINDED)) return STAMINA_WINDED_COLOR;
+        if (player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.STAMINA_REGENERATION)) return STAMINA_REGENERATION_COLOR;
+        return STAMINA_COLOR;
+    }
+
+    /** The water drops: a dirty green with thirst, a clear bright blue under hydration regeneration. */
+    public static int waterColor(net.minecraft.world.entity.player.Player player) {
+        if (player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.THIRST)) return WATER_THIRST_COLOR;
+        if (player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.HYDRATION_REGENERATION)) return WATER_REGENERATION_COLOR;
+        return WATER_COLOR;
     }
 
     private static void renderDrops(net.minecraft.client.gui.GuiGraphicsExtractor graphics,

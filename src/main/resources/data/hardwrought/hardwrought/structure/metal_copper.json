@@ -1,0 +1,9 @@
+{
+  "material": "hardwrought:copper",
+  "blocks": [
+    "minecraft:copper_block",
+    "minecraft:waxed_copper_block",
+    "minecraft:cut_copper",
+    "minecraft:waxed_cut_copper"
+  ]
+}

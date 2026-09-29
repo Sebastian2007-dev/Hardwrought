@@ -404,10 +404,10 @@ public final class SmithingGameTests {
                 "Worked by a turning crank, it drives the forge hotter");
         level.setBlockAndUpdate(forgePos, level.getBlockState(forgePos).setValue(ForgeBlock.LINED, true));
         helper.assertTrue(forge.target(level, forgePos, level.getBlockState(forgePos)) == ForgeBlockEntity.LINED_BELLOWS_C,
-                "and lined with refractory brick it reaches the most any fire here can");
+                "and lined with refractory brick it reaches the most any forge can");
 
-        // Return to the ordinary 1300 °C forge for the heating check. Aluminum used to stop dead at
-        // its 660 °C melting point because the working range was incorrectly used as a heat ceiling.
+        // Back to the ordinary 1300 °C forge: aluminum, melting at 660 °C, heats to the top of its
+        // forging range and stops there, however much hotter the fire is.
         level.setBlockAndUpdate(forgePos, level.getBlockState(forgePos).setValue(ForgeBlock.LINED, false));
         level.setBlockAndUpdate(bellows.east(), Blocks.AIR.defaultBlockState());
         helper.assertTrue(forge.target(level, forgePos, level.getBlockState(forgePos)) == ForgeBlockEntity.BASE_C,
@@ -416,10 +416,9 @@ public final class SmithingGameTests {
                 "Raw aluminum goes into the metal place");
         helper.runAfterDelay(600, () -> {
             double celsius = Heat.of(forge.getItem(ForgeBlockEntity.FIRST_METAL), level.getGameTime());
-            helper.assertTrue(celsius > 800,
-                    "Raw aluminum follows the forge past its old 660 degree ceiling: " + celsius);
-            helper.assertTrue(celsius <= forge.temperature() + 1,
-                    "and the workpiece never becomes hotter than the fire heating it");
+            double top = 660 * Smithing.WORKING_MAX;
+            helper.assertTrue(celsius > top - 5 && celsius <= top + 1,
+                    "Raw aluminum heats to forging heat and never towards melting: " + celsius);
             for (BlockPos pos : List.of(forgePos, bellows, bellows.east())) {
                 level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
             }
@@ -876,6 +875,32 @@ public final class SmithingGameTests {
                         "A hammer head wants a stone hammer at least");
             }
         }
+        helper.succeed();
+    }
+
+    @GameTest
+    public void everySolidMetalIsForgedIntoRodsAndPlates(GameTestHelper helper) {
+        helper.assertTrue(de.ipnats.hardwrought.smithing.MetalStock.metals().size() == 21,
+                "Iron, copper, gold, bronze, the three steels and every ore metal but mercury have stock");
+        for (var metal : de.ipnats.hardwrought.smithing.MetalStock.metals()) {
+            var ingot = metal.ingot().get();
+            var rod = de.ipnats.hardwrought.smithing.MetalStock.rod(metal.material());
+            var plate = de.ipnats.hardwrought.smithing.MetalStock.plate(metal.material());
+            var rodRecipe = de.ipnats.hardwrought.smithing.Smithing.recipeFor(ingot,
+                    net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(rod));
+            var plateRecipe = de.ipnats.hardwrought.smithing.Smithing.recipeFor(ingot,
+                    net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(plate));
+            helper.assertTrue(rodRecipe != null && rodRecipe.count() == 1 && rodRecipe.makes() == 4,
+                    "One " + metal.material() + " bar is drawn out into four rods on the anvil");
+            helper.assertTrue(plateRecipe != null && plateRecipe.makes() == 1,
+                    "and beaten out into one plate");
+            helper.assertTrue(de.ipnats.hardwrought.metallurgy.Smelting.materialOf(rod).getPath().equals(metal.material())
+                            && de.ipnats.hardwrought.metallurgy.Smelting.materialOf(plate).getPath().equals(metal.material()),
+                    "Both melt as the metal they are made of");
+        }
+        helper.assertTrue(net.minecraft.core.registries.BuiltInRegistries.ITEM
+                        .getOptional(de.ipnats.hardwrought.Hardwrought.id("mercury_rod")).isEmpty(),
+                "Mercury is liquid: there is no rod of it");
         helper.succeed();
     }
 }

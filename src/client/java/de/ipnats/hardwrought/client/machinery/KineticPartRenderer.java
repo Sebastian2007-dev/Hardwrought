@@ -2,6 +2,7 @@ package de.ipnats.hardwrought.client.machinery;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import de.ipnats.hardwrought.core.registry.ModBlocks;
 import de.ipnats.hardwrought.machinery.KineticBlockEntity;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -73,7 +74,11 @@ public class KineticPartRenderer<T extends KineticBlockEntity> implements BlockE
         if (drawn == null) return;
         state.axis = axis.apply(entity.getBlockState());
         float offset = ((pos.getX() + pos.getY() + pos.getZ()) & 1) == 0 ? 0.0f : mesh;
-        state.angle = entity.angle() + entity.degreesPerTick() * partialTick + offset;
+        // A 16-tooth wheel needs half of its own tooth pitch relative to an 8-tooth wheel.
+        // Small/large pairs meet diagonally, so their block parity is identical and this fixed
+        // phase puts each small tooth into a gap of the large wheel.
+        float sizePhase = drawn == ModBlocks.LARGE_COGWHEEL_GEAR ? 11.25f : 0.0f;
+        state.angle = entity.angle() + entity.degreesPerTick() * partialTick + offset + sizePhase;
         state.part.blockPos = pos;
         state.part.randomSeedPos = pos;
         state.part.blockState = drawn.defaultBlockState();

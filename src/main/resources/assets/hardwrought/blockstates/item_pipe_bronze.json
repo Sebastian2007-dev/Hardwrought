@@ -1,0 +1,57 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "hardwrought:block/item_pipe_bronze/core"
+      }
+    },
+    {
+      "when": {
+        "north": "true"
+      },
+      "apply": {
+        "model": "hardwrought:block/item_pipe_bronze/arm_north"
+      }
+    },
+    {
+      "when": {
+        "south": "true"
+      },
+      "apply": {
+        "model": "hardwrought:block/item_pipe_bronze/arm_south"
+      }
+    },
+    {
+      "when": {
+        "west": "true"
+      },
+      "apply": {
+        "model": "hardwrought:block/item_pipe_bronze/arm_west"
+      }
+    },
+    {
+      "when": {
+        "east": "true"
+      },
+      "apply": {
+        "model": "hardwrought:block/item_pipe_bronze/arm_east"
+      }
+    },
+    {
+      "when": {
+        "down": "true"
+      },
+      "apply": {
+        "model": "hardwrought:block/item_pipe_bronze/arm_down"
+      }
+    },
+    {
+      "when": {
+        "up": "true"
+      },
+      "apply": {
+        "model": "hardwrought:block/item_pipe_bronze/arm_up"
+      }
+    }
+  ]
+}

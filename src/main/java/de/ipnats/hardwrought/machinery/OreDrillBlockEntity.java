@@ -1,26 +1,24 @@
 package de.ipnats.hardwrought.machinery;
 
+import de.ipnats.hardwrought.core.events.CoreLifecycle;
+import de.ipnats.hardwrought.core.networking.OreDrillPayloads;
 import de.ipnats.hardwrought.core.registry.ModBlockEntities;
 import de.ipnats.hardwrought.geology.DrillTier;
 import de.ipnats.hardwrought.geology.DrillYield;
 import de.ipnats.hardwrought.geology.Geology;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.NonNullList;
+import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.Container;
-import net.minecraft.world.ContainerHelper;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.WorldlyContainer;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.DispenserMenu;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -31,8 +29,9 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 
 /**
  * The ore drill: a drill head with a frame round it, three by three and two high.
@@ -40,9 +39,9 @@ import java.util.Locale;
  * <pre>
  *   layer 2   F F F        F  a drill frame, of any of the five metals
  *             F F F        D  the drill head, driven by a line from any side
- *             F F F
+ *             F F F        &gt;  the chute, on the side the head faces
  *   layer 1   F F F
- *             F D F
+ *             F D F &gt;
  *             F F F
  * </pre>
  *
@@ -50,9 +49,15 @@ import java.util.Locale;
  * of the ores in the chunk under it the drill can reach — the chunk's own mix, see {@link DrillYield}.
  * It works at a rate, not through an amount: one piece of ore every so often for as long as it is
  * turned, faster when turned faster, faster over a body of ore, and for ever.
+ *
+ * <p>It keeps nothing. Every piece goes out through the chute on the side the head faces: into
+ * whatever takes items just outside it — a chest, a hopper, a pipe of any mod that offers item
+ * storage — or, where nothing is there, onto the ground. A full chest stops it until there is room.
+ *
+ * <p>It is worked by rotation, from a line coming into any side of the head. An electric motor is one
+ * more thing that turns a line, so a drill runs on power the moment there is a motor to drive it.
  */
-public class OreDrillBlockEntity extends BlockEntity implements WorldlyContainer, KineticHolder, MenuProvider {
-    public static final int SIZE = 9;
+public class OreDrillBlockEntity extends BlockEntity implements KineticHolder {
     /** Blocks in a complete frame: eight round the head, nine above it. */
     public static final int FRAME_BLOCKS = 17;
     /** The speed the drill is built for. */
@@ -62,11 +67,18 @@ public class OreDrillBlockEntity extends BlockEntity implements WorldlyContainer
     public static final float IMPACT_PER_TIER = 4.0f;
     /** How often the frame is looked over, in ticks. */
     private static final int CHECK_INTERVAL = 40;
-    private static final int[] ALL = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+    /** How often a piece held up by a full chest tries again, in ticks. */
+    private static final int RETRY_INTERVAL = 10;
 
-    private final NonNullList<ItemStack> items = NonNullList.withSize(SIZE, ItemStack.EMPTY);
+    /** What the drill is doing, as its screen says it. */
+    public enum Status {
+        INCOMPLETE, BARREN, STILL, WORKING, BLOCKED
+    }
+
     private float speed;
     private float progress;
+    /** A piece brought up that the chest outside had no room for; nothing more comes up until it is out. */
+    private final List<ItemStack> held = new ArrayList<>();
     /** The tier of the frame as last found, or null where the frame is not complete. */
     private DrillTier tier;
     /** Frame blocks missing when last looked. */
@@ -97,22 +109,31 @@ public class OreDrillBlockEntity extends BlockEntity implements WorldlyContainer
         return frame.subtract(offset);
     }
 
+    /** The side the drill puts its ore out by: the way its head faces. */
+    public static Direction outputSide(BlockState head) {
+        return head.hasProperty(OreDrillBlock.FACING) ? head.getValue(OreDrillBlock.FACING) : Direction.NORTH;
+    }
+
     /**
      * Draws the drill whole or takes it apart again: every frame block round the head is told its part
-     * of the finished drill, or that it is a loose frame once more, and the head whether it is closed in.
+     * of the finished drill, or that it is a loose frame once more, the one in front of the head that it
+     * carries the chute, and the head whether it is closed in.
      */
     public static void shape(Level level, BlockPos head, boolean formed) {
+        BlockState headState = level.getBlockState(head);
+        BlockPos chute = head.relative(outputSide(headState));
         List<BlockPos> frame = framePositions(head);
         for (int i = 0; i < frame.size(); i++) {
             BlockPos pos = frame.get(i);
             BlockState state = level.getBlockState(pos);
             if (!(state.getBlock() instanceof DrillFrameBlock)) continue;
             int part = formed ? i + 1 : 0;
-            if (state.getValue(DrillFrameBlock.PART) != part) {
-                level.setBlock(pos, state.setValue(DrillFrameBlock.PART, part), Block.UPDATE_CLIENTS);
+            boolean output = formed && pos.equals(chute);
+            if (state.getValue(DrillFrameBlock.PART) != part || state.getValue(DrillFrameBlock.OUTPUT) != output) {
+                level.setBlock(pos, state.setValue(DrillFrameBlock.PART, part).setValue(DrillFrameBlock.OUTPUT, output),
+                        Block.UPDATE_CLIENTS);
             }
         }
-        BlockState headState = level.getBlockState(head);
         if (headState.getBlock() instanceof OreDrillBlock && headState.getValue(OreDrillBlock.FORMED) != formed) {
             level.setBlock(head, headState.setValue(OreDrillBlock.FORMED, formed), Block.UPDATE_CLIENTS);
         }
@@ -136,8 +157,11 @@ public class OreDrillBlockEntity extends BlockEntity implements WorldlyContainer
     public static void serverTick(Level level, BlockPos pos, BlockState state, OreDrillBlockEntity drill) {
         if (!(level instanceof ServerLevel server)) return;
         if (drill.missing < 0 || level.getGameTime() % CHECK_INTERVAL == 0) drill.lookOverFrame(server, pos);
-        boolean working = drill.tier != null && drill.speed != 0.0f && drill.yield != null && !drill.yield.barren()
-                && drill.hasRoom();
+        if (!drill.held.isEmpty() && level.getGameTime() % RETRY_INTERVAL == 0) {
+            drill.putOutAll(server, pos, List.copyOf(drill.held));
+            drill.setChanged();
+        }
+        boolean working = drill.status() == Status.WORKING;
         if (working) {
             drill.progress += Math.abs(drill.speed) / RATED_SPEED;
             if (drill.progress >= drill.yield.intervalTicks()) {
@@ -155,40 +179,77 @@ public class OreDrillBlockEntity extends BlockEntity implements WorldlyContainer
         int[] counted = new int[1];
         DrillTier found = frameTier(level, pos, counted);
         missing = counted[0];
+        boolean wasFormed = getBlockState().getValue(OreDrillBlock.FORMED);
         shape(level, pos, found != null);
-        if (found != tier) {
+        if (found != tier || wasFormed != (found != null)) {
             tier = found;
             // A heavier frame is a heavier load on the line.
             Kinetics.update(level, pos);
+            if (wasFormed != (found != null)) {
+                // The frame carries the drive now, or no longer: lines that meet it from outside change too.
+                for (BlockPos frame : framePositions(pos)) Kinetics.update(level, frame);
+            }
         }
         yield = tier == null ? null : DrillYield.forChunk(level.getSeed(), Geology.profiles(level.getServer()),
                 pos.getX(), pos.getZ(), tier);
     }
 
-    private boolean hasRoom() {
-        for (ItemStack stack : items) {
-            if (stack.isEmpty() || stack.getCount() < stack.getMaxStackSize()) return true;
-        }
-        return false;
+    public Status status() {
+        if (tier == null) return Status.INCOMPLETE;
+        if (yield == null || yield.barren()) return Status.BARREN;
+        if (!held.isEmpty()) return Status.BLOCKED;
+        if (speed == 0.0f) return Status.STILL;
+        return Status.WORKING;
     }
 
+    /**
+     * Brings one piece of the chunk's ore up: what that ore gives when it is mined with a pickaxe — raw
+     * iron, raw tin, coal, a handful of redstone — read off the ore's own loot table, never the block.
+     */
     private void bringUp(ServerLevel level, BlockPos pos) {
         Identifier ore = yield.roll(level.getRandom());
         if (ore == null) return;
-        Item item = BuiltInRegistries.ITEM.getValue(ore);
-        if (item == null) return;
-        ItemStack piece = new ItemStack(item);
-        for (int slot = 0; slot < SIZE && !piece.isEmpty(); slot++) {
-            ItemStack there = items.get(slot);
-            if (there.isEmpty()) {
-                items.set(slot, piece);
-                piece = ItemStack.EMPTY;
-            } else if (ItemStack.isSameItemSameComponents(there, piece) && there.getCount() < there.getMaxStackSize()) {
-                there.grow(1);
-                piece = ItemStack.EMPTY;
-            }
-        }
+        Block block = BuiltInRegistries.BLOCK.getValue(ore);
+        if (block == null || block.defaultBlockState().isAir()) return;
+        // Cut as an iron pickaxe would: no silk touch, no fortune.
+        List<ItemStack> pieces = Block.getDrops(block.defaultBlockState(), level, pos, null, null,
+                new ItemStack(net.minecraft.world.item.Items.IRON_PICKAXE));
+        putOutAll(level, pos, pieces);
         level.playSound(null, pos, SoundEvents.STONE_BREAK, SoundSource.BLOCKS, 0.5f, 0.7f);
+    }
+
+    /** Puts every stack out, and keeps back what a full chest had no room for. */
+    private void putOutAll(ServerLevel level, BlockPos pos, List<ItemStack> stacks) {
+        held.clear();
+        for (ItemStack stack : stacks) {
+            if (stack.isEmpty()) continue;
+            ItemStack left = putOut(level, pos, stack);
+            if (!left.isEmpty()) held.add(left);
+        }
+    }
+
+    /** Where the ore goes: whatever takes items just outside the chute, if anything does. */
+    private static Storage<ItemVariant> outlet(ServerLevel level, BlockPos head) {
+        Direction side = outputSide(level.getBlockState(head));
+        return ItemStorage.SIDED.find(level, head.relative(side, 2), side.getOpposite());
+    }
+
+    /**
+     * Puts a piece out through the chute. Into whatever takes items outside it, or onto the ground where
+     * nothing does. Gives back what did not fit, which is only ever the case with a full chest.
+     */
+    private ItemStack putOut(ServerLevel level, BlockPos head, ItemStack piece) {
+        Storage<ItemVariant> outlet = outlet(level, head);
+        Direction side = outputSide(level.getBlockState(head));
+        if (outlet == null) {
+            Block.popResourceFromFace(level, head.relative(side), side, piece);
+            return ItemStack.EMPTY;
+        }
+        try (Transaction transaction = Transaction.openOuter()) {
+            long moved = outlet.insert(ItemVariant.of(piece), piece.getCount(), transaction);
+            transaction.commit();
+            return piece.copyWithCount(piece.getCount() - (int) moved);
+        }
     }
 
     /** How strongly the drill loads its line per turn, by its tier. Nothing while its frame is incomplete. */
@@ -196,30 +257,59 @@ public class OreDrillBlockEntity extends BlockEntity implements WorldlyContainer
         return tier == null ? BASE_IMPACT : BASE_IMPACT + IMPACT_PER_TIER * tier.level();
     }
 
-    /** What reading the drill tells: its tier and state. */
-    public Component describe() {
-        if (tier == null) return Component.translatable("message.hardwrought.ore_drill.incomplete", Math.max(0, missing));
-        Component tierName = Component.translatable("drill_tier.hardwrought." + tier.serializedName());
-        if (yield == null || yield.barren()) return Component.translatable("message.hardwrought.ore_drill.barren", tierName);
-        if (speed == 0.0f) return Component.translatable("message.hardwrought.ore_drill.still", tierName);
-        double seconds = yield.intervalTicks() / 20.0 * RATED_SPEED / Math.abs(speed);
-        return Component.translatable("message.hardwrought.ore_drill.working", tierName,
-                String.format(Locale.ROOT, "%.0f", seconds));
+    /** Seconds between two pieces at the speed it is turned now, or 0 where it is not working. */
+    public float secondsPerPiece() {
+        if (status() != Status.WORKING) return 0.0f;
+        return (float) (yield.intervalTicks() / 20.0 * RATED_SPEED / Math.abs(speed));
     }
 
-    /** What the chunk under the drill holds for it, largest share first, as lines for the chat. */
-    public List<Component> composition() {
-        List<Component> lines = new ArrayList<>();
-        if (yield == null || yield.barren()) return lines;
-        List<DrillYield.Entry> entries = new ArrayList<>(yield.entries());
-        entries.sort((first, second) -> Integer.compare(second.weight(), first.weight()));
-        for (DrillYield.Entry entry : entries) {
-            Item item = BuiltInRegistries.ITEM.getValue(entry.ore());
-            lines.add(Component.translatable("message.hardwrought.ore_drill.share",
-                    new ItemStack(item).getHoverName(),
-                    String.format(Locale.ROOT, "%.1f", yield.share(entry.ore()) * 100)));
+    /**
+     * Everything the drill's screen shows: its state, and every ore the chunk under it holds — the ones
+     * this frame reaches with their share of what comes up, the others with the frame they would need.
+     */
+    public OreDrillPayloads.Info info(ServerPlayer player, boolean open) {
+        ServerLevel level = player.level();
+        BlockPos pos = getBlockPos();
+        List<OreDrillPayloads.Ore> ores = chunkOres(player, pos, tier, yield, false);
+        Storage<ItemVariant> outlet = outlet(level, pos);
+        Direction side = outputSide(getBlockState());
+        Identifier into = outlet == null ? null
+                : BuiltInRegistries.BLOCK.getKey(level.getBlockState(pos.relative(side, 2)).getBlock());
+        float progressShare = yield == null || yield.barren() ? 0.0f
+                : Math.min(1.0f, progress / yield.intervalTicks());
+        return new OreDrillPayloads.Info(open, false, pos, tier == null ? 0 : tier.level(), Math.max(0, missing),
+                status().ordinal(), speed, secondsPerPiece(), progressShare, side.get3DDataValue(), into,
+                SectionPos.blockToSectionCoord(pos.getX()), SectionPos.blockToSectionCoord(pos.getZ()), ores);
+    }
+
+    /**
+     * Every ore the chunk at this position holds, as a drill of this tier would see it: the ones it
+     * reaches with their share of what it brings up, the others with the tier they need. With no tier,
+     * nothing is reached. {@code revealAll} names every ore whether or not the player knows it.
+     */
+    public static List<OreDrillPayloads.Ore> chunkOres(ServerPlayer player, BlockPos pos, DrillTier tier,
+                                                      DrillYield yield, boolean revealAll) {
+        ServerLevel level = player.level();
+        var profiles = Geology.profiles(level.getServer());
+        Map<Identifier, Integer> needs = DrillYield.oreTiers(profiles);
+        DrillTier best = DrillTier.values()[DrillTier.values().length - 1];
+        DrillYield everything = DrillYield.forChunk(level.getSeed(), profiles, pos.getX(), pos.getZ(), best);
+        var runtime = CoreLifecycle.find(level.getServer());
+        int studied = de.ipnats.hardwrought.knowledge.KnowledgeLevel.STUDIED.ordinal();
+        List<OreDrillPayloads.Ore> ores = new ArrayList<>();
+        for (DrillYield.Entry entry : everything.entries()) {
+            int tierNeeded = needs.getOrDefault(entry.ore(), best.level());
+            boolean reached = tier != null && tier.reaches(tierNeeded) && yield != null && !yield.barren();
+            int known = revealAll ? studied
+                    : runtime == null ? 0 : runtime.knowledge().knowledge(player).level(entry.ore()).ordinal();
+            ores.add(new OreDrillPayloads.Ore(entry.ore(), tierNeeded, reached ? (float) yield.share(entry.ore()) : -1.0f,
+                    (float) everything.share(entry.ore()), known));
         }
-        return lines;
+        // What is reached first, most first; then what would need a better frame, most of it first.
+        ores.sort(Comparator.comparing((OreDrillPayloads.Ore ore) -> ore.share() < 0)
+                .thenComparing(ore -> -Math.max(ore.share(), 0))
+                .thenComparing(ore -> -ore.presence()));
+        return ores;
     }
 
     // ---------------------------------------------------------------- for tests
@@ -232,22 +322,24 @@ public class OreDrillBlockEntity extends BlockEntity implements WorldlyContainer
         return yield;
     }
 
+    /** Test hook: brings one piece up now, as if the drill had just finished it. */
+    public void bringUpNow() {
+        if (level instanceof ServerLevel server && yield != null && !yield.barren() && held.isEmpty()) {
+            bringUp(server, worldPosition);
+        }
+    }
+
+    /** What a full chest left in the drill, or nothing. */
+    public List<ItemStack> held() {
+        return List.copyOf(held);
+    }
+
     /** Looks the frame over now rather than on the next check: when it is used, or a frame block comes or goes. */
     public void lookOverFrameNow() {
         if (level instanceof ServerLevel server) lookOverFrame(server, worldPosition);
     }
 
-    // ---------------------------------------------------------------- menu, kinetics, saving
-
-    @Override
-    public Component getDisplayName() {
-        return Component.translatable("container.hardwrought.ore_drill");
-    }
-
-    @Override
-    public AbstractContainerMenu createMenu(int id, Inventory inventory, Player player) {
-        return new DispenserMenu(id, inventory, this);
-    }
+    // ---------------------------------------------------------------- kinetics, saving
 
     @Override
     public float kineticSpeed() {
@@ -263,85 +355,25 @@ public class OreDrillBlockEntity extends BlockEntity implements WorldlyContainer
     @Override
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
-        items.clear();
-        ContainerHelper.loadAllItems(input, items);
         speed = input.getFloatOr("speed", 0.0f);
         progress = input.getFloatOr("progress", 0.0f);
+        held.clear();
+        input.read("held", ItemStack.CODEC.listOf()).ifPresent(held::addAll);
     }
 
     @Override
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
-        ContainerHelper.saveAllItems(output, items);
         output.putFloat("speed", speed);
         output.putFloat("progress", progress);
+        if (!held.isEmpty()) output.store("held", ItemStack.CODEC.listOf(), List.copyOf(held));
     }
 
+    /** What the drill held when it is broken comes out with it. */
     @Override
-    public int getContainerSize() {
-        return SIZE;
-    }
-
-    @Override
-    public boolean isEmpty() {
-        for (ItemStack stack : items) if (!stack.isEmpty()) return false;
-        return true;
-    }
-
-    @Override
-    public ItemStack getItem(int slot) {
-        return items.get(slot);
-    }
-
-    @Override
-    public ItemStack removeItem(int slot, int count) {
-        ItemStack removed = ContainerHelper.removeItem(items, slot, count);
-        if (!removed.isEmpty()) setChanged();
-        return removed;
-    }
-
-    @Override
-    public ItemStack removeItemNoUpdate(int slot) {
-        ItemStack removed = ContainerHelper.takeItem(items, slot);
-        if (!removed.isEmpty()) setChanged();
-        return removed;
-    }
-
-    @Override
-    public void setItem(int slot, ItemStack stack) {
-        items.set(slot, stack);
-        stack.limitSize(getMaxStackSize(stack));
-        setChanged();
-    }
-
-    /** Nothing goes in: what is in it came up out of the ground. */
-    @Override
-    public boolean canPlaceItem(int slot, ItemStack stack) {
-        return false;
-    }
-
-    @Override
-    public boolean stillValid(Player player) {
-        return Container.stillValidBlockEntity(this, player);
-    }
-
-    @Override
-    public void clearContent() {
-        items.clear();
-    }
-
-    @Override
-    public int[] getSlotsForFace(Direction side) {
-        return ALL;
-    }
-
-    @Override
-    public boolean canPlaceItemThroughFace(int slot, ItemStack stack, Direction side) {
-        return false;
-    }
-
-    @Override
-    public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction side) {
-        return true;
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        if (level != null) held.forEach(stack -> Block.popResource(level, pos, stack));
+        held.clear();
+        super.preRemoveSideEffects(pos, state);
     }
 }

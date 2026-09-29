@@ -46,6 +46,17 @@ public class DrillingRigBlock extends Block implements EntityBlock, KineticBlock
         registerDefaultState(stateDefinition.any().setValue(RUNNING, false));
     }
 
+    /** The platform, four corner posts, the crown on them and the pipe down the middle. */
+    private static final net.minecraft.world.phys.shapes.VoxelShape SHAPE = net.minecraft.world.phys.shapes.Shapes.or(
+            box(0, 0, 0, 16, 3, 16), box(1, 3, 1, 3, 15, 3), box(13, 3, 1, 15, 15, 3), box(1, 3, 13, 3, 15, 15),
+            box(13, 3, 13, 15, 15, 15), box(1, 15, 1, 15, 16, 15), box(6, 3, 6, 10, 15, 10));
+
+    @Override
+    protected net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState state, net.minecraft.world.level.BlockGetter level,
+                                                                  BlockPos pos, net.minecraft.world.phys.shapes.CollisionContext context) {
+        return SHAPE;
+    }
+
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(RUNNING);

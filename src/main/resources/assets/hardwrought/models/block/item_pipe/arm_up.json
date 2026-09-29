@@ -1,0 +1,105 @@
+{
+  "parent": "minecraft:block/block",
+  "elements": [
+    {
+      "from": [
+        4,
+        12,
+        4
+      ],
+      "to": [
+        12,
+        16,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            12,
+            4
+          ],
+          "texture": "#pipe"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            12,
+            4
+          ],
+          "texture": "#pipe"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            12,
+            4
+          ],
+          "texture": "#pipe"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            12,
+            4
+          ],
+          "texture": "#pipe"
+        }
+      }
+    },
+    {
+      "from": [
+        3,
+        13.75,
+        3
+      ],
+      "to": [
+        13,
+        15.25,
+        13
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            3,
+            0.75,
+            13,
+            2.25
+          ],
+          "texture": "#trim"
+        },
+        "south": {
+          "uv": [
+            3,
+            0.75,
+            13,
+            2.25
+          ],
+          "texture": "#trim"
+        },
+        "west": {
+          "uv": [
+            3,
+            0.75,
+            13,
+            2.25
+          ],
+          "texture": "#trim"
+        },
+        "east": {
+          "uv": [
+            3,
+            0.75,
+            13,
+            2.25
+          ],
+          "texture": "#trim"
+        }
+      }
+    }
+  ]
+}

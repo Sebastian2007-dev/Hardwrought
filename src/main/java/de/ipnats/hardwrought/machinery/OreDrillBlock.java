@@ -33,15 +33,44 @@ public class OreDrillBlock extends Block implements EntityBlock, KineticBlock {
     public static final BooleanProperty RUNNING = BooleanProperty.create("running");
     /** Whether a complete frame closes the head in, so the drill is drawn as one machine. */
     public static final BooleanProperty FORMED = BooleanProperty.create("formed");
+    /** The side the ore leaves by: toward whoever set the head down. */
+    public static final net.minecraft.world.level.block.state.properties.EnumProperty<Direction> FACING =
+            net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING;
 
     public OreDrillBlock(Properties properties) {
         super(properties);
-        registerDefaultState(stateDefinition.any().setValue(RUNNING, false).setValue(FORMED, false));
+        registerDefaultState(stateDefinition.any().setValue(RUNNING, false).setValue(FORMED, false)
+                .setValue(FACING, Direction.NORTH));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(RUNNING, FORMED);
+        builder.add(RUNNING, FORMED, FACING);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(net.minecraft.world.item.context.BlockPlaceContext context) {
+        return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+    }
+
+    @Override
+    protected BlockState rotate(BlockState state, net.minecraft.world.level.block.Rotation rotation) {
+        return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+    }
+
+    @Override
+    protected BlockState mirror(BlockState state, net.minecraft.world.level.block.Mirror mirror) {
+        return state.rotate(mirror.getRotation(state.getValue(FACING)));
+    }
+
+    /** The head on its own: a braced cap, the gear housing and the bit tapering down under it. */
+    private static final net.minecraft.world.phys.shapes.VoxelShape LOOSE = net.minecraft.world.phys.shapes.Shapes.or(
+            box(1, 13, 1, 15, 16, 15), box(3, 7, 3, 13, 13, 13), box(4, 5, 4, 12, 7, 12), box(6, 0, 6, 10, 5, 10));
+
+    @Override
+    protected net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState state, net.minecraft.world.level.BlockGetter level,
+                                                                  BlockPos pos, net.minecraft.world.phys.shapes.CollisionContext context) {
+        return state.getValue(FORMED) ? OreDrillShapes.head() : LOOSE;
     }
 
     @Override
@@ -50,18 +79,21 @@ public class OreDrillBlock extends Block implements EntityBlock, KineticBlock {
         return open(level, pos, player);
     }
 
-    /** Opens the drill whose head is here, from whichever of its blocks was used. */
+    /** Shows the drill whose head is here, from whichever of its blocks was used: its state and its chunk. */
     public static InteractionResult open(Level level, BlockPos pos, Player player) {
         if (!(level.getBlockEntity(pos) instanceof OreDrillBlockEntity drill)) return InteractionResult.PASS;
         if (level.isClientSide()) return InteractionResult.SUCCESS;
         drill.lookOverFrameNow();
-        if (player instanceof ServerPlayer serverPlayer) {
-            serverPlayer.sendOverlayMessage(drill.describe());
-            for (var line : drill.composition()) serverPlayer.sendSystemMessage(line);
+        if (player instanceof ServerPlayer serverPlayer
+                && net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(serverPlayer,
+                de.ipnats.hardwrought.core.networking.OreDrillPayloads.Info.TYPE)) {
+            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(serverPlayer, drill.info(serverPlayer, true));
         }
-        player.openMenu(drill);
         return InteractionResult.CONSUME;
     }
+
+    /** How far from the head a player may be and still have its screen kept current. */
+    public static final double WATCH_RANGE_SQR = 12.0 * 12.0;
 
     /** Rock dust out of the frame while it works. */
     @Override
@@ -75,6 +107,17 @@ public class OreDrillBlock extends Block implements EntityBlock, KineticBlock {
     @Override
     public float port(BlockState state, Direction face) {
         return 1.0f;
+    }
+
+    /** The frame round a finished head carries its drive in from outside; see {@link DrillFrameBlock#links}. */
+    @Override
+    public void links(Level level, BlockPos pos, BlockState state, LinkSink sink) {
+        for (BlockPos frame : OreDrillBlockEntity.framePositions(pos)) {
+            BlockState there = level.getBlockState(frame);
+            if (there.getBlock() instanceof DrillFrameBlock && there.getValue(DrillFrameBlock.PART) != 0) {
+                sink.link(frame, 1.0f);
+            }
+        }
     }
 
     @Override

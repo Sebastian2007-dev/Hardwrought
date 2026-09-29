@@ -12,7 +12,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
-import net.minecraft.world.level.block.entity.BlastFurnaceBlockEntity;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,29 +26,22 @@ import java.util.OptionalDouble;
  * block, its deepslate twin, the raw chunk and the powder of a metal all melt as that metal, and a
  * metal added to {@link Metal} is covered the moment it is.
  *
- * <p>A furnace smelts what it can bring to its melting point and leaves the rest where it lies,
- * without burning fuel on it. That is what makes the ladder of furnaces a ladder: the brick furnace
- * gets as far as iron and no further, the stone furnace reaches the hard metals, and only a blast
- * furnace melts tungsten.
+ * <p>Every furnace, brick, stone or blast, tops out just past iron. It melts and heats iron and
+ * everything softer, and leaves anything harder where it lies, without burning fuel on it. The hard
+ * metals are heated in a forge and melted in the smeltery.
  *
  * <p>Anything without a melting point — food, sand, clay — is not limited here at all.
  */
 public final class Smelting {
-    /** A brick furnace just reaches iron, at 1538 °C, and nothing that melts hotter. */
-    public static final double BRICK_FURNACE_MAX_C = 1550;
-    /** A stone furnace: titanium, platinum, chromium. */
-    public static final double FURNACE_MAX_C = 2000;
-    /** A blast furnace: everything, tungsten included. */
-    public static final double BLAST_FURNACE_MAX_C = 3500;
+    /** Any furnace just reaches iron, at 1538 °C, and nothing that melts hotter. */
+    public static final double FURNACE_MAX_C = 1550;
 
     private static final Map<Item, Identifier> MATERIAL_OF = new HashMap<>();
 
     private Smelting() { }
 
-    /** How hot this furnace can get. */
+    /** How hot this furnace can get: the same for every kind, they only differ in speed. */
     public static double maxTemperature(AbstractFurnaceBlockEntity furnace) {
-        if (furnace instanceof BrickFurnaceBlockEntity) return BRICK_FURNACE_MAX_C;
-        if (furnace instanceof BlastFurnaceBlockEntity) return BLAST_FURNACE_MAX_C;
         return FURNACE_MAX_C;
     }
 
@@ -71,10 +63,8 @@ public final class Smelting {
      * Whether this furnace gets hot enough for what is in it. Answers yes when nothing is known,
      * because a missing number must never stop a furnace that vanilla would have run.
      *
-     * <p>Two different questions under one name. Powder and mixture are cast: they have to melt, so
-     * the furnace has to reach the melting point. Everything else metal is only heated for the anvil,
-     * and needs the furnace to reach working heat — well below melting, which is the whole reason a
-     * brick furnace can bring titanium to the anvil but could never cast it.
+     * <p>Powder and mixture are cast and everything else metal is heated for the anvil, but either way
+     * a furnace only takes a metal it could melt: iron at most. Nothing harder goes in a furnace at all.
      */
     public static boolean hotEnough(ServerLevel level, AbstractFurnaceBlockEntity furnace, ItemStack input) {
         if (input.isEmpty()) return true;
@@ -82,10 +72,7 @@ public final class Smelting {
         if (runtime == null) return true;
         OptionalDouble melting = meltingPoint(input.getItem(), runtime.materials());
         if (melting.isEmpty()) return true;
-        double needed = isCast(input.getItem())
-                ? melting.getAsDouble()
-                : melting.getAsDouble() * de.ipnats.hardwrought.smithing.Smithing.WORKING_MIN;
-        return needed <= maxTemperature(furnace);
+        return melting.getAsDouble() <= maxTemperature(furnace);
     }
 
     /** Powder and mixture are melted and cast; everything else metal is heated and forged. */
@@ -119,12 +106,18 @@ public final class Smelting {
                     OrePowders.powder(OrePowders.VanillaOre.NETHER_GOLD));
             put("netherite", Items.ANCIENT_DEBRIS, OrePowders.powder(OrePowders.VanillaOre.ANCIENT_DEBRIS));
             put("bronze", ModItems.BRONZE_MIXTURE, ModItems.BRONZE_INGOT);
+            put("steel", Alloys.STEEL_INGOT);
+            put("stainless_steel", Alloys.STAINLESS_STEEL_INGOT);
+            put("tungsten_steel", Alloys.TUNGSTEN_STEEL_INGOT);
             put("iron", Items.IRON_INGOT);
             put("copper", Items.COPPER_INGOT);
             put("gold", Items.GOLD_INGOT);
             for (Metal metal : Metal.values()) {
                 put(metal.id(), ModMetals.raw(metal), ModMetals.ore(metal), ModMetals.deepslateOre(metal),
                         OrePowders.powder(metal), ModMetals.ingot(metal));
+            }
+            for (Item stock : de.ipnats.hardwrought.smithing.MetalStock.all()) {
+                put(de.ipnats.hardwrought.smithing.MetalStock.materialOf(stock), stock);
             }
             // A forged head or blade melts as the metal it was forged from.
             for (Item part : de.ipnats.hardwrought.smithing.ToolParts.all()) {

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    " F ",
+    "F F",
+    " F "
+  ],
+  "key": {
+    "F": "hardwrought:fireclay"
+  },
+  "result": {
+    "id": "hardwrought:unfired_ingot_cast",
+    "count": 1
+  }
+}

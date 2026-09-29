@@ -90,11 +90,42 @@ public final class ModBlocks {
                     de.ipnats.hardwrought.geology.DrillTier.TITANIUM, properties),
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BARS).strength(3.0f + 4, 6.0f)
                     .requiresCorrectToolForDrops());
+    /** Carries items along, faster the better its metal; see {@code ItemPipeBlock}. */
+    public static final de.ipnats.hardwrought.machinery.ItemPipeBlock ITEM_PIPE_BRONZE = register("item_pipe_bronze",
+            properties -> new de.ipnats.hardwrought.machinery.ItemPipeBlock(
+                    de.ipnats.hardwrought.machinery.ItemPipeTier.BRONZE, properties),
+            BlockBehaviour.Properties.of().strength(1.5f + 0 * 0.5f, 6.0f).requiresCorrectToolForDrops()
+                    .sound(net.minecraft.world.level.block.SoundType.COPPER).noOcclusion());
+    public static final de.ipnats.hardwrought.machinery.ItemPipeBlock ITEM_PIPE_IRON = register("item_pipe_iron",
+            properties -> new de.ipnats.hardwrought.machinery.ItemPipeBlock(
+                    de.ipnats.hardwrought.machinery.ItemPipeTier.IRON, properties),
+            BlockBehaviour.Properties.of().strength(1.5f + 1 * 0.5f, 6.0f).requiresCorrectToolForDrops()
+                    .sound(net.minecraft.world.level.block.SoundType.COPPER).noOcclusion());
+    public static final de.ipnats.hardwrought.machinery.ItemPipeBlock ITEM_PIPE_NICKEL = register("item_pipe_nickel",
+            properties -> new de.ipnats.hardwrought.machinery.ItemPipeBlock(
+                    de.ipnats.hardwrought.machinery.ItemPipeTier.NICKEL, properties),
+            BlockBehaviour.Properties.of().strength(1.5f + 2 * 0.5f, 6.0f).requiresCorrectToolForDrops()
+                    .sound(net.minecraft.world.level.block.SoundType.COPPER).noOcclusion());
+    public static final de.ipnats.hardwrought.machinery.ItemPipeBlock ITEM_PIPE_CHROMIUM = register("item_pipe_chromium",
+            properties -> new de.ipnats.hardwrought.machinery.ItemPipeBlock(
+                    de.ipnats.hardwrought.machinery.ItemPipeTier.CHROMIUM, properties),
+            BlockBehaviour.Properties.of().strength(1.5f + 3 * 0.5f, 6.0f).requiresCorrectToolForDrops()
+                    .sound(net.minecraft.world.level.block.SoundType.COPPER).noOcclusion());
+    public static final de.ipnats.hardwrought.machinery.ItemPipeBlock ITEM_PIPE_TITANIUM = register("item_pipe_titanium",
+            properties -> new de.ipnats.hardwrought.machinery.ItemPipeBlock(
+                    de.ipnats.hardwrought.machinery.ItemPipeTier.TITANIUM, properties),
+            BlockBehaviour.Properties.of().strength(1.5f + 4 * 0.5f, 6.0f).requiresCorrectToolForDrops()
+                    .sound(net.minecraft.world.level.block.SoundType.COPPER).noOcclusion());
     /** Section 60: bores down to a reservoir and pumps it; see {@code DrillingRigBlock}. */
     public static final de.ipnats.hardwrought.oil.DrillingRigBlock DRILLING_RIG = register("drilling_rig",
             de.ipnats.hardwrought.oil.DrillingRigBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(4.0f, 6.0f).noOcclusion());
     /** Section 62: a copper pot still over a fire; see {@code StillBlock}. */
+    /** Crude oil standing in the world: poured out of its bucket, it creeps and it burns. */
+    public static final de.ipnats.hardwrought.oil.CrudeOilBlock CRUDE_OIL = register("crude_oil",
+            properties -> new de.ipnats.hardwrought.oil.CrudeOilBlock(de.ipnats.hardwrought.oil.ModFluids.CRUDE_OIL, properties),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.WATER)
+                    .mapColor(net.minecraft.world.level.material.MapColor.COLOR_BLACK).ignitedByLava());
     public static final de.ipnats.hardwrought.chemistry.StillBlock STILL = register("still",
             de.ipnats.hardwrought.chemistry.StillBlock::new,
             BlockBehaviour.Properties.of().strength(2.5f, 6.0f).requiresCorrectToolForDrops()
@@ -151,7 +182,8 @@ public final class ModBlocks {
     /** Section 73: a box of bevel gears that turns a line round a corner. */
     public static final de.ipnats.hardwrought.machinery.GearboxBlock GEARBOX = register("gearbox",
             de.ipnats.hardwrought.machinery.GearboxBlock::new,
-            BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS));
+            // Not a full cube: it must not hide the faces of the blocks beside it.
+            BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS).noOcclusion());
     /** Section 74: the hub of a water wheel. The wheel around it is drawn. */
     public static final de.ipnats.hardwrought.machinery.WaterWheelBlock WATER_WHEEL = register("water_wheel",
             de.ipnats.hardwrought.machinery.WaterWheelBlock::new,
@@ -174,6 +206,12 @@ public final class ModBlocks {
             BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS).noOcclusion());
 
     /** Sticks lashed into a frame: green leaf fibre hung on it dries in the sun into cord. */
+    /** Milestone 17: a half block and a pane or carpet in one cell; see {@code SharedCell}. */
+    public static final de.ipnats.hardwrought.building.SharedCellBlock SHARED_CELL = register("shared_cell",
+            de.ipnats.hardwrought.building.SharedCellBlock::new,
+            BlockBehaviour.Properties.of().noOcclusion().dynamicShape().strength(0.3f)
+                    .sound(net.minecraft.world.level.block.SoundType.STONE));
+
     public static final de.ipnats.hardwrought.progression.DryingRackBlock DRYING_RACK = register("drying_rack",
             de.ipnats.hardwrought.progression.DryingRackBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_FENCE).noOcclusion());

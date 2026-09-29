@@ -23,7 +23,12 @@
       "de.ipnats.hardwrought.test.MachineryGameTests",
       "de.ipnats.hardwrought.test.KineticsGameTests",
       "de.ipnats.hardwrought.test.SmithingGameTests",
-      "de.ipnats.hardwrought.test.OilGameTests"
+      "de.ipnats.hardwrought.test.OilGameTests",
+      "de.ipnats.hardwrought.test.BuildingGameTests",
+      "de.ipnats.hardwrought.test.SharedCellGameTests",
+      "de.ipnats.hardwrought.test.MobGameTests",
+      "de.ipnats.hardwrought.test.SmelteryGameTests",
+      "de.ipnats.hardwrought.test.SteelTierGameTests"
     ],
     "fabric-client-gametest": [
       "de.ipnats.hardwrought.test.CoreClientGameTest",

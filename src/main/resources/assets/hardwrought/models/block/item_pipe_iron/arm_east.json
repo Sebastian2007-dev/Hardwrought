@@ -1,0 +1,9 @@
+{
+  "parent": "hardwrought:block/item_pipe/arm_east",
+  "textures": {
+    "pipe": "minecraft:block/iron_block",
+    "trim": "minecraft:block/polished_blackstone",
+    "end": "minecraft:block/black_concrete",
+    "particle": "minecraft:block/iron_block"
+  }
+}

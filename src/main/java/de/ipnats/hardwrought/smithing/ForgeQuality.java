@@ -103,7 +103,7 @@ public record ForgeQuality(float craftsmanship, Treatment treatment) {
 
     public static double speedFactor(ItemStack stack) {
         ForgeQuality quality = of(stack);
-        return quality == null ? 1.0 : quality.speedFactor();
+        return (quality == null ? 1.0 : quality.speedFactor()) * Rust.speedFactor(stack);
     }
 
     public static double durabilityFactor(ItemStack stack) {
@@ -113,6 +113,6 @@ public record ForgeQuality(float craftsmanship, Treatment treatment) {
 
     public static double damageFactor(ItemStack stack) {
         ForgeQuality quality = of(stack);
-        return quality == null ? 1.0 : quality.damageFactor();
+        return (quality == null ? 1.0 : quality.damageFactor()) * Rust.damageFactor(stack);
     }
 }

@@ -1,6 +1,10 @@
 {
   "items": [
-    "hardwrought:iron_greatsword"
+    "hardwrought:iron_greatsword",
+    "hardwrought:steel_greatsword",
+    "hardwrought:stainless_steel_greatsword",
+    "hardwrought:titanium_greatsword",
+    "hardwrought:tungsten_steel_greatsword"
   ],
   "damage": {
     "slash": 0.75,

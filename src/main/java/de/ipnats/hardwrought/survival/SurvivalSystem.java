@@ -126,6 +126,11 @@ public final class SurvivalSystem {
      */
     public static final double IDLE_RECOVERY_PER_TICK = 0.012;
     /**
+     * What one level of stamina regeneration adds per tick: twice what sprinting costs, so a player
+     * under it can run and still gain, and several times what rest gives.
+     */
+    public static final double STAMINA_REGENERATION_PER_TICK = 0.02;
+    /**
      * Fatigue is a day-scale value, so it is expressed against the day it is meant to cover: staying
      * awake through one full Minecraft day and night costs about 30 of 100. A player can therefore
      * always see a whole cycle through without being forced to sleep, and one night of good sleep
@@ -154,6 +159,8 @@ public final class SurvivalSystem {
     private final Set<UUID> outdoorSleepers = new HashSet<>();
     private final Map<UUID, Boolean> lastOnGround = new HashMap<>();
     private final Map<UUID, Double> sleepQuality = new HashMap<>();
+    /** When each sleeper lay down, in world ticks: a nap is not a night (mob specification § 20). */
+    private final Map<UUID, Long> sleepStart = new HashMap<>();
     private final Set<UUID> restedNotice = new HashSet<>();
     private final Map<UUID, ActivityLoad> activity = new HashMap<>();
     /** When each player last scooped a mouthful out of the world, so it cannot be spammed. */
@@ -252,6 +259,18 @@ public final class SurvivalSystem {
         }
     }
 
+    /**
+     * What a mob's hit does to the body besides wounding it (mob specification §§ 6 and 9): water
+     * lost, heat taken or given, stamina spent. Changes are added to the current values.
+     */
+    public void afflict(ServerPlayer player, double hydration, double bodyTemperature, double stamina) {
+        de.ipnats.hardwrought.core.utilities.ServerThread.require(server);
+        if (player.isCreative() || player.isSpectator()) return;
+        PlayerVitals v = vitals(player);
+        save.setVitals(player.getUUID(), new PlayerVitals(v.stamina() + stamina, v.hydration() + hydration,
+                v.nutrition(), v.fatigue(), v.bodyTemperature() + bodyTemperature, v.wetness(), v.stress()).normalized());
+    }
+
     public void drink(ServerPlayer player, double amount) {
         drink(player, amount, WaterQuality.FRESH);
     }
@@ -297,6 +316,17 @@ public final class SurvivalSystem {
      * rather than ticked by the effect itself, so bad water costs one reserve update and one
      * synchronisation a second like everything else that drains it.
      */
+    /**
+     * Water one level of hydration regeneration gives per second: a three-minute potion fills most of
+     * an empty reserve.
+     */
+    public static final double HYDRATION_REGENERATION_PER_SECOND = 0.5;
+
+    public static double hydrationRegeneration(net.minecraft.world.entity.LivingEntity player) {
+        var effect = player.getEffect(de.ipnats.hardwrought.core.registry.ModEffects.HYDRATION_REGENERATION);
+        return effect == null ? 0 : HYDRATION_REGENERATION_PER_SECOND * (effect.getAmplifier() + 1);
+    }
+
     public static double thirstDrain(net.minecraft.world.entity.LivingEntity player) {
         var effect = player.getEffect(de.ipnats.hardwrought.core.registry.ModEffects.THIRST);
         return effect == null ? 0.0 : THIRST_PER_SECOND * (effect.getAmplifier() + 1);
@@ -347,13 +377,20 @@ public final class SurvivalSystem {
 
     private void beginSleep(ServerPlayer player, BlockPos pos) {
         sleepQuality.put(player.getUUID(), calculateSleepQuality(player, pos));
+        sleepStart.put(player.getUUID(), player.level().getGameTime());
         updateSleepAcceleration();
     }
 
     private void endSleep(UUID id) {
         restedNotice.remove(id);
         outdoorSleepers.remove(id);
-        sleepQuality.remove(id);
+        Double quality = sleepQuality.remove(id);
+        Long start = sleepStart.remove(id);
+        ServerPlayer sleeper = server.getPlayerList().getPlayer(id);
+        // How the night went decides the sleep debt that phantoms follow.
+        if (sleeper != null && quality != null && start != null) {
+            de.ipnats.hardwrought.mobs.SleepDebt.wokeUp(sleeper, quality, sleeper.level().getGameTime() - start);
+        }
         updateSleepAcceleration();
     }
 
@@ -403,6 +440,11 @@ public final class SurvivalSystem {
             double load = Math.max(0, carried / capacity(player) - 1.0);
             if (active && load > 0) delta -= OVERLOAD_STAMINA_PER_TICK * load;
             if (active) delta -= ARMOR_STAMINA_PER_TICK * armorStaminaDrain(player);
+            // Stamina regeneration refills the reserve whatever the player is doing, stronger per level.
+            var staminaRegeneration = player.getEffect(de.ipnats.hardwrought.core.registry.ModEffects.STAMINA_REGENERATION);
+            if (staminaRegeneration != null) {
+                delta += STAMINA_REGENERATION_PER_TICK * (staminaRegeneration.getAmplifier() + 1);
+            }
             if (!active && !player.isSleeping()) {
                 double recovery = IDLE_RECOVERY_PER_TICK
                         * recoveryFactor(player, value, load, environment.reading(player).gases());
@@ -517,7 +559,8 @@ public final class SurvivalSystem {
             double stress = player.isSleeping() ? v.stress()
                     : Math.max(0, v.stress() - STRESS_RECOVERY_PER_SECOND);
             PlayerVitals next = new PlayerVitals(v.stamina(),
-                    v.hydration() - 0.035 - activityWater - heatWater - badWater - workWater - armorWater,
+                    v.hydration() - 0.035 - activityWater - heatWater - badWater - workWater - armorWater
+                            + hydrationRegeneration(player),
                     diet.drained(1.0, energyUse - BASAL_ENERGY_PER_SECOND), fatigue, body, wetness, stress)
                     .normalized();
             // Bad air drains the reserve directly; resting cannot out-recover it.
@@ -548,7 +591,10 @@ public final class SurvivalSystem {
         double calm = 1.0 - 0.5 * v.stress() / 100.0;
         // Section 7 listed oxygen as an input from the start; Milestone 3 supplies the real value.
         double air = Math.max(0.05, 1.0 - gases.oxygenStress() * 0.85 - gases.carbonDioxideStress() * 0.55);
-        return hydration * energy * nourished * rest * thermal * air * calm / (1.0 + load);
+        // Mob specification §§ 6 and 9: a husk's or a stray's hit leaves the player winded.
+        double winded = player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.WINDED)
+                ? de.ipnats.hardwrought.mobs.MobHits.WINDED_RECOVERY : 1.0;
+        return hydration * energy * nourished * rest * thermal * air * calm * winded / (1.0 + load);
     }
 
     /**
@@ -645,6 +691,8 @@ public final class SurvivalSystem {
         double temperature = air.temperature();
         if (player.isInWater()) temperature -= 6.0;
         if (radiantHeatNearby(player)) temperature += 8.0;
+        // Mob specification §§ 21 and 22: blazes and magma cubes heat what is around them.
+        temperature += de.ipnats.hardwrought.mobs.MobHeat.nearby(player);
         return PlayerVitals.clamp(temperature, -35, 55);
     }
 

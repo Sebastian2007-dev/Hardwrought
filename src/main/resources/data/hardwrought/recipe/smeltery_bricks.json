@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "BB",
+    "BB"
+  ],
+  "key": {
+    "B": "hardwrought:refractory_brick"
+  },
+  "result": {
+    "id": "hardwrought:smeltery_bricks",
+    "count": 1
+  }
+}

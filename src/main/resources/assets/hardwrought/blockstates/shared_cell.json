@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "connects=false": {
+      "model": "hardwrought:block/shared_cell"
+    },
+    "connects=true": {
+      "model": "hardwrought:block/shared_cell"
+    }
+  }
+}

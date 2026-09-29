@@ -12,10 +12,16 @@ public class HardwroughtClient implements ClientModInitializer {
 		de.ipnats.hardwrought.client.survival.MeltingPointTooltip.initialize();
 		de.ipnats.hardwrought.client.survival.NutritionScreen.initialize();
 		de.ipnats.hardwrought.client.chemistry.ChemistryClient.initialize();
+		de.ipnats.hardwrought.client.oil.OilClient.initialize();
 		de.ipnats.hardwrought.client.smithing.SmithingClient.initialize();
 		de.ipnats.hardwrought.client.combat.CombatHud.initialize();
 		de.ipnats.hardwrought.client.environment.EnvironmentHud.initialize();
 		de.ipnats.hardwrought.client.environment.DynamicLight.initialize();
+		de.ipnats.hardwrought.client.environment.Darkness.initialize();
+		de.ipnats.hardwrought.client.smeltery.SmelteryClient.initialize();
+		net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
+				de.ipnats.hardwrought.core.registry.ModBlockEntities.SHARED_CELL,
+				de.ipnats.hardwrought.client.environment.SharedCellRenderer::new);
 		de.ipnats.hardwrought.client.environment.CarrierWater.initialize();
 		de.ipnats.hardwrought.client.environment.LeafOverlay.initialize();
 		net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(

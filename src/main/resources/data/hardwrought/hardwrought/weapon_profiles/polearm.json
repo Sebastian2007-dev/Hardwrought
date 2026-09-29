@@ -1,6 +1,10 @@
 {
   "items": [
-    "hardwrought:iron_halberd"
+    "hardwrought:iron_halberd",
+    "hardwrought:steel_halberd",
+    "hardwrought:stainless_steel_halberd",
+    "hardwrought:titanium_halberd",
+    "hardwrought:tungsten_steel_halberd"
   ],
   "damage": {
     "slash": 0.4,

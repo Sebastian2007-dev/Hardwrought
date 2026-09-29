@@ -192,10 +192,10 @@ public final class Forging {
     private static void finish(ServerPlayer player, ServerLevel level, BlockPos anvil, ItemStack piece,
                                ForgingState state, de.ipnats.hardwrought.core.CoreRuntime runtime) {
         Item resultItem = BuiltInRegistries.ITEM.getValue(state.result());
-        ItemStack result = new ItemStack(resultItem);
+        Smithing.Recipe recipe = Smithing.recipeFor(piece.getItem(), state.result());
+        ItemStack result = new ItemStack(resultItem, recipe == null ? 1 : recipe.makes());
         Heat heat = piece.get(ModDataComponents.HEAT);
         if (heat != null) result.set(ModDataComponents.HEAT, heat);
-        Smithing.Recipe recipe = Smithing.recipeFor(piece.getItem(), state.result());
         if (recipe != null && recipe.part()) {
             float craftsmanship = state.craftsmanship();
             result.set(ModDataComponents.FORGE_QUALITY,

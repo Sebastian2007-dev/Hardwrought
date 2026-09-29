@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 400,
+  "experience": 0.2,
+  "ingredient": "minecraft:coal",
+  "result": {
+    "id": "hardwrought:coke"
+  }
+}

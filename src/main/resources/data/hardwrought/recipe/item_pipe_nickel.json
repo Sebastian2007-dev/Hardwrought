@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:nickel_plate"
+  },
+  "pattern": [
+    "PPP"
+  ],
+  "result": {
+    "id": "hardwrought:item_pipe_nickel",
+    "count": 8
+  }
+}

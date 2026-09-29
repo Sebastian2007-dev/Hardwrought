@@ -296,4 +296,23 @@ public final class GeologyGameTests {
         }
         throw new AssertionError("Expected operation to be rejected");
     }
+
+    @GameTest
+    public void theOreScannerReadsTheChunkItIsUsedIn(GameTestHelper helper) {
+        @SuppressWarnings("removal")
+        var player = helper.makeMockServerPlayerInLevel();
+        var info = de.ipnats.hardwrought.geology.OreScannerItem.scan(player);
+        helper.assertTrue(info.scan() && info.chunkX() == (player.blockPosition().getX() >> 4),
+                "It reads the chunk the player stands in");
+        double total = 0;
+        for (var ore : info.ores()) {
+            total += ore.presence();
+            helper.assertTrue(ore.known() == de.ipnats.hardwrought.knowledge.KnowledgeLevel.STUDIED.ordinal(),
+                    "A creative tool names every ore, known or not");
+            helper.assertTrue(ore.needs() >= 1 && ore.needs() <= 5, "and says which drill tier reaches it");
+        }
+        helper.assertTrue(info.ores().isEmpty() || Math.abs(total - 1.0) < 0.01,
+                "The shares of the chunk add up to the whole of it: " + total);
+        helper.succeed();
+    }
 }

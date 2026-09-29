@@ -21,7 +21,7 @@ ASSETS = ROOT / "src/main/resources/assets/hardwrought"
 TIERS = ("bronze", "iron", "nickel", "chromium", "titanium")
 FACES = ("north", "south", "west", "east", "up", "down")
 
-# The whole machine, in structure pixels: (from, to, texture, faces left open or None for all).
+# The whole machine, in structure pixels. OreDrillShapes.java holds the same boxes for the hitboxes.: (from, to, texture, faces left open or None for all).
 MACHINE = [
     # The casing the head sits in, a band of bracing round its top edge.
     ((0, 0, 0), (48, 11, 48), "#plate"),
@@ -137,7 +137,30 @@ def textures(plate_texture):
     return {"plate": plate_texture, "particle": plate_texture,
             "brace": "hardwrought:block/hardwrought/iron_brace",
             "steel": "hardwrought:block/hardwrought/drill_steel",
-            "gearbox": "hardwrought:block/hardwrought/gearbox_side"}
+            "gearbox": "hardwrought:block/hardwrought/gearbox_side",
+            "mouth": "hardwrought:block/hardwrought/soot"}
+
+
+# The chute on the frame block in front of the head, by the part that block is: a steel spout out of
+# the casing with its dark mouth outward. It stands out of its own block, so no face of it is culled.
+CHUTES = {
+    4: ("north", (4, 3, -4), (12, 9, 0)),
+    5: ("south", (4, 3, 16), (12, 9, 20)),
+    2: ("west", (-4, 3, 4), (0, 9, 12)),
+    7: ("east", (16, 3, 4), (20, 9, 12)),
+}
+OPPOSITE = {"north": "south", "south": "north", "west": "east", "east": "west"}
+
+
+def chute(part):
+    side, lo, hi = CHUTES[part]
+    faces = {}
+    for face in FACES:
+        if face == OPPOSITE[side]:
+            continue  # against the casing
+        # The spout reaches out of its block, so its faces take a fixed patch of the texture.
+        faces[face] = {"uv": [4, 4, 12, 10], "texture": "#mouth" if face == side else "#steel"}
+    return {"from": list(lo), "to": list(hi), "faces": faces}
 
 
 def main():
@@ -147,23 +170,34 @@ def main():
     for part, cell in enumerate(cells, start=1):
         write(formed / f"part_{part}.json", {"parent": "minecraft:block/block", "__comment": comment,
                                              "elements": pieces(cell)})
+        if part in CHUTES:
+            write(formed / f"part_{part}_output.json", {"parent": "minecraft:block/block", "__comment": comment,
+                                                        "elements": pieces(cell) + [chute(part)]})
     for tier in TIERS:
         plate(tier).save(ASSETS / f"textures/block/drill_plate_{tier}.png")
-        variants = {"part=0": {"model": f"hardwrought:block/drill_frame_{tier}"}}
+        loose = {"model": f"hardwrought:block/drill_frame_{tier}"}
+        variants = {"output=false,part=0": loose, "output=true,part=0": loose}
         for part in range(1, len(cells) + 1):
-            write(formed / tier / f"part_{part}.json", {
-                "parent": f"hardwrought:block/ore_drill_formed/part_{part}", "__comment": comment,
-                "textures": textures(f"hardwrought:block/drill_plate_{tier}")})
-            variants[f"part={part}"] = {"model": f"hardwrought:block/ore_drill_formed/{tier}/part_{part}"}
+            names = [f"part_{part}"] + ([f"part_{part}_output"] if part in CHUTES else [])
+            for name in names:
+                write(formed / tier / f"{name}.json", {
+                    "parent": f"hardwrought:block/ore_drill_formed/{name}", "__comment": comment,
+                    "textures": textures(f"hardwrought:block/drill_plate_{tier}")})
+            plain = {"model": f"hardwrought:block/ore_drill_formed/{tier}/part_{part}"}
+            variants[f"output=false,part={part}"] = plain
+            variants[f"output=true,part={part}"] = (
+                {"model": f"hardwrought:block/ore_drill_formed/{tier}/part_{part}_output"} if part in CHUTES else plain)
         write(ASSETS / f"blockstates/drill_frame_{tier}.json", {"variants": variants})
 
     write(formed / "head.json", {"parent": "minecraft:block/block", "__comment": comment,
                                  "textures": textures("hardwrought:block/hardwrought/drill_steel"),
                                  "elements": pieces((0, 0, 0))})
     variants = {}
-    for running in ("false", "true"):
-        variants[f"formed=false,running={running}"] = {"model": "hardwrought:block/ore_drill"}
-        variants[f"formed=true,running={running}"] = {"model": "hardwrought:block/ore_drill_formed/head"}
+    for facing in ("north", "east", "south", "west"):
+        for running in ("false", "true"):
+            variants[f"facing={facing},formed=false,running={running}"] = {"model": "hardwrought:block/ore_drill"}
+            variants[f"facing={facing},formed=true,running={running}"] = {
+                "model": "hardwrought:block/ore_drill_formed/head"}
     write(ASSETS / "blockstates/ore_drill.json", {"variants": variants})
     print("formed ore drill written")
 

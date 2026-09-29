@@ -1,0 +1,10 @@
+{
+  "tier": 4,
+  "density_kg_m3": 7850,
+  "melting_point_c": 1450,
+  "structure": {
+    "compression_strength_mpa": 400,
+    "tension_strength_mpa": 400,
+    "support_distance_blocks": 10
+  }
+}

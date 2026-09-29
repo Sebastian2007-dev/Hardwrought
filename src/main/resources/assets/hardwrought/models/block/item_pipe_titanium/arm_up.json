@@ -1,0 +1,9 @@
+{
+  "parent": "hardwrought:block/item_pipe/arm_up",
+  "textures": {
+    "pipe": "minecraft:block/light_gray_concrete",
+    "trim": "minecraft:block/polished_blackstone",
+    "end": "minecraft:block/black_concrete",
+    "particle": "minecraft:block/light_gray_concrete"
+  }
+}

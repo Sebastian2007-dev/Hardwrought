@@ -15,7 +15,7 @@ import net.minecraft.world.entity.player.Inventory;
  */
 public class ForgeScreen extends AbstractContainerScreen<ForgeMenu> {
     private static final Identifier FLAME = Identifier.withDefaultNamespace("container/furnace/lit_progress");
-    private static final double SCALE_C = 3500.0;
+    private static final double SCALE_C = de.ipnats.hardwrought.smithing.ForgeBlockEntity.LINED_BELLOWS_C;
     private static final int PANEL = 0xFFC6C6C6;
     private static final int LIGHT = 0xFFFFFFFF;
     private static final int DARK = 0xFF555555;

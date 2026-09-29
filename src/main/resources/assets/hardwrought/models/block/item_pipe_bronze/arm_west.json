@@ -1,0 +1,9 @@
+{
+  "parent": "hardwrought:block/item_pipe/arm_west",
+  "textures": {
+    "pipe": "minecraft:block/cut_copper",
+    "trim": "minecraft:block/polished_blackstone",
+    "end": "minecraft:block/black_concrete",
+    "particle": "minecraft:block/cut_copper"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "material": "hardwrought:wood",
+  "blocks": [
+    "hardwrought:shaft",
+    "hardwrought:gearbox",
+    "hardwrought:cogwheel",
+    "hardwrought:large_cogwheel",
+    "hardwrought:crank_box",
+    "hardwrought:hand_crank",
+    "hardwrought:water_wheel",
+    "hardwrought:windmill",
+    "hardwrought:bellows"
+  ],
+  "priority": 20
+}

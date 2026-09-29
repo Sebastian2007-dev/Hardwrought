@@ -1,11 +1,11 @@
-"""Generates the forge hood and the gas pipe: models and multipart blockstates.
+"""Generates the forge hood and the gas pipe from vanilla textures.
 
 A hood is a brick plate with a skirt round the sides that are not joined to another hood, corner
 posts where two skirts would meet, and on top either a collar into whatever the flue goes on into or,
 standing alone, a short stub. Side by side, hoods therefore read as one canopy. The pieces never
 share a face, so nothing flickers where they meet.
 
-A gas pipe is a copper core with an arm toward every side it is joined on.
+A gas pipe is a copper core with an arm and a dark coupling toward every side it joins.
 
 Run from the repository root:  python tools/flue_models.py
 """
@@ -32,29 +32,48 @@ def box(lo, hi, faces=FACES, texture="#brick", special=None):
             "faces": {f: {"uv": uv(f, lo, hi), "texture": special.get(f, texture)} for f in faces}}
 
 
+def opposite(face):
+    return {"north": "south", "south": "north", "west": "east", "east": "west",
+            "up": "down", "down": "up"}[face]
+
+
 def write(path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
 
-HOOD_TEXTURES = {"brick": "hardwrought:block/hardwrought/forge_brick",
-                 "soot": "hardwrought:block/hardwrought/soot",
-                 "particle": "hardwrought:block/hardwrought/forge_brick"}
-PLATE = box((0, 6, 0), (16, 8, 16), special={"down": "#soot"})
+HOOD_TEXTURES = {"brick": "minecraft:block/iron_block",
+                 "trim": "minecraft:block/polished_blackstone",
+                 "soot": "minecraft:block/coal_block",
+                 "particle": "#brick"}
+PLATE = [
+    box((0, 6, 0), (16, 8, 16), special={"down": "#soot"}),
+    box((2, 8, 2), (14, 9, 14), texture="#trim"),
+]
 SKIRTS = {
-    "north": box((2, 0, 0), (14, 6, 2), ("north", "south", "down")),
-    "south": box((2, 0, 14), (14, 6, 16), ("north", "south", "down")),
-    "west": box((0, 0, 2), (2, 6, 14), ("west", "east", "down")),
-    "east": box((14, 0, 2), (16, 6, 14), ("west", "east", "down")),
+    "north": [box((2, 0, 0), (14, 2, 1.5), texture="#trim"),
+              box((2, 2, 0.75), (14, 4, 2.5)), box((2, 4, 1.5), (14, 6, 3.5))],
+    "south": [box((2, 0, 14.5), (14, 2, 16), texture="#trim"),
+              box((2, 2, 13.5), (14, 4, 15.25)), box((2, 4, 12.5), (14, 6, 14.5))],
+    # West/east steps omit horizontal faces where they cross the north/south steps. This keeps the
+    # tapered corners solid without drawing two coplanar surfaces in the overlap.
+    "west": [box((0, 0, 2), (1.5, 2, 14), ("north", "south", "west", "east"), texture="#trim"),
+             box((0.75, 2, 2), (2.5, 4, 14), ("north", "south", "west", "east")),
+             box((1.5, 4, 2), (3.5, 6, 14), ("north", "south", "west", "east"))],
+    "east": [box((14.5, 0, 2), (16, 2, 14), ("north", "south", "west", "east"), texture="#trim"),
+             box((13.5, 2, 2), (15.25, 4, 14), ("north", "south", "west", "east")),
+             box((12.5, 4, 2), (14.5, 6, 14), ("north", "south", "west", "east"))],
 }
 CORNERS = {
-    ("north", "west"): box((0, 0, 0), (2, 6, 2), ("north", "west", "south", "east", "down")),
-    ("north", "east"): box((14, 0, 0), (16, 6, 2), ("north", "east", "south", "west", "down")),
-    ("south", "west"): box((0, 0, 14), (2, 6, 16), ("south", "west", "north", "east", "down")),
-    ("south", "east"): box((14, 0, 14), (16, 6, 16), ("south", "east", "north", "west", "down")),
+    ("north", "west"): box((0, 0, 0), (2, 6, 2), texture="#trim"),
+    ("north", "east"): box((14, 0, 0), (16, 6, 2), texture="#trim"),
+    ("south", "west"): box((0, 0, 14), (2, 6, 16), texture="#trim"),
+    ("south", "east"): box((14, 0, 14), (16, 6, 16), texture="#trim"),
 }
-COLLAR = box((4, 8, 4), (12, 16, 12), ("north", "south", "west", "east"))
-STUB = box((5, 8, 5), (11, 11, 11), ("north", "south", "west", "east", "up"), special={"up": "#soot"})
+COLLAR = [box((5, 9, 5), (11, 16, 11), ("north", "south", "west", "east")),
+          box((4, 8.5, 4), (12, 10, 12), texture="#trim")]
+STUB = [box((5, 9, 5), (11, 12, 11), special={"up": "#soot"}),
+        box((4.5, 8.5, 4.5), (11.5, 10, 11.5), texture="#trim")]
 
 
 def hood():
@@ -66,28 +85,30 @@ def hood():
                                          "textures": HOOD_TEXTURES, "elements": elements})
         return f"hardwrought:block/forge_hood/{name}"
 
-    multipart = [{"apply": {"model": part("plate", [PLATE])}}]
-    for side, element in SKIRTS.items():
-        multipart.append({"when": {side: "false"}, "apply": {"model": part(f"skirt_{side}", [element])}})
+    multipart = [{"apply": {"model": part("plate", PLATE)}}]
+    for side, elements in SKIRTS.items():
+        multipart.append({"when": {side: "false"}, "apply": {"model": part(f"skirt_{side}", elements)}})
     for (a, b), element in CORNERS.items():
         multipart.append({"when": {"OR": [{a: "false"}, {b: "false"}]},
                           "apply": {"model": part(f"corner_{a}_{b}", [element])}})
-    multipart.append({"when": {"up": "true"}, "apply": {"model": part("collar", [COLLAR])}})
+    multipart.append({"when": {"up": "true"}, "apply": {"model": part("collar", COLLAR)}})
     multipart.append({"when": {"up": "false", "north": "false", "east": "false", "south": "false",
-                               "west": "false"}, "apply": {"model": part("stub", [STUB])}})
+                               "west": "false"}, "apply": {"model": part("stub", STUB)}})
     write(ASSETS / "blockstates/forge_hood.json", {"multipart": multipart})
 
     # The item is a hood standing alone.
     write(ASSETS / "models/block/forge_hood.json", {
         "parent": "minecraft:block/block", "__comment": "Generated by tools/flue_models.py: a hood on its own.",
         "textures": HOOD_TEXTURES,
-        "elements": [PLATE, *SKIRTS.values(), *CORNERS.values(), STUB]})
+        "elements": [*PLATE, *(element for parts in SKIRTS.values() for element in parts),
+                     *CORNERS.values(), *STUB]})
     write(ASSETS / "items/forge_hood.json", {"model": {"type": "minecraft:model", "model": "hardwrought:block/forge_hood"}})
 
 
-PIPE_TEXTURES = {"copper": "hardwrought:block/hardwrought/copper_pipe",
-                 "particle": "hardwrought:block/hardwrought/copper_pipe",
-                 "soot": "hardwrought:block/hardwrought/soot"}
+PIPE_TEXTURES = {"copper": "minecraft:block/copper_block",
+                 "trim": "minecraft:block/polished_blackstone",
+                 "particle": "#copper",
+                 "soot": "minecraft:block/coal_block"}
 ARMS = {
     "north": ((5, 5, 0), (11, 11, 5), ("north", "west", "east", "up", "down")),
     "south": ((5, 5, 11), (11, 11, 16), ("south", "west", "east", "up", "down")),
@@ -107,20 +128,34 @@ def pipe():
                                          "textures": PIPE_TEXTURES, "elements": elements})
         return f"hardwrought:block/gas_pipe/{name}"
 
-    core = box((5, 5, 5), (11, 11, 11), texture="#copper")
+    core = box((4.5, 4.5, 4.5), (11.5, 11.5, 11.5), texture="#copper")
     multipart = [{"apply": {"model": part("core", [core])}}]
     for side, (lo, hi, faces) in ARMS.items():
         # The end of an arm is the joint into the next pipe: its face is never seen, so it is left off.
         faces = tuple(f for f in faces if f != side)
-        multipart.append({"when": {side: "true"},
-                          "apply": {"model": part(f"arm_{side}", [box(lo, hi, faces, texture="#copper")])}})
+        collar_lo = [4, 4, 4]
+        collar_hi = [12, 12, 12]
+        axis = {"west": 0, "east": 0, "down": 1, "up": 1, "north": 2, "south": 2}[side]
+        if side in ("north", "west", "down"):
+            collar_lo[axis], collar_hi[axis] = 0.75, 2.25
+        else:
+            collar_lo[axis], collar_hi[axis] = 13.75, 15.25
+        collar_faces = tuple(f for f in FACES if f not in (side, opposite(side)))
+        multipart.append({"when": {side: "true"}, "apply": {"model": part(f"arm_{side}", [
+            box(lo, hi, faces, texture="#copper"),
+            box(tuple(collar_lo), tuple(collar_hi), collar_faces, texture="#trim")])}})
     write(ASSETS / "blockstates/gas_pipe.json", {"multipart": multipart})
     write(ASSETS / "items/gas_pipe.json", {"model": {"type": "minecraft:model",
                                                      "model": "hardwrought:block/gas_pipe/item"}})
     write(models / "item.json", {"parent": "minecraft:block/block", "__comment": "Generated by tools/flue_models.py.",
                                  "textures": PIPE_TEXTURES,
-                                 "elements": [box((5, 5, 0), (11, 11, 16), texture="#copper",
-                                                  special={"north": "#soot", "south": "#soot"})]})
+                                 "elements": [
+                                     box((5, 5, 0), (11, 11, 16), texture="#copper",
+                                         special={"north": "#soot", "south": "#soot"}),
+                                     box((4, 4, 0.75), (12, 12, 2.25),
+                                         ("west", "east", "up", "down"), texture="#trim"),
+                                     box((4, 4, 13.75), (12, 12, 15.25),
+                                         ("west", "east", "up", "down"), texture="#trim")]})
 
 
 if __name__ == "__main__":

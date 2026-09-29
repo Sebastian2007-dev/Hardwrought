@@ -1,0 +1,9 @@
+{
+  "material": "hardwrought:iron",
+  "blocks": [
+    "minecraft:iron_block",
+    "minecraft:iron_bars",
+    "minecraft:iron_door",
+    "minecraft:iron_trapdoor"
+  ]
+}

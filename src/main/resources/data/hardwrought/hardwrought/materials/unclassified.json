@@ -1,0 +1,9 @@
+{
+  "tier": 0,
+  "density_kg_m3": 1000,
+  "structure": {
+    "compression_strength_mpa": 10,
+    "tension_strength_mpa": 1,
+    "support_distance_blocks": 1
+  }
+}

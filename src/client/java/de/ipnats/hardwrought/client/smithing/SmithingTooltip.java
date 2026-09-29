@@ -45,6 +45,13 @@ public final class SmithingTooltip {
                         new net.minecraft.world.item.ItemStack(result).getHoverName(),
                         Math.round(state.progress() * 100)).withStyle(ChatFormatting.GRAY));
             }
+            // Plain steel rusts: how far along it is, or a reminder that it will.
+            if (de.ipnats.hardwrought.smithing.Rust.rusts(stack)) {
+                float rust = de.ipnats.hardwrought.smithing.Rust.of(stack);
+                lines.add(rust > 0
+                        ? Component.translatable("tooltip.hardwrought.rust", Math.round(rust * 100)).withStyle(ChatFormatting.RED)
+                        : Component.translatable("tooltip.hardwrought.rusts").withStyle(ChatFormatting.DARK_GRAY));
+            }
             ForgeQuality quality = ForgeQuality.of(stack);
             if (quality != null) {
                 lines.add(Component.translatable("tooltip.hardwrought.craftsmanship",

@@ -98,9 +98,12 @@ public final class CoreGameTests {
                 "Invalid balancing data rejected");
         expectFailure(() -> new MaterialDefinition(1, Double.NaN, 10));
         var lines = runtime.snapshot(helper.getLevel(), helper.absolutePos(net.minecraft.core.BlockPos.ZERO));
-        // Milestone 3 supplies the gas channel; the channels without a system must still say so.
-        helper.assertTrue(lines.stream().anyMatch(line -> line.startsWith("STRUCTURE | unavailable")),
-                "Unimplemented models must not invent data");
+        // Every channel has its system now; none may fall back to the placeholder.
+        helper.assertTrue(lines.stream().noneMatch(line -> line.contains("| unavailable")),
+                "Every diagnostic channel reports a real model");
+        helper.assertTrue(lines.stream().anyMatch(line -> line.startsWith("STRUCTURE | ")
+                        && (line.contains("natural terrain") || line.contains("carries nothing") || line.contains("built"))),
+                "Milestone 17: the structure channel reports the statics");
         helper.assertTrue(lines.stream().noneMatch(line -> line.startsWith("ORE | unavailable")),
                 "while the ore channel reports the real geology of Milestone 6");
         helper.assertTrue(lines.stream().anyMatch(line -> line.contains("not Celsius")), "Biome temperature must be labelled accurately");

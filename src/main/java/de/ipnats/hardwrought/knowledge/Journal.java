@@ -93,6 +93,20 @@ public final class Journal {
                     List.of(Hardwrought.id("ore_drill"), Hardwrought.id("drill_frame_bronze"),
                             Hardwrought.id("drill_frame_iron")),
                     List.of(Hardwrought.id("starter_crusher"), Hardwrought.id("nailed_workbench"))),
+            // A drill fills a chest nobody empties; a pipe from its chute takes the ore on by itself.
+            new JournalEntry(Hardwrought.id("moving_it_along"),
+                    List.of(Hardwrought.id("item_pipe_bronze"), Hardwrought.id("item_pipe_iron")),
+                    List.of(Hardwrought.id("ore_drill"))),
+            // A forge never melts anything; a bath of metal wants a fire shut in by refractory brick.
+            // Controller, drain and casting table together: any one alone casts nothing.
+            new JournalEntry(Hardwrought.id("a_bath_of_metal"),
+                    List.of(Hardwrought.id("smeltery_controller"), Hardwrought.id("smeltery_drain"),
+                            Hardwrought.id("casting_table")),
+                    List.of(Hardwrought.id("refractory_brick"), Hardwrought.id("forge")), true),
+            // Steel is only made in that bath: iron and coal powder, and hotter than iron melts.
+            new JournalEntry(Hardwrought.id("harder_than_iron"),
+                    List.of(Hardwrought.id("steel_pickaxe"), Hardwrought.id("steel_ingot")),
+                    List.of(Hardwrought.id("smeltery_controller"))),
             // Milestone 11: once a line can be turned by water or wind, it is strong enough to bore
             // with — and what is under the sedimentary rock is worth boring for.
             new JournalEntry(Hardwrought.id("black_gold"),

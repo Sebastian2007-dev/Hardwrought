@@ -57,7 +57,17 @@ public class KineticBlockEntity extends BlockEntity implements KineticHolder {
     public static void clientTick(Level level, BlockPos pos, BlockState state, KineticBlockEntity part) {
         if (part.speed == 0.0f) return;
         part.angle = (part.angle + part.degreesPerTick()) % 360.0f;
+        // Every part keeps its own angle, which drifted apart from its neighbours' — each had counted
+        // from whenever it happened to be loaded. The world clock is the same for all of them, so each
+        // is pulled towards the angle that clock gives at its speed: parts turning alike turn in step,
+        // and after a change of speed they come back into step smoothly rather than with a jump.
+        double beat = (level.getGameTime() * (double) part.degreesPerTick()) % 360.0;
+        float drift = net.minecraft.util.Mth.wrapDegrees((float) beat - part.angle);
+        part.angle = (part.angle + drift * SYNC_PULL) % 360.0f;
     }
+
+    /** Share of the drift from the common beat that is taken back each tick. */
+    private static final float SYNC_PULL = 0.2f;
 
     @Override
     protected void loadAdditional(ValueInput input) {

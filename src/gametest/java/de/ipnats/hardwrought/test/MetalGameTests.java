@@ -181,12 +181,10 @@ public final class MetalGameTests {
                 ModMetals.raw(Metal.TITANIUM), materials).orElseThrow();
         double tungsten = de.ipnats.hardwrought.metallurgy.Smelting.meltingPoint(
                 ModMetals.raw(Metal.TUNGSTEN), materials).orElseThrow();
-        helper.assertTrue(iron <= de.ipnats.hardwrought.metallurgy.Smelting.BRICK_FURNACE_MAX_C
-                        && titanium > de.ipnats.hardwrought.metallurgy.Smelting.BRICK_FURNACE_MAX_C,
-                "A brick furnace gets as far as iron and no further");
-        helper.assertTrue(titanium <= de.ipnats.hardwrought.metallurgy.Smelting.FURNACE_MAX_C
+        helper.assertTrue(iron <= de.ipnats.hardwrought.metallurgy.Smelting.FURNACE_MAX_C
+                        && titanium > de.ipnats.hardwrought.metallurgy.Smelting.FURNACE_MAX_C
                         && tungsten > de.ipnats.hardwrought.metallurgy.Smelting.FURNACE_MAX_C,
-                "a stone furnace reaches titanium, and tungsten needs a blast furnace");
+                "Any furnace gets as far as iron and no further");
         helper.assertTrue(de.ipnats.hardwrought.progression.BenchTier.required(
                         new ItemStack(net.minecraft.world.item.Items.FURNACE))
                         == de.ipnats.hardwrought.progression.BenchTier.JOINED,
@@ -214,9 +212,9 @@ public final class MetalGameTests {
         ironBrick.setItem(1, new ItemStack(net.minecraft.world.item.Items.COAL, 4));
         helper.runAfterDelay(20, () -> {
             helper.assertTrue(tooCold.getItem(1).getCount() == 4,
-                    "A brick furnace does not burn fuel on tungsten it cannot even bring to working heat");
-            helper.assertTrue(hotEnough.getItem(1).getCount() == 3,
-                    "a stone furnace lights for the same load");
+                    "A brick furnace does not burn fuel on tungsten");
+            helper.assertTrue(hotEnough.getItem(1).getCount() == 4,
+                    "nor does a stone furnace: tungsten belongs in a forge");
             helper.assertTrue(ironBrick.getItem(1).getCount() == 3,
                     "and the brick furnace lights for iron, which it can melt");
             for (BlockPos pos : List.of(brick, stone, warm)) {

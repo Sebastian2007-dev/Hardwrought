@@ -1,6 +1,6 @@
 package de.ipnats.hardwrought.client.chemistry;
 
-import de.ipnats.hardwrought.chemistryddd.StillMenu;
+import de.ipnats.hardwrought.chemistry.StillMenu;
 import de.ipnats.hardwrought.core.registry.ModDataComponents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;

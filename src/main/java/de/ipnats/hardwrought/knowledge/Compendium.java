@@ -203,10 +203,9 @@ public final class Compendium {
                 var melting = de.ipnats.hardwrought.metallurgy.Smelting.meltingPoint(inputs.getFirst().getItem(), materials);
                 if (melting.isPresent()) {
                     double degrees = melting.getAsDouble();
-                    ItemStack needed = degrees <= de.ipnats.hardwrought.metallurgy.Smelting.BRICK_FURNACE_MAX_C
+                    ItemStack needed = degrees <= de.ipnats.hardwrought.metallurgy.Smelting.FURNACE_MAX_C
                             ? new ItemStack(de.ipnats.hardwrought.core.registry.ModBlocks.BRICK_FURNACE)
-                            : degrees <= de.ipnats.hardwrought.metallurgy.Smelting.FURNACE_MAX_C
-                                    ? new ItemStack(Items.FURNACE) : new ItemStack(Items.BLAST_FURNACE);
+                            : new ItemStack(de.ipnats.hardwrought.smeltery.SmelteryBlocks.CONTROLLER);
                     return slot(List.of(needed), known);
                 }
             }

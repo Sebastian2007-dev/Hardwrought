@@ -53,6 +53,10 @@ public final class ToolParts {
         }
     }
 
+    /** Every tool and weapon part, for the metals that make full equipment. */
+    private static final Part[] EQUIPMENT = {Part.PICKAXE_HEAD, Part.AXE_HEAD, Part.SHOVEL_HEAD, Part.HOE_HEAD,
+            Part.SWORD_BLADE, Part.DAGGER_BLADE, Part.GREATSWORD_BLADE, Part.HALBERD_HEAD};
+
     /** A metal that tools are forged from: its material id and its ingot. */
     public enum SmithMetal {
         IRON("iron", () -> Items.IRON_INGOT, Part.values()),
@@ -60,7 +64,13 @@ public final class ToolParts {
                 Part.HOE_HEAD, Part.SWORD_BLADE),
         COPPER("copper", () -> Items.COPPER_INGOT, Part.PICKAXE_HEAD, Part.AXE_HEAD, Part.SHOVEL_HEAD,
                 Part.HOE_HEAD, Part.SWORD_BLADE),
-        BRONZE("bronze", () -> ModItems.BRONZE_INGOT, Part.PICKAXE_HEAD, Part.AXE_HEAD);
+        BRONZE("bronze", () -> ModItems.BRONZE_INGOT, Part.PICKAXE_HEAD, Part.AXE_HEAD),
+        // The metals above iron (see AlloyEquipment): every part but the hammer's head.
+        STEEL("steel", () -> de.ipnats.hardwrought.metallurgy.Alloys.STEEL_INGOT, EQUIPMENT),
+        STAINLESS_STEEL("stainless_steel", () -> de.ipnats.hardwrought.metallurgy.Alloys.STAINLESS_STEEL_INGOT, EQUIPMENT),
+        TITANIUM("titanium", () -> de.ipnats.hardwrought.metallurgy.ModMetals.ingot(
+                de.ipnats.hardwrought.metallurgy.Metal.TITANIUM), EQUIPMENT),
+        TUNGSTEN_STEEL("tungsten_steel", () -> de.ipnats.hardwrought.metallurgy.Alloys.TUNGSTEN_STEEL_INGOT, EQUIPMENT);
 
         private final String material;
         private final Supplier<Item> ingot;

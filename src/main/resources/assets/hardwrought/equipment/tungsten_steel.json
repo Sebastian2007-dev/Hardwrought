@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "hardwrought:tungsten_steel"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "hardwrought:tungsten_steel"
+      }
+    ]
+  }
+}

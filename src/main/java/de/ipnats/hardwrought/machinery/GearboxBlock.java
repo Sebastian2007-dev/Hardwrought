@@ -14,8 +14,17 @@ import net.minecraft.world.level.block.state.BlockState;
  * they share, as the two bevel wheels facing each other inside do.
  */
 public class GearboxBlock extends Block implements KineticBlock {
+    /** The casing and its corner posts: half a pixel in from every side, full height. */
+    private static final net.minecraft.world.phys.shapes.VoxelShape SHAPE = Block.box(0.5, 0, 0.5, 15.5, 16, 15.5);
+
     public GearboxBlock(Properties properties) {
         super(properties);
+    }
+
+    @Override
+    protected net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState state, net.minecraft.world.level.BlockGetter level,
+                                                                 BlockPos pos, net.minecraft.world.phys.shapes.CollisionContext context) {
+        return SHAPE;
     }
 
     @Override

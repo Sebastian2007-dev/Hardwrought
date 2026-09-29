@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "N": "minecraft:iron_nugget"
+  },
+  "pattern": [
+    "N N",
+    " I ",
+    "N N"
+  ],
+  "result": {
+    "id": "hardwrought:structural_anchor",
+    "count": 2
+  }
+}

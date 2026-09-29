@@ -1,0 +1,73 @@
+{
+  "variants": {
+    "metal=0": {
+      "model": "hardwrought:block/molten/iron"
+    },
+    "metal=1": {
+      "model": "hardwrought:block/molten/gold"
+    },
+    "metal=2": {
+      "model": "hardwrought:block/molten/copper"
+    },
+    "metal=3": {
+      "model": "hardwrought:block/molten/bronze"
+    },
+    "metal=4": {
+      "model": "hardwrought:block/molten/steel"
+    },
+    "metal=5": {
+      "model": "hardwrought:block/molten/stainless_steel"
+    },
+    "metal=6": {
+      "model": "hardwrought:block/molten/tungsten_steel"
+    },
+    "metal=7": {
+      "model": "hardwrought:block/molten/titanium"
+    },
+    "metal=8": {
+      "model": "hardwrought:block/molten/tungsten"
+    },
+    "metal=9": {
+      "model": "hardwrought:block/molten/tin"
+    },
+    "metal=10": {
+      "model": "hardwrought:block/molten/zinc"
+    },
+    "metal=11": {
+      "model": "hardwrought:block/molten/lead"
+    },
+    "metal=12": {
+      "model": "hardwrought:block/molten/manganese"
+    },
+    "metal=13": {
+      "model": "hardwrought:block/molten/magnesium"
+    },
+    "metal=14": {
+      "model": "hardwrought:block/molten/aluminum"
+    },
+    "metal=15": {
+      "model": "hardwrought:block/molten/nickel"
+    },
+    "metal=16": {
+      "model": "hardwrought:block/molten/cobalt"
+    },
+    "metal=17": {
+      "model": "hardwrought:block/molten/chromium"
+    },
+    "metal=18": {
+      "model": "hardwrought:block/molten/uranium"
+    },
+    "metal=19": {
+      "model": "hardwrought:block/molten/thorium"
+    },
+    "metal=20": {
+      "model": "hardwrought:block/molten/platinum"
+    },
+    "metal=21": {
+      "model": "hardwrought:block/molten/netherite"
+    },
+    "metal=22": {
+      "model": "hardwrought:block/molten/carbon"
+    }
+  }
+}

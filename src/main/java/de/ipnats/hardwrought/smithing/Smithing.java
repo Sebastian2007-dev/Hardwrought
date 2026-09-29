@@ -33,10 +33,10 @@ public final class Smithing {
     /** Coldest a piece can be hammered without straining it. */
     public static final double WORKING_MIN = 0.55;
     /**
-     * Top of the useful hammering range as a share of the melting point. This describes when the
-     * anvil can work a piece; it does not cap the temperature a hotter forge can put into it.
+     * Top of the hammering range as a share of the melting point: forging heat, not melting heat.
+     * No furnace or forge heats a piece past it; melting is the smeltery's work.
      */
-    public static final double WORKING_MAX = 1.0;
+    public static final double WORKING_MAX = 0.85;
     /** Quenched from above this, iron hardens. */
     public static final double HARDENING = 0.45;
     /** Warmed back to this band after quenching, it tempers. */
@@ -45,8 +45,16 @@ public final class Smithing {
     /** How much heat one blow of the hammer takes out of the piece. */
     public static final double HEAT_PER_BLOW = 6.0;
 
-    /** One thing the anvil turns into another. */
-    public record Recipe(Item input, int count, Item result, boolean part) {
+    /**
+     * One thing the anvil turns into another.
+     *
+     * @param makes how many of the result one job gives: four rods are cut from one bar drawn out
+     */
+    public record Recipe(Item input, int count, Item result, boolean part, int makes) {
+        public Recipe(Item input, int count, Item result, boolean part) {
+            this(input, count, result, part, 1);
+        }
+
         public Identifier id() {
             Identifier in = BuiltInRegistries.ITEM.getKey(input);
             Identifier out = BuiltInRegistries.ITEM.getKey(result);
@@ -72,6 +80,12 @@ public final class Smithing {
                     de.ipnats.hardwrought.core.registry.ModItems.IRON_SEWING_NEEDLE, false));
             for (Metal metal : Metal.values()) {
                 RECIPES.add(new Recipe(ModMetals.raw(metal), 1, ModMetals.ingot(metal), false));
+            }
+            for (MetalStock.StockMetal metal : MetalStock.metals()) {
+                for (MetalStock.Form form : MetalStock.Form.values()) {
+                    RECIPES.add(new Recipe(metal.ingot().get(), 1, MetalStock.of(metal.material(), form), false,
+                            form.perIngot()));
+                }
             }
             for (ToolParts.SmithMetal metal : ToolParts.SmithMetal.values()) {
                 for (ToolParts.Part part : metal.parts()) {
@@ -127,7 +141,9 @@ public final class Smithing {
     /** Only iron takes a hardening. Bronze, gold and copper come out of the water as soft as they went in. */
     public static boolean hardenable(Item item) {
         Identifier material = Smelting.materialOf(item);
-        return material != null && material.getPath().equals("iron");
+        // Iron and every steel take a hardening; titanium, bronze, gold and copper do not.
+        return material != null && java.util.Set.of("iron", "steel", "stainless_steel", "tungsten_steel")
+                .contains(material.getPath());
     }
 
     /**
@@ -187,7 +203,7 @@ public final class Smithing {
             }
             shown.add(new de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe(recipe.id(),
                     List.of(List.of(new ItemStack(recipe.input(), recipe.count())), List.copyOf(hammers)),
-                    new ItemStack(recipe.result()), anvil));
+                    new ItemStack(recipe.result(), recipe.makes()), anvil));
         }
         return shown;
     }

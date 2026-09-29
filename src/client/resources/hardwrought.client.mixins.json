@@ -9,6 +9,7 @@
 		"FluidRendererMixin",
 		"GuiGraphicsExtractorAccessor",
 		"InventoryScreenMixin",
+		"LightmapRenderStateExtractorMixin",
 		"MinecraftGasPushMixin",
 		"RecipeBookScreenAccessor"
 	],

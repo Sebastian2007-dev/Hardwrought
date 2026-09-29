@@ -299,7 +299,7 @@ behind and a test such as `savedTicks % 40 == 0` can never be true. A test locks
 - Chimneys, ventilation shafts, mechanical fans and detectors (sections 18.3 and 19).
 - Fire spread driven by wind, fuel and building material (section 19).
 - True darkness, moon phases and dark adaptation (sections 20 to 22); only the carried light of the
-  Milestone 3 list is implemented.
+  Milestone 3 list is implemented. They have since followed, see [lighting.md](lighting.md).
 - Smoke as a moving body of gas between rooms; it stays inside its own cell.
 
 ## Verification

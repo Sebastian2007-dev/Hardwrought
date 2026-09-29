@@ -2,16 +2,15 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "I": "hardwrought:titanium_ingot",
-    "S": "minecraft:stick"
+    "R": "hardwrought:titanium_rod"
   },
   "pattern": [
-    "ISI",
-    "S S",
-    "ISI"
+    "R R",
+    " R ",
+    "R R"
   ],
   "result": {
     "id": "hardwrought:drill_frame_titanium",
-    "count": 4
+    "count": 2
   }
 }

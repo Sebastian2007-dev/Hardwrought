@@ -1,57 +1,111 @@
 {
   "variants": {
-    "part=0": {
+    "output=false,part=0": {
       "model": "hardwrought:block/drill_frame_nickel"
     },
-    "part=1": {
+    "output=true,part=0": {
+      "model": "hardwrought:block/drill_frame_nickel"
+    },
+    "output=false,part=1": {
       "model": "hardwrought:block/ore_drill_formed/nickel/part_1"
     },
-    "part=2": {
+    "output=true,part=1": {
+      "model": "hardwrought:block/ore_drill_formed/nickel/part_1"
+    },
+    "output=false,part=2": {
       "model": "hardwrought:block/ore_drill_formed/nickel/part_2"
     },
-    "part=3": {
+    "output=true,part=2": {
+      "model": "hardwrought:block/ore_drill_formed/nickel/part_2_output"
+    },
+    "output=false,part=3": {
       "model": "hardwrought:block/ore_drill_formed/nickel/part_3"
     },
-    "part=4": {
+    "output=true,part=3": {
+      "model": "hardwrought:block/ore_drill_formed/nickel/part_3"
+    },
+    "output=false,part=4": {
       "model": "hardwrought:block/ore_drill_formed/nickel/part_4"
     },
-    "part=5": {
+    "output=true,part=4": {
+      "model": "hardwrought:block/ore_drill_formed/nickel/part_4_output"
+    },
+    "output=false,part=5": {
       "model": "hardwrought:block/ore_drill_formed/nickel/part_5"
     },
-    "part=6": {
+    "output=true,part=5": {
+      "model": "hardwrought:block/ore_drill_formed/nickel/part_5_output"
+    },
+    "output=false,part=6": {
       "model": "hardwrought:block/ore_drill_formed/nickel/part_6"
     },
-    "part=7": {
+    "output=true,part=6": {
+      "model": "hardwrought:block/ore_drill_formed/nickel/part_6"
+    },
+    "output=false,part=7": {
       "model": "hardwrought:block/ore_drill_formed/nickel/part_7"
     },
-    "part=8": {
+    "output=true,part=7": {
+      "model": "hardwrought:block/ore_drill_formed/nickel/part_7_output"
+    },
+    "output=false,part=8": {
       "model": "hardwrought:block/ore_drill_formed/nickel/part_8"
     },
-    "part=9": {
+    "output=true,part=8": {
+      "model": "hardwrought:block/ore_drill_formed/nickel/part_8"
+    },
+    "output=false,part=9": {
       "model": "hardwrought:block/ore_drill_formed/nickel/part_9"
     },
-    "part=10": {
+    "output=true,part=9": {
+      "model": "hardwrought:block/ore_drill_formed/nickel/part_9"
+    },
+    "output=false,part=10": {
       "model": "hardwrought:block/ore_drill_formed/nickel/part_10"
     },
-    "part=11": {
+    "output=true,part=10": {
+      "model": "hardwrought:block/ore_drill_formed/nickel/part_10"
+    },
+    "output=false,part=11": {
       "model": "hardwrought:block/ore_drill_formed/nickel/part_11"
     },
-    "part=12": {
+    "output=true,part=11": {
+      "model": "hardwrought:block/ore_drill_formed/nickel/part_11"
+    },
+    "output=false,part=12": {
       "model": "hardwrought:block/ore_drill_formed/nickel/part_12"
     },
-    "part=13": {
+    "output=true,part=12": {
+      "model": "hardwrought:block/ore_drill_formed/nickel/part_12"
+    },
+    "output=false,part=13": {
       "model": "hardwrought:block/ore_drill_formed/nickel/part_13"
     },
-    "part=14": {
+    "output=true,part=13": {
+      "model": "hardwrought:block/ore_drill_formed/nickel/part_13"
+    },
+    "output=false,part=14": {
       "model": "hardwrought:block/ore_drill_formed/nickel/part_14"
     },
-    "part=15": {
+    "output=true,part=14": {
+      "model": "hardwrought:block/ore_drill_formed/nickel/part_14"
+    },
+    "output=false,part=15": {
       "model": "hardwrought:block/ore_drill_formed/nickel/part_15"
     },
-    "part=16": {
+    "output=true,part=15": {
+      "model": "hardwrought:block/ore_drill_formed/nickel/part_15"
+    },
+    "output=false,part=16": {
       "model": "hardwrought:block/ore_drill_formed/nickel/part_16"
     },
-    "part=17": {
+    "output=true,part=16": {
+      "model": "hardwrought:block/ore_drill_formed/nickel/part_16"
+    },
+    "output=false,part=17": {
+      "model": "hardwrought:block/ore_drill_formed/nickel/part_17"
+    },
+    "output=true,part=17": {
       "model": "hardwrought:block/ore_drill_formed/nickel/part_17"
     }
   }

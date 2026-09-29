@@ -45,12 +45,24 @@ public class Hardwrought implements ModInitializer {
 		WaterStorage.initialize();
 		de.ipnats.hardwrought.water.WaterCurrent.initialize();
 		WaterQualityStorage.initialize();
+		de.ipnats.hardwrought.oil.ModFluids.initialize();
 		ModBlocks.initialize();
+		net.fabricmc.fabric.api.registry.FlammableBlockRegistry.getDefaultInstance().add(ModBlocks.CRUDE_OIL,
+				de.ipnats.hardwrought.oil.CrudeOilBlock.CATCH_CHANCE, de.ipnats.hardwrought.oil.CrudeOilBlock.BURN_CHANCE);
 		de.ipnats.hardwrought.metallurgy.ModMetals.initialize();
 		de.ipnats.hardwrought.metallurgy.OrePowders.initialize();
 		ModItems.initialize();
+		de.ipnats.hardwrought.metallurgy.Alloys.initialize();
+		de.ipnats.hardwrought.smeltery.SmelteryBlocks.initialize();
 		de.ipnats.hardwrought.smithing.ToolParts.initialize();
+		de.ipnats.hardwrought.smithing.AlloyEquipment.initialize();
+		de.ipnats.hardwrought.smithing.MetalStock.initialize();
 		de.ipnats.hardwrought.core.registry.ModBlockEntities.initialize();
+		de.ipnats.hardwrought.building.BuildingPhysics.initialize();
+		de.ipnats.hardwrought.building.SharedCell.initialize();
+		de.ipnats.hardwrought.mobs.MobSystem.initialize();
+		de.ipnats.hardwrought.mobs.SleepDebt.initialize();
+		de.ipnats.hardwrought.smithing.Rust.initialize();
 		de.ipnats.hardwrought.smithing.ForgeMenu.initialize();
 		de.ipnats.hardwrought.chemistry.StillMenu.initialize();
 		de.ipnats.hardwrought.core.registry.ModEffects.initialize();
@@ -64,6 +76,7 @@ public class Hardwrought implements ModInitializer {
 		DataResourceLoader.get().registerReloadListener(id("water_quality"), new WaterQualityProfiles());
 		DataResourceLoader.get().registerReloadListener(id("aquifer"), new AquiferProfiles());
 		DataResourceLoader.get().registerReloadListener(id("rock"), new RockProfiles());
+		DataResourceLoader.get().registerReloadListener(id("structure"), new de.ipnats.hardwrought.building.StructuralProfiles());
 		CoreNetworking.initialize();
 		SurvivalSystem.initializeEvents();
 		CombatSystem.initializeEvents();

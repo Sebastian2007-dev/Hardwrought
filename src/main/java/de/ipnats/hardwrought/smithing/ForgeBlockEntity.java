@@ -37,10 +37,12 @@ import java.util.List;
 /**
  * The smith's hearth: a bed of burning coal, a place for fuel and places for the pieces lying in it.
  *
- * <p>It gets hotter the better it is built, and that is the one way to reach the heat the hard metals
- * need. On its own it holds about 1300 °C — iron, not much more. Air driven through it by a bellows
- * on a turning shaft takes it to 2000 °C; a lining of refractory brick keeps that heat in and takes it
- * to 3500 °C, as hot as anything in the game gets.
+ * <p>It gets hotter the better it is built, and that is the one way to bring the hard metals to forging
+ * heat. On its own it holds about 1300 °C, enough for iron and titanium. A lining of refractory brick
+ * takes it to 1600 °C, air driven through it by a bellows on a turning shaft to 2000 °C, and both
+ * together to 2800 °C, enough to forge tungsten. A forge heats for the anvil and never melts
+ * anything: every piece stops at the top of its forging range, however hot the fire. Melting is the
+ * smeltery's work.
  *
  * <p>Coal laid in it has to be lit, and once lit the fire keeps itself going on whatever fuel is
  * there, whether or not anything lies in it to be heated, until the last coal is burnt.
@@ -62,7 +64,7 @@ public class ForgeBlockEntity extends BlockEntity implements Container, Extended
     public static final double BASE_C = 1300;
     public static final double BELLOWS_C = 2000;
     public static final double LINED_C = 1600;
-    public static final double LINED_BELLOWS_C = 3500;
+    public static final double LINED_BELLOWS_C = 2800;
     /** How much of the gap to its target the fire closes each tick. */
     private static final double FIRE_RESPONSE = 0.005;
     /** How much of the gap to the fire a piece closes on each heating pass. */
@@ -298,9 +300,8 @@ public class ForgeBlockEntity extends BlockEntity implements Container, Extended
     }
 
     /**
-     * Brings every piece a step closer to the fire's actual heat and keeps whatever it already has:
-     * nothing lying in a forge cools. The working range controls whether a piece can be hammered;
-     * it is not a temperature ceiling for a hotter forge.
+     * Brings every piece a step closer to the fire's heat, but no further than the top of its forging
+     * range, and keeps whatever it already has: nothing lying in a forge cools.
      */
     private void heatPieces(ServerLevel level, int layout) {
         var runtime = CoreLifecycle.find(level.getServer());
@@ -312,9 +313,11 @@ public class ForgeBlockEntity extends BlockEntity implements Container, Extended
             if (piece.isEmpty()) continue;
             Heat heat = piece.get(ModDataComponents.HEAT);
             double current = heat == null ? Heat.AMBIENT : heat.celsius();
+            double[] range = Smithing.workingRange(piece.getItem(), runtime.materials());
+            double ceiling = range == null ? temperature : Math.min(temperature, range[1]);
             double next = current;
-            if (temperature > current) {
-                next = current + (temperature - current) * PIECE_RESPONSE;
+            if (ceiling > current) {
+                next = Math.min(ceiling, current + (temperature - current) * PIECE_RESPONSE);
             }
             // Stamped until the next pass: a piece's heat only starts falling after its stamp, so
             // until then it holds exactly, and taken out it starts cooling from where it was.

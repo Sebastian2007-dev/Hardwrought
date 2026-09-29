@@ -32,14 +32,22 @@ PARTS = {
     "copper": ["pickaxe_head", "axe_head", "shovel_head", "hoe_head", "sword_blade"],
     "bronze": ["pickaxe_head", "axe_head"],
 }
+# The metals above iron (tools/alloy_assets.py): every tool and weapon part.
+for _metal in ("steel", "stainless_steel", "titanium", "tungsten_steel"):
+    PARTS[_metal] = ["pickaxe_head", "axe_head", "shovel_head", "hoe_head", "sword_blade", "dagger_blade",
+                     "greatsword_blade", "halberd_head"]
+ALLOYS = ["steel", "stainless_steel", "tungsten_steel"]
 
 
 def mod_items():
-    items = ["bronze_ingot"]
+    items = ["bronze_ingot"] + [f"{alloy}_ingot" for alloy in ALLOYS]
     for metal in MOD_METALS:
         items += [f"raw_{metal}", f"{metal}_ingot"]
     for metal, parts in PARTS.items():
         items += [f"{metal}_{part}" for part in parts]
+    # Rods and plates (tools/metal_stock_textures.py): every metal but mercury.
+    for metal in ["iron", "copper", "gold", "bronze"] + ALLOYS + [m for m in MOD_METALS if m != "mercury"]:
+        items += [f"{metal}_rod", f"{metal}_plate"]
     return items
 
 

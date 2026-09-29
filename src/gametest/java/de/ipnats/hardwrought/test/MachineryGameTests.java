@@ -4,6 +4,9 @@ import de.ipnats.hardwrought.core.registry.ModBlocks;
 import de.ipnats.hardwrought.machinery.CrankBoxBlock;
 import de.ipnats.hardwrought.machinery.Driveline;
 import de.ipnats.hardwrought.machinery.HandCrankBlock;
+import de.ipnats.hardwrought.machinery.ItemPipeBlock;
+import de.ipnats.hardwrought.machinery.ItemPipeBlockEntity;
+import de.ipnats.hardwrought.machinery.ItemPipeTier;
 import de.ipnats.hardwrought.machinery.StarterCrusherBlockEntity;
 import de.ipnats.hardwrought.metallurgy.Crushing;
 import de.ipnats.hardwrought.metallurgy.Metal;
@@ -19,10 +22,13 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import de.ipnats.hardwrought.machinery.ShaftBlock;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -289,6 +295,9 @@ public final class MachineryGameTests {
                 "Raw ore still crushes as before");
         helper.assertTrue(Crushing.result(new ItemStack(Items.DIAMOND)) == null,
                 "A diamond is not ground to dust");
+        helper.assertTrue(Crushing.result(new ItemStack(Items.COAL)) == OrePowders.powder(OrePowders.VanillaOre.COAL)
+                        && Crushing.result(new ItemStack(Items.CHARCOAL)) == OrePowders.powder(OrePowders.VanillaOre.COAL),
+                "Coal and charcoal are ground to coal powder, the carbon of steel");
         helper.succeed();
     }
 
@@ -308,6 +317,76 @@ public final class MachineryGameTests {
         helper.assertFalse(BenchTier.allows(BenchTier.HEWN, new ItemStack(ModItems.CRANK_BOX)),
                 "The crank box is the creative source and is not made at all");
         helper.succeed();
+    }
+
+    @GameTest
+    public void itemPipesCarryOnToTheNextChestAtTheirMetalsPace(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos base = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE + 6);
+        try {
+            // A chest, three bronze pipes east of it, a chest at the end. Items come in from the first chest's side.
+            level.setBlockAndUpdate(base, Blocks.CHEST.defaultBlockState());
+            level.setBlockAndUpdate(base.east(4), Blocks.CHEST.defaultBlockState());
+            layPipes(level, base, ModBlocks.ITEM_PIPE_BRONZE);
+            helper.assertTrue(level.getBlockState(base.east()).getValue(net.minecraft.world.level.block.PipeBlock.WEST)
+                            && level.getBlockState(base.east(3)).getValue(net.minecraft.world.level.block.PipeBlock.EAST),
+                    "The pipes join both chests");
+            helper.assertTrue(feed(level, base, 5) == ItemPipeTier.BRONZE.batch(), "A bronze pipe takes one at a time");
+            runPipes(level, base, 3 * ItemPipeTier.BRONZE.ticksPerBlock() - 5);
+            helper.assertTrue(count(level, base.east(4)) == 0, "Bronze is still carrying it after less than three pipes' time");
+            runPipes(level, base, 10);
+            helper.assertTrue(count(level, base.east(4)) == 1, "Then it is in the far chest: " + count(level, base.east(4)));
+            helper.assertTrue(count(level, base) == 0, "It never goes back to the chest it came from, though that is nearer");
+
+            layPipes(level, base, ModBlocks.ITEM_PIPE_TITANIUM);
+            helper.assertTrue(feed(level, base, 64) == ItemPipeTier.TITANIUM.batch(), "Titanium takes a whole batch");
+            runPipes(level, base, 3 * ItemPipeTier.TITANIUM.ticksPerBlock() + 3);
+            helper.assertTrue(count(level, base.east(4)) == 1 + ItemPipeTier.TITANIUM.batch(),
+                    "And has it through in a few ticks: " + count(level, base.east(4)));
+        } finally {
+            clear(level, base, 4);
+        }
+        helper.succeed();
+    }
+
+    private static void layPipes(ServerLevel level, BlockPos base, Block pipe) {
+        for (int step = 1; step <= 3; step++) level.setBlock(base.east(step), pipe.defaultBlockState(), 2);
+        for (int step = 1; step <= 3; step++) {
+            BlockPos pos = base.east(step);
+            BlockState state = level.getBlockState(pos);
+            for (Direction side : Direction.values()) {
+                state = state.setValue(net.minecraft.world.level.block.PipeBlock.PROPERTY_BY_DIRECTION.get(side),
+                        ItemPipeBlock.joins(level, pos, side));
+            }
+            level.setBlock(pos, state, 2);
+        }
+    }
+
+    /** Puts cobblestone into the first pipe from the chest's side; how many it took. */
+    private static long feed(ServerLevel level, BlockPos base, int count) {
+        ItemPipeBlockEntity first = (ItemPipeBlockEntity) level.getBlockEntity(base.east());
+        try (Transaction transaction = Transaction.openOuter()) {
+            long taken = first.inlet(Direction.WEST).insert(ItemVariant.of(Items.COBBLESTONE), count, transaction);
+            transaction.commit();
+            return taken;
+        }
+    }
+
+    private static void runPipes(ServerLevel level, BlockPos base, int ticks) {
+        for (int tick = 0; tick < ticks; tick++) {
+            for (int step = 1; step <= 3; step++) {
+                BlockPos pos = base.east(step);
+                ItemPipeBlockEntity.serverTick(level, pos, level.getBlockState(pos),
+                        (ItemPipeBlockEntity) level.getBlockEntity(pos));
+            }
+        }
+    }
+
+    private static int count(ServerLevel level, BlockPos chest) {
+        int total = 0;
+        net.minecraft.world.Container container = (net.minecraft.world.Container) level.getBlockEntity(chest);
+        for (int slot = 0; slot < container.getContainerSize(); slot++) total += container.getItem(slot).getCount();
+        return total;
     }
 
     private static boolean driven(ServerLevel level, BlockPos pos) {

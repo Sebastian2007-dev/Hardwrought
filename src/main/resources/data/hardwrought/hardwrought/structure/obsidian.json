@@ -1,0 +1,7 @@
+{
+  "material": "hardwrought:obsidian",
+  "blocks": [
+    "minecraft:obsidian",
+    "minecraft:crying_obsidian"
+  ]
+}

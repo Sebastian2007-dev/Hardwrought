@@ -34,6 +34,18 @@ public class BellowsBlock extends Block implements net.minecraft.world.level.blo
         builder.add(FACING);
     }
 
+    /** Two boards with the leather between them, and the nozzle out of the front; drawn facing north. */
+    private static final java.util.Map<Direction, net.minecraft.world.phys.shapes.VoxelShape> SHAPES =
+            net.minecraft.world.phys.shapes.Shapes.rotateHorizontal(net.minecraft.world.phys.shapes.Shapes.or(
+                    box(1, 0, 2, 15, 2, 16), box(2, 2, 3, 14, 7, 15), box(1, 7, 2, 15, 9, 16), box(6, 2, 0, 10, 6, 3)));
+
+    @Override
+    protected net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState state, net.minecraft.world.level.BlockGetter level,
+                                                                  net.minecraft.core.BlockPos pos,
+                                                                  net.minecraft.world.phys.shapes.CollisionContext context) {
+        return SHAPES.get(state.getValue(FACING));
+    }
+
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());

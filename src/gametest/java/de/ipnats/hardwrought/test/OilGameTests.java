@@ -225,6 +225,98 @@ public final class OilGameTests {
         helper.succeed();
     }
 
+    @GameTest(maxTicks = 200)
+    public void pouredCrudeOilCreepsAFewBlocksAndGoesBackIntoTheBucket(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos floor = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE);
+        List<BlockPos> used = new ArrayList<>();
+        // A floor wide enough that the oil finds no edge to run over.
+        for (int dx = -6; dx <= 6; dx++) {
+            for (int dz = -6; dz <= 6; dz++) place(level, used, floor.offset(dx, 0, dz), Blocks.STONE.defaultBlockState());
+        }
+        BlockPos pour = floor.above();
+        var bucket = (net.minecraft.world.item.BucketItem) ModItems.CRUDE_OIL_BUCKET;
+        helper.assertTrue(bucket.emptyContents(null, level, pour, null), "A bucket of crude oil pours out");
+        used.add(pour);
+        for (int dx = -6; dx <= 6; dx++) {
+            for (int dz = -6; dz <= 6; dz++) used.add(pour.offset(dx, 0, dz));
+        }
+        helper.assertTrue(level.getFluidState(pour).is(de.ipnats.hardwrought.oil.ModFluids.CRUDE_OIL)
+                && level.getFluidState(pour).isSource(), "as a pool of oil");
+        helper.runAfterDelay(4 * de.ipnats.hardwrought.oil.CrudeOilFluid.TICK_DELAY + 40, () -> {
+            try {
+                helper.assertTrue(isOil(level, pour.east(3)) && isOil(level, pour.west(3)),
+                        "It creeps three blocks out");
+                helper.assertFalse(isOil(level, pour.east(4)) || isOil(level, pour.west(4)),
+                        "and no further: it is thick, not water");
+                var picked = ((net.minecraft.world.level.block.BucketPickup) ModBlocks.CRUDE_OIL)
+                        .pickupBlock(null, level, pour, level.getBlockState(pour));
+                helper.assertTrue(picked.is(ModItems.CRUDE_OIL_BUCKET), "An empty bucket takes the pool back up");
+            } finally {
+                clear(level, used);
+            }
+            helper.succeed();
+        });
+    }
+
+    @GameTest(maxTicks = 120)
+    public void crudeOilFloatsOnWater(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos floor = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE);
+        List<BlockPos> used = new ArrayList<>();
+        BlockPos well = floor.above();
+        place(level, used, floor, Blocks.STONE.defaultBlockState());
+        for (var side : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+            place(level, used, well.relative(side), Blocks.STONE.defaultBlockState());
+            place(level, used, floor.relative(side), Blocks.STONE.defaultBlockState());
+        }
+        place(level, used, well, Blocks.WATER.defaultBlockState());
+        place(level, used, well.above(), ModBlocks.CRUDE_OIL.defaultBlockState());
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -3; dz <= 3; dz++) used.add(well.above().offset(dx, 0, dz));
+        }
+        helper.runAfterDelay(4 * de.ipnats.hardwrought.oil.CrudeOilFluid.TICK_DELAY, () -> {
+            try {
+                helper.assertTrue(level.getFluidState(well).is(net.minecraft.tags.FluidTags.WATER),
+                        "The water under the oil is still water");
+                helper.assertTrue(isOil(level, well.above()) && level.getFluidState(well.above()).isSource(),
+                        "and the oil lies on top of it");
+            } finally {
+                clear(level, used);
+            }
+            helper.succeed();
+        });
+    }
+
+    @GameTest(maxTicks = 1200)
+    public void crudeOilBurnsAway(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos floor = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE);
+        List<BlockPos> used = new ArrayList<>();
+        BlockPos pit = floor.above();
+        place(level, used, floor, Blocks.STONE.defaultBlockState());
+        for (var side : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+            place(level, used, pit.relative(side), Blocks.STONE.defaultBlockState());
+        }
+        place(level, used, pit, ModBlocks.CRUDE_OIL.defaultBlockState());
+        // Fire only spreads and burns near a player, and a test has none: for this test, everywhere.
+        var rules = level.getGameRules();
+        var rule = net.minecraft.world.level.gamerules.GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER;
+        int radius = rules.get(rule);
+        rules.set(rule, -1, level.getServer());
+        place(level, used, pit.above(), Blocks.FIRE.defaultBlockState());
+        helper.assertTrue(level.getBlockState(pit.above()).is(Blocks.FIRE), "Fire takes hold over a pool of oil");
+        helper.succeedWhen(() -> {
+            helper.assertFalse(isOil(level, pit), "and burns it away");
+            rules.set(rule, radius, level.getServer());
+            clear(level, used);
+        });
+    }
+
+    private static boolean isOil(ServerLevel level, BlockPos pos) {
+        return level.getFluidState(pos).getType() instanceof de.ipnats.hardwrought.oil.CrudeOilFluid;
+    }
+
     private static void place(ServerLevel level, List<BlockPos> used, BlockPos pos,
                               net.minecraft.world.level.block.state.BlockState state) {
         level.setBlockAndUpdate(pos, state);

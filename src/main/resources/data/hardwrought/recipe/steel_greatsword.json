@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_transmute",
+  "category": "equipment",
+  "input": "hardwrought:steel_greatsword_blade",
+  "material": "minecraft:stick",
+  "material_count": {
+    "min": 2,
+    "max": 2
+  },
+  "result": {
+    "id": "hardwrought:steel_greatsword"
+  }
+}

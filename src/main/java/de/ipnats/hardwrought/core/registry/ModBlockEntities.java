@@ -87,8 +87,24 @@ public final class ModBlockEntities {
                     new BlockEntityType<>(de.ipnats.hardwrought.progression.DryingRackBlockEntity::new,
                             Set.of(ModBlocks.DRYING_RACK)));
 
+    public static final BlockEntityType<de.ipnats.hardwrought.building.SharedCellBlockEntity> SHARED_CELL =
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Hardwrought.id("shared_cell"),
+                    new BlockEntityType<>(de.ipnats.hardwrought.building.SharedCellBlockEntity::new,
+                            Set.of(ModBlocks.SHARED_CELL)));
+
     private ModBlockEntities() { }
 
+    /** The batch an item pipe carries, whatever its metal. */
+    public static final BlockEntityType<de.ipnats.hardwrought.machinery.ItemPipeBlockEntity> ITEM_PIPE =
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Hardwrought.id("item_pipe"),
+                    new BlockEntityType<>(de.ipnats.hardwrought.machinery.ItemPipeBlockEntity::new,
+                            Set.of(ModBlocks.ITEM_PIPE_BRONZE, ModBlocks.ITEM_PIPE_IRON, ModBlocks.ITEM_PIPE_NICKEL,
+                                    ModBlocks.ITEM_PIPE_CHROMIUM, ModBlocks.ITEM_PIPE_TITANIUM)));
+
     /** Touching the class registers everything in it; called from the mod initializer. */
-    public static void initialize() { }
+    public static void initialize() {
+        // Item pipes take items from anything that pushes them through Fabric's transfer API.
+        net.fabricmc.fabric.api.transfer.v1.item.ItemStorage.SIDED.registerForBlockEntity(
+                de.ipnats.hardwrought.machinery.ItemPipeBlockEntity::inlet, ITEM_PIPE);
+    }
 }

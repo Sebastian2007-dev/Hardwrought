@@ -67,7 +67,11 @@ public final class MachineryClientGameTest implements FabricClientGameTest {
                 // An ore drill: a titanium frame round its head, a bronze block in it, a crank box under it.
                 BlockPos head = base.north(3).above();
                 level.setBlockAndUpdate(head.below(), ModBlocks.CRANK_BOX.defaultBlockState().setValue(CrankBoxBlock.TURNING, true));
-                level.setBlockAndUpdate(head, ModBlocks.ORE_DRILL.defaultBlockState());
+                // Facing south, toward the camera, so its chute is in the picture.
+                level.setBlockAndUpdate(head, ModBlocks.ORE_DRILL.defaultBlockState()
+                        .setValue(de.ipnats.hardwrought.machinery.OreDrillBlock.FACING, net.minecraft.core.Direction.SOUTH));
+                // A pool of crude oil beside the still.
+                level.setBlockAndUpdate(base.below().south(1).west(4), ModBlocks.CRUDE_OIL.defaultBlockState());
                 var frame = de.ipnats.hardwrought.machinery.OreDrillBlockEntity.framePositions(head);
                 for (int i = 0; i < frame.size(); i++) {
                     level.setBlockAndUpdate(frame.get(i), (i == 4 ? ModBlocks.DRILL_FRAME_BRONZE
@@ -93,6 +97,25 @@ public final class MachineryClientGameTest implements FabricClientGameTest {
             context.waitTicks(10);
             context.takeScreenshot("hardwrought-still-screen");
             context.runOnClient(client -> client.player.closeContainer());
+            // The drill's own screen: what it is doing and what its chunk holds.
+            world.getServer().runOnServer(server -> {
+                var player = server.getPlayerList().getPlayers().getFirst();
+                BlockPos head = player.blockPosition().north(5).above().north(3).above();
+                var drill = (de.ipnats.hardwrought.machinery.OreDrillBlockEntity) player.level().getBlockEntity(head);
+                drill.lookOverFrameNow();
+                net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player, drill.info(player, true));
+            });
+            context.waitTicks(10);
+            context.takeScreenshot("hardwrought-ore-drill-screen");
+            context.runOnClient(client -> client.gui.setScreen(null));
+            world.getServer().runOnServer(server -> {
+                var player = server.getPlayerList().getPlayers().getFirst();
+                net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player,
+                        de.ipnats.hardwrought.geology.OreScannerItem.scan(player));
+            });
+            context.waitTicks(10);
+            context.takeScreenshot("hardwrought-ore-scanner");
+            context.runOnClient(client -> client.gui.setScreen(null));
             // The compendium's view of the drill, whole and then its bottom layer on its own.
             var rig = de.ipnats.hardwrought.knowledge.Multiblocks.ORE_DRILL_RIG;
             var viewer = context.computeOnClient(client -> {
@@ -105,6 +128,11 @@ public final class MachineryClientGameTest implements FabricClientGameTest {
             context.runOnClient(client -> viewer.stepLayer(1));
             context.waitTicks(5);
             context.takeScreenshot("hardwrought-multiblock-layer");
+            var smeltery = de.ipnats.hardwrought.knowledge.Multiblocks.SMELTERY;
+            context.runOnClient(client -> client.gui.setScreen(
+                    new de.ipnats.hardwrought.client.knowledge.MultiblockScreen(null, smeltery, smeltery.blocks())));
+            context.waitTicks(10);
+            context.takeScreenshot("hardwrought-multiblock-smeltery");
             context.runOnClient(client -> client.gui.setScreen(null));
         }
         // The Ultra switch sits under the game mode when a world is made.

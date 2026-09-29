@@ -41,11 +41,15 @@ public final class CoreClientGameTest implements FabricClientGameTest {
             verifyCombatFeedback(context, world);
             verifyFiniteWater(context, world);
             verifySealedRoomAndCarriedLight(context, world);
+            verifyDarkness(context, world);
+            verifyEffectDrops(context, world);
             verifyCompendium(context, world);
             verifyWornStrap(context, world);
             verifyBadWaterThirst(context, world);
             verifyFirecraft(context, world);
             verifyTurningShaft(context, world);
+            verifySharedCells(context, world);
+            verifySmeltery(context, world);
             // The weight table has to reach the client, or every tooltip would guess.
             context.waitFor(client -> !de.ipnats.hardwrought.client.survival.WeightTooltip.weights().isEmpty());
             context.runOnClient(client -> {
@@ -385,6 +389,121 @@ public final class CoreClientGameTest implements FabricClientGameTest {
      * when the crank stops. Both halves matter: a shaft that never stops is as wrong as one that
      * never starts, and only the second of those is obvious by eye.
      */
+    /**
+     * Milestone 17: panes set into stairs, a carpet on a slab and one through a doorway. The server side
+     * is tested in SharedCellGameTests; here the point is that both parts reach the client and are drawn.
+     */
+    private static void verifySharedCells(ClientGameTestContext context,
+                                          net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
+        net.minecraft.core.BlockPos stairCell = world.getServer().computeOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            var level = (net.minecraft.server.level.ServerLevel) player.level();
+            var blocks = net.minecraft.world.level.block.Blocks.class;
+            net.minecraft.core.BlockPos base = player.blockPosition().east(14);
+            for (int x = -4; x <= 4; x++) {
+                for (int y = 0; y <= 4; y++) {
+                    for (int z = -1; z <= 6; z++) {
+                        level.setBlockAndUpdate(base.offset(x, y, z), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+                    }
+                }
+                for (int z = -1; z <= 6; z++) {
+                    level.setBlockAndUpdate(base.offset(x, -1, z), net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+                }
+            }
+            var stairs = net.minecraft.world.level.block.Blocks.BRICK_STAIRS.defaultBlockState()
+                    .setValue(net.minecraft.world.level.block.StairBlock.FACING, net.minecraft.core.Direction.NORTH);
+            var slab = net.minecraft.world.level.block.Blocks.OAK_SLAB.defaultBlockState();
+            var door = net.minecraft.world.level.block.Blocks.OAK_DOOR.defaultBlockState();
+            var pane = net.minecraft.world.level.block.Blocks.GLASS_PANE.defaultBlockState();
+            level.setBlockAndUpdate(base.offset(-3, 0, 0), slab);
+            level.setBlockAndUpdate(base.offset(-2, 0, 0), stairs);
+            level.setBlockAndUpdate(base.offset(0, 0, 0), stairs);
+            level.setBlockAndUpdate(base.offset(-1, 0, 0), pane);
+            level.setBlock(base.offset(2, 0, 0), door, 3);
+            level.setBlock(base.offset(2, 1, 0), door.setValue(net.minecraft.world.level.block.DoorBlock.HALF,
+                    net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER), 3);
+            for (int x = -2; x <= 0; x++) level.setBlockAndUpdate(base.offset(x, 1, 0), pane);
+            de.ipnats.hardwrought.building.SharedCell.combine(level, base.offset(-3, 0, 0), slab,
+                    net.minecraft.world.level.block.Blocks.CARPET.red().defaultBlockState());
+            for (int x : new int[] {-2, 0}) {
+                net.minecraft.core.BlockPos at = base.offset(x, 0, 0);
+                de.ipnats.hardwrought.building.SharedCell.combine(level, at, stairs,
+                        net.minecraft.world.level.block.Block.updateFromNeighbourShapes(pane, level, at));
+            }
+            de.ipnats.hardwrought.building.SharedCell.combine(level, base.offset(2, 0, 0), level.getBlockState(base.offset(2, 0, 0)),
+                    net.minecraft.world.level.block.Blocks.CARPET.blue().defaultBlockState());
+            for (int x = -1; x <= 1; x++) {
+                level.setBlockAndUpdate(base.offset(x, 0, 0), net.minecraft.world.level.block.Block.updateFromNeighbourShapes(
+                        level.getBlockState(base.offset(x, 0, 0)), level, base.offset(x, 0, 0)));
+            }
+            player.teleportTo(level, base.getX() + 0.5, base.getY(), base.getZ() + 4.5,
+                    java.util.Set.of(), 180.0f, 20.0f, false);
+            return base.offset(-2, 0, 0);
+        });
+        world.getConnection().waitForChunksRender();
+        context.waitFor(client -> client.level.getBlockEntity(stairCell)
+                instanceof de.ipnats.hardwrought.building.SharedCellBlockEntity cell
+                && cell.host().is(net.minecraft.world.level.block.Blocks.BRICK_STAIRS)
+                && cell.insert().is(net.minecraft.world.level.block.Blocks.GLASS_PANE), 200);
+        context.waitTicks(10);
+        context.takeScreenshot("hardwrought-shared-cells");
+    }
+
+    /** The smeltery: molten metal in layers in its tank, a faucet and a table, and its screen. */
+    private static void verifySmeltery(ClientGameTestContext context,
+                                       net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
+        net.minecraft.core.BlockPos controller = world.getServer().computeOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            var level = (net.minecraft.server.level.ServerLevel) player.level();
+            var S = de.ipnats.hardwrought.smeltery.SmelteryBlocks.class;
+            net.minecraft.core.BlockPos base = player.blockPosition().south(16);
+            var bricks = de.ipnats.hardwrought.smeltery.SmelteryBlocks.SMELTERY_BRICKS.defaultBlockState();
+            var glass = de.ipnats.hardwrought.smeltery.SmelteryBlocks.SMELTERY_GLASS.defaultBlockState();
+            for (int x = -3; x <= 3; x++) {
+                for (int z = -3; z <= 5; z++) {
+                    for (int y = 0; y <= 4; y++) level.setBlockAndUpdate(base.offset(x, y, z), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+                    level.setBlockAndUpdate(base.offset(x, -1, z), net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+                }
+            }
+            // A tank of 3 by 3, two high; glass on the side facing the camera.
+            for (int x = -1; x <= 1; x++) for (int z = -1; z <= 1; z++) level.setBlockAndUpdate(base.offset(x, 0, z), bricks);
+            for (int y = 1; y <= 2; y++) {
+                for (int i = -1; i <= 1; i++) {
+                    level.setBlockAndUpdate(base.offset(i, y, -2), bricks);
+                    level.setBlockAndUpdate(base.offset(-2, y, i), bricks);
+                    level.setBlockAndUpdate(base.offset(2, y, i), bricks);
+                    level.setBlockAndUpdate(base.offset(i, y, 2), i == 0 && y == 1
+                            ? de.ipnats.hardwrought.smeltery.SmelteryBlocks.CONTROLLER.defaultBlockState()
+                                    .setValue(de.ipnats.hardwrought.smeltery.SmelteryControllerBlock.FACING, net.minecraft.core.Direction.SOUTH)
+                            : i == 1 && y == 1 ? de.ipnats.hardwrought.smeltery.SmelteryBlocks.DRAIN.defaultBlockState() : glass);
+                }
+            }
+            level.setBlockAndUpdate(base.offset(1, 1, 3), de.ipnats.hardwrought.smeltery.SmelteryBlocks.FAUCET.defaultBlockState()
+                    .setValue(de.ipnats.hardwrought.smeltery.FaucetBlock.FACING, net.minecraft.core.Direction.SOUTH));
+            level.setBlockAndUpdate(base.offset(1, 0, 3), de.ipnats.hardwrought.smeltery.SmelteryBlocks.CASTING_TABLE.defaultBlockState());
+            var smeltery = (de.ipnats.hardwrought.smeltery.SmelteryControllerBlockEntity) level.getBlockEntity(base.offset(0, 1, 2));
+            smeltery.addFluidForTesting("steel", 6000);
+            smeltery.addFluidForTesting("copper", 3000);
+            smeltery.addFluidForTesting("gold", 2500);
+            player.teleportTo(level, base.getX() + 0.5, base.getY() + 3.2, base.getZ() + 6.5, java.util.Set.of(), 180.0f, 30.0f, false);
+            return base.offset(0, 1, 2);
+        });
+        world.getConnection().waitForChunksRender();
+        context.waitFor(client -> client.level.getBlockEntity(controller)
+                instanceof de.ipnats.hardwrought.smeltery.SmelteryControllerBlockEntity smeltery
+                && smeltery.formed() && !smeltery.fluids().isEmpty(), 200);
+        context.waitTicks(10);
+        context.takeScreenshot("hardwrought-smeltery");
+        world.getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            player.openMenu((de.ipnats.hardwrought.smeltery.SmelteryControllerBlockEntity) player.level().getBlockEntity(controller));
+        });
+        context.waitFor(client -> client.gui.screen() instanceof de.ipnats.hardwrought.client.smeltery.SmelteryScreen, 100);
+        context.waitTicks(5);
+        context.takeScreenshot("hardwrought-smeltery-screen");
+        context.runOnClient(client -> client.player.closeContainer());
+    }
+
     private static void verifyTurningShaft(ClientGameTestContext context,
                                            net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
         net.minecraft.core.BlockPos crank = world.getServer().computeOnServer(server -> {
@@ -812,6 +931,91 @@ public final class CoreClientGameTest implements FabricClientGameTest {
         // Open the roof again so the rest of the run does not happen in spent air.
         world.getServer().runOnServer(server -> shell(server, net.minecraft.world.level.block.Blocks.AIR));
         context.waitFor(client -> !EnvironmentHud.snapshot().sealed(), 600);
+    }
+
+    /**
+     * The stamina and water drops show what is acting on them, the way vanilla hearts show poison:
+     * gold and bright blue for the regeneration effects, orange-red and dirty green for winded and thirst.
+     */
+    private static void verifyEffectDrops(ClientGameTestContext context,
+                                          net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
+        int plainStamina = context.computeOnClient(client -> de.ipnats.hardwrought.client.survival.SurvivalHud.staminaColor(client.player));
+        int plainWater = context.computeOnClient(client -> de.ipnats.hardwrought.client.survival.SurvivalHud.waterColor(client.player));
+        world.getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    de.ipnats.hardwrought.core.registry.ModEffects.STAMINA_REGENERATION, 400));
+            player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    de.ipnats.hardwrought.core.registry.ModEffects.HYDRATION_REGENERATION, 400));
+        });
+        context.waitFor(client -> client.player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.HYDRATION_REGENERATION), 100);
+        context.runOnClient(client -> {
+            if (de.ipnats.hardwrought.client.survival.SurvivalHud.staminaColor(client.player) == plainStamina
+                    || de.ipnats.hardwrought.client.survival.SurvivalHud.waterColor(client.player) == plainWater) {
+                throw new AssertionError("Regeneration effects must colour the stamina and water drops");
+            }
+        });
+        context.waitTicks(5);
+        context.takeScreenshot("hardwrought-drops-regeneration");
+        int goodStamina = context.computeOnClient(client -> de.ipnats.hardwrought.client.survival.SurvivalHud.staminaColor(client.player));
+        int goodWater = context.computeOnClient(client -> de.ipnats.hardwrought.client.survival.SurvivalHud.waterColor(client.player));
+        world.getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            player.addEffect(new net.minecraft.world.effect.MobEffectInstance(de.ipnats.hardwrought.core.registry.ModEffects.WINDED, 400));
+            player.addEffect(new net.minecraft.world.effect.MobEffectInstance(de.ipnats.hardwrought.core.registry.ModEffects.THIRST, 400));
+        });
+        context.waitFor(client -> client.player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.THIRST), 100);
+        context.runOnClient(client -> {
+            if (de.ipnats.hardwrought.client.survival.SurvivalHud.staminaColor(client.player) == goodStamina
+                    || de.ipnats.hardwrought.client.survival.SurvivalHud.waterColor(client.player) == goodWater) {
+                throw new AssertionError("A bad effect must show over a good one, as poison does on hearts");
+            }
+        });
+        context.waitTicks(5);
+        context.takeScreenshot("hardwrought-drops-winded-thirst");
+        world.getServer().runOnServer(server -> server.getPlayerList().getPlayers().getFirst().removeAllEffects());
+    }
+
+    /**
+     * Sections 21 and 22: a moonless night gives no sky light at all, the eyes adapt to it within
+     * seconds rather than at once, and a torch in hand undoes the adaptation again.
+     */
+    private static void verifyDarkness(ClientGameTestContext context,
+                                       net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
+        if (de.ipnats.hardwrought.client.environment.Darkness.skyScale(1f, net.minecraft.world.level.MoonPhase.NEW_MOON, 0f) != 0f
+                || de.ipnats.hardwrought.client.environment.Darkness.skyScale(1f, net.minecraft.world.level.MoonPhase.FULL_MOON, 0f) != 1f
+                || de.ipnats.hardwrought.client.environment.Darkness.skyScale(0f, net.minecraft.world.level.MoonPhase.NEW_MOON, 0f) != 1f) {
+            throw new AssertionError("The moon may only scale the night sky, from nothing at new moon to vanilla at full moon");
+        }
+        world.getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, net.minecraft.world.item.ItemStack.EMPTY);
+            player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.OFFHAND, net.minecraft.world.item.ItemStack.EMPTY);
+        });
+        world.getServer().runCommand("weather clear");
+        // Midnight of the fifth day of the moon cycle: new moon.
+        world.getServer().runCommand("time set 114000");
+        context.waitFor(client -> client.gameRenderer.mainCamera().attributeProbe()
+                .getValue(net.minecraft.world.attribute.EnvironmentAttributes.MOON_PHASE, 1f)
+                == net.minecraft.world.level.MoonPhase.NEW_MOON, 200);
+        context.waitFor(client -> DynamicLight.placedAt() == null, 200);
+        context.waitTicks(40);
+        float early = context.computeOnClient(client -> de.ipnats.hardwrought.client.environment.Darkness.adaptation());
+        context.waitTicks(260);
+        float adapted = context.computeOnClient(client -> de.ipnats.hardwrought.client.environment.Darkness.adaptation());
+        if (early > 0.4f || adapted < 0.6f) {
+            throw new AssertionError("Eyes must adapt to a moonless night over seconds, not at once: "
+                    + early + " after 2 s, " + adapted + " after 15 s");
+        }
+        context.takeScreenshot("hardwrought-lighting-new-moon");
+
+        world.getServer().runOnServer(server -> server.getPlayerList().getPlayers().getFirst().setItemSlot(
+                net.minecraft.world.entity.EquipmentSlot.MAINHAND,
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.TORCH)));
+        context.waitFor(client -> de.ipnats.hardwrought.client.environment.Darkness.adaptation() < 0.2f, 100);
+        world.getServer().runOnServer(server -> server.getPlayerList().getPlayers().getFirst().setItemSlot(
+                net.minecraft.world.entity.EquipmentSlot.MAINHAND, net.minecraft.world.item.ItemStack.EMPTY));
+        world.getServer().runCommand("time set noon");
     }
 
     /**

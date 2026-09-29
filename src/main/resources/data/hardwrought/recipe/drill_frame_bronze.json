@@ -2,16 +2,15 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "I": "hardwrought:bronze_ingot",
-    "S": "minecraft:stick"
+    "R": "hardwrought:bronze_rod"
   },
   "pattern": [
-    "ISI",
-    "S S",
-    "ISI"
+    "R R",
+    " R ",
+    "R R"
   ],
   "result": {
     "id": "hardwrought:drill_frame_bronze",
-    "count": 4
+    "count": 2
   }
 }

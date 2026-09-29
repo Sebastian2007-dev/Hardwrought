@@ -1,41 +1,82 @@
 {
-  "parent": "minecraft:block/block",
-  "textures": {
-    "housing": "hardwrought:block/hardwrought/gearbox_side",
-    "particle": "hardwrought:block/hardwrought/gearbox_side"
-  },
-  "elements": [
-    {
-      "from": [
-        4,
-        4,
-        8
-      ],
-      "to": [
-        12,
-        12,
-        16
-      ],
-      "faces": {
-        "north": {
-          "texture": "#housing"
-        },
-        "south": {
-          "texture": "#housing"
-        },
-        "east": {
-          "texture": "#housing"
-        },
-        "west": {
-          "texture": "#housing"
-        },
-        "up": {
-          "texture": "#housing"
-        },
-        "down": {
-          "texture": "#housing"
-        }
-      }
-    }
-  ]
+	"format_version": "26.3",
+	"credit": "Made with Blockbench",
+	"textures": {
+		"0": "minecraft:block/spruce_planks",
+		"1": "minecraft:block/iron_block",
+		"particle": "#0"
+	},
+	"elements": [
+		{
+			"name": "Housing square",
+			"from": [4, 4, 9],
+			"to": [12, 12, 16],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 12]},
+			"faces": {
+				"north": {"uv": [0, 0, 8, 8], "texture": "#0"},
+				"east": {"uv": [0, 0, 7, 8], "texture": "#0"},
+				"south": {"uv": [0, 0, 8, 8], "texture": "#0"},
+				"west": {"uv": [0, 0, 7, 8], "texture": "#0"},
+				"up": {"uv": [0, 0, 8, 7], "texture": "#0"},
+				"down": {"uv": [0, 0, 8, 7], "texture": "#0"}
+			}
+		},
+		{
+			"name": "Housing bevel",
+			"from": [5, 3, 10],
+			"to": [11, 13, 16],
+			"rotation": {"angle": 45, "axis": "z", "origin": [8, 8, 12]},
+			"faces": {
+				"north": {"uv": [0, 0, 6, 10], "texture": "#0"},
+				"east": {"uv": [0, 0, 6, 10], "texture": "#0"},
+				"west": {"uv": [0, 0, 6, 10], "texture": "#0"},
+				"up": {"uv": [0, 0, 6, 6], "texture": "#0"},
+				"down": {"uv": [0, 0, 6, 6], "texture": "#0"}
+			}
+		},
+		{
+			"name": "Front collar square",
+			"from": [5, 5, 7],
+			"to": [11, 11, 10],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8.5]},
+			"faces": {
+				"north": {"uv": [0, 0, 6, 6], "texture": "#1"},
+				"east": {"uv": [0, 0, 3, 6], "texture": "#1"},
+				"south": {"uv": [0, 0, 6, 6], "texture": "#1"},
+				"west": {"uv": [0, 0, 3, 6], "texture": "#1"},
+				"up": {"uv": [0, 0, 6, 3], "texture": "#1"},
+				"down": {"uv": [0, 0, 6, 3], "texture": "#1"}
+			}
+		},
+		{
+			"name": "Front collar bevel",
+			"from": [5.75, 5.75, 6.5],
+			"to": [10.25, 10.25, 9.5],
+			"rotation": {"angle": 45, "axis": "z", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 4.5, 4.5], "texture": "#1"},
+				"east": {"uv": [0, 0, 3, 4.5], "texture": "#1"},
+				"south": {"uv": [0, 0, 4.5, 4.5], "texture": "#1"},
+				"west": {"uv": [0, 0, 3, 4.5], "texture": "#1"},
+				"up": {"uv": [0, 0, 4.5, 3], "texture": "#1"},
+				"down": {"uv": [0, 0, 4.5, 3], "texture": "#1"}
+			}
+		}
+	],
+	"groups": [
+		{
+			"name": "Housing",
+			"origin": [8, 8, 12],
+			"scope": 0,
+			"color": 0,
+			"children": [0, 1]
+		},
+		{
+			"name": "Bearing",
+			"origin": [8, 8, 8],
+			"scope": 0,
+			"color": 0,
+			"children": [2, 3]
+		}
+	]
 }

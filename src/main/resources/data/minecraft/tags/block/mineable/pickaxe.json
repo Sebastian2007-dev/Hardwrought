@@ -1,4 +1,5 @@
 {
+  "replace": false,
   "values": [
     {
       "id": "hardwrought:tin_ore",
@@ -132,6 +133,17 @@
     "hardwrought:drill_frame_iron",
     "hardwrought:drill_frame_nickel",
     "hardwrought:drill_frame_chromium",
-    "hardwrought:drill_frame_titanium"
+    "hardwrought:drill_frame_titanium",
+    "hardwrought:item_pipe_bronze",
+    "hardwrought:item_pipe_iron",
+    "hardwrought:item_pipe_nickel",
+    "hardwrought:item_pipe_chromium",
+    "hardwrought:item_pipe_titanium",
+    "hardwrought:smeltery_bricks",
+    "hardwrought:smeltery_glass",
+    "hardwrought:smeltery_drain",
+    "hardwrought:smeltery_controller",
+    "hardwrought:faucet",
+    "hardwrought:casting_table"
   ]
 }

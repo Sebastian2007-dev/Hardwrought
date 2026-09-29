@@ -6,7 +6,11 @@
     "minecraft:iron_sword",
     "minecraft:diamond_sword",
     "minecraft:netherite_sword",
-    "hardwrought:flint_sword"
+    "hardwrought:flint_sword",
+    "hardwrought:steel_sword",
+    "hardwrought:stainless_steel_sword",
+    "hardwrought:titanium_sword",
+    "hardwrought:tungsten_steel_sword"
   ],
   "damage": {
     "slash": 0.65,

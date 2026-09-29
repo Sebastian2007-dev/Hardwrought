@@ -418,8 +418,8 @@ def rewrite_models():
     forge_files += list((MODEL_ROOT / "forge_hood").glob("*.json"))
     for path in forge_files:
         relative = path.relative_to(MODEL_ROOT).as_posix()
-        replace_in(relative, {"minecraft:block/coal_block": "coal_bed" if "bed_" in path.name else "soot",
-                              "minecraft:block/magma": "coal_bed_hot"})
+        # The lit bed keeps vanilla's magma: its texture and animation looked better than coal_bed_hot.
+        replace_in(relative, {"minecraft:block/coal_block": "coal_bed" if "bed_" in path.name else "soot"})
 
 
 def verify():
@@ -430,7 +430,8 @@ def verify():
             if isinstance(value, str) and value.startswith("minecraft:block/"):
                 relative = path.relative_to(MODEL_ROOT).as_posix()
                 forge_material = relative.startswith("forge") and value in {
-                    "minecraft:block/bricks", "minecraft:block/mud_bricks", "minecraft:block/cobblestone"
+                    "minecraft:block/bricks", "minecraft:block/mud_bricks", "minecraft:block/cobblestone",
+                    "minecraft:block/magma"
                 }
                 if not (relative.startswith("hewn_workbench_") or relative.startswith("dirt_slab")
                         or forge_material):

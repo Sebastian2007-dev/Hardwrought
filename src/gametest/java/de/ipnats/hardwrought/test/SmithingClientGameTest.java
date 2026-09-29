@@ -70,6 +70,18 @@ public final class SmithingClientGameTest implements FabricClientGameTest {
             context.runOnClient(client -> client.gui.setScreen(new ForgingScreen(anvil[0], options)));
             context.waitTicks(5);
             context.takeScreenshot("hardwrought-smithing-choice");
+            // Everything an iron bar can become: more than the panel holds, so the list scrolls.
+            List<net.minecraft.resources.Identifier> everything = de.ipnats.hardwrought.smithing.Smithing.recipes().stream()
+                    .filter(recipe -> recipe.input() == Items.IRON_INGOT)
+                    .map(recipe -> BuiltInRegistries.ITEM.getKey(recipe.result())).toList();
+            context.runOnClient(client -> client.gui.setScreen(new ForgingScreen(anvil[0], everything)));
+            context.waitTicks(5);
+            context.runOnClient(client -> client.gui.screen().mouseScrolled(0, 0, 0, -1));
+            context.runOnClient(client -> client.gui.screen().mouseScrolled(0, 0, 0, -1));
+            context.waitTicks(2);
+            context.takeScreenshot("hardwrought-smithing-choice-scrolled");
+            context.runOnClient(client -> client.gui.setScreen(new ForgingScreen(anvil[0], options)));
+            context.waitTicks(3);
             context.runOnClient(client -> {
                 var source = de.ipnats.hardwrought.client.smithing.ItemPixels.mask(
                         de.ipnats.hardwrought.client.smithing.ItemPixels.of(new ItemStack(Items.IRON_INGOT)));

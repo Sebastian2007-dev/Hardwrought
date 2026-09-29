@@ -8,7 +8,11 @@
     "minecraft:netherite_axe",
     "hardwrought:flint_hatchet",
     "hardwrought:stone_hatchet",
-    "hardwrought:iron_hatchet"
+    "hardwrought:iron_hatchet",
+    "hardwrought:steel_axe",
+    "hardwrought:stainless_steel_axe",
+    "hardwrought:titanium_axe",
+    "hardwrought:tungsten_steel_axe"
   ],
   "damage": {
     "slash": 0.7,

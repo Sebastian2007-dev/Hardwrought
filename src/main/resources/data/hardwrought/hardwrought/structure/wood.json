@@ -1,0 +1,18 @@
+{
+  "material": "hardwrought:wood",
+  "blocks": [
+    "#minecraft:planks",
+    "#minecraft:logs",
+    "#minecraft:bamboo_blocks",
+    "#minecraft:wooden_slabs",
+    "#minecraft:wooden_stairs",
+    "#minecraft:wooden_fences",
+    "#minecraft:fence_gates",
+    "minecraft:crafting_table",
+    "minecraft:bookshelf",
+    "minecraft:barrel",
+    "minecraft:chest",
+    "minecraft:trapped_chest"
+  ],
+  "priority": 10
+}

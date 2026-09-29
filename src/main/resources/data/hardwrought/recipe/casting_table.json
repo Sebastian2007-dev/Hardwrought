@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "BBB",
+    "B B",
+    "B B"
+  ],
+  "key": {
+    "B": "hardwrought:refractory_brick"
+  },
+  "result": {
+    "id": "hardwrought:casting_table",
+    "count": 1
+  }
+}
