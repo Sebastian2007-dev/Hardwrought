@@ -45,9 +45,11 @@ public record ArmorCoverage(double slashResistance, double pierceResistance, dou
                 insulation += DEFAULT_INSULATION;
                 continue;
             }
-            slash += coverage * profile.slashResistance();
-            pierce += coverage * profile.pierceResistance();
-            blunt += coverage * profile.bluntResistance();
+            // A piece protects as well as it was made (ForgeQuality); one nobody forged, as its material does.
+            double made = coverage * de.ipnats.hardwrought.smithing.ForgeQuality.protectionFactor(piece);
+            slash += made * profile.slashResistance();
+            pierce += made * profile.pierceResistance();
+            blunt += made * profile.bluntResistance();
             drain += profile.staminaDrain();
             insulation += profile.insulation().orElse(DEFAULT_INSULATION);
         }

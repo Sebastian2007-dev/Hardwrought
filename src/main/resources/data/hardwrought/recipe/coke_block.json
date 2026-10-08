@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "CCC",
+    "CCC",
+    "CCC"
+  ],
+  "key": {
+    "C": "hardwrought:coke"
+  },
+  "result": {
+    "id": "hardwrought:coke_block",
+    "count": 1
+  }
+}

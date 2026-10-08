@@ -28,10 +28,22 @@ public class SmelteryScreen extends AbstractContainerScreen<SmelteryMenu> {
     private static final int GAUGE_X = 282;
     private static final double SCALE_C = SmelteryControllerBlockEntity.COKE_BLOWN_C;
     private static final int TOOLTIP_WIDTH = 200;
+    private static final int SELECTED = 0xFFFFF2A0, POURS_Y = 93;
+    /** A layer is never drawn thinner than this while there is room: thin enough to show, thick enough to click. */
+    private static final int LAYER_MIN = 11;
 
     public SmelteryScreen(SmelteryMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title, 296, 186);
         inventoryLabelY = imageHeight - 94;
+    }
+
+    /**
+     * What the tank holds, asked of the smeltery itself. The menu cannot say: it sends its numbers as
+     * shorts, and a tank of more than 28 blocks holds more millibuckets than a short does.
+     */
+    private int capacity() {
+        SmelteryControllerBlockEntity smeltery = smeltery();
+        return smeltery == null ? 0 : smeltery.capacity();
     }
 
     private SmelteryControllerBlockEntity smeltery() {
@@ -67,19 +79,27 @@ public class SmelteryScreen extends AbstractContainerScreen<SmelteryMenu> {
         graphics.fill(tx - 1, y + TOP - 1, tx + TANK_W + 1, y + BOTTOM + 1, SLOT_DARK);
         graphics.fill(tx, y + TOP, tx + TANK_W, y + BOTTOM, 0xFF2A2320);
         SmelteryControllerBlockEntity smeltery = smeltery();
-        int capacity = menu.capacity();
+        int capacity = capacity();
         if (smeltery != null && capacity > 0) {
             for (TankLayer layer : tankLayers(smeltery, capacity)) {
                 int top = y + layer.top();
                 int bottom = y + layer.bottom();
                 int colour = MoltenColors.of(layer.material());
                 graphics.fill(tx, top, tx + TANK_W, bottom, colour);
+                if (layer.material().equals(smeltery.bottomCastable())) {
+                    // What a faucet pours next wears a bright frame.
+                    graphics.fill(tx, top, tx + TANK_W, top + 1, SELECTED);
+                    graphics.fill(tx, bottom - 1, tx + TANK_W, bottom, SELECTED);
+                    graphics.fill(tx, top, tx + 1, bottom, SELECTED);
+                    graphics.fill(tx + TANK_W - 1, top, tx + TANK_W, bottom, SELECTED);
+                }
                 if (layer.bottom() - layer.top() >= font.lineHeight + 2) {
                     Component translated = Component.translatable("molten.hardwrought." + layer.material());
                     String name = shortened(translated.getString(), TANK_W - 6);
                     int textX = tx + (TANK_W - font.width(name)) / 2;
                     int textY = top + (bottom - top - font.lineHeight) / 2;
-                    graphics.text(font, name, textX, textY, textColour(colour), true);
+                    int ink = textColour(colour);
+                    graphics.text(font, name, textX, textY, ink, ink == 0xFFFFFFFF);
                 }
             }
         }
@@ -99,6 +119,15 @@ public class SmelteryScreen extends AbstractContainerScreen<SmelteryMenu> {
         super.extractLabels(graphics, mouseX, mouseY);
         Component heat = Component.translatable("gui.hardwrought.forge.heat", menu.temperature());
         graphics.text(font, heat, imageWidth - 8 - font.width(heat), titleLabelY, TEXT, false);
+        // Under the tank, on the line of the inventory's own label: what a faucet would pour.
+        SmelteryControllerBlockEntity smeltery = smeltery();
+        String next = smeltery == null ? null : smeltery.bottomCastable();
+        if (next == null) return;
+        graphics.fill(TANK_X, POURS_Y, TANK_X + 7, POURS_Y + 7, SLOT_DARK);
+        graphics.fill(TANK_X + 1, POURS_Y + 1, TANK_X + 6, POURS_Y + 6, MoltenColors.of(next));
+        String pours = Component.translatable("gui.hardwrought.smeltery.pours_next",
+                Component.translatable("molten.hardwrought." + next)).getString();
+        graphics.text(font, shortened(pours, imageWidth - 8 - TANK_X - 10), TANK_X + 10, POURS_Y, TEXT, false);
     }
 
     @Override
@@ -113,7 +142,7 @@ public class SmelteryScreen extends AbstractContainerScreen<SmelteryMenu> {
                 TankLayer layer = tankLayerAt(smeltery, mouseY - topPos);
                 if (layer == null) {
                     lines.add(Component.translatable("gui.hardwrought.smeltery.capacity",
-                            smeltery.fluidTotal(), menu.capacity()));
+                            smeltery.fluidTotal(), capacity()));
                 } else {
                     lines.add(Component.translatable("gui.hardwrought.smeltery.fluid",
                             Component.translatable("molten.hardwrought." + layer.material()), layer.amount(),
@@ -161,12 +190,28 @@ public class SmelteryScreen extends AbstractContainerScreen<SmelteryMenu> {
     /** The map's first entry is physically lowest and is what the faucet draws. */
     private List<TankLayer> tankLayers(SmelteryControllerBlockEntity smeltery, int capacity) {
         List<TankLayer> layers = new ArrayList<>();
-        if (capacity <= 0) return layers;
+        int count = smeltery.fluids().size();
+        if (capacity <= 0 || count == 0) return layers;
+        // To scale, a single bar in a big tank is a line one pixel high that nobody can click. Every
+        // layer gets a height that can be read and hit; what that takes comes off the thickest ones.
+        int space = BOTTOM - TOP, least = Math.max(1, Math.min(LAYER_MIN, space / count));
+        int[] heights = new int[count];
+        int used = 0, index = 0;
+        for (int amount : smeltery.fluids().values()) {
+            heights[index] = (int) Math.max(least, Math.round(amount / (double) capacity * space));
+            used += heights[index++];
+        }
+        while (used > space) {
+            int thickest = 0;
+            for (int i = 1; i < count; i++) if (heights[i] > heights[thickest]) thickest = i;
+            if (heights[thickest] <= 1) break;
+            heights[thickest]--;
+            used--;
+        }
         int bottom = BOTTOM;
+        index = 0;
         for (Map.Entry<String, Integer> fluid : smeltery.fluids().entrySet()) {
-            int height = (int) Math.max(1,
-                    Math.round(fluid.getValue() / (double) capacity * (BOTTOM - TOP)));
-            int top = Math.max(TOP, bottom - height);
+            int top = Math.max(TOP, bottom - heights[index++]);
             if (bottom > TOP) layers.add(new TankLayer(fluid.getKey(), fluid.getValue(), top, bottom));
             bottom = top;
         }
@@ -174,7 +219,7 @@ public class SmelteryScreen extends AbstractContainerScreen<SmelteryMenu> {
     }
 
     private TankLayer tankLayerAt(SmelteryControllerBlockEntity smeltery, double y) {
-        for (TankLayer layer : tankLayers(smeltery, menu.capacity())) {
+        for (TankLayer layer : tankLayers(smeltery, capacity())) {
             if (y >= layer.top() && y < layer.bottom()) return layer;
         }
         return null;

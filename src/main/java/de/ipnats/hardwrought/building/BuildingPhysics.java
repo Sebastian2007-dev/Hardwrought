@@ -421,7 +421,15 @@ public final class BuildingPhysics {
             if (member.isPresent() && BuiltBlocks.isAnchored(level, pos)) return member.get().withAnchor();
             return member.<Statics.Cell>map(value -> value).orElse(Statics.EMPTY);
         }
-        if (Leaves.isLeaves(state) || !state.isCollisionShapeFullBlock(level, pos)) return Statics.EMPTY;
+        if (Leaves.isLeaves(state)) return Statics.EMPTY;
+        // Not known to have been built, so it is taken to hold: a whole block of anything, and also a
+        // block that is not a whole cube but is made of something that carries — a gearbox set down
+        // before machines counted as structure, a fence post of a village. Without this a shaft
+        // standing on such a gearbox had nothing under it, fell, and broke on the gearbox.
+        if (!state.isCollisionShapeFullBlock(level, pos)
+                && StructuralMaterials.of(level.getServer(), state).isEmpty()) {
+            return Statics.EMPTY;
+        }
         return Statics.ANCHOR;
     }
 

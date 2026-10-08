@@ -33,6 +33,19 @@ public final class SmithingTooltip {
                             ? ChatFormatting.GOLD : ChatFormatting.YELLOW));
                 }
             }
+            var cast = de.ipnats.hardwrought.smeltery.Casts.of(stack);
+            var unfired = de.ipnats.hardwrought.smeltery.Casts.unfired(stack);
+            if (stack.is(de.ipnats.hardwrought.smeltery.Casts.BLANK)) {
+                lines.add(Component.translatable("tooltip.hardwrought.cast_blank").withStyle(ChatFormatting.GRAY));
+            } else if (unfired != null) {
+                lines.add(Component.translatable("tooltip.hardwrought.cast_unfired").withStyle(ChatFormatting.GRAY));
+            } else if (cast != null) {
+                lines.add(Component.translatable("tooltip.hardwrought.cast_amount",
+                        cast.amount() / de.ipnats.hardwrought.smeltery.MoltenMetals.INGOT).withStyle(ChatFormatting.GRAY));
+                if (cast.part() != null) {
+                    lines.add(Component.translatable("tooltip.hardwrought.cast_rough").withStyle(ChatFormatting.DARK_GRAY));
+                }
+            }
             int reach = de.ipnats.hardwrought.smithing.Hammers.reach(stack);
             if (reach > 0) {
                 lines.add(Component.translatable("tooltip.hardwrought.hammer_reach", reach)
@@ -55,12 +68,25 @@ public final class SmithingTooltip {
             ForgeQuality quality = ForgeQuality.of(stack);
             if (quality != null) {
                 lines.add(Component.translatable("tooltip.hardwrought.craftsmanship",
-                        Math.round(quality.craftsmanship() * 100)).withStyle(ChatFormatting.GRAY));
+                        Math.round(quality.total() * 100)).withStyle(ChatFormatting.GRAY));
+                // "Air-cooled" would be a lie about a piece still glowing in the fire.
+                boolean stillHot = quality.treatment() == ForgeQuality.Treatment.AIR && Heat.hot(stack, now);
                 lines.add(Component.translatable("tooltip.hardwrought.treatment."
-                        + quality.treatment().getSerializedName()).withStyle(ChatFormatting.DARK_GRAY));
-                lines.add(Component.translatable("tooltip.hardwrought.forged_stats",
-                        percent(quality.speedFactor()), percent(quality.durabilityFactor()),
-                        percent(quality.damageFactor())).withStyle(ChatFormatting.DARK_GRAY));
+                        + (stillHot ? "air_hot" : quality.treatment().getSerializedName())).withStyle(ChatFormatting.DARK_GRAY));
+                var part = de.ipnats.hardwrought.smithing.ToolParts.partOf(stack.getItem());
+                if (part != null || quality.passes() > 0) {
+                    lines.add(Component.translatable("tooltip.hardwrought.polish", Math.round(quality.polish() * 100),
+                            quality.passes(), de.ipnats.hardwrought.smithing.Grinding.PASSES).withStyle(ChatFormatting.DARK_GRAY));
+                }
+                // Only what the piece is for: armor does not dig or hit, it turns blows aside.
+                boolean armor = part != null ? de.ipnats.hardwrought.smithing.ToolParts.ARMOR.contains(part)
+                        : stack.has(net.minecraft.core.component.DataComponents.EQUIPPABLE);
+                lines.add((armor
+                        ? Component.translatable("tooltip.hardwrought.forged_armor_stats",
+                                percent(quality.protectionFactor()), percent(quality.durabilityFactor()))
+                        : Component.translatable("tooltip.hardwrought.forged_stats",
+                                percent(quality.speedFactor()), percent(quality.durabilityFactor()),
+                                percent(quality.damageFactor()))).withStyle(ChatFormatting.DARK_GRAY));
             }
         });
     }

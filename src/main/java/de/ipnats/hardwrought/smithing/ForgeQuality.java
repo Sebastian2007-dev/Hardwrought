@@ -16,7 +16,7 @@ import java.util.Locale;
  *
  * <p>Carried by a forged part and handed on to the tool it becomes, so two pickaxes of the same iron
  * can be two different pickaxes. Everything a player notices — how fast it digs, how long it lasts,
- * how hard it hits — is worked out from these two values rather than written onto the item, so the
+ * how hard it hits, how much a piece of armor turns aside — is worked out from these two values rather than written onto the item, so the
  * balance can change without every forged tool in every world having to be rewritten.
  *
  * <p>A tool nobody forged — one from a chest, a villager, another mod — carries none, and behaves
@@ -24,8 +24,11 @@ import java.util.Locale;
  *
  * @param craftsmanship 0 to 1: how cleanly the piece was worked
  * @param treatment     what happened to it after the last time it was at forging heat
+ * @param polish        what a grindstone added on top of that (see {@link Grinding}); with it a part
+ *                      can stand above the best an anvil gives
+ * @param passes        how often the piece has been put to the grindstone
  */
-public record ForgeQuality(float craftsmanship, Treatment treatment) {
+public record ForgeQuality(float craftsmanship, Treatment treatment, float polish, int passes) {
     /** The heat treatment of section 38. Only iron takes a hardening; bronze and gold do not. */
     public enum Treatment implements StringRepresentable {
         /** Left to cool in the air: soft, tough, the baseline. */
@@ -45,22 +48,38 @@ public record ForgeQuality(float craftsmanship, Treatment treatment) {
 
     public static final Codec<ForgeQuality> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.floatRange(0, 1).fieldOf("craftsmanship").forGetter(ForgeQuality::craftsmanship),
-            Treatment.CODEC.optionalFieldOf("treatment", Treatment.AIR).forGetter(ForgeQuality::treatment)
+            Treatment.CODEC.optionalFieldOf("treatment", Treatment.AIR).forGetter(ForgeQuality::treatment),
+            Codec.FLOAT.optionalFieldOf("polish", 0f).forGetter(ForgeQuality::polish),
+            Codec.INT.optionalFieldOf("passes", 0).forGetter(ForgeQuality::passes)
     ).apply(instance, ForgeQuality::new));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ForgeQuality> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.FLOAT, ForgeQuality::craftsmanship,
             ByteBufCodecs.VAR_INT.map(index -> Treatment.values()[index], Treatment::ordinal), ForgeQuality::treatment,
+            ByteBufCodecs.FLOAT, ForgeQuality::polish,
+            ByteBufCodecs.VAR_INT, ForgeQuality::passes,
             ForgeQuality::new);
 
     public ForgeQuality {
         if (!Float.isFinite(craftsmanship)) craftsmanship = 0;
         craftsmanship = Math.clamp(craftsmanship, 0f, 1f);
         if (treatment == null) treatment = Treatment.AIR;
+        polish = Float.isFinite(polish) ? Math.clamp(polish, 0f, 1f) : 0;
+        passes = Math.clamp(passes, 0, 127);
+    }
+
+    /** A piece no grindstone has touched. */
+    public ForgeQuality(float craftsmanship, Treatment treatment) {
+        this(craftsmanship, treatment, 0, 0);
     }
 
     public ForgeQuality withTreatment(Treatment value) {
-        return new ForgeQuality(craftsmanship, value);
+        return new ForgeQuality(craftsmanship, value, polish, passes);
+    }
+
+    /** How well made the piece is all told: the anvil's share and the grindstone's. Above 1 for the very best. */
+    public float total() {
+        return craftsmanship + polish;
     }
 
     /**
@@ -68,7 +87,7 @@ public record ForgeQuality(float craftsmanship, Treatment treatment) {
      * digs at about four fifths of the speed, a well made one a little above full.
      */
     public double speedFactor() {
-        double base = 0.80 + 0.30 * craftsmanship;
+        double base = 0.80 + 0.30 * total();
         return base * switch (treatment) {
             case AIR -> 1.00;
             case QUENCHED -> 1.10;
@@ -78,7 +97,7 @@ public record ForgeQuality(float craftsmanship, Treatment treatment) {
 
     /** Durability against vanilla's: 71 % for poor work up to about 125 % for the best. */
     public double durabilityFactor() {
-        double base = 0.65 + 0.60 * craftsmanship;
+        double base = 0.65 + 0.60 * total();
         return base * switch (treatment) {
             case AIR -> 1.00;
             case QUENCHED -> 0.75;
@@ -88,11 +107,24 @@ public record ForgeQuality(float craftsmanship, Treatment treatment) {
 
     /** Damage against the weapon's own. */
     public double damageFactor() {
-        double base = 0.85 + 0.25 * craftsmanship;
+        double base = 0.85 + 0.25 * total();
         return base * switch (treatment) {
             case AIR -> 1.00;
             case QUENCHED -> 1.08;
             case TEMPERED -> 1.05;
+        };
+    }
+
+    /**
+     * How much of an armor piece's resistance to cuts, stabs and blows it really gives: poorly made
+     * plate has thin places.
+     */
+    public double protectionFactor() {
+        double base = 0.85 + 0.25 * total();
+        return base * switch (treatment) {
+            case AIR -> 1.00;
+            case QUENCHED -> 1.04;
+            case TEMPERED -> 1.08;
         };
     }
 
@@ -109,6 +141,11 @@ public record ForgeQuality(float craftsmanship, Treatment treatment) {
     public static double durabilityFactor(ItemStack stack) {
         ForgeQuality quality = of(stack);
         return quality == null ? 1.0 : quality.durabilityFactor();
+    }
+
+    public static double protectionFactor(ItemStack stack) {
+        ForgeQuality quality = of(stack);
+        return quality == null ? 1.0 : quality.protectionFactor();
     }
 
     public static double damageFactor(ItemStack stack) {

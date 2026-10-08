@@ -139,6 +139,14 @@ public final class ToolParts {
         return all;
     }
 
+    /** Which kind of part an item is, or null where it is not a part. */
+    public static Part partOf(Item item) {
+        for (Map<Part, Item> parts : ITEMS.values()) {
+            for (var entry : parts.entrySet()) if (entry.getValue() == item) return entry.getKey();
+        }
+        return null;
+    }
+
     /** Which metal a part is made of, or null where the item is not a part. */
     public static SmithMetal metalOf(Item item) {
         for (var entry : ITEMS.entrySet()) {

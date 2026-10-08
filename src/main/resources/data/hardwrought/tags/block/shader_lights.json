@@ -38,6 +38,7 @@
     {
       "id": "#minecraft:lanterns",
       "required": false
-    }
+    },
+    "minecraft:enchanting_table"
   ]
 }

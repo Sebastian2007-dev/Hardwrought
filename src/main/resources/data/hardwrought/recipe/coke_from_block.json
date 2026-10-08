@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:coke_block"
+  ],
+  "result": {
+    "id": "hardwrought:coke",
+    "count": 9
+  }
+}

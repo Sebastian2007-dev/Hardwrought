@@ -5,6 +5,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
@@ -14,10 +16,15 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
-/** A faucet's pour: which metal is running, if any. Drawn by the client as a stream to the table. */
+/**
+ * A faucet's pour: which metal is running, if any. Drawn by the client as a stream to the table.
+ * Opened by hand it fills one cast; with a redstone signal on it, one cast after another.
+ */
 public class FaucetBlockEntity extends BlockEntity {
     /** Millibuckets a faucet runs per tick: an ingot in about a second. */
     public static final int FLOW = 8;
+    /** How often a faucet held open by redstone looks whether it can pour again. */
+    static final int REOPEN_TICKS = 10;
 
     private String pouring = "";
 
@@ -42,17 +49,35 @@ public class FaucetBlockEntity extends BlockEntity {
 
     /** Opened by hand: starts pouring, if there is something to pour and somewhere for it to go. */
     public void open() {
+        open(null);
+    }
+
+    /** As {@link #open()}, telling whoever turned it why nothing runs where nothing does. */
+    public void open(ServerPlayer player) {
         SmelteryControllerBlockEntity smeltery = smeltery();
         CastingTableBlockEntity table = table();
-        if (smeltery == null || table == null) return;
+        if (smeltery == null || table == null || !pouring.isEmpty()) return;
         String metal = smeltery.bottomCastable();
-        if (metal == null || !table.accepts(metal)) return;
+        if (metal == null || !table.accepts(metal)) {
+            if (player != null) {
+                player.sendOverlayMessage(!table.ready() ? Component.translatable("message.hardwrought.cast.no_cast")
+                        : metal == null ? Component.translatable("message.hardwrought.cast.nothing")
+                        : Component.translatable("message.hardwrought.cast.no_part",
+                                Component.translatable("molten.hardwrought." + metal)));
+            }
+            return;
+        }
         set(metal);
         level.playSound(null, worldPosition, SoundEvents.LAVA_POP, SoundSource.BLOCKS, 0.8f, 0.9f);
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, FaucetBlockEntity faucet) {
-        if (faucet.pouring.isEmpty()) return;
+        if (faucet.pouring.isEmpty()) {
+            // Held open by redstone, a faucet pours again as soon as the cast is empty: with a hopper
+            // under the table, that is a smeltery casting by itself.
+            if (level.getGameTime() % REOPEN_TICKS == 0 && level.hasNeighborSignal(pos)) faucet.open();
+            return;
+        }
         SmelteryControllerBlockEntity smeltery = faucet.smeltery();
         CastingTableBlockEntity table = faucet.table();
         if (smeltery == null || table == null || !faucet.pouring.equals(smeltery.bottomCastable())) {

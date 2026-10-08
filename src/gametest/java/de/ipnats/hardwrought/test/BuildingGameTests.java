@@ -330,6 +330,48 @@ public final class BuildingGameTests {
         });
     }
 
+    /**
+     * A shaft standing on a machine stands, whether the machine was set down just now or has stood
+     * there since before machines counted as structure. The second is the one that used to fail: a
+     * gearbox is not a whole cube, so one the statics did not know as built counted as nothing at
+     * all, and the shaft on it fell — and broke, landing on the gearbox.
+     */
+    @GameTest(maxTicks = 200)
+    public void aShaftStandsOnTheMachineItDrives(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        var crusher = de.ipnats.hardwrought.core.registry.ModBlocks.STARTER_CRUSHER.defaultBlockState();
+        var upright = de.ipnats.hardwrought.core.registry.ModBlocks.SHAFT.defaultBlockState()
+                .setValue(de.ipnats.hardwrought.machinery.ShaftBlock.AXIS, net.minecraft.core.Direction.Axis.Y);
+        BlockPos fresh = helper.absolutePos(new BlockPos(1, 1, 1)), old = helper.absolutePos(new BlockPos(3, 1, 1));
+        for (BlockPos machine : List.of(fresh, old)) level.setBlockAndUpdate(machine.below(), Blocks.STONE.defaultBlockState());
+        build(level, fresh, crusher);
+        level.setBlockAndUpdate(old, de.ipnats.hardwrought.core.registry.ModBlocks.GEARBOX.defaultBlockState());
+        for (BlockPos machine : List.of(fresh, old)) {
+            build(level, machine.above(), upright);
+            build(level, machine.above(2), de.ipnats.hardwrought.core.registry.ModBlocks.GEARBOX.defaultBlockState());
+        }
+        // A windmill on a standing shaft, as a mill over its crusher is built.
+        BlockPos mill = helper.absolutePos(new BlockPos(5, 1, 1));
+        level.setBlockAndUpdate(mill.below(), Blocks.STONE.defaultBlockState());
+        build(level, mill, crusher);
+        build(level, mill.above(), upright);
+        build(level, mill.above(2), de.ipnats.hardwrought.core.registry.ModBlocks.WINDMILL.defaultBlockState());
+        helper.runAfterDelay(119, () -> helper.assertTrue(
+                level.getBlockState(mill.above()).is(de.ipnats.hardwrought.core.registry.ModBlocks.SHAFT)
+                        && level.getBlockState(mill.above(2)).is(de.ipnats.hardwrought.core.registry.ModBlocks.WINDMILL),
+                "Crusher, shaft and windmill all stand: " + level.getBlockState(mill) + " / "
+                        + level.getBlockState(mill.above()) + " / " + level.getBlockState(mill.above(2))));
+        helper.runAfterDelay(120, () -> {
+            for (BlockPos machine : List.of(fresh, old)) {
+                helper.assertTrue(level.getBlockState(machine.above()).is(de.ipnats.hardwrought.core.registry.ModBlocks.SHAFT)
+                                && level.getBlockState(machine.above(2)).is(de.ipnats.hardwrought.core.registry.ModBlocks.GEARBOX),
+                        "Machine, shaft and gearbox all stand on " + (machine.equals(fresh) ? "the new crusher" : "the old gearbox") + ": "
+                                + level.getBlockState(machine) + " / " + level.getBlockState(machine.above()) + " / " + level.getBlockState(machine.above(2)));
+            }
+            helper.succeed();
+        });
+    }
+
     private static void build(ServerLevel level, BlockPos pos, BlockState state) {
         level.setBlockAndUpdate(pos, state);
         BuildingPhysics.placed(level, pos, state);

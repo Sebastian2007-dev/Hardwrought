@@ -413,9 +413,11 @@ public final class CompendiumTextureExporter {
     private static BufferedImage textured(int width, int height, int base, int fiber, int spacing) {
         BufferedImage image = image(width, height, base);
         for (int y = 1; y < height - 1; y++) for (int x = 1; x < width - 1; x++) {
+            // Only light fibres, and few: these surfaces are written on, and a dark speck the colour
+            // of the ink reads as a stray stroke of a letter.
             int noise = Math.floorMod(x * 31 + y * 17 + x * y * 3, spacing * 3);
-            if (noise == 0 || (noise == 1 && x % 3 != 0)) set(image, x, y, fiber);
-            else if (noise == spacing * 2) set(image, x, y, PAGE_DEEP);
+            boolean margin = x < 3 || y < 3 || x >= width - 3 || y >= height - 3;
+            if (noise == 0 && (x + y) % 2 == 0 && margin) set(image, x, y, fiber);
         }
         return image;
     }

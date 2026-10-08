@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 200,
+  "experience": 0.2,
+  "ingredient": "hardwrought:unfired_sabatons_cast",
+  "result": {
+    "id": "hardwrought:sabatons_cast"
+  }
+}

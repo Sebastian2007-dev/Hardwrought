@@ -31,6 +31,8 @@ public class ForgeMenu extends AbstractContainerMenu {
     private final int layout;
     private final int fuelCount;
     private final int forgeSlots;
+    /** The heat of each of the forge's places as the client last heard it. */
+    private final Heat[] sentHeat;
 
     /** The client's side: an empty stand-in the server fills. */
     public ForgeMenu(int id, Inventory inventory, Integer layout) {
@@ -45,6 +47,7 @@ public class ForgeMenu extends AbstractContainerMenu {
         this.fuelCount = ForgeBlockEntity.fuelSlots(layout);
         int metalCount = ForgeBlockEntity.metalSlots(layout);
         this.forgeSlots = fuelCount + metalCount;
+        this.sentHeat = new Heat[forgeSlots];
 
         for (int i = 0; i < fuelCount; i++) {
             int[] at = fuelPosition(layout, i);
@@ -123,6 +126,26 @@ public class ForgeMenu extends AbstractContainerMenu {
         if (stack.getCount() == original.getCount()) return ItemStack.EMPTY;
         slot.onTake(player, stack);
         return original;
+    }
+
+    /**
+     * Sends the pieces again whenever the forge has given one a new heat. Vanilla would not: hot pieces
+     * that differ only in their heat count as the same stack (so that they stack, see
+     * {@link Heat#stackTogether}), and a slot that holds "the same stack" as before is not sent. The
+     * screen then went on cooling a piece the fire was holding, until it was closed and opened again.
+     */
+    @Override
+    public void broadcastChanges() {
+        boolean reheated = false;
+        for (int i = 0; i < forgeSlots; i++) {
+            Heat heat = slots.get(i).getItem().get(de.ipnats.hardwrought.core.registry.ModDataComponents.HEAT);
+            if (!java.util.Objects.equals(heat, sentHeat[i])) {
+                sentHeat[i] = heat;
+                reheated = true;
+            }
+        }
+        if (reheated) sendAllDataToRemote();
+        super.broadcastChanges();
     }
 
     @Override

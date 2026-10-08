@@ -89,7 +89,7 @@ public final class CoreGameTests {
         helper.assertTrue(runtime.materials().containsKey(Hardwrought.id("copper")), "Bundled materials loaded through datapack listener");
         helper.assertTrue(runtime.itemWeights().get(Hardwrought.id("filled_waterskin")) == 1.2,
                 "Bundled item mass is loaded through the datapack listener");
-        helper.assertTrue(runtime.foodNutrition().get(net.minecraft.resources.Identifier.withDefaultNamespace("apple")).vitamins() == 12,
+        helper.assertTrue(runtime.foodNutrition().get(net.minecraft.resources.Identifier.withDefaultNamespace("apple")).vitamins() == 7,
                 "Bundled food profile is loaded through the datapack listener");
         helper.assertTrue(runtime.materials().get(Hardwrought.id("copper")).tier() == 1, "Copper properties loaded");
         expectFailure(() -> runtime.materials().clear());
@@ -225,8 +225,9 @@ public final class CoreGameTests {
         var decoded = CoreSaveData.CODEC.parse(JsonOps.INSTANCE, encoded).getOrThrow().vitals(id);
         helper.assertTrue(decoded.stamina() == 0, "Stamina is clamped at zero");
         helper.assertTrue(decoded.hydration() == 100, "Hydration is clamped at maximum");
-        helper.assertTrue(decoded.nutrition().protein() == de.ipnats.hardwrought.survival.Nutrient.MAX,
-                "Nutrients are bounded");
+        helper.assertTrue(decoded.nutrition().protein() > de.ipnats.hardwrought.survival.Nutrient.HIGH
+                        && decoded.nutrition().protein() <= de.ipnats.hardwrought.survival.Nutrient.MAX,
+                "Nutrients are bounded: a feast fills a level far up and never past the top");
         helper.assertTrue(PlayerVitals.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString("""
                 {"stamina":-1,"hydration":100,"calories":2000,"protein":70,"carbohydrates":260,
                  "fat":70,"micronutrients":100,"fatigue":15,"body_temperature":37,"wetness":0}
@@ -432,14 +433,41 @@ public final class CoreGameTests {
                 "Work burns carbohydrates");
 
         // Four days of living on steak alone: protein and fat run over while the rest runs out.
-        var steak = new de.ipnats.hardwrought.survival.Nutrition(12, 8, 0, 1, 0);
+        var steak = new de.ipnats.hardwrought.survival.Nutrition(17, 11, 0, 1, 0);
         var carnivore = diet;
-        for (int meal = 0; meal < 24; meal++) carnivore = carnivore.plus(steak, 1.0).drained(200, 0);
+        for (int meal = 0; meal < 24; meal++) carnivore = carnivore.plus(steak, 1.0).plus(steak, 1.0).drained(200, 0);
         helper.assertTrue(carnivore.high(de.ipnats.hardwrought.survival.Nutrient.PROTEIN),
                 "Steak alone is too much protein");
         helper.assertTrue(carnivore.low(de.ipnats.hardwrought.survival.Nutrient.FIBER)
                         && carnivore.low(de.ipnats.hardwrought.survival.Nutrient.CARBOHYDRATES),
                 "and too little of what it does not have");
+
+        // A mixed diet holds itself in the band, whether the player eats little of it or twice as
+        // much: a full body takes in less of what it has plenty of, and burns it faster.
+        var bread = new de.ipnats.hardwrought.survival.Nutrition(3, 1, 17, 1, 6);
+        var carrot = new de.ipnats.hardwrought.survival.Nutrition(0, 0, 4, 10, 6);
+        helper.assertTrue(diet.plus(steak, 1.0).plus(steak, 1.0).balanced(),
+                "Two steaks in one sitting are not yet too much: " + diet.plus(steak, 1.0).plus(steak, 1.0));
+        for (int portions = 1; portions <= 2; portions++) {
+            var mixed = diet;
+            for (int day = 0; day < 12; day++) {
+                for (var food : List.of(steak, bread, carrot)) {
+                    for (int i = 0; i < portions; i++) mixed = mixed.plus(food, 1.0);
+                    if (portions == 1) {
+                        helper.assertTrue(mixed.balanced(), "Steak, bread and a carrot a day stay balanced even straight "
+                                + "after a meal, on day " + day + ": " + mixed);
+                    }
+                    mixed = mixed.drained(400, 0);
+                    helper.assertTrue(mixed.balanced(), "A mixed diet is balanced again by the next meal, at " + portions
+                            + " of each on day " + day + ": " + mixed);
+                }
+            }
+        }
+        // Too much goes away again in good time once the player eats something else.
+        var recovering = new de.ipnats.hardwrought.survival.Nutrition(93, 92, 71, 93, 54).drained(1200, 0);
+        helper.assertFalse(recovering.high(de.ipnats.hardwrought.survival.Nutrient.PROTEIN)
+                        || recovering.high(de.ipnats.hardwrought.survival.Nutrient.VITAMINS),
+                "A day without it brings an overfull level back into the band: " + recovering);
 
         var runtime = de.ipnats.hardwrought.core.events.CoreLifecycle.require(helper.getLevel().getServer());
         net.minecraft.server.level.ServerPlayer player = (net.minecraft.server.level.ServerPlayer)
@@ -447,11 +475,35 @@ public final class CoreGameTests {
         runtime.survival().setVitalsForTesting(player, PlayerVitals.defaults());
         runtime.survival().consumeFood(player, new ItemStack(Items.CARROT));
         var afterCarrot = runtime.survival().vitals(player).nutrition();
-        helper.assertTrue(afterCarrot.vitamins() == diet.vitamins() + 18 && afterCarrot.protein() == diet.protein(),
-                "Each food fills its own nutrients: a carrot is vitamins, not protein");
+        helper.assertTrue(afterCarrot.vitamins() > diet.vitamins() + 6 && afterCarrot.vitamins() < diet.vitamins() + 10
+                        && afterCarrot.protein() == diet.protein(),
+                "Each food fills its own nutrients: a carrot is vitamins, not protein: " + afterCarrot);
         runtime.survival().consumeFood(player, new ItemStack(Items.MILK_BUCKET));
         helper.assertTrue(runtime.survival().vitals(player).nutrition().fat() > afterCarrot.fat(),
                 "Milk counts as food too");
+        helper.succeed();
+    }
+
+    /**
+     * With no water left a body is dying of thirst; a spectator has no body to thirst. That the damage
+     * then lands is seen in the game itself: a test's stand-in player cannot be hurt.
+     */
+    @GameTest
+    public void thirstKillsAndASpectatorDoesNotThirst(GameTestHelper helper) {
+        var survival = de.ipnats.hardwrought.core.events.CoreLifecycle.require(helper.getLevel().getServer()).survival();
+        var parched = (net.minecraft.server.level.ServerPlayer) helper.makeMockServerPlayer(net.minecraft.world.level.GameType.SURVIVAL);
+        var watching = (net.minecraft.server.level.ServerPlayer) helper.makeMockServerPlayer(net.minecraft.world.level.GameType.SPECTATOR);
+        var dry = PlayerVitals.defaults().withHydration(0).withStamina(40);
+        helper.assertFalse(de.ipnats.hardwrought.survival.SurvivalSystem.parched(parched, PlayerVitals.defaults().withHydration(1)),
+                "A last drop of water still holds");
+        helper.assertTrue(de.ipnats.hardwrought.survival.SurvivalSystem.parched(parched, dry), "With none left, thirst kills");
+        helper.assertFalse(de.ipnats.hardwrought.survival.SurvivalSystem.parched(watching, dry), "but not a spectator");
+
+        survival.setVitalsForTesting(watching, dry);
+        survival.drink(watching, 30);
+        survival.afflict(watching, -10, 0, -10);
+        helper.assertTrue(survival.vitals(watching).equals(dry) && survival.stamina(watching) == PlayerVitals.MAX_STAMINA,
+                "whose vitals stand still: " + survival.vitals(watching));
         helper.succeed();
     }
 

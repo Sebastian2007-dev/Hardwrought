@@ -43,6 +43,9 @@ public final class SmelteryBlocks {
             BlockBehaviour.Properties.of().noCollision().noOcclusion().lightLevel(state -> 15).noLootTable());
 
     public static final Item COKE = item("coke", Item::new);
+    /** Nine pieces of coke pressed together: to store it, and to burn as nine. */
+    public static final Block COKE_BLOCK = block("coke_block", Block::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.COAL_BLOCK));
     public static final Item UNFIRED_INGOT_CAST = item("unfired_ingot_cast", Item::new);
     public static final Item INGOT_CAST = item("ingot_cast", Item::new);
 
@@ -59,13 +62,16 @@ public final class SmelteryBlocks {
 
     /** Touching the class registers everything in it; the menu type with it. */
     public static void initialize() {
+        Casts.initialize();
         SmelteryMenu.initialize();
     }
 
     /** Everything a player can hold, for the creative tab. */
     public static List<Item> items() {
-        return List.of(SMELTERY_BRICKS.asItem(), SMELTERY_GLASS.asItem(), TANK.asItem(), CONTROLLER.asItem(), DRAIN.asItem(),
-                FAUCET.asItem(), CASTING_TABLE.asItem(), UNFIRED_INGOT_CAST, INGOT_CAST, COKE);
+        List<Item> items = new java.util.ArrayList<>(List.of(SMELTERY_BRICKS.asItem(), SMELTERY_GLASS.asItem(), TANK.asItem(),
+                CONTROLLER.asItem(), DRAIN.asItem(), FAUCET.asItem(), CASTING_TABLE.asItem(), COKE, COKE_BLOCK.asItem()));
+        items.addAll(Casts.items());
+        return items;
     }
 
     private static <T extends Block> T register(String name, Function<BlockBehaviour.Properties, T> factory,
@@ -82,7 +88,7 @@ public final class SmelteryBlocks {
         return block;
     }
 
-    private static Item item(String name, Function<Item.Properties, Item> factory) {
+    static Item item(String name, Function<Item.Properties, Item> factory) {
         ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, Hardwrought.id(name));
         return Registry.register(BuiltInRegistries.ITEM, key, factory.apply(new Item.Properties().setId(key)));
     }

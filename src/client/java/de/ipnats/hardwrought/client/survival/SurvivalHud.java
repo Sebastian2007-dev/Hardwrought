@@ -67,6 +67,22 @@ public final class SurvivalHud {
         });
         HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, Hardwrought.id("survival_hud"),
                 (graphics, delta) -> render(graphics));
+        // With armor on, the stamina drops stand where vanilla writes the name of the item just
+        // selected; the name moves up out of their way.
+        HudElementRegistry.replaceElement(VanillaHudElements.HELD_ITEM_TOOLTIP, vanilla -> (graphics, delta) -> {
+            Minecraft client = Minecraft.getInstance();
+            int lift = client.player == null || snapshot == null
+                    || de.ipnats.hardwrought.survival.SurvivalSystem.exempt(client.player) ? 0
+                    : graphics.guiHeight() - 49 - staminaY(client.player, graphics.guiHeight());
+            if (lift <= 0) {
+                vanilla.extractRenderState(graphics, delta);
+                return;
+            }
+            graphics.pose().pushMatrix();
+            graphics.pose().translate(0, -lift);
+            vanilla.extractRenderState(graphics, delta);
+            graphics.pose().popMatrix();
+        });
     }
 
     private static void render(net.minecraft.client.gui.GuiGraphicsExtractor graphics) {
@@ -74,9 +90,10 @@ public final class SurvivalHud {
         if (client.player == null || snapshot == null) return;
 
         int center = graphics.guiWidth() / 2;
-        if (!client.player.isCreative()) {
+        if (!de.ipnats.hardwrought.survival.SurvivalSystem.exempt(client.player)) {
             int dropY = graphics.guiHeight() - 49;
-            renderDrops(graphics, center - 91, dropY, snapshot.stamina(), staminaColor(client.player));
+            renderDrops(graphics, center - 91, staminaY(client.player, graphics.guiHeight()), snapshot.stamina(),
+                    staminaColor(client.player));
             if (!client.player.isUnderWater()) {
                 renderDrops(graphics, center + 11, dropY, snapshot.hydration(), waterColor(client.player));
             }
@@ -89,6 +106,19 @@ public final class SurvivalHud {
             int textX = center - client.font.width(sleep) / 2;
             graphics.text(client.font, sleep, textX, graphics.guiHeight() - 72, 0xFFDCCFFF, true);
         }
+    }
+
+    /**
+     * Where the stamina drops go: the row above the hearts, which is where vanilla draws armor. With
+     * armor on they move up a row, above the armor; and like the armor they stand clear of however
+     * many rows of hearts there are.
+     */
+    public static int staminaY(net.minecraft.world.entity.player.Player player, int screenHeight) {
+        double hearts = Math.max(player.getMaxHealth(), player.getHealth()) + player.getAbsorptionAmount();
+        int rows = Math.max(1, (int) Math.ceil(hearts / 2.0 / 10.0));
+        int rowHeight = Math.max(10 - (rows - 2), 3);
+        int aboveHearts = screenHeight - 39 - (rows - 1) * rowHeight - 10;
+        return player.getArmorValue() > 0 ? aboveHearts - 10 : aboveHearts;
     }
 
     /**

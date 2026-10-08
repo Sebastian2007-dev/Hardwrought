@@ -169,55 +169,7 @@ def textures():
 
     coke = recolour(vanilla("item/coal"), (30, 32, 38), (150, 156, 168))
     save(coke, "item/coke")
-    for key, body, hollow in (("unfired_ingot_cast", (206, 190, 162), (154, 132, 103)),
-                              ("ingot_cast", (160, 91, 55), (75, 39, 25))):
-        img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
-        q = img.load()
-        # A table-sized mould plate with a stepped, ingot-shaped opening.  The transparent opening is
-        # deliberately aligned with the molten-metal box in SmelteryRenderers.Table.
-        for y in range(1, 15):
-            for x in range(16):
-                q[x, y] = body + (255,)
-        for y in (5, 10):
-            for x in range(3, 13):
-                q[x, y] = (0, 0, 0, 0)
-        for y in range(6, 10):
-            for x in range(2, 14):
-                q[x, y] = (0, 0, 0, 0)
-        highlight = tuple(min(255, v + 34) for v in body) + (255,)
-        shadow = tuple(v * 2 // 3 for v in body) + (255,)
-        for x in range(16):
-            q[x, 1] = highlight
-            q[x, 14] = shadow
-        for y in range(2, 14):
-            q[0, y] = highlight
-            q[15, y] = shadow
-        # Light the upper/left edge of the ingot recess and shade its lower/right edge.
-        for x in range(3, 13):
-            q[x, 4] = highlight
-            q[x, 11] = shadow
-        for y in range(6, 10):
-            q[1, y] = highlight
-            q[14, y] = shadow
-        save(img, f"item/{key}")
-
-        # Tileable material and recessed cavity used by the actual 3-D item model.
-        surface = Image.new("RGBA", (16, 16), body + (255,))
-        sp = surface.load()
-        for y in range(16):
-            for x in range(16):
-                grain = ((x * 7 + y * 11 + (x ^ y) * 3) % 13) - 6
-                edge = 9 if y == 0 else (-12 if y == 15 else 0)
-                sp[x, y] = tuple(max(0, min(255, c + grain + edge)) for c in body) + (255,)
-        save(surface, f"item/{key}_material")
-
-        cavity = Image.new("RGBA", (16, 16), hollow + (255,))
-        cp = cavity.load()
-        for y in range(16):
-            for x in range(16):
-                shade = -12 if x in (0, 1) or y in (0, 1) else (7 if x == 15 or y == 15 else 0)
-                cp[x, y] = tuple(max(0, min(255, c + shade)) for c in hollow) + (255,)
-        save(cavity, f"item/{key}_cavity")
+    # The casts are drawn by tools/cast_assets.py.
 
 
 def tank_models():
@@ -312,13 +264,7 @@ def models():
                    "conditions": [{"condition": "minecraft:survives_explosion"}]}]})
     write_json(f"{ASSETS}/models/item/coke.json", {"parent": "minecraft:item/generated",
                                                     "textures": {"layer0": f"{MOD}:item/coke"}})
-    for key in ("unfired_ingot_cast", "ingot_cast"):
-        write_json(f"{ASSETS}/models/item/{key}.json", {"parent": "minecraft:item/generated",
-                                                        "textures": {"layer0": f"{MOD}:item/{key}"},
-                                                        "display": {"fixed": {"rotation": [0, 0, 0],
-                                                                              "scale": [1.0, 1.0, 1.0]}}})
-
-    for key in ("coke", "unfired_ingot_cast", "ingot_cast"):
+    for key in ("coke",):
         write_json(f"{ASSETS}/items/{key}.json", {"model": {"type": "minecraft:model", "model": f"{MOD}:item/{key}"}})
 
     tag = f"{DATA}/minecraft/tags/block/mineable/pickaxe.json"
@@ -348,8 +294,7 @@ def recipes():
     shaped("faucet", ["B B", " B "], {"B": brick}, f"{MOD}:faucet")
     shaped("casting_table", ["BBB", "B B", "B B"], {"B": brick}, f"{MOD}:casting_table")
     shaped("unfired_ingot_cast", [" F ", "F F", " F "], {"F": f"{MOD}:fireclay"}, f"{MOD}:unfired_ingot_cast")
-    for key, ingredient, result, time in (("ingot_cast_from_smelting", f"{MOD}:unfired_ingot_cast", f"{MOD}:ingot_cast", 200),
-                                          ("coke_from_smelting", "minecraft:coal", f"{MOD}:coke", 400)):
+    for key, ingredient, result, time in (("coke_from_smelting", "minecraft:coal", f"{MOD}:coke", 400),):
         write_json(f"{r}/{key}.json", {"type": "minecraft:smelting", "category": "misc", "cookingtime": time,
                                        "experience": 0.2, "ingredient": ingredient, "result": {"id": result}})
 
@@ -363,8 +308,7 @@ def languages():
                         ("faucet", "Wasserhahn", "Faucet"), ("casting_table", "Gießtisch", "Casting Table"),
                         ("molten_metal", "Flüssiges Metall", "Molten Metal")):
         name(f"block.{MOD}.{key}", de, en)
-    for key, de, en in (("coke", "Koks", "Coke"), ("unfired_ingot_cast", "Ungebrannte Barrenform", "Unfired Ingot Cast"),
-                        ("ingot_cast", "Barrenform", "Ingot Cast")):
+    for key, de, en in (("coke", "Koks", "Coke"),):
         name(f"item.{MOD}.{key}", de, en)
     for material, _c, de, en in MOLTEN:
         name(f"molten.{MOD}.{material}", de, en)

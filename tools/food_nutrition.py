@@ -1,8 +1,11 @@
 """Writes what every vanilla food brings to the five nutrients.
 
 Points on the 0-100 nutrient levels (see survival/Nutrient.java). The body uses about 10 points of
-each per Minecraft day, so a food that brings 10 of something covers a day of it; how filling a
-food is stays the vanilla hunger value. Meat is protein and fat, bread and potatoes carbohydrate and
+each per Minecraft day at rest. The table below is in those points; what is written is the table
+times SCALE, because a player eats two or three things a day, not ten. A body takes in less of what
+it already has plenty of and burns it faster (survival/Nutrition.java), so the levels settle: SCALE
+only decides where, and how much one sitting can move a level. How filling a food is stays the
+vanilla hunger value. Meat is protein and fat, bread and potatoes carbohydrate and
 fibre, fruit and vegetables vitamins and fibre, and a stew a little of everything - which is the point
 of cooking one.
 
@@ -12,6 +15,11 @@ import json
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parent.parent / "src/main/resources/data/hardwrought/hardwrought/food_nutrition"
+
+# The table times this is what a food brings. At 1.0 a varied diet could not keep up with the body;
+# at 2.5 any meal ran the levels over the top. At 1.4 two of a thing in one sitting, on a body in the
+# middle of the band, stay healthy and three of it run over.
+SCALE = 1.4
 
 #            protein fat  carbs vitamins fibre  water
 FOODS = {
@@ -66,7 +74,9 @@ def main():
     names = ("protein", "fat", "carbohydrates", "vitamins", "fiber", "hydration")
     for item, values in FOODS.items():
         data = {"item": f"minecraft:{item}"}
-        data.update({name: value for name, value in zip(names, values) if value})
+        # The water in a food is what it is; only the nutrients are scaled.
+        scaled = [max(1, round(value * SCALE)) if value else 0 for value in values[:5]] + [values[5]]
+        data.update({name: value for name, value in zip(names, scaled) if value})
         (OUT / f"{item}.json").write_text(json.dumps(data) + "\n", encoding="utf-8")
     print(f"{len(FOODS)} foods written")
 

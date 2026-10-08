@@ -2,19 +2,5 @@
   "parent": "minecraft:item/generated",
   "textures": {
     "layer0": "hardwrought:item/ingot_cast"
-  },
-  "display": {
-    "fixed": {
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1.0,
-        1.0,
-        1.0
-      ]
-    }
   }
 }

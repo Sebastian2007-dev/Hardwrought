@@ -250,7 +250,7 @@ public class SmelteryControllerBlockEntity extends BlockEntity implements Contai
             ItemStack stack = items.get(FUEL_SLOT);
             int ticks = fuelTicks(stack);
             if (ticks > 0) {
-                fuel = stack.is(SmelteryBlocks.COKE) ? Fuel.COKE : Fuel.COAL;
+                fuel = isCoke(stack) ? Fuel.COKE : Fuel.COAL;
                 burnTicks = ticks;
                 burnTotal = ticks;
                 stack.shrink(1);
@@ -287,9 +287,15 @@ public class SmelteryControllerBlockEntity extends BlockEntity implements Contai
         return false;
     }
 
+    /** Coke by the piece or by the block: the fuel that burns hottest. */
+    public static boolean isCoke(ItemStack stack) {
+        return stack.is(SmelteryBlocks.COKE) || stack.is(SmelteryBlocks.COKE_BLOCK.asItem());
+    }
+
     /** Ticks a fuel burns in the smeltery: longer than in a furnace — a smeltery is a hungry thing. */
     public static int fuelTicks(ItemStack stack) {
         if (stack.is(SmelteryBlocks.COKE)) return 2400;
+        if (stack.is(SmelteryBlocks.COKE_BLOCK.asItem())) return 21600;
         if (stack.is(Items.COAL) || stack.is(Items.CHARCOAL)) return 1200;
         if (stack.is(Items.COAL_BLOCK)) return 10800;
         return 0;
@@ -464,9 +470,15 @@ public class SmelteryControllerBlockEntity extends BlockEntity implements Contai
         setChanged();
     }
 
+    /**
+     * What a hopper may put where. A melting place holds one piece and no more — the screen's slots
+     * say so themselves, but a hopper asks here — so a place with something in it takes nothing, and
+     * what a hopper brings spreads over the free places one piece each.
+     */
     @Override
     public boolean canPlaceItem(int slot, ItemStack stack) {
-        return slot == FUEL_SLOT ? fuelTicks(stack) > 0 : MoltenMetals.melt(stack.getItem()) != null;
+        if (slot == FUEL_SLOT) return fuelTicks(stack) > 0;
+        return items.get(slot).isEmpty() && MoltenMetals.melt(stack.getItem()) != null;
     }
 
     @Override

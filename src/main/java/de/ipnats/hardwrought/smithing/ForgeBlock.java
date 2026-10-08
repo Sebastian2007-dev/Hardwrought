@@ -60,6 +60,8 @@ public class ForgeBlock extends Block implements EntityBlock {
     public static int fuelValue(ItemStack stack) {
         if (stack.is(Items.COAL) || stack.is(Items.CHARCOAL)) return 1600;
         if (stack.is(Items.COAL_BLOCK)) return 16000;
+        if (stack.is(de.ipnats.hardwrought.smeltery.SmelteryBlocks.COKE)) return 2400;
+        if (stack.is(de.ipnats.hardwrought.smeltery.SmelteryBlocks.COKE_BLOCK.asItem())) return 24000;
         return 0;
     }
 

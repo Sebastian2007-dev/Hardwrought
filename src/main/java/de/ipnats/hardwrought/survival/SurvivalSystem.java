@@ -142,6 +142,8 @@ public final class SurvivalSystem {
     /** One metabolism pass is one second, so these are the intervals of the periodic hazards. */
     private static final int AIR_DAMAGE_PASSES = 2;
     private static final int THERMAL_DAMAGE_PASSES = 10;
+    /** Metabolism passes between two points of damage from having no water left at all. */
+    static final int DEHYDRATION_DAMAGE_PASSES = 4;
     private static final double SLEEP_RECOVERY_PER_TICK = 0.025;
     /**
      * Section 11: a player may sleep at any hour, so nothing forces them awake again. Lying down
@@ -217,7 +219,7 @@ public final class SurvivalSystem {
     public PlayerVitals vitals(ServerPlayer player) { return save.vitals(player.getUUID()); }
 
     public double stamina(ServerPlayer player) {
-        return player.isCreative() ? PlayerVitals.MAX_STAMINA : vitals(player).stamina();
+        return exempt(player) ? PlayerVitals.MAX_STAMINA : vitals(player).stamina();
     }
 
     /**
@@ -240,7 +242,7 @@ public final class SurvivalSystem {
     }
 
     public boolean spendStamina(ServerPlayer player, double amount) {
-        if (player.isCreative()) return true;
+        if (exempt(player)) return true;
         PlayerVitals current = vitals(player);
         if (current.stamina() < Math.min(2.0, amount)) {
             player.setSprinting(false);
@@ -252,7 +254,7 @@ public final class SurvivalSystem {
     }
 
     public void consumeFood(ServerPlayer player, ItemStack stack) {
-        if (player.isCreative()) return;
+        if (exempt(player)) return;
         FoodProperties food = stack.get(DataComponents.FOOD);
         Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         FoodNutritionDefinition profile = server.getOrThrow(FoodNutritionDefinitions.KEY).get(id);
@@ -275,7 +277,7 @@ public final class SurvivalSystem {
      */
     public void afflict(ServerPlayer player, double hydration, double bodyTemperature, double stamina) {
         de.ipnats.hardwrought.core.utilities.ServerThread.require(server);
-        if (player.isCreative() || player.isSpectator()) return;
+        if (exempt(player)) return;
         PlayerVitals v = vitals(player);
         save.setVitals(player.getUUID(), new PlayerVitals(v.stamina() + stamina, v.hydration() + hydration,
                 v.nutrition(), v.fatigue(), v.bodyTemperature() + bodyTemperature, v.wetness(), v.stress()).normalized());
@@ -291,7 +293,7 @@ public final class SurvivalSystem {
      * effect for now; the disease system of section 12 replaces it when it exists.
      */
     public void drink(ServerPlayer player, double amount, WaterQuality quality) {
-        if (player.isCreative()) return;
+        if (exempt(player)) return;
         save.setVitals(player.getUUID(), vitals(player).drink(amount * quality.hydrationFactor()));
         if (quality.illnessRisk() > 0 && player.level().getRandom().nextDouble() < quality.illnessRisk()) {
             // Not poison. Drinking from a stagnant pond is not being envenomed, it is spending the
@@ -422,9 +424,32 @@ public final class SurvivalSystem {
         acceleratingSleep = false;
     }
 
+    /**
+     * Whether the body's needs leave this player alone: in creative, and as a spectator, who has no
+     * body to tire or to thirst. Their vitals stand still until they come back.
+     */
+    public static boolean exempt(net.minecraft.world.entity.player.Player player) {
+        return player.isCreative() || player.isSpectator();
+    }
+
+    /** Whether this player is dying of thirst: no water left at all, in a body that thirst can touch. */
+    public static boolean parched(net.minecraft.world.entity.player.Player player, PlayerVitals v) {
+        return v.hydration() <= 0 && !exempt(player);
+    }
+
+    /**
+     * Thirst kills: with no water left in the body, it gives way a little each time this is due, and
+     * armor is no help.
+     */
+    private void parch(ServerPlayer player, PlayerVitals v) {
+        if (parched(player, v)) {
+            player.hurtServer(player.level(), damageSource(player.level(), ModDamageTypes.DEHYDRATION), 1.0f);
+        }
+    }
+
     private void tickMovement() {
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            if (player.isCreative()) {
+            if (exempt(player)) {
                 lastOnGround.put(player.getUUID(), player.onGround());
                 activity.remove(player.getUUID());
                 clearPenalties(player);
@@ -508,7 +533,7 @@ public final class SurvivalSystem {
         }
         updateSleepAcceleration();
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            if (player.isCreative()) {
+            if (exempt(player)) {
                 activity.remove(player.getUUID());
                 clearPenalties(player);
                 continue;
@@ -583,6 +608,7 @@ public final class SurvivalSystem {
                 player.hurtServer(player.level(), next.bodyTemperature() < 34.0
                         ? player.level().damageSources().freeze() : player.level().damageSources().hotFloor(), 1.0f);
             }
+            if (metabolismPasses % DEHYDRATION_DAMAGE_PASSES == 0) parch(player, next);
             applyPenalties(player, next, carried);
             sync(player, carried, ambient, quality(player));
         }

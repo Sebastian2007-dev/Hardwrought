@@ -3,6 +3,7 @@ package de.ipnats.hardwrought.client.smeltery;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import de.ipnats.hardwrought.smeltery.CastingTableBlockEntity;
+import de.ipnats.hardwrought.smeltery.Casts;
 import de.ipnats.hardwrought.smeltery.FaucetBlock;
 import de.ipnats.hardwrought.smeltery.FaucetBlockEntity;
 import de.ipnats.hardwrought.smeltery.MoltenMetalBlock;
@@ -22,8 +23,10 @@ import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
@@ -32,8 +35,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Molten metal in the world: the layers in a smeltery's tank, the stream from a faucet, the pool in a
- * casting table. Each is the molten-metal block of its metal, stretched to the size it should have.
+ * Molten metal in the world: the layers in a smeltery's tank, the stream from a faucet, the metal in a
+ * cast. The first two are the molten-metal block of their metal, stretched to the size it should have.
  */
 public final class SmelteryRenderers {
     private SmelteryRenderers() { }
@@ -128,8 +131,9 @@ public final class SmelteryRenderers {
             if (faucet.pouring().isEmpty()) return;
             Direction facing = faucet.getBlockState().getValue(FaucetBlock.FACING);
             float cx = 0.5f - facing.getStepX() * 0.25f, cz = 0.5f - facing.getStepZ() * 0.25f;
+            // Down from the spout into the cast lying in the bed of the table below.
             state.boxes.add(new Box(molten(faucet.getLevel(), faucet.getBlockPos(), faucet.pouring()),
-                    cx - 0.0625f, -1 / 16f, cz - 0.0625f, 0.125f, 6 / 16f, 0.125f));
+                    cx - 0.0625f, -3 / 16f, cz - 0.0625f, 0.125f, 8 / 16f, 0.125f));
         }
 
         @Override
@@ -176,8 +180,19 @@ public final class SmelteryRenderers {
         }
     }
 
-    /** A casting table: its cast lying on it, the metal rising in the cast, and the finished bar. */
+    /**
+     * A casting table: the cast lying in its bed, the metal rising in the cast — in the cast's own
+     * outline, so what is poured already looks like what it will be — and what has set.
+     */
     public static class Table implements BlockEntityRenderer<CastingTableBlockEntity, BoxState> {
+        /** The table's bed and the top of its rim, and how much of the bed a cast covers. */
+        private static final float BED = 13 / 16f, RIM = 15 / 16f, SPREAD = 0.75f;
+        /** The metal and the piece stand a hair inside the cast's walls, so the two never flicker. */
+        private static final float INSIDE = 0.992f;
+        /** How high a full cast stands, and how thick the set piece lies, in pixels. */
+        private static final float FULL = 1.5f;
+        private static final int GLOWING = 0xF000F0;
+
         private final ItemModelResolver resolver;
 
         public Table(BlockEntityRendererProvider.Context context) {
@@ -197,36 +212,42 @@ public final class SmelteryRenderers {
             state.items.clear();
             state.itemAt.clear();
             int seed = (int) table.getBlockPos().asLong();
-            add(state, table.cast(), table, seed, 15.05f / 16f);
-            if (!table.metal().isEmpty() && table.amount() > 0) {
-                float h = 0.06f * table.amount() / MoltenMetals.INGOT;
-                state.boxes.add(new Box(molten(table.getLevel(), table.getBlockPos(), table.metal()),
-                        0.3f, 15.1f / 16f, 0.36f, 0.4f, h, 0.28f));
+            // The cast fills the bed up to the rim; a blank is the same plate without its hole.
+            add(state, table.cast(), table, seed, BED, (RIM - BED) * 16, SPREAD, state.lightCoords);
+            Casts.Cast shape = Casts.of(table.cast());
+            if (shape != null && !table.metal().isEmpty() && table.amount() > 0) {
+                ItemStack metal = new ItemStack(Casts.FILL);
+                metal.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(List.of(), List.of(),
+                        List.of(shape.shape()), List.of(MoltenColors.of(table.metal()))));
+                float level = FULL * Math.min(1f, table.amount() / (float) shape.amount());
+                add(state, metal, table, seed + 2, BED + 0.002f, Math.max(0.15f, level), SPREAD * INSIDE, GLOWING);
             }
-            add(state, table.result(), table, seed + 1, 15.2f / 16f);
+            add(state, table.result(), table, seed + 1, BED + 0.002f, FULL, SPREAD * INSIDE, state.lightCoords);
         }
 
-        private void add(BoxState state, ItemStack stack, CastingTableBlockEntity table, int seed, float y) {
+        /** An item lying flat: its underside at this height, this many pixels thick, over this share of the block. */
+        private void add(BoxState state, ItemStack stack, CastingTableBlockEntity table, int seed, float bottom,
+                         float thickness, float spread, int light) {
             if (stack.isEmpty()) return;
             ItemStackRenderState item = new ItemStackRenderState();
-            resolver.updateForTopItem(item, stack, ItemDisplayContext.FIXED, table.getLevel(), null, seed);
+            // No display transform at all: the cast, the metal in it and the piece must lie exactly alike.
+            resolver.updateForTopItem(item, stack, ItemDisplayContext.NONE, table.getLevel(), null, seed);
             state.items.add(item);
-            state.itemAt.add(new float[] {y});
+            state.itemAt.add(new float[] {bottom, thickness, spread, light});
         }
 
         @Override
         public void submit(BoxState state, PoseStack pose, SubmitNodeCollector collector, CameraRenderState camera) {
             for (int i = 0; i < state.items.size(); i++) {
+                float[] at = state.itemAt.get(i);
                 pose.pushPose();
-                pose.translate(0.5f, state.itemAt.get(i)[0], 0.5f);
-                // Item models face south in-hand.  Turning that face upward makes the cast cavity
-                // and the ingot texture visible instead of showing their backs through the table.
+                pose.translate(0.5f, at[0] + at[1] / 32f, 0.5f);
+                // A flat item stands upright facing south; laid on its back its face looks up.
                 pose.rotateDegrees(Axis.XP, -90f);
-                pose.scale(0.75f, 0.75f, 0.75f);
-                state.items.get(i).submit(pose, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+                pose.scale(at[2], at[2], at[1]);
+                state.items.get(i).submit(pose, collector, (int) at[3], OverlayTexture.NO_OVERLAY, 0);
                 pose.popPose();
             }
-            SmelteryRenderers.submit(state.boxes, pose, collector);
         }
     }
 }

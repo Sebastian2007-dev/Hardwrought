@@ -26,7 +26,8 @@ import java.util.List;
  * light stays underneath, for spawning and for what the shaders cannot see: it also tells the
  * shader where a light is hidden behind a wall (see {@code hardwrought:dynamic_light.glsl}).
  *
- * <p>Which blocks count is the block tag {@code hardwrought:shader_lights}; natural light — lava,
+ * <p>Which blocks count is the block tag {@code hardwrought:shader_lights} — the enchanting table is
+ * among them, glowing violet; natural light — lava,
  * fire, glow lichen — is left to vanilla. How bright a block shines is its own light emission, so
  * an unlit furnace or candle stays dark.
  */
@@ -46,6 +47,8 @@ public final class PlacedLights {
     private static final int WHITE = 0xF4ECFF;
     /** Copper burns green: copper torches and copper lanterns. */
     private static final int COPPER = 0x8CFF9C;
+    /** Magic is violet: the enchanting table. */
+    private static final int ARCANE = 0xB060FF;
 
     /** One placed light: where it sits, how bright it is and its colour. */
     public record Placed(Vec3 position, int level, int color, boolean flame, int seed) { }
@@ -138,6 +141,7 @@ public final class PlacedLights {
         if (id.contains("redstone_torch") || id.contains("redstone_wall_torch")) return REDSTONE;
         if (id.contains("sea_lantern") || id.contains("beacon")) return SEA;
         if (id.contains("end_rod")) return WHITE;
+        if (id.contains("enchanting_table")) return ARCANE;
         if (id.contains("furnace") || id.contains("smoker") || id.contains("forge") || id.contains("smeltery")) return EMBER;
         if (id.contains("lantern") || id.contains("lamp") || id.contains("glowstone") || id.contains("froglight")) return DynamicLight.LAMP;
         return DynamicLight.FLAME;
@@ -146,6 +150,7 @@ public final class PlacedLights {
     /** Whether a light is a living flame, which breathes, rather than a lamp, which holds still. */
     public static boolean flickers(String id) {
         return !(id.contains("redstone") || id.contains("sea_lantern") || id.contains("glowstone")
-                || id.contains("froglight") || id.contains("end_rod") || id.contains("beacon"));
+                || id.contains("froglight") || id.contains("end_rod") || id.contains("beacon")
+                || id.contains("enchanting_table"));
     }
 }

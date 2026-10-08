@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "hardwrought:item/casting_fill/helmet_shell"
+  }
+}

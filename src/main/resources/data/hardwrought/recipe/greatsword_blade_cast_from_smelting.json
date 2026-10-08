@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 200,
+  "experience": 0.2,
+  "ingredient": "hardwrought:unfired_greatsword_blade_cast",
+  "result": {
+    "id": "hardwrought:greatsword_blade_cast"
+  }
+}

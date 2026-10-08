@@ -59,24 +59,61 @@ public record Nutrition(double protein, double fat, double carbohydrates, double
         return true;
     }
 
-    /** These levels with another set added, scaled by how much of it the body takes in. */
+    /**
+     * How much stronger than at rest the body burns a nutrient it has this much of: nothing extra up
+     * to {@link Nutrient#START}, then more and more, up to {@value #EXCESS_BURN} times as much again
+     * at the very top.
+     */
+    static final double EXCESS_BURN = 4.0;
+    /** A food is taken in bite by bite, so that one big meal cannot jump a level past what it would settle at. */
+    private static final int BITES = 8;
+
+    /**
+     * The share of a food's measure a body with this level takes in: all of it up to
+     * {@link Nutrient#START}, then less and less, and nothing at all of what it is already full of.
+     *
+     * <p>Together with {@link #burn} this is what makes a diet hold steady. How much a player eats is
+     * set by hunger, not by what the body needs of each nutrient; if every bite simply added its
+     * measure, any way of eating either starved a level or drove it to the top. This way each level
+     * settles: a mixed diet comes to rest inside the healthy band however much of it is eaten, and
+     * only living on one kind of food pushes that food's nutrients over it.
+     */
+    public static double uptake(double level) {
+        if (level <= Nutrient.START) return 1.0;
+        return Math.max(0, (Nutrient.MAX - level) / (Nutrient.MAX - Nutrient.START));
+    }
+
+    /** How many times its resting rate the body uses up a nutrient it has this much of; see {@link #uptake}. */
+    public static double burn(double level) {
+        return 1.0 + EXCESS_BURN * Math.max(0, level - Nutrient.START) / (Nutrient.MAX - Nutrient.START);
+    }
+
+    private static double fed(double level, double food, double absorbed) {
+        double bite = food * absorbed / BITES;
+        if (bite <= 0) return level;
+        for (int i = 0; i < BITES; i++) level += bite * uptake(level);
+        return level;
+    }
+
+    /** These levels with a food added, scaled by how much of it the body takes in; see {@link #uptake}. */
     public Nutrition plus(Nutrition food, double absorbed) {
-        return new Nutrition(protein + food.protein * absorbed, fat + food.fat * absorbed,
-                carbohydrates + food.carbohydrates * absorbed, vitamins + food.vitamins * absorbed,
-                fiber + food.fiber * absorbed).clamped();
+        return new Nutrition(fed(protein, food.protein, absorbed), fed(fat, food.fat, absorbed),
+                fed(carbohydrates, food.carbohydrates, absorbed), fed(vitamins, food.vitamins, absorbed),
+                fed(fiber, food.fiber, absorbed)).clamped();
     }
 
     /**
-     * One second of the body using them up. Work — anything above resting, in the same units the
-     * rest of the metabolism counts — burns carbohydrates first and fat after.
+     * One second of the body using them up, the faster the more it has of each (see {@link #burn}).
+     * Work — anything above resting, in the same units the rest of the metabolism counts — burns
+     * carbohydrates first and fat after.
      */
     public Nutrition drained(double seconds, double work) {
         return new Nutrition(
-                protein - Nutrient.PROTEIN.drainPerSecond() * seconds,
-                fat - (Nutrient.FAT.drainPerSecond() + work * 0.002) * seconds,
-                carbohydrates - (Nutrient.CARBOHYDRATES.drainPerSecond() + work * 0.005) * seconds,
-                vitamins - Nutrient.VITAMINS.drainPerSecond() * seconds,
-                fiber - Nutrient.FIBER.drainPerSecond() * seconds).clamped();
+                protein - Nutrient.PROTEIN.drainPerSecond() * burn(protein) * seconds,
+                fat - (Nutrient.FAT.drainPerSecond() * burn(fat) + work * 0.002) * seconds,
+                carbohydrates - (Nutrient.CARBOHYDRATES.drainPerSecond() * burn(carbohydrates) + work * 0.005) * seconds,
+                vitamins - Nutrient.VITAMINS.drainPerSecond() * burn(vitamins) * seconds,
+                fiber - Nutrient.FIBER.drainPerSecond() * burn(fiber) * seconds).clamped();
     }
 
     public Nutrition clamped() {

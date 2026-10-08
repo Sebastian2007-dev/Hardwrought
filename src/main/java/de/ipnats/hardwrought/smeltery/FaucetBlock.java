@@ -60,7 +60,9 @@ public class FaucetBlock extends Block implements EntityBlock {
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-        if (!level.isClientSide() && level.getBlockEntity(pos) instanceof FaucetBlockEntity faucet) faucet.open();
+        if (!level.isClientSide() && level.getBlockEntity(pos) instanceof FaucetBlockEntity faucet) {
+            faucet.open(player instanceof net.minecraft.server.level.ServerPlayer server ? server : null);
+        }
         return InteractionResult.SUCCESS;
     }
 

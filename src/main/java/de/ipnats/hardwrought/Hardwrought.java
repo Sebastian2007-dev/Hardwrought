@@ -93,6 +93,7 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.knowledge.WorldRecipes.initialize();
 		de.ipnats.hardwrought.smithing.SmithingEvents.initialize();
 		de.ipnats.hardwrought.smithing.Forging.initialize();
+		de.ipnats.hardwrought.smithing.Grinding.initialize();
 		de.ipnats.hardwrought.machinery.KineticReadout.initialize();
 		de.ipnats.hardwrought.progression.Weaving.initialize();
 		de.ipnats.hardwrought.progression.StructureLoot.initialize();

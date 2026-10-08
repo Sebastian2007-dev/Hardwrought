@@ -17,7 +17,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-/** A casting table: put an ingot cast on it, pour metal in from a faucet above, take the bar. */
+/** A casting table: put a cast on it, pour metal in from a faucet above, take what has set. */
 public class CastingTableBlock extends Block implements EntityBlock {
     private static final VoxelShape SHAPE = Block.box(0, 0, 0, 16, 15, 16);
 
@@ -33,9 +33,20 @@ public class CastingTableBlock extends Block implements EntityBlock {
     @Override
     protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player,
                                           InteractionHand hand, BlockHitResult hit) {
-        if (!stack.is(SmelteryBlocks.INGOT_CAST)) return InteractionResult.TRY_WITH_EMPTY_HAND;
         if (!(level.getBlockEntity(pos) instanceof CastingTableBlockEntity table)) return InteractionResult.PASS;
-        if (!level.isClientSide()) table.placeCast(stack);
+        if (Casts.liesOnTable(stack)) {
+            if (!level.isClientSide()) table.placeCast(stack);
+            return InteractionResult.SUCCESS;
+        }
+        // A bar or a part pressed into a blank leaves its shape in the clay.
+        if (!table.cast().is(Casts.BLANK) || Casts.imprintOf(stack) == null) return InteractionResult.TRY_WITH_EMPTY_HAND;
+        if (!level.isClientSide()) {
+            Casts.Cast shape = table.imprint(stack);
+            if (shape != null && player instanceof net.minecraft.server.level.ServerPlayer presser) {
+                presser.sendOverlayMessage(net.minecraft.network.chat.Component.translatable("message.hardwrought.cast.imprinted",
+                        new ItemStack(shape.fired()).getHoverName()));
+            }
+        }
         return InteractionResult.SUCCESS;
     }
 

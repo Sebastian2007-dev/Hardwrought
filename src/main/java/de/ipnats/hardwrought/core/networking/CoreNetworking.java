@@ -22,6 +22,8 @@ public final class CoreNetworking {
         PayloadTypeRegistry.serverboundPlay().register(ForgingPayloads.Begin.TYPE, ForgingPayloads.Begin.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ForgingPayloads.Strike.TYPE, ForgingPayloads.Strike.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ForgingPayloads.Cancel.TYPE, ForgingPayloads.Cancel.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(GrindingPayloads.Open.TYPE, GrindingPayloads.Open.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(GrindingPayloads.Pass.TYPE, GrindingPayloads.Pass.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SleepRequestPayload.TYPE, SleepRequestPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(OreDrillPayloads.Info.TYPE, OreDrillPayloads.Info.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(OreDrillPayloads.Watch.TYPE, OreDrillPayloads.Watch.CODEC);

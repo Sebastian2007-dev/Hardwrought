@@ -24,6 +24,10 @@ public final class ModDamageTypes {
     public static final ResourceKey<DamageType> SMOKE =
             ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("smoke"));
 
+    /** No water left in the body. Armor is no help against it. */
+    public static final ResourceKey<DamageType> DEHYDRATION =
+            ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("dehydration"));
+
     public static final TagKey<DamageType> IS_SUFFOCATING =
             TagKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("is_suffocating"));
 

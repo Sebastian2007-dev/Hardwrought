@@ -669,6 +669,36 @@ public final class SmithingGameTests {
         long forgeSlots = menu.slots.stream().filter(slot -> slot.container == controller).count();
         helper.assertTrue(forgeSlots == 1 + 4, "Its screen shows one fuel and four metal places, got " + forgeSlots);
 
+        // A piece the fire gives a new heat is "the same stack" to vanilla, which would not send it;
+        // the open screen then shows the piece cooling in a fire that is holding it.
+        float[] heard = {0};
+        menu.setSynchronizer(new net.minecraft.world.inventory.ContainerSynchronizer() {
+            @Override
+            public void sendInitialData(net.minecraft.world.inventory.AbstractContainerMenu sent, java.util.List<ItemStack> stacks,
+                                        ItemStack carried, int[] data) {
+                Heat heat = stacks.get(1).get(ModDataComponents.HEAT);
+                heard[0] = heat == null ? 0 : heat.celsius();
+            }
+
+            @Override
+            public void sendSlotChange(net.minecraft.world.inventory.AbstractContainerMenu sent, int slot, ItemStack stack) { }
+
+            @Override
+            public void sendCarriedChange(net.minecraft.world.inventory.AbstractContainerMenu sent, ItemStack carried) { }
+
+            @Override
+            public void sendDataChange(net.minecraft.world.inventory.AbstractContainerMenu sent, int id, int value) { }
+
+            @Override
+            public net.minecraft.world.inventory.RemoteSlot createSlot() {
+                return net.minecraft.world.inventory.RemoteSlot.PLACEHOLDER;
+            }
+        });
+        menu.broadcastChanges();
+        controller.getItem(ForgeBlockEntity.FIRST_METAL).set(ModDataComponents.HEAT, new Heat(900f, 40));
+        menu.broadcastChanges();
+        helper.assertTrue(heard[0] == 900f, "The open screen hears of a piece's new heat, heard " + heard[0]);
+
         int before = countItems(level, corner, 2);
         level.destroyBlock(corner.offset(1, 0, 1), false);
         for (int x = 0; x < 2; x++) {

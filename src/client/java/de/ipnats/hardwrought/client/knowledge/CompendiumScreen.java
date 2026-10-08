@@ -124,6 +124,8 @@ public class CompendiumScreen extends Screen {
 
     private static final int TEXT_COLOR = 0xFF1B120B;
     private static final int FADED_COLOR = 0xFF4A3522;
+    /** A tab that is not selected: quieter than the selected one, but still ink on its darker paper. */
+    private static final int TAB_COLOR = 0xFF2E2016;
     private static final int RULE_COLOR = 0x906D5131;
     /** Muted enough to mark a note as followed without turning the page into a checklist. */
     private static final int DONE_COLOR = 0xFF445128;
@@ -230,6 +232,8 @@ public class CompendiumScreen extends Screen {
             search.setBordered(false);
             search.setTextColor(TEXT_COLOR);
             search.setTextColorUneditable(FADED_COLOR);
+            // Ink on paper: the shadow vanilla gives a text field only smears it here.
+            search.setTextShadow(false);
             search.setHint(Component.translatable("gui.hardwrought.compendium.search"));
             search.setValue(searchText);
             search.setResponder(text -> {
@@ -757,7 +761,7 @@ public class CompendiumScreen extends Screen {
                     selected ? TAB_SELECTED_SPRITE : TAB_SPRITE,
                     leftContentX(), y, TAB_WIDTH + (selected ? 3 : 0), TAB_HEIGHT);
             ink(graphics, Component.translatable(category.translationKey()), leftContentX() + 6, y + 3,
-                    selected || hovered ? TEXT_COLOR : FADED_COLOR);
+                    selected || hovered ? TEXT_COLOR : TAB_COLOR);
             y += TAB_HEIGHT;
         }
     }

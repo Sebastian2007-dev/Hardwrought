@@ -1,0 +1,216 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "ingot",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:item/casting_fill/ingot",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": 14242334
+            }
+          ]
+        }
+      },
+      {
+        "when": "pickaxe_head",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:item/casting_fill/pickaxe_head",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": 14242334
+            }
+          ]
+        }
+      },
+      {
+        "when": "axe_head",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:item/casting_fill/axe_head",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": 14242334
+            }
+          ]
+        }
+      },
+      {
+        "when": "shovel_head",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:item/casting_fill/shovel_head",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": 14242334
+            }
+          ]
+        }
+      },
+      {
+        "when": "hoe_head",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:item/casting_fill/hoe_head",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": 14242334
+            }
+          ]
+        }
+      },
+      {
+        "when": "sword_blade",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:item/casting_fill/sword_blade",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": 14242334
+            }
+          ]
+        }
+      },
+      {
+        "when": "dagger_blade",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:item/casting_fill/dagger_blade",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": 14242334
+            }
+          ]
+        }
+      },
+      {
+        "when": "greatsword_blade",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:item/casting_fill/greatsword_blade",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": 14242334
+            }
+          ]
+        }
+      },
+      {
+        "when": "halberd_head",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:item/casting_fill/halberd_head",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": 14242334
+            }
+          ]
+        }
+      },
+      {
+        "when": "hammer_head",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:item/casting_fill/hammer_head",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": 14242334
+            }
+          ]
+        }
+      },
+      {
+        "when": "helmet_shell",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:item/casting_fill/helmet_shell",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": 14242334
+            }
+          ]
+        }
+      },
+      {
+        "when": "cuirass",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:item/casting_fill/cuirass",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": 14242334
+            }
+          ]
+        }
+      },
+      {
+        "when": "greaves",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:item/casting_fill/greaves",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": 14242334
+            }
+          ]
+        }
+      },
+      {
+        "when": "sabatons",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:item/casting_fill/sabatons",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": 14242334
+            }
+          ]
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "hardwrought:item/casting_fill/ingot",
+      "tints": [
+        {
+          "type": "minecraft:custom_model_data",
+          "index": 0,
+          "default": 14242334
+        }
+      ]
+    }
+  }
+}

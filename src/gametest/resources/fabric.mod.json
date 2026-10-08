@@ -38,7 +38,8 @@
       "de.ipnats.hardwrought.test.SmithingClientGameTest",
       "de.ipnats.hardwrought.test.MachineryClientGameTest",
       "de.ipnats.hardwrought.test.LightingClientGameTest",
-      "de.ipnats.hardwrought.test.MagicClientGameTest"
+      "de.ipnats.hardwrought.test.MagicClientGameTest",
+      "de.ipnats.hardwrought.test.SmelteryClientGameTest"
     ]
   }
 }

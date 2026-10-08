@@ -1,6 +1,7 @@
 package de.ipnats.hardwrought.smeltery;
 
 import de.ipnats.hardwrought.core.registry.ModDataComponents;
+import de.ipnats.hardwrought.smithing.ForgeQuality;
 import de.ipnats.hardwrought.smithing.Heat;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -19,10 +20,18 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
 /**
- * A casting table: an ingot cast on it, filled by a faucet, sets into a bar. The bar comes out hot —
- * cast metal is as hot as anything out of a forge.
+ * A casting table: a cast on it, filled by a faucet, sets into a bar or a part. What sets comes out
+ * hot — cast metal is as hot as anything out of a forge — and a part comes out rough (see {@link Casts}).
+ *
+ * <p>It is also where a cast gets its shape: a blank lying on it takes the shape of the bar or the
+ * part pressed into it.
+ *
+ * <p>To a hopper the table is one place, holding what has set: a hopper under it draws the piece out
+ * and leaves the cast where it lies, and nothing can be put in from outside.
  */
-public class CastingTableBlockEntity extends BlockEntity {
+public class CastingTableBlockEntity extends BlockEntity implements net.minecraft.world.WorldlyContainer {
+    private static final int[] SET_PIECE = {0}, NOTHING = {};
+
     /** Ticks a full cast takes to set. */
     public static final int SETTING_TICKS = 40;
     /** How hot a fresh casting is, as a share of its metal's melting point. */
@@ -48,13 +57,19 @@ public class CastingTableBlockEntity extends BlockEntity {
 
     /** Whether this metal could be poured in now. */
     public boolean accepts(String material) {
-        return !cast.isEmpty() && result.isEmpty() && MoltenMetals.ingot(material) != null
-                && (metal.isEmpty() || metal.equals(material)) && amount < MoltenMetals.INGOT;
+        Casts.Cast shape = Casts.of(cast);
+        return shape != null && result.isEmpty() && shape.result(material) != null
+                && (metal.isEmpty() || metal.equals(material)) && amount < shape.amount();
+    }
+
+    /** Whether a fired cast lies here with nothing standing or set in it. */
+    public boolean ready() {
+        return Casts.of(cast) != null && result.isEmpty();
     }
 
     /** How much of this metal would still go in, up to the given amount. */
     public int room(String material, int max) {
-        return accepts(material) ? Math.min(max, MoltenMetals.INGOT - amount) : 0;
+        return accepts(material) ? Math.min(max, Casts.of(cast).amount() - amount) : 0;
     }
 
     public void fill(String material, int poured) {
@@ -64,10 +79,15 @@ public class CastingTableBlockEntity extends BlockEntity {
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, CastingTableBlockEntity table) {
-        if (table.amount < MoltenMetals.INGOT || !table.result.isEmpty()) return;
+        Casts.Cast shape = Casts.of(table.cast);
+        if (shape == null || table.amount < shape.amount() || !table.result.isEmpty()) return;
         if (++table.setting < SETTING_TICKS) return;
-        Item ingot = MoltenMetals.ingot(table.metal);
-        ItemStack bar = new ItemStack(ingot);
+        Item made = shape.result(table.metal);
+        if (made == null) return;
+        ItemStack bar = new ItemStack(made);
+        if (shape.part() != null) {
+            bar.set(ModDataComponents.FORGE_QUALITY, new ForgeQuality(Casts.CAST_CRAFTSMANSHIP, ForgeQuality.Treatment.AIR));
+        }
         var runtime = de.ipnats.hardwrought.core.events.CoreLifecycle.find(level.getServer());
         if (runtime != null) {
             double melting = MoltenMetals.meltingPoint(table.metal, runtime.materials());
@@ -81,12 +101,25 @@ public class CastingTableBlockEntity extends BlockEntity {
         table.changed();
     }
 
-    /** Puts a cast on the table. */
+    /** Puts a cast, or a blank that is to become one, on the table. */
     public boolean placeCast(ItemStack stack) {
-        if (!cast.isEmpty() || !stack.is(SmelteryBlocks.INGOT_CAST)) return false;
+        if (!cast.isEmpty() || !Casts.liesOnTable(stack)) return false;
         cast = stack.split(1);
         changed();
         return true;
+    }
+
+    /**
+     * Presses a bar or a part into the blank lying here, which takes its shape; the piece itself is
+     * not used up. Returns the cast it left, or null where nothing happened.
+     */
+    public Casts.Cast imprint(ItemStack pressed) {
+        Casts.Cast shape = cast.is(Casts.BLANK) ? Casts.imprintOf(pressed) : null;
+        if (shape == null) return null;
+        cast = new ItemStack(shape.unfired());
+        if (level != null) level.playSound(null, worldPosition, SoundEvents.GRAVEL_PLACE, SoundSource.BLOCKS, 0.7f, 1.3f);
+        changed();
+        return shape;
     }
 
     /** What an empty hand takes: the bar if there is one, else the cast while nothing is poured in. */
@@ -104,6 +137,76 @@ public class CastingTableBlockEntity extends BlockEntity {
             return taken;
         }
         return ItemStack.EMPTY;
+    }
+
+    // ---------------------------------------------------------------- what a hopper sees
+
+    @Override
+    public int[] getSlotsForFace(net.minecraft.core.Direction side) {
+        return side == net.minecraft.core.Direction.DOWN ? SET_PIECE : NOTHING;
+    }
+
+    @Override
+    public boolean canPlaceItemThroughFace(int slot, ItemStack stack, net.minecraft.core.Direction side) {
+        return false;
+    }
+
+    @Override
+    public boolean canTakeItemThroughFace(int slot, ItemStack stack, net.minecraft.core.Direction side) {
+        return side == net.minecraft.core.Direction.DOWN;
+    }
+
+    @Override
+    public boolean canPlaceItem(int slot, ItemStack stack) {
+        return false;
+    }
+
+    @Override
+    public int getContainerSize() {
+        return 1;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return result.isEmpty();
+    }
+
+    @Override
+    public ItemStack getItem(int slot) {
+        return slot == 0 ? result : ItemStack.EMPTY;
+    }
+
+    @Override
+    public ItemStack removeItem(int slot, int count) {
+        if (slot != 0 || result.isEmpty() || count <= 0) return ItemStack.EMPTY;
+        ItemStack taken = result.split(count);
+        changed();
+        return taken;
+    }
+
+    @Override
+    public ItemStack removeItemNoUpdate(int slot) {
+        if (slot != 0) return ItemStack.EMPTY;
+        ItemStack taken = result;
+        result = ItemStack.EMPTY;
+        return taken;
+    }
+
+    @Override
+    public void setItem(int slot, ItemStack stack) {
+        if (slot != 0) return;
+        result = stack;
+        changed();
+    }
+
+    @Override
+    public boolean stillValid(net.minecraft.world.entity.player.Player player) {
+        return net.minecraft.world.Container.stillValidBlockEntity(this, player);
+    }
+
+    @Override
+    public void clearContent() {
+        result = ItemStack.EMPTY;
     }
 
     private void changed() {
