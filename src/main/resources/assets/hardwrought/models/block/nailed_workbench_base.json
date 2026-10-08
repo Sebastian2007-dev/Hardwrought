@@ -1,0 +1,47 @@
+{
+  "__comment": "Original nailed-workbench cube and texture blend, with four visible nail heads added.",
+  "parent": "minecraft:block/block",
+  "textures": {
+    "metal": "minecraft:block/copper_block"
+  },
+  "elements": [
+    {
+      "name": "Original workbench body",
+      "from": [0, 0, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "north": { "texture": "#front", "cullface": "north" },
+        "east": { "texture": "#side", "cullface": "east" },
+        "south": { "texture": "#side", "cullface": "south" },
+        "west": { "texture": "#side", "cullface": "west" },
+        "up": { "texture": "#top", "cullface": "up" },
+        "down": { "texture": "#bottom", "cullface": "down" }
+      }
+    },
+    {
+      "name": "Front left nail",
+      "from": [2, 15.9, 2], "to": [3.25, 16.05, 3.25],
+      "faces": { "up": { "texture": "#metal", "cullface": "up" }, "north": { "texture": "#metal" }, "east": { "texture": "#metal" }, "south": { "texture": "#metal" }, "west": { "texture": "#metal" } }
+    },
+    {
+      "name": "Front right nail",
+      "from": [12.75, 15.9, 2], "to": [14, 16.05, 3.25],
+      "faces": { "up": { "texture": "#metal", "cullface": "up" }, "north": { "texture": "#metal" }, "east": { "texture": "#metal" }, "south": { "texture": "#metal" }, "west": { "texture": "#metal" } }
+    },
+    {
+      "name": "Rear left nail",
+      "from": [2, 15.9, 12.75], "to": [3.25, 16.05, 14],
+      "faces": { "up": { "texture": "#metal", "cullface": "up" }, "north": { "texture": "#metal" }, "east": { "texture": "#metal" }, "south": { "texture": "#metal" }, "west": { "texture": "#metal" } }
+    },
+    {
+      "name": "Rear right nail",
+      "from": [12.75, 15.9, 12.75], "to": [14, 16.05, 14],
+      "faces": { "up": { "texture": "#metal", "cullface": "up" }, "north": { "texture": "#metal" }, "east": { "texture": "#metal" }, "south": { "texture": "#metal" }, "west": { "texture": "#metal" } }
+    }
+  ],
+  "display": {
+    "gui": { "rotation": [30, 225, 0], "scale": [0.72, 0.72, 0.72] },
+    "ground": { "translation": [0, 3, 0], "scale": [0.4, 0.4, 0.4] },
+    "fixed": { "rotation": [0, 180, 0], "scale": [0.65, 0.65, 0.65] }
+  }
+}

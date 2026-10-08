@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:raw_adamantium_block"
+  ],
+  "result": {
+    "id": "hardwrought:raw_adamantium",
+    "count": 9
+  }
+}

@@ -74,7 +74,7 @@ WEAPON_PROFILES = {"sword": "sword", "dagger": "knife", "greatsword": "two_hande
 def vanilla_jar():
     for base, _, files in os.walk(VANILLA_JAR_DIR):
         for name in files:
-            if name.startswith("minecraft-clientOnly") and name.endswith(".jar"):
+            if name.startswith("minecraft-clientOnly") and name.endswith(".jar") and not name.endswith("-sources.jar"):
                 return zipfile.ZipFile(os.path.join(base, name))
     raise SystemExit("Minecraft client jar not found; run a Gradle build first")
 
@@ -199,10 +199,7 @@ def data():
                 "input": f"{MOD}:{metal}_{part}", "material": "minecraft:stick",
                 "material_count": {"min": handles, "max": handles},
                 "result": {"id": f"{MOD}:{metal}_{tool}"}})
-        for piece, (_de, _en, pattern, _plates) in ARMOR.items():
-            write_json(os.path.join(recipes, f"{metal}_{piece}.json"), {
-                "type": "minecraft:crafting_shaped", "category": "equipment", "pattern": pattern,
-                "key": {"P": f"{MOD}:{metal}_plate"}, "result": {"id": f"{MOD}:{metal}_{piece}"}})
+        # Armor is forged in parts and put together with leather: tools/armor_parts_assets.py writes its recipes.
 
     profiles = os.path.join(DATA, MOD, MOD)
     for tool, profile in WEAPON_PROFILES.items():

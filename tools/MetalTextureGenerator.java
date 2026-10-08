@@ -7,6 +7,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +32,10 @@ public final class MetalTextureGenerator {
     private static final Palette URANIUM = palette("25311b", "53652d", "89923f");
     private static final Palette THORIUM = palette("29352a", "546947", "889368");
     private static final Palette PLATINUM = palette("6a7581", "bbc9d2", "eff5f6");
+    private static final Palette SILVER = palette("66727a", "b9c5ca", "f5faf8");
+    private static final Palette MITHRIL = palette("174e58", "42a99f", "a9fff0");
+    private static final Palette ADAMANTIUM = palette("431927", "a02f4e", "f07a91");
+    private static final Palette VOID = palette("080611", "321354", "59e6f0");
     private static final Palette BRONZE = palette("5b2e18", "a65c2d", "dc9650");
 
     private static final List<MetalSpec> METALS = List.of(
@@ -48,7 +53,10 @@ public final class MetalTextureGenerator {
             metal("tungsten", "diamond", TUNGSTEN),
             metal("uranium", "emerald", URANIUM),
             metal("thorium", "emerald", THORIUM),
-            metal("platinum", "gold", PLATINUM)
+            metal("platinum", "gold", PLATINUM),
+            metal("silver", "gold", SILVER),
+            metal("mithril", "diamond", MITHRIL),
+            metal("adamantium", "emerald", ADAMANTIUM)
     );
 
     public static void main(String[] args) throws Exception {
@@ -74,6 +82,7 @@ public final class MetalTextureGenerator {
         BufferedImage deepslate = read(vanilla.resolve("block/deepslate.png"));
         BufferedImage rawIron = read(vanilla.resolve("item/raw_iron.png"));
         BufferedImage ironIngot = read(vanilla.resolve("item/iron_ingot.png"));
+        BufferedImage powderTemplate = read(items.resolve("platinum_powder.png"));
         List<BufferedImage> atlasCells = new ArrayList<>();
 
         for (MetalSpec metal : METALS) {
@@ -87,6 +96,13 @@ public final class MetalTextureGenerator {
             write(blocks.resolve("deepslate_" + metal.id + "_ore.png"), deepOre);
             write(items.resolve("raw_" + metal.id + ".png"), raw);
             write(items.resolve(metal.id + "_ingot.png"), ingot);
+            if (metal.id.equals("silver") || metal.id.equals("mithril") || metal.id.equals("adamantium")) {
+                write(items.resolve(metal.id + "_powder.png"), recolorSprite(powderTemplate, metal.ingot));
+                BufferedImage molten = recolorTexture(read(vanilla.resolve("block/lava_still.png")), metal.ingot);
+                write(blocks.resolve("molten/" + metal.id + ".png"), molten);
+                Files.copy(vanilla.resolve("block/lava_still.png.mcmeta"),
+                        blocks.resolve("molten/" + metal.id + ".png.mcmeta"), StandardCopyOption.REPLACE_EXISTING);
+            }
             replaceTexture(blockModels.resolve(metal.id + "_ore.json"), "all",
                     "hardwrought:block/" + metal.id + "_ore");
             replaceTexture(blockModels.resolve("deepslate_" + metal.id + "_ore.json"), "all",
@@ -118,8 +134,39 @@ public final class MetalTextureGenerator {
         atlasCells.add(bronzeHatchet);
         atlasCells.add(bronzePickaxe);
 
+        generateVoidCrystal(blocks, items, vanilla);
+
         write(root.resolve("art_source/metals_pixel_atlas.png"), atlas(atlasCells, 4));
         System.out.println("Generated " + atlasCells.size() + " metal textures and the source atlas.");
+    }
+
+    private static void generateVoidCrystal(Path blocks, Path items, Path vanilla) throws IOException {
+        for (String name : List.of("amethyst_block", "budding_amethyst", "small_amethyst_bud",
+                "medium_amethyst_bud", "large_amethyst_bud", "amethyst_cluster")) {
+            String target = switch (name) {
+                case "amethyst_block" -> "void_crystal_block";
+                case "budding_amethyst" -> "budding_void_crystal";
+                default -> name.replace("amethyst", "void_crystal");
+            };
+            write(blocks.resolve(target + ".png"), recolorTexture(read(vanilla.resolve("block/" + name + ".png")), VOID));
+        }
+        write(items.resolve("void_crystal_shard.png"),
+                recolorTexture(read(vanilla.resolve("item/amethyst_shard.png")), VOID));
+    }
+
+    private static BufferedImage recolorTexture(BufferedImage source, Palette palette) {
+        int min = 255, max = 0;
+        for (int y = 0; y < source.getHeight(); y++) for (int x = 0; x < source.getWidth(); x++) {
+            int pixel = source.getRGB(x, y);
+            if (alpha(pixel) > 0) { min = Math.min(min, luminance(pixel)); max = Math.max(max, luminance(pixel)); }
+        }
+        BufferedImage output = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y < source.getHeight(); y++) for (int x = 0; x < source.getWidth(); x++) {
+            int pixel = source.getRGB(x, y), a = alpha(pixel);
+            if (a > 0) output.setRGB(x, y, shade(palette,
+                    max == min ? 0.5 : (luminance(pixel) - min) / (double) (max - min), a));
+        }
+        return output;
     }
 
     private static BufferedImage recolorOre(BufferedImage host, BufferedImage template, Palette palette) {

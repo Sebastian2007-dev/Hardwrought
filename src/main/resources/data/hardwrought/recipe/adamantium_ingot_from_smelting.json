@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 200,
+  "experience": 0.7,
+  "ingredient": "hardwrought:adamantium_powder",
+  "result": {
+    "id": "hardwrought:adamantium_ingot"
+  }
+}

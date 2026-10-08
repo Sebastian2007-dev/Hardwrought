@@ -1,0 +1,52 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "north": "hardwrought:block/smeltery_tank/6",
+    "south": "hardwrought:block/smeltery_tank/10",
+    "east": "hardwrought:block/smeltery_tank/10",
+    "west": "hardwrought:block/smeltery_tank/6",
+    "up": "hardwrought:block/smeltery_tank/9",
+    "down": "hardwrought:block/smeltery_tank/10",
+    "particle": "hardwrought:block/smeltery_tank"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#north",
+          "cullface": "north"
+        },
+        "east": {
+          "texture": "#east",
+          "cullface": "east"
+        },
+        "south": {
+          "texture": "#south",
+          "cullface": "south"
+        },
+        "west": {
+          "texture": "#west",
+          "cullface": "west"
+        },
+        "up": {
+          "texture": "#up",
+          "cullface": "up"
+        },
+        "down": {
+          "texture": "#down",
+          "cullface": "down"
+        }
+      }
+    }
+  ]
+}

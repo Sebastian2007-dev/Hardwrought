@@ -1,0 +1,8 @@
+{
+  "parent": "hardwrought:block/magic_table_right_base",
+  "textures": {
+    "wood": "minecraft:block/oak_log",
+    "planks": "minecraft:block/oak_planks",
+    "particle": "minecraft:block/oak_planks"
+  }
+}

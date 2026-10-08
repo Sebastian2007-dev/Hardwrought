@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_transmute",
+  "category": "equipment",
+  "input": "hardwrought:iron_cuirass",
+  "material": "minecraft:leather",
+  "material_count": {
+    "min": 3,
+    "max": 3
+  },
+  "result": {
+    "id": "minecraft:iron_chestplate"
+  }
+}

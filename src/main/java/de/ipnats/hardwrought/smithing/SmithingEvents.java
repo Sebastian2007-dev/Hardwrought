@@ -71,15 +71,31 @@ public final class SmithingEvents {
 
     /**
      * A stack keeps its heat component until somebody notices it has gone cold. Dropping it then
-     * is what lets a cooled ingot stack with the cold ingots beside it again.
+     * is what lets a cooled ingot stack with the cold ingots beside it again — and it is put onto
+     * them, so a bag does not fill with single bars that have each cooled in a slot of their own.
      */
     private static void dropColdHeat(ServerPlayer player, long now) {
         var inventory = player.getInventory();
+        boolean changed = false;
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             ItemStack stack = inventory.getItem(slot);
             if (stack.isEmpty() || !stack.has(ModDataComponents.HEAT)) continue;
-            if (Heat.of(stack, now) < Heat.COLD_BELOW) stack.remove(ModDataComponents.HEAT);
+            if (Heat.of(stack, now) >= Heat.COLD_BELOW) continue;
+            stack.remove(ModDataComponents.HEAT);
+            changed = true;
+            // The hands and the armor keep what they hold; the bag's slots are tidied.
+            if (slot >= net.minecraft.world.entity.player.Inventory.INVENTORY_SIZE || slot == inventory.getSelectedSlot()) continue;
+            for (int other = 0; other < net.minecraft.world.entity.player.Inventory.INVENTORY_SIZE && !stack.isEmpty(); other++) {
+                ItemStack into = inventory.getItem(other);
+                if (other == slot || into.isEmpty() || !ItemStack.isSameItemSameComponents(into, stack)) continue;
+                int moved = Math.min(stack.getCount(), into.getMaxStackSize() - into.getCount());
+                if (moved <= 0) continue;
+                into.grow(moved);
+                stack.shrink(moved);
+            }
+            if (stack.isEmpty()) inventory.setItem(slot, ItemStack.EMPTY);
         }
+        if (changed) inventory.setChanged();
     }
 
     /** What one quench boils off: one layer of water, an eighth of a block. */

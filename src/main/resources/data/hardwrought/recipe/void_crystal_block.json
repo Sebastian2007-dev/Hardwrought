@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": ["##", "##"],
+  "key": { "#": "hardwrought:void_crystal_shard" },
+  "result": { "id": "hardwrought:void_crystal_block" }
+}

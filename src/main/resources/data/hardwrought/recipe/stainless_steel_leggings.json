@@ -1,13 +1,11 @@
 {
-  "type": "minecraft:crafting_shaped",
+  "type": "minecraft:crafting_transmute",
   "category": "equipment",
-  "pattern": [
-    "PPP",
-    "P P",
-    "P P"
-  ],
-  "key": {
-    "P": "hardwrought:stainless_steel_plate"
+  "input": "hardwrought:stainless_steel_greaves",
+  "material": "minecraft:leather",
+  "material_count": {
+    "min": 2,
+    "max": 2
   },
   "result": {
     "id": "hardwrought:stainless_steel_leggings"

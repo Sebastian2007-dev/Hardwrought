@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:raw_titanium_block"
+  ],
+  "result": {
+    "id": "hardwrought:raw_titanium",
+    "count": 9
+  }
+}

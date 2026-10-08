@@ -1,5 +1,6 @@
 {
   "values": [
+    "#hardwrought:raw_metal_blocks/stone",
     {
       "id": "hardwrought:tin_ore",
       "required": false

@@ -176,8 +176,17 @@ public class MultiblockScreen extends Screen {
             y = graphics.textWithWordWrap(font, Component.translatable("gui.hardwrought.multiblock.any_of"),
                     x, y + 2, CONTENT_WIDTH, FADED_COLOR, false) + 4;
         }
-        graphics.textWithWordWrap(font, Component.translatable("gui.hardwrought.multiblock.hint"),
-                x, Math.max(y + 4, top + CONTROLS_Y - 30), CONTENT_WIDTH, FADED_COLOR, false);
+        // A structure that can be built in more than one size says that what is shown is only one of them.
+        String note = "multiblock." + multiblock.id().getNamespace() + "." + multiblock.id().getPath() + ".note";
+        if (net.minecraft.locale.Language.getInstance().has(note)) {
+            y = graphics.textWithWordWrap(font, Component.translatable(note), x, y + 2, CONTENT_WIDTH, TEXT_COLOR, false) + 4;
+        }
+        Component hint = Component.translatable("gui.hardwrought.multiblock.hint");
+        int hintY = Math.max(y + 4, top + CONTROLS_Y - 30);
+        // Only where it fits above the buttons: a long legend or note comes first.
+        if (hintY + font.split(hint, CONTENT_WIDTH).size() * font.lineHeight <= top + CONTROLS_Y - 2) {
+            graphics.textWithWordWrap(font, hint, x, hintY, CONTENT_WIDTH, FADED_COLOR, false);
+        }
 
         button(graphics, leftContentX(), top + CONTROLS_Y, 54, Component.translatable("gui.hardwrought.compendium.back"),
                 mouseX, mouseY);

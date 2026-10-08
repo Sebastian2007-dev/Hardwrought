@@ -1,0 +1,196 @@
+{
+  "variants": {
+    "north=false,east=false,south=false,west=false,up=false,down=false": {
+      "model": "hardwrought:block/smeltery_tank"
+    },
+    "north=true,east=false,south=false,west=false,up=false,down=false": {
+      "model": "hardwrought:block/smeltery_tank/1"
+    },
+    "north=false,east=true,south=false,west=false,up=false,down=false": {
+      "model": "hardwrought:block/smeltery_tank/2"
+    },
+    "north=true,east=true,south=false,west=false,up=false,down=false": {
+      "model": "hardwrought:block/smeltery_tank/3"
+    },
+    "north=false,east=false,south=true,west=false,up=false,down=false": {
+      "model": "hardwrought:block/smeltery_tank/4"
+    },
+    "north=true,east=false,south=true,west=false,up=false,down=false": {
+      "model": "hardwrought:block/smeltery_tank/5"
+    },
+    "north=false,east=true,south=true,west=false,up=false,down=false": {
+      "model": "hardwrought:block/smeltery_tank/6"
+    },
+    "north=true,east=true,south=true,west=false,up=false,down=false": {
+      "model": "hardwrought:block/smeltery_tank/7"
+    },
+    "north=false,east=false,south=false,west=true,up=false,down=false": {
+      "model": "hardwrought:block/smeltery_tank/8"
+    },
+    "north=true,east=false,south=false,west=true,up=false,down=false": {
+      "model": "hardwrought:block/smeltery_tank/9"
+    },
+    "north=false,east=true,south=false,west=true,up=false,down=false": {
+      "model": "hardwrought:block/smeltery_tank/10"
+    },
+    "north=true,east=true,south=false,west=true,up=false,down=false": {
+      "model": "hardwrought:block/smeltery_tank/11"
+    },
+    "north=false,east=false,south=true,west=true,up=false,down=false": {
+      "model": "hardwrought:block/smeltery_tank/12"
+    },
+    "north=true,east=false,south=true,west=true,up=false,down=false": {
+      "model": "hardwrought:block/smeltery_tank/13"
+    },
+    "north=false,east=true,south=true,west=true,up=false,down=false": {
+      "model": "hardwrought:block/smeltery_tank/14"
+    },
+    "north=true,east=true,south=true,west=true,up=false,down=false": {
+      "model": "hardwrought:block/smeltery_tank/15"
+    },
+    "north=false,east=false,south=false,west=false,up=true,down=false": {
+      "model": "hardwrought:block/smeltery_tank/16"
+    },
+    "north=true,east=false,south=false,west=false,up=true,down=false": {
+      "model": "hardwrought:block/smeltery_tank/17"
+    },
+    "north=false,east=true,south=false,west=false,up=true,down=false": {
+      "model": "hardwrought:block/smeltery_tank/18"
+    },
+    "north=true,east=true,south=false,west=false,up=true,down=false": {
+      "model": "hardwrought:block/smeltery_tank/19"
+    },
+    "north=false,east=false,south=true,west=false,up=true,down=false": {
+      "model": "hardwrought:block/smeltery_tank/20"
+    },
+    "north=true,east=false,south=true,west=false,up=true,down=false": {
+      "model": "hardwrought:block/smeltery_tank/21"
+    },
+    "north=false,east=true,south=true,west=false,up=true,down=false": {
+      "model": "hardwrought:block/smeltery_tank/22"
+    },
+    "north=true,east=true,south=true,west=false,up=true,down=false": {
+      "model": "hardwrought:block/smeltery_tank/23"
+    },
+    "north=false,east=false,south=false,west=true,up=true,down=false": {
+      "model": "hardwrought:block/smeltery_tank/24"
+    },
+    "north=true,east=false,south=false,west=true,up=true,down=false": {
+      "model": "hardwrought:block/smeltery_tank/25"
+    },
+    "north=false,east=true,south=false,west=true,up=true,down=false": {
+      "model": "hardwrought:block/smeltery_tank/26"
+    },
+    "north=true,east=true,south=false,west=true,up=true,down=false": {
+      "model": "hardwrought:block/smeltery_tank/27"
+    },
+    "north=false,east=false,south=true,west=true,up=true,down=false": {
+      "model": "hardwrought:block/smeltery_tank/28"
+    },
+    "north=true,east=false,south=true,west=true,up=true,down=false": {
+      "model": "hardwrought:block/smeltery_tank/29"
+    },
+    "north=false,east=true,south=true,west=true,up=true,down=false": {
+      "model": "hardwrought:block/smeltery_tank/30"
+    },
+    "north=true,east=true,south=true,west=true,up=true,down=false": {
+      "model": "hardwrought:block/smeltery_tank/31"
+    },
+    "north=false,east=false,south=false,west=false,up=false,down=true": {
+      "model": "hardwrought:block/smeltery_tank/32"
+    },
+    "north=true,east=false,south=false,west=false,up=false,down=true": {
+      "model": "hardwrought:block/smeltery_tank/33"
+    },
+    "north=false,east=true,south=false,west=false,up=false,down=true": {
+      "model": "hardwrought:block/smeltery_tank/34"
+    },
+    "north=true,east=true,south=false,west=false,up=false,down=true": {
+      "model": "hardwrought:block/smeltery_tank/35"
+    },
+    "north=false,east=false,south=true,west=false,up=false,down=true": {
+      "model": "hardwrought:block/smeltery_tank/36"
+    },
+    "north=true,east=false,south=true,west=false,up=false,down=true": {
+      "model": "hardwrought:block/smeltery_tank/37"
+    },
+    "north=false,east=true,south=true,west=false,up=false,down=true": {
+      "model": "hardwrought:block/smeltery_tank/38"
+    },
+    "north=true,east=true,south=true,west=false,up=false,down=true": {
+      "model": "hardwrought:block/smeltery_tank/39"
+    },
+    "north=false,east=false,south=false,west=true,up=false,down=true": {
+      "model": "hardwrought:block/smeltery_tank/40"
+    },
+    "north=true,east=false,south=false,west=true,up=false,down=true": {
+      "model": "hardwrought:block/smeltery_tank/41"
+    },
+    "north=false,east=true,south=false,west=true,up=false,down=true": {
+      "model": "hardwrought:block/smeltery_tank/42"
+    },
+    "north=true,east=true,south=false,west=true,up=false,down=true": {
+      "model": "hardwrought:block/smeltery_tank/43"
+    },
+    "north=false,east=false,south=true,west=true,up=false,down=true": {
+      "model": "hardwrought:block/smeltery_tank/44"
+    },
+    "north=true,east=false,south=true,west=true,up=false,down=true": {
+      "model": "hardwrought:block/smeltery_tank/45"
+    },
+    "north=false,east=true,south=true,west=true,up=false,down=true": {
+      "model": "hardwrought:block/smeltery_tank/46"
+    },
+    "north=true,east=true,south=true,west=true,up=false,down=true": {
+      "model": "hardwrought:block/smeltery_tank/47"
+    },
+    "north=false,east=false,south=false,west=false,up=true,down=true": {
+      "model": "hardwrought:block/smeltery_tank/48"
+    },
+    "north=true,east=false,south=false,west=false,up=true,down=true": {
+      "model": "hardwrought:block/smeltery_tank/49"
+    },
+    "north=false,east=true,south=false,west=false,up=true,down=true": {
+      "model": "hardwrought:block/smeltery_tank/50"
+    },
+    "north=true,east=true,south=false,west=false,up=true,down=true": {
+      "model": "hardwrought:block/smeltery_tank/51"
+    },
+    "north=false,east=false,south=true,west=false,up=true,down=true": {
+      "model": "hardwrought:block/smeltery_tank/52"
+    },
+    "north=true,east=false,south=true,west=false,up=true,down=true": {
+      "model": "hardwrought:block/smeltery_tank/53"
+    },
+    "north=false,east=true,south=true,west=false,up=true,down=true": {
+      "model": "hardwrought:block/smeltery_tank/54"
+    },
+    "north=true,east=true,south=true,west=false,up=true,down=true": {
+      "model": "hardwrought:block/smeltery_tank/55"
+    },
+    "north=false,east=false,south=false,west=true,up=true,down=true": {
+      "model": "hardwrought:block/smeltery_tank/56"
+    },
+    "north=true,east=false,south=false,west=true,up=true,down=true": {
+      "model": "hardwrought:block/smeltery_tank/57"
+    },
+    "north=false,east=true,south=false,west=true,up=true,down=true": {
+      "model": "hardwrought:block/smeltery_tank/58"
+    },
+    "north=true,east=true,south=false,west=true,up=true,down=true": {
+      "model": "hardwrought:block/smeltery_tank/59"
+    },
+    "north=false,east=false,south=true,west=true,up=true,down=true": {
+      "model": "hardwrought:block/smeltery_tank/60"
+    },
+    "north=true,east=false,south=true,west=true,up=true,down=true": {
+      "model": "hardwrought:block/smeltery_tank/61"
+    },
+    "north=false,east=true,south=true,west=true,up=true,down=true": {
+      "model": "hardwrought:block/smeltery_tank/62"
+    },
+    "north=true,east=true,south=true,west=true,up=true,down=true": {
+      "model": "hardwrought:block/smeltery_tank/63"
+    }
+  }
+}

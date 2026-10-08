@@ -1,0 +1,13 @@
+{
+	"required": true,
+	"package": "de.ipnats.hardwrought.client.mixin.sodium",
+	"plugin": "de.ipnats.hardwrought.client.mixin.sodium.SodiumMixinPlugin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"SodiumDefaultChunkRendererMixin",
+		"SodiumShaderChunkRendererMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

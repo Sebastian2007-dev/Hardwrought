@@ -39,7 +39,10 @@ public enum Metal {
     TUNGSTEN("tungsten", -200, -60, 2, 4, Hardness.DIAMOND, 5, Rock.GRANITE, "diamond"),
     URANIUM("uranium", -200, -40, 2, 4, Hardness.IRON, 5, Rock.GRANITE, "emerald"),
     THORIUM("thorium", -220, -80, 2, 4, Hardness.IRON, 5, Rock.GRANITE, "emerald"),
-    PLATINUM("platinum", -220, -100, 1, 3, Hardness.DIAMOND, 5, Rock.VOLCANIC, "gold");
+    PLATINUM("platinum", -220, -100, 1, 3, Hardness.DIAMOND, 5, Rock.VOLCANIC, "gold"),
+    SILVER("silver", -80, 32, 3, 5, Hardness.IRON, 3, Rock.VOLCANIC, "gold"),
+    MITHRIL("mithril", -180, -64, 1, 3, Hardness.DIAMOND, 5, Rock.GRANITE, "diamond"),
+    ADAMANTIUM("adamantium", -240, -128, 1, 2, Hardness.DIAMOND, 5, Rock.VOLCANIC, "emerald");
 
     /** Which pickaxe is hard enough. Vanilla already owns these lines, so they are reused. */
     public enum Hardness {
@@ -105,6 +108,10 @@ public enum Metal {
 
     public String rawId() {
         return "raw_" + id;
+    }
+
+    public String rawBlockId() {
+        return "raw_" + id + "_block";
     }
 
     public String ingotId() {

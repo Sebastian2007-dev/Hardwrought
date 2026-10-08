@@ -45,32 +45,45 @@ import java.util.Map;
  *   <tr><th>fuel</th><th>alone</th><th>with a bellows at the wall</th></tr>
  *   <tr><td>coal, charcoal</td><td>{@value #COAL_C} °C</td><td>{@value #COAL_BLOWN_C} °C</td></tr>
  *   <tr><td>coke</td><td>{@value #COKE_C} °C</td><td>{@value #COKE_BLOWN_C} °C</td></tr>
+ *   <tr><td>lava from a tank in the wall</td><td>{@value #LAVA_C} °C</td><td>{@value #LAVA_BLOWN_C} °C</td></tr>
  * </table>
  * Coal alone melts copper, tin and gold, never iron; iron, and so steel, wants a bellows or coke;
- * tungsten wants both.
+ * tungsten wants both. Lava melts iron on its own; it is burnt only when the fuel slot is empty.
  */
 public class SmelteryControllerBlockEntity extends BlockEntity implements Container, ExtendedMenuProvider<BlockPos> {
     public static final int FUEL_SLOT = 0;
     public static final int MELT_SLOTS = 27;
     public static final int CONTAINER_SIZE = 1 + MELT_SLOTS;
+    /** Heat, goal, fuel left and capacity, then the state of every melting place. */
+    public static final int DATA_COUNT = 4 + MELT_SLOTS;
     /** How much a block of tank holds: eight ingots. */
     public static final int PER_BLOCK = 8 * MoltenMetals.INGOT;
-    public static final double COAL_C = 1250, COAL_BLOWN_C = 1650, COKE_C = 2000, COKE_BLOWN_C = 3600;
+    public static final double COAL_C = 1250, COAL_BLOWN_C = 1650, COKE_C = 2000, COKE_BLOWN_C = 4200;
+    public static final double LAVA_C = 1600, LAVA_BLOWN_C = 2000;
+    /** Lava taken from a tank at a time, and how long it burns: a bucket lasts five minutes. */
+    public static final int LAVA_PER_BURN = 50, LAVA_TICKS = 300;
+
+    /** What is burning: coal or charcoal, coke, or lava. */
+    private enum Fuel { COAL, COKE, LAVA }
     /** Share of the gap to the fire's heat closed each tick: a large tank of brick warms slowly. */
     static final double RESPONSE = 0.004;
-    /** Ticks a piece takes to melt once the bath is hot enough for it. */
+    /** Ticks an ingot's worth takes to melt once the bath is hot enough; more metal takes longer. */
     static final int MELT_TICKS = 100;
+    /** What the screen is told of a melting place: too cold for what lies there, or no room in the tank. */
+    public static final int TOO_COLD = -1, TANK_FULL = -2;
     /** Most of one alloy made per tick, in units of its ratio. */
     static final int ALLOY_UNITS_PER_TICK = 4;
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private final int[] progress = new int[MELT_SLOTS];
+    /** Per melting place: {@link #TOO_COLD}, {@link #TANK_FULL}, or how far along it is in thousandths. */
+    private final int[] state = new int[MELT_SLOTS];
     private final LinkedHashMap<String, Integer> fluids = new LinkedHashMap<>();
     private double temperature = Heat.AMBIENT;
     private double target = Heat.AMBIENT;
     private int burnTicks;
     private int burnTotal;
-    private boolean hotFuel;
+    private Fuel fuel = Fuel.COAL;
     private SmelteryStructure.Found structure;
     private BlockPos tankMin, tankMax;
     private boolean dirty;
@@ -83,7 +96,7 @@ public class SmelteryControllerBlockEntity extends BlockEntity implements Contai
                 case 1 -> (int) Math.round(target);
                 case 2 -> burnTotal <= 0 ? 0 : burnTicks * 1000 / burnTotal;
                 case 3 -> capacity();
-                default -> 0;
+                default -> index - 4 < MELT_SLOTS ? state[index - 4] : 0;
             };
         }
 
@@ -92,7 +105,7 @@ public class SmelteryControllerBlockEntity extends BlockEntity implements Contai
 
         @Override
         public int getCount() {
-            return 4;
+            return DATA_COUNT;
         }
     };
 
@@ -147,6 +160,30 @@ public class SmelteryControllerBlockEntity extends BlockEntity implements Contai
             if (entry.getValue() > 0 && MoltenMetals.ingot(entry.getKey()) != null) return entry.getKey();
         }
         return null;
+    }
+
+    /**
+     * Makes this metal the bottom layer and therefore the one a faucet pours next. The screen sends
+     * only the material index; the server still verifies that the material is really in this tank
+     * and can be cast.
+     */
+    public boolean selectForCasting(String material) {
+        Integer amount = fluids.get(material);
+        if (amount == null || amount <= 0 || MoltenMetals.ingot(material) == null) return false;
+        if (material.equals(bottomCastable())) return true;
+        LinkedHashMap<String, Integer> reordered = new LinkedHashMap<>();
+        reordered.put(material, amount);
+        fluids.forEach((name, present) -> {
+            if (!name.equals(material)) reordered.put(name, present);
+        });
+        fluids.clear();
+        fluids.putAll(reordered);
+        dirty = true;
+        setChanged();
+        if (level != null) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
+        }
+        return true;
     }
 
     /** Takes up to this much of a metal out of the tank; returns how much it took. */
@@ -210,23 +247,44 @@ public class SmelteryControllerBlockEntity extends BlockEntity implements Contai
 
     private void heat() {
         if (burnTicks <= 0 && structure != null && hasWork()) {
-            ItemStack fuel = items.get(FUEL_SLOT);
-            int ticks = fuelTicks(fuel);
+            ItemStack stack = items.get(FUEL_SLOT);
+            int ticks = fuelTicks(stack);
             if (ticks > 0) {
-                hotFuel = fuel.is(SmelteryBlocks.COKE);
+                fuel = stack.is(SmelteryBlocks.COKE) ? Fuel.COKE : Fuel.COAL;
                 burnTicks = ticks;
                 burnTotal = ticks;
-                fuel.shrink(1);
+                stack.shrink(1);
+                dirty = true;
+            } else if (drawLava()) {
+                fuel = Fuel.LAVA;
+                burnTicks = LAVA_TICKS;
+                burnTotal = LAVA_TICKS;
                 dirty = true;
             }
         }
         if (burnTicks > 0) burnTicks--;
         boolean blown = structure != null && structure.blown();
-        target = structure == null || burnTicks <= 0 ? Heat.AMBIENT
-                : hotFuel ? (blown ? COKE_BLOWN_C : COKE_C) : (blown ? COAL_BLOWN_C : COAL_C);
+        target = structure == null || burnTicks <= 0 ? Heat.AMBIENT : switch (fuel) {
+            case COAL -> blown ? COAL_BLOWN_C : COAL_C;
+            case COKE -> blown ? COKE_BLOWN_C : COKE_C;
+            case LAVA -> blown ? LAVA_BLOWN_C : LAVA_C;
+        };
         double before = temperature;
         temperature += (target - temperature) * RESPONSE;
         if (Math.abs(temperature - before) > 5) dirty = true;
+    }
+
+    /** Takes one burn's worth of lava from a tank in the wall. False where the tanks are dry. */
+    private boolean drawLava() {
+        if (level == null || structure == null) return false;
+        for (BlockPos pos : structure.tanks()) {
+            // A tank in the wall draws on every tank joined to it, even those outside the wall.
+            if (SmelteryTankBlockEntity.lava(level, pos) >= LAVA_PER_BURN) {
+                SmelteryTankBlockEntity.drainGroup(level, pos, LAVA_PER_BURN);
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Ticks a fuel burns in the smeltery: longer than in a furnace — a smeltery is a hungry thing. */
@@ -244,13 +302,26 @@ public class SmelteryControllerBlockEntity extends BlockEntity implements Contai
         for (int i = 0; i < MELT_SLOTS; i++) {
             ItemStack stack = items.get(1 + i);
             MoltenMetals.Melt melt = stack.isEmpty() ? null : MoltenMetals.melt(stack.getItem());
-            if (melt == null || temperature < MoltenMetals.meltingPoint(melt.material(), runtime.materials())
-                    || fluidTotal() + melt.amount() > capacity) {
+            if (melt == null) {
                 progress[i] = 0;
+                state[i] = 0;
                 continue;
             }
-            if (++progress[i] < MELT_TICKS) continue;
+            if (temperature < MoltenMetals.meltingPoint(melt.material(), runtime.materials())) {
+                progress[i] = 0;
+                state[i] = TOO_COLD;
+                continue;
+            }
+            if (fluidTotal() + melt.amount() > capacity) {
+                // Waits where it is, keeping what it has: the tank only has to be emptied.
+                state[i] = TANK_FULL;
+                continue;
+            }
+            int needed = meltTicks(melt);
+            state[i] = Math.min(999, progress[i] * 1000 / needed);
+            if (++progress[i] < needed) continue;
             progress[i] = 0;
+            state[i] = 0;
             stack.shrink(1);
             fluids.merge(melt.material(), melt.amount(), Integer::sum);
             dirty = true;
@@ -282,9 +353,16 @@ public class SmelteryControllerBlockEntity extends BlockEntity implements Contai
         dirty = true;
     }
 
-    /** Melting progress of a slot, 0 to 1, for the screen. */
+    /** How long a piece takes to melt: an ingot's worth in five seconds, a block of nine in thirty. */
+    public static int meltTicks(MoltenMetals.Melt melt) {
+        return Math.max(40, Math.min(600, MELT_TICKS * melt.amount() / MoltenMetals.INGOT));
+    }
+
+    /** Melting progress of a slot, 0 to 1. */
     public float progress(int slot) {
-        return progress[slot] / (float) MELT_TICKS;
+        ItemStack stack = items.get(1 + slot);
+        MoltenMetals.Melt melt = stack.isEmpty() ? null : MoltenMetals.melt(stack.getItem());
+        return melt == null ? 0 : progress[slot] / (float) meltTicks(melt);
     }
 
     // ---------------------------------------------------------------- saving and syncing
@@ -300,7 +378,8 @@ public class SmelteryControllerBlockEntity extends BlockEntity implements Contai
         temperature = input.getDoubleOr("temperature", Heat.AMBIENT);
         burnTicks = input.getIntOr("burn", 0);
         burnTotal = input.getIntOr("burn_total", 0);
-        hotFuel = input.getBooleanOr("hot_fuel", false);
+        int burning = input.getIntOr("fuel", input.getBooleanOr("hot_fuel", false) ? 1 : 0);
+        fuel = Fuel.values()[Math.clamp(burning, 0, Fuel.values().length - 1)];
         tankMin = input.read("tank_min", BlockPos.CODEC).orElse(null);
         tankMax = input.read("tank_max", BlockPos.CODEC).orElse(null);
     }
@@ -315,7 +394,7 @@ public class SmelteryControllerBlockEntity extends BlockEntity implements Contai
         output.putDouble("temperature", temperature);
         output.putInt("burn", burnTicks);
         output.putInt("burn_total", burnTotal);
-        output.putBoolean("hot_fuel", hotFuel);
+        output.putInt("fuel", fuel.ordinal());
         if (tankMin != null) output.store("tank_min", BlockPos.CODEC, tankMin);
         if (tankMax != null) output.store("tank_max", BlockPos.CODEC, tankMax);
     }

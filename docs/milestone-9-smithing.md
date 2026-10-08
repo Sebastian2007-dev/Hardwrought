@@ -47,8 +47,8 @@ to above 450 °C, tinted by temperature from dull red to yellow-white (`HeatLook
 
 **Furnaces heat instead of smelting.** A piece of forge metal with no smelting recipe is handed a
 synthetic recipe whose result is the piece itself; vanilla then does fuel, cook time and the brick
-furnace's slowness, and the complete inserted stack comes out together as hot as the furnace gets —
-never past the top of its working range. A real smelting recipe still consumes only one item per
+furnace's slowness, and the complete inserted stack comes out together as hot as the furnace gets.
+A real smelting recipe still consumes only one item per
 operation. Progress and quality on the piece survive the trip. Every furnace tops out at 1550 °C,
 just past iron: anything that melts hotter (titanium, chromium, platinum, tungsten and more) is not
 heated or cast in a furnace at all, and no fuel is burnt on it. Those go to the forge, and melt only
@@ -60,8 +60,10 @@ only the soft metals (tin, lead, zinc) and bronze.
 
 **The forge** (`ForgeBlock`) is the hearth that goes further. Coal in, pieces laid in the coals by
 hand, taken out by hand. Its fire warms and cools gradually and the pieces follow it — which is what
-makes it the place to temper. A piece in it heats to the top of its working range and stops there,
-however hot the fire is: the forge brings metal to forging heat, never to melting.
+makes it the place to temper. While the fire burns a piece keeps its heat, so pieces can be taken out
+one at a time while the rest wait. Once the fire is out the pieces cool with the embers, a little
+slower than in open air. A piece in it follows the fire all the way. Iron left in a lined, blown
+forge comes out far past its working heat, and every blow on it then costs quality.
 
 | forge | heads for |
 | --- | --- |
@@ -103,8 +105,59 @@ came to a third of the squares that needed fixing.
 | hoe head, sword blade | 2 |
 | shovel head, dagger blade | 1 |
 | greatsword blade | 4 |
+| hammer head (iron, steel) | 2 |
+| helmet shell | 5 |
+| cuirass | 8 |
+| greaves | 7 |
+| sabatons | 4 |
 
-Iron has all eight, gold the five vanilla tools, bronze the pick and hatchet heads.
+Which metal has which parts:
+- **iron**: everything;
+- **gold** and **copper**: the five vanilla tools and the four armor parts;
+- **bronze**: the pick and hatchet heads;
+- **steel, stainless steel, titanium and tungsten steel**: every tool, weapon and armor part, and
+  steel also the hammer head.
+
+Hammers:
+
+| hammer | blow covers | made from |
+| --- | --- | --- |
+| wooden mallet | 1 square | — |
+| stone hammer | 2 × 2 | — |
+| iron hammer | 3 × 3 | iron hammer head + stone hammer |
+| steel hammer (1000 durability) | 4 × 4 | steel hammer head + iron hammer |
+
+- An iron hammer head and every armor part need at least a stone hammer.
+- A steel hammer head needs at least an iron hammer.
+
+**Armor** is forged in parts and put together at the bench with leather for padding and straps
+(`crafting_transmute`, so the part's quality carries over):
+
+| part | + leather | becomes |
+| --- | --- | --- |
+| helmet shell | 1 | helmet |
+| cuirass | 3 | chestplate |
+| greaves | 2 | leggings |
+| sabatons | 1 | boots |
+
+- The armor of iron, gold and copper is vanilla's; the other metals' armor is the mod's own.
+- Vanilla's recipes from bars and the mod's old recipes from plates are replaced.
+- Quality changes armor's durability, as for tools.
+
+**No diamond equipment** (`NoDiamondGear`):
+- **Recipes:** none of vanilla's diamond tools, weapons, spear and armor can be made. Their recipes
+  and the recipe book's unlocks for them carry a `fabric:false` load condition.
+- **Steel in its place:** wherever a piece still turns up, it is replaced, keeping its enchantments,
+  name and share of wear. That covers loot tables, mobs' equipment when they spawn, and players'
+  inventories, checked every second, which catches trades and commands.
+  - The spear, horse armor and nautilus armor become iron, since steel has none of these.
+- **Creative tabs:** diamond gear is gone from them.
+- **Netherite:** it is upgraded from tungsten steel instead (spear, horse armor and nautilus armor
+  from iron).
+- **The diamond itself stays.**
+
+Assets: `tools/armor_parts_assets.py` and `tools/steel_hammer_assets.py`, then
+`tools/glow_textures.py`.
 
 ## Quality
 

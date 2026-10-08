@@ -1,0 +1,199 @@
+{
+  "variants": {
+    "facing=north,glyph=fire": {
+      "model": "hardwrought:block/rune_stone_fire"
+    },
+    "facing=north,glyph=water": {
+      "model": "hardwrought:block/rune_stone_water"
+    },
+    "facing=north,glyph=wind": {
+      "model": "hardwrought:block/rune_stone_wind"
+    },
+    "facing=north,glyph=earth": {
+      "model": "hardwrought:block/rune_stone_earth"
+    },
+    "facing=north,glyph=light": {
+      "model": "hardwrought:block/rune_stone_light"
+    },
+    "facing=north,glyph=dark": {
+      "model": "hardwrought:block/rune_stone_dark"
+    },
+    "facing=north,glyph=arrow": {
+      "model": "hardwrought:block/rune_stone_arrow"
+    },
+    "facing=north,glyph=circle": {
+      "model": "hardwrought:block/rune_stone_circle"
+    },
+    "facing=north,glyph=triangle": {
+      "model": "hardwrought:block/rune_stone_triangle"
+    },
+    "facing=north,glyph=spiral": {
+      "model": "hardwrought:block/rune_stone_spiral"
+    },
+    "facing=north,glyph=square": {
+      "model": "hardwrought:block/rune_stone_square"
+    },
+    "facing=north,glyph=strike": {
+      "model": "hardwrought:block/rune_stone_strike"
+    },
+    "facing=east,glyph=fire": {
+      "model": "hardwrought:block/rune_stone_fire",
+      "y": 90
+    },
+    "facing=east,glyph=water": {
+      "model": "hardwrought:block/rune_stone_water",
+      "y": 90
+    },
+    "facing=east,glyph=wind": {
+      "model": "hardwrought:block/rune_stone_wind",
+      "y": 90
+    },
+    "facing=east,glyph=earth": {
+      "model": "hardwrought:block/rune_stone_earth",
+      "y": 90
+    },
+    "facing=east,glyph=light": {
+      "model": "hardwrought:block/rune_stone_light",
+      "y": 90
+    },
+    "facing=east,glyph=dark": {
+      "model": "hardwrought:block/rune_stone_dark",
+      "y": 90
+    },
+    "facing=east,glyph=arrow": {
+      "model": "hardwrought:block/rune_stone_arrow",
+      "y": 90
+    },
+    "facing=east,glyph=circle": {
+      "model": "hardwrought:block/rune_stone_circle",
+      "y": 90
+    },
+    "facing=east,glyph=triangle": {
+      "model": "hardwrought:block/rune_stone_triangle",
+      "y": 90
+    },
+    "facing=east,glyph=spiral": {
+      "model": "hardwrought:block/rune_stone_spiral",
+      "y": 90
+    },
+    "facing=east,glyph=square": {
+      "model": "hardwrought:block/rune_stone_square",
+      "y": 90
+    },
+    "facing=east,glyph=strike": {
+      "model": "hardwrought:block/rune_stone_strike",
+      "y": 90
+    },
+    "facing=south,glyph=fire": {
+      "model": "hardwrought:block/rune_stone_fire",
+      "y": 180
+    },
+    "facing=south,glyph=water": {
+      "model": "hardwrought:block/rune_stone_water",
+      "y": 180
+    },
+    "facing=south,glyph=wind": {
+      "model": "hardwrought:block/rune_stone_wind",
+      "y": 180
+    },
+    "facing=south,glyph=earth": {
+      "model": "hardwrought:block/rune_stone_earth",
+      "y": 180
+    },
+    "facing=south,glyph=light": {
+      "model": "hardwrought:block/rune_stone_light",
+      "y": 180
+    },
+    "facing=south,glyph=dark": {
+      "model": "hardwrought:block/rune_stone_dark",
+      "y": 180
+    },
+    "facing=south,glyph=arrow": {
+      "model": "hardwrought:block/rune_stone_arrow",
+      "y": 180
+    },
+    "facing=south,glyph=circle": {
+      "model": "hardwrought:block/rune_stone_circle",
+      "y": 180
+    },
+    "facing=south,glyph=triangle": {
+      "model": "hardwrought:block/rune_stone_triangle",
+      "y": 180
+    },
+    "facing=south,glyph=spiral": {
+      "model": "hardwrought:block/rune_stone_spiral",
+      "y": 180
+    },
+    "facing=south,glyph=square": {
+      "model": "hardwrought:block/rune_stone_square",
+      "y": 180
+    },
+    "facing=south,glyph=strike": {
+      "model": "hardwrought:block/rune_stone_strike",
+      "y": 180
+    },
+    "facing=west,glyph=fire": {
+      "model": "hardwrought:block/rune_stone_fire",
+      "y": 270
+    },
+    "facing=west,glyph=water": {
+      "model": "hardwrought:block/rune_stone_water",
+      "y": 270
+    },
+    "facing=west,glyph=wind": {
+      "model": "hardwrought:block/rune_stone_wind",
+      "y": 270
+    },
+    "facing=west,glyph=earth": {
+      "model": "hardwrought:block/rune_stone_earth",
+      "y": 270
+    },
+    "facing=west,glyph=light": {
+      "model": "hardwrought:block/rune_stone_light",
+      "y": 270
+    },
+    "facing=west,glyph=dark": {
+      "model": "hardwrought:block/rune_stone_dark",
+      "y": 270
+    },
+    "facing=west,glyph=arrow": {
+      "model": "hardwrought:block/rune_stone_arrow",
+      "y": 270
+    },
+    "facing=west,glyph=circle": {
+      "model": "hardwrought:block/rune_stone_circle",
+      "y": 270
+    },
+    "facing=west,glyph=triangle": {
+      "model": "hardwrought:block/rune_stone_triangle",
+      "y": 270
+    },
+    "facing=west,glyph=spiral": {
+      "model": "hardwrought:block/rune_stone_spiral",
+      "y": 270
+    },
+    "facing=west,glyph=square": {
+      "model": "hardwrought:block/rune_stone_square",
+      "y": 270
+    },
+    "facing=west,glyph=strike": {
+      "model": "hardwrought:block/rune_stone_strike",
+      "y": 270
+    },
+    "facing=north,glyph=lightning": {
+      "model": "hardwrought:block/rune_stone_lightning"
+    },
+    "facing=east,glyph=lightning": {
+      "model": "hardwrought:block/rune_stone_lightning",
+      "y": 90
+    },
+    "facing=south,glyph=lightning": {
+      "model": "hardwrought:block/rune_stone_lightning",
+      "y": 180
+    },
+    "facing=west,glyph=lightning": {
+      "model": "hardwrought:block/rune_stone_lightning",
+      "y": 270
+    }
+  }
+}

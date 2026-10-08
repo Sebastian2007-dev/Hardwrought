@@ -28,6 +28,9 @@ public final class SmelteryBlocks {
             BlockBehaviour.Properties.ofFullCopy(Blocks.GLASS).strength(1.5f));
     public static final Block DRAIN = block("smeltery_drain", Block::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.NETHER_BRICKS));
+    /** Lava for fuel, in the wall: brick with a window, like the glass. */
+    public static final SmelteryTankBlock TANK = block("smeltery_tank", SmelteryTankBlock::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.NETHER_BRICKS).noOcclusion().lightLevel(state -> 7));
     public static final SmelteryControllerBlock CONTROLLER = block("smeltery_controller", SmelteryControllerBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.NETHER_BRICKS)
                     .lightLevel(state -> state.getValue(SmelteryControllerBlock.LIT) ? 13 : 0));
@@ -45,6 +48,8 @@ public final class SmelteryBlocks {
 
     public static final BlockEntityType<SmelteryControllerBlockEntity> CONTROLLER_ENTITY = entity("smeltery_controller",
             new BlockEntityType<>(SmelteryControllerBlockEntity::new, Set.of(CONTROLLER)));
+    public static final BlockEntityType<SmelteryTankBlockEntity> TANK_ENTITY = entity("smeltery_tank",
+            new BlockEntityType<>(SmelteryTankBlockEntity::new, Set.of(TANK)));
     public static final BlockEntityType<FaucetBlockEntity> FAUCET_ENTITY = entity("faucet",
             new BlockEntityType<>(FaucetBlockEntity::new, Set.of(FAUCET)));
     public static final BlockEntityType<CastingTableBlockEntity> CASTING_TABLE_ENTITY = entity("casting_table",
@@ -59,7 +64,7 @@ public final class SmelteryBlocks {
 
     /** Everything a player can hold, for the creative tab. */
     public static List<Item> items() {
-        return List.of(SMELTERY_BRICKS.asItem(), SMELTERY_GLASS.asItem(), CONTROLLER.asItem(), DRAIN.asItem(),
+        return List.of(SMELTERY_BRICKS.asItem(), SMELTERY_GLASS.asItem(), TANK.asItem(), CONTROLLER.asItem(), DRAIN.asItem(),
                 FAUCET.asItem(), CASTING_TABLE.asItem(), UNFIRED_INGOT_CAST, INGOT_CAST, COKE);
     }
 

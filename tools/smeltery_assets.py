@@ -30,8 +30,20 @@ MOLTEN = [("iron", 0xD9521E, "Eisen", "Iron"), ("gold", 0xF6C83A, "Gold", "Gold"
           ("aluminum", 0xD8DDE3, "Aluminium", "Aluminum"), ("nickel", 0xD3CFA8, "Nickel", "Nickel"),
           ("cobalt", 0x5A7DD8, "Kobalt", "Cobalt"), ("chromium", 0xC8D8E4, "Chrom", "Chromium"),
           ("uranium", 0x7FD04F, "Uran", "Uranium"), ("thorium", 0x9FA8A0, "Thorium", "Thorium"),
-          ("platinum", 0xD8ECF4, "Platin", "Platinum"), ("netherite", 0x5A4448, "Netherit", "Netherite"),
-          ("carbon", 0x2A2626, "Kohlenstoff", "Carbon")]
+          ("platinum", 0xD8ECF4, "Platin", "Platinum"), ("silver", 0xE7EEF2, "Silber", "Silver"),
+          ("mithril", 0x73E6D1, "Mithril", "Mithril"), ("adamantium", 0xCA4868, "Adamantium", "Adamantium"),
+          ("netherite", 0x5A4448, "Netherit", "Netherite"),
+          ("carbon", 0x2A2626, "Kohlenstoff", "Carbon"),
+          # Lava is not tinted: it is vanilla's own, the fuel in a smeltery tank.
+          ("lava", None, "Lava", "Lava")]
+
+
+# A tank face's open edges, as bits of its texture's number.
+TANK_EDGES = {"top": 1, "bottom": 2, "left": 4, "right": 8}
+# Which neighbour lies beyond each edge of each face, as the face's texture is drawn on the block.
+TANK_FACE_EDGES = {"north": ("up", "down", "east", "west"), "south": ("up", "down", "west", "east"),
+                   "east": ("up", "down", "south", "north"), "west": ("up", "down", "north", "south"),
+                   "up": ("north", "south", "west", "east"), "down": ("south", "north", "west", "east")}
 
 
 def jar():
@@ -95,6 +107,24 @@ def textures():
                 fp[x, y] = (60, 50, 44, 255)
     save(frame, "block/smeltery_glass")
 
+    # The tank: a ring of brick three pixels wide round a window, through which the lava is seen.
+    # Tanks joined side by side lose the frame towards each other and the window runs through, so a
+    # face comes in sixteen versions, one for each set of open edges (see TANK_EDGES).
+    gp = glass.load()
+    for mask in range(16):
+        tank = bricks.copy()
+        tp = tank.load()
+        x0 = 0 if mask & TANK_EDGES["left"] else 3
+        x1 = 15 if mask & TANK_EDGES["right"] else 12
+        y0 = 0 if mask & TANK_EDGES["top"] else 3
+        y1 = 15 if mask & TANK_EDGES["bottom"] else 12
+        for y in range(y0, y1 + 1):
+            for x in range(x0, x1 + 1):
+                edge = (x == x0 and not mask & TANK_EDGES["left"]) or (x == x1 and not mask & TANK_EDGES["right"]) \
+                    or (y == y0 and not mask & TANK_EDGES["top"]) or (y == y1 and not mask & TANK_EDGES["bottom"])
+                tp[x, y] = (40, 34, 30, 255) if edge else gp[x, y]
+        save(tank, "block/smeltery_tank" if mask == 0 else f"block/smeltery_tank/{mask}")
+
     # Dark forged iron for the hardware.  Keeping this separate from the brick texture makes the
     # faucet and casting table readable at a glance, even in the deliberately dim smeltery room.
     metal = recolour(vanilla("block/iron_block"), (28, 25, 23), (104, 91, 78))
@@ -123,15 +153,16 @@ def textures():
     lava = vanilla("block/lava_still")
     lava_meta = json.loads(JAR.read("assets/minecraft/textures/block/lava_still.png.mcmeta"))
     for material, colour, _de, _en in MOLTEN:
-        c = ((colour >> 16) & 255, (colour >> 8) & 255, colour & 255)
         out = lava.copy()
-        px = out.load()
-        for y in range(out.height):
-            for x in range(out.width):
-                r, g, b, a = px[x, y]
-                lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
-                f = 0.45 + 0.75 * lum
-                px[x, y] = tuple(min(255, int(c[k] * f)) for k in range(3)) + (a,)
+        if colour is not None:
+            c = ((colour >> 16) & 255, (colour >> 8) & 255, colour & 255)
+            px = out.load()
+            for y in range(out.height):
+                for x in range(out.width):
+                    r, g, b, a = px[x, y]
+                    lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+                    f = 0.45 + 0.75 * lum
+                    px[x, y] = tuple(min(255, int(c[k] * f)) for k in range(3)) + (a,)
         save(out, f"block/molten/{material}")
         with open(os.path.join(ASSETS, "textures/block/molten", material + ".png.mcmeta"), "w", newline="\n") as f:
             json.dump(lava_meta, f)
@@ -142,15 +173,32 @@ def textures():
                               ("ingot_cast", (160, 91, 55), (75, 39, 25))):
         img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
         q = img.load()
-        for y in range(4, 13):
-            for x in range(1, 15):
+        # A table-sized mould plate with a stepped, ingot-shaped opening.  The transparent opening is
+        # deliberately aligned with the molten-metal box in SmelteryRenderers.Table.
+        for y in range(1, 15):
+            for x in range(16):
                 q[x, y] = body + (255,)
-        for y in range(6, 11):
-            for x in range(4, 12):
-                q[x, y] = hollow + (255,)
-        for x in range(1, 15):
-            q[x, 4] = tuple(min(255, v + 25) for v in body) + (255,)
-            q[x, 12] = tuple(v * 3 // 4 for v in body) + (255,)
+        for y in (5, 10):
+            for x in range(3, 13):
+                q[x, y] = (0, 0, 0, 0)
+        for y in range(6, 10):
+            for x in range(2, 14):
+                q[x, y] = (0, 0, 0, 0)
+        highlight = tuple(min(255, v + 34) for v in body) + (255,)
+        shadow = tuple(v * 2 // 3 for v in body) + (255,)
+        for x in range(16):
+            q[x, 1] = highlight
+            q[x, 14] = shadow
+        for y in range(2, 14):
+            q[0, y] = highlight
+            q[15, y] = shadow
+        # Light the upper/left edge of the ingot recess and shade its lower/right edge.
+        for x in range(3, 13):
+            q[x, 4] = highlight
+            q[x, 11] = shadow
+        for y in range(6, 10):
+            q[1, y] = highlight
+            q[14, y] = shadow
         save(img, f"item/{key}")
 
         # Tileable material and recessed cavity used by the actual 3-D item model.
@@ -172,12 +220,35 @@ def textures():
         save(cavity, f"item/{key}_cavity")
 
 
+def tank_models():
+    """One model per set of joined neighbours: each face picks the frame with the right edges open."""
+    sides = ("north", "east", "south", "west", "up", "down")
+    variants = {}
+    for bits in range(64):
+        joined = {side: bool(bits >> i & 1) for i, side in enumerate(sides)}
+        textures = {}
+        for face, (top, bottom, left, right) in TANK_FACE_EDGES.items():
+            mask = sum(TANK_EDGES[edge] for edge, side in (("top", top), ("bottom", bottom), ("left", left),
+                                                           ("right", right)) if joined[side])
+            textures[face] = f"{MOD}:block/smeltery_tank" if mask == 0 else f"{MOD}:block/smeltery_tank/{mask}"
+        textures["particle"] = f"{MOD}:block/smeltery_tank"
+        name_ = "smeltery_tank" if bits == 0 else f"smeltery_tank/{bits}"
+        write_json(f"{ASSETS}/models/block/{name_}.json", {
+            "parent": "minecraft:block/block", "textures": textures,
+            "elements": [{"from": [0, 0, 0], "to": [16, 16, 16], "faces": {
+                face: {"texture": f"#{face}", "cullface": face} for face in sides}}]})
+        key = ",".join(f"{side}={'true' if joined[side] else 'false'}" for side in sides)
+        variants[key] = {"model": f"{MOD}:block/{name_}"}
+    write_json(f"{ASSETS}/blockstates/smeltery_tank.json", {"variants": variants})
+
+
 def models():
     blocks = ASSETS + "/blockstates"
     bm = ASSETS + "/models/block"
     for key in ("smeltery_bricks", "smeltery_glass", "smeltery_drain"):
         write_json(f"{bm}/{key}.json", {"parent": "minecraft:block/cube_all", "textures": {"all": f"{MOD}:block/{key}"}})
         write_json(f"{blocks}/{key}.json", {"variants": {"": {"model": f"{MOD}:block/{key}"}}})
+    tank_models()
     for lit in ("", "_lit"):
         write_json(f"{bm}/smeltery_controller{lit}.json", {"parent": "minecraft:block/orientable", "textures": {
             "front": f"{MOD}:block/smeltery_controller_front{lit}", "side": f"{MOD}:block/smeltery_bricks",
@@ -199,12 +270,12 @@ def models():
     write_json(f"{bm}/faucet.json", {"parent": "minecraft:block/block", "textures": {"b": texture, "m": metal,
                                                                                          "particle": metal},
                "elements": [
-                   {"name": "wall collar", "from": [4, 10, 13], "to": [12, 15, 16], "faces": metal_faces},
-                   {"name": "upper channel", "from": [5, 11, 7], "to": [11, 14, 14], "faces": metal_faces},
-                   {"name": "down spout", "from": [6, 7, 6], "to": [10, 13, 10], "faces": metal_faces},
-                   {"name": "spout lip", "from": [5, 6, 5], "to": [11, 8, 11], "faces": metal_faces},
-                   {"name": "handle stem", "from": [7, 14, 9], "to": [9, 16, 11], "faces": metal_faces},
-                   {"name": "handle", "from": [4, 15, 9], "to": [12, 16, 11], "faces": metal_faces}]})
+                   {"name": "wall collar", "from": [4, 6, 13], "to": [12, 11, 16], "faces": metal_faces},
+                   {"name": "upper channel", "from": [5, 7, 7], "to": [11, 10, 14], "faces": metal_faces},
+                   {"name": "down spout", "from": [6, 4, 6], "to": [10, 11, 10], "faces": metal_faces},
+                   {"name": "spout lip", "from": [5, 3, 5], "to": [11, 5, 11], "faces": metal_faces},
+                   {"name": "handle stem", "from": [7, 10, 9], "to": [9, 13, 11], "faces": metal_faces},
+                   {"name": "handle", "from": [4, 12, 9], "to": [12, 14, 11], "faces": metal_faces}]})
     write_json(f"{blocks}/faucet.json", {"variants": {f"facing={f}": ({"model": f"{MOD}:block/faucet", "y": y} if y
                                                                        else {"model": f"{MOD}:block/faucet"})
                                                       for f, y in rotations.items()}})
@@ -233,7 +304,8 @@ def models():
         molten_variants[f"metal={index}"] = {"model": f"{MOD}:block/molten/{material}"}
     write_json(f"{blocks}/molten_metal.json", {"variants": molten_variants})
 
-    for key in ("smeltery_bricks", "smeltery_glass", "smeltery_drain", "smeltery_controller", "faucet", "casting_table"):
+    for key in ("smeltery_bricks", "smeltery_glass", "smeltery_drain", "smeltery_tank", "smeltery_controller", "faucet",
+                "casting_table"):
         write_json(f"{ASSETS}/items/{key}.json", {"model": {"type": "minecraft:model", "model": f"{MOD}:block/{key}"}})
         write_json(f"{DATA}/{MOD}/loot_table/blocks/{key}.json", {"type": "minecraft:block", "pools": [{"rolls": 1,
                    "entries": [{"type": "minecraft:item", "name": f"{MOD}:{key}"}],
@@ -241,43 +313,23 @@ def models():
     write_json(f"{ASSETS}/models/item/coke.json", {"parent": "minecraft:item/generated",
                                                     "textures": {"layer0": f"{MOD}:item/coke"}})
     for key in ("unfired_ingot_cast", "ingot_cast"):
-        material = f"{MOD}:item/{key}_material"
-        # A thin open frame, inspired by the readable Tinkers-style cast silhouette.  There is no
-        # fake backing plate: on the casting table the refractory bed and poured metal remain visible
-        # through the opening.  The table renderer turns the south-facing item upward.
-        rim_faces = {side: {"texture": "#material"} for side in ("north", "south", "east", "west", "up", "down")}
-        write_json(f"{ASSETS}/models/item/{key}.json", {
-            "parent": "minecraft:item/handheld",
-            "ambientocclusion": True,
-            "textures": {"material": material, "particle": material},
-            "elements": [
-                {"name": "lower rail", "from": [2, 3, 8], "to": [14, 4.5, 9], "faces": rim_faces},
-                {"name": "upper rail", "from": [2, 11.5, 8], "to": [14, 13, 9], "faces": rim_faces},
-                {"name": "left rail", "from": [2, 4.5, 8], "to": [3.5, 11.5, 9], "faces": rim_faces},
-                {"name": "right rail", "from": [12.5, 4.5, 8], "to": [14, 11.5, 9], "faces": rim_faces}
-            ],
-            "display": {
-                "gui": {"rotation": [25, 0, 0], "translation": [0, 0, 0], "scale": [1.05, 1.05, 1.05]},
-                "ground": {"rotation": [-90, 0, 0], "translation": [0, 2, 0], "scale": [0.55, 0.55, 0.55]},
-                "fixed": {"rotation": [0, 0, 0], "scale": [0.8, 0.8, 0.8]},
-                "thirdperson_righthand": {"rotation": [0, 0, 0], "translation": [0, 2, 1], "scale": [0.65, 0.65, 0.65]},
-                "thirdperson_lefthand": {"rotation": [0, 0, 0], "translation": [0, 2, 1], "scale": [0.65, 0.65, 0.65]},
-                "firstperson_righthand": {"rotation": [0, 0, 0], "translation": [1, 3, 1], "scale": [0.75, 0.75, 0.75]},
-                "firstperson_lefthand": {"rotation": [0, 0, 0], "translation": [-1, 3, 1], "scale": [0.75, 0.75, 0.75]}
-            }
-        })
+        write_json(f"{ASSETS}/models/item/{key}.json", {"parent": "minecraft:item/generated",
+                                                        "textures": {"layer0": f"{MOD}:item/{key}"},
+                                                        "display": {"fixed": {"rotation": [0, 0, 0],
+                                                                              "scale": [1.0, 1.0, 1.0]}}})
 
     for key in ("coke", "unfired_ingot_cast", "ingot_cast"):
         write_json(f"{ASSETS}/items/{key}.json", {"model": {"type": "minecraft:model", "model": f"{MOD}:item/{key}"}})
 
     tag = f"{DATA}/minecraft/tags/block/mineable/pickaxe.json"
     values = json.load(open(tag, encoding="utf-8"))["values"] if os.path.exists(tag) else []
-    for key in ("smeltery_bricks", "smeltery_glass", "smeltery_drain", "smeltery_controller", "faucet", "casting_table"):
+    for key in ("smeltery_bricks", "smeltery_glass", "smeltery_drain", "smeltery_tank", "smeltery_controller", "faucet",
+                "casting_table"):
         if f"{MOD}:{key}" not in values:
             values.append(f"{MOD}:{key}")
     write_json(tag, {"replace": False, "values": values})
     write_json(f"{DATA}/{MOD}/{MOD}/structure/smeltery.json", {"material": f"{MOD}:brick", "priority": 20, "blocks": [
-        f"{MOD}:{key}" for key in ("smeltery_bricks", "smeltery_drain", "smeltery_controller", "casting_table")]})
+        f"{MOD}:{key}" for key in ("smeltery_bricks", "smeltery_drain", "smeltery_tank", "smeltery_controller", "casting_table")]})
 
 
 def recipes():
@@ -292,6 +344,7 @@ def recipes():
     shaped("smeltery_glass", [" B ", "BGB", " B "], {"B": brick, "G": "minecraft:glass"}, f"{MOD}:smeltery_glass")
     shaped("smeltery_controller", ["BBB", "B B", "BBB"], {"B": brick}, f"{MOD}:smeltery_controller")
     shaped("smeltery_drain", ["B B", "B B", "B B"], {"B": brick}, f"{MOD}:smeltery_drain")
+    shaped("smeltery_tank", ["BBB", "BGB", "BBB"], {"B": brick, "G": "minecraft:glass"}, f"{MOD}:smeltery_tank")
     shaped("faucet", ["B B", " B "], {"B": brick}, f"{MOD}:faucet")
     shaped("casting_table", ["BBB", "B B", "B B"], {"B": brick}, f"{MOD}:casting_table")
     shaped("unfired_ingot_cast", [" F ", "F F", " F "], {"F": f"{MOD}:fireclay"}, f"{MOD}:unfired_ingot_cast")
@@ -305,6 +358,7 @@ def languages():
     for key, de, en in (("smeltery_bricks", "Schmelzziegel", "Smeltery Bricks"),
                         ("smeltery_glass", "Schmelzglas", "Smeltery Glass"),
                         ("smeltery_drain", "Schmelzerei-Abfluss", "Smeltery Drain"),
+                        ("smeltery_tank", "Schmelzerei-Tank", "Smeltery Tank"),
                         ("smeltery_controller", "Schmelzerei-Controller", "Smeltery Controller"),
                         ("faucet", "Wasserhahn", "Faucet"), ("casting_table", "Gießtisch", "Casting Table"),
                         ("molten_metal", "Flüssiges Metall", "Molten Metal")):
@@ -319,13 +373,18 @@ def languages():
          "Not built: a floor and walls of smeltery bricks around an empty tank.")
     name(f"gui.{MOD}.smeltery.capacity", "%s von %s mB", "%s of %s mB")
     name(f"gui.{MOD}.smeltery.fluid", "%s: %s mB (%s Barren)", "%s: %s mB (%s ingots)")
-    name(f"gui.{MOD}.smeltery.heat_hint", "Schmilzt erst am vollen Schmelzpunkt. Kohle: 1250 °C, mit Blasebalg 1650 °C; Koks: 2000 °C, mit Blasebalg 3600 °C.",
-         "Melts only at the full melting point. Coal: 1250 °C, with a bellows 1650 °C; coke: 2000 °C, with a bellows 3600 °C.")
+    name(f"gui.{MOD}.smeltery.heat_hint", "Schmilzt erst am vollen Schmelzpunkt.", "Melts only at the full melting point.")
+    name(f"gui.{MOD}.smeltery.heat_coal", "Kohle: 1250 °C, mit Blasebalg 1650 °C", "Coal: 1250 °C, with a bellows 1650 °C")
+    name(f"gui.{MOD}.smeltery.heat_coke", "Koks: 2000 °C, mit Blasebalg 4200 °C", "Coke: 2000 °C, with a bellows 4200 °C")
+    name(f"gui.{MOD}.smeltery.heat_lava", "Lava aus einem Tank: 1600 °C, mit Blasebalg 2000 °C",
+         "Lava from a tank: 1600 °C, with a bellows 2000 °C")
     for code, entries in lang.items():
         path = os.path.join(ASSETS, "lang", code + ".json")
         existing = json.load(open(path, encoding="utf-8"))
         existing.update(entries)
-        write_json(path, existing)
+        with open(path, "w", encoding="utf-8", newline="\r\n") as file:
+            json.dump(existing, file, indent=2, ensure_ascii=False)
+            file.write("\n")
 
 
 if __name__ == "__main__":

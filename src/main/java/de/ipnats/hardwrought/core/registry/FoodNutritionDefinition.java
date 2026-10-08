@@ -50,7 +50,7 @@ public record FoodNutritionDefinition(Identifier item, double protein, double fa
      */
     public static FoodNutritionDefinition guess(Identifier item, int vanillaNutrition) {
         double n = Math.max(0, Math.min(20, vanillaNutrition));
-        return new FoodNutritionDefinition(item, n * 0.6, n * 0.4, n * 1.2, n * 0.4, n * 0.4, 0);
+        return new FoodNutritionDefinition(item, n * 1.5, n * 1.0, n * 3.0, n * 1.0, n * 1.0, 0);
     }
 
     private static boolean valid(double value) {

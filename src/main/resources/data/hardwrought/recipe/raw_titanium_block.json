@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###",
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": "hardwrought:raw_titanium"
+  },
+  "result": {
+    "id": "hardwrought:raw_titanium_block"
+  }
+}

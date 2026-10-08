@@ -13,6 +13,7 @@ adding a metal or a part:
 import io
 import json
 import os
+import sys
 import zipfile
 
 from PIL import Image
@@ -24,7 +25,8 @@ VANILLA_JAR_DIR = os.path.join(ROOT, ".gradle/loom-cache/minecraftMaven/net/mine
 
 VANILLA_ITEMS = ["raw_iron", "raw_copper", "raw_gold", "iron_ingot", "copper_ingot", "gold_ingot"]
 MOD_METALS = ["tin", "zinc", "lead", "manganese", "magnesium", "aluminum", "nickel", "cobalt", "chromium",
-              "mercury", "titanium", "tungsten", "uranium", "thorium", "platinum"]
+              "mercury", "titanium", "tungsten", "uranium", "thorium", "platinum", "silver", "mithril",
+              "adamantium"]
 PARTS = {
     "iron": ["pickaxe_head", "axe_head", "shovel_head", "hoe_head", "sword_blade", "dagger_blade",
              "greatsword_blade", "halberd_head", "hammer_head"],
@@ -36,6 +38,11 @@ PARTS = {
 for _metal in ("steel", "stainless_steel", "titanium", "tungsten_steel"):
     PARTS[_metal] = ["pickaxe_head", "axe_head", "shovel_head", "hoe_head", "sword_blade", "dagger_blade",
                      "greatsword_blade", "halberd_head"]
+# The steel hammer's head (tools/steel_hammer_assets.py).
+PARTS["steel"].append("hammer_head")
+# Forged armor parts (tools/armor_parts_assets.py).
+for _metal in ("iron", "gold", "copper", "steel", "stainless_steel", "titanium", "tungsten_steel"):
+    PARTS[_metal] += ["helmet_shell", "cuirass", "greaves", "sabatons"]
 ALLOYS = ["steel", "stainless_steel", "tungsten_steel"]
 
 
@@ -54,7 +61,7 @@ def mod_items():
 def vanilla_jar():
     for base, _, files in os.walk(VANILLA_JAR_DIR):
         for name in files:
-            if name.startswith("minecraft-clientOnly") and name.endswith(".jar"):
+            if name.startswith("minecraft-clientOnly") and name.endswith(".jar") and not name.endswith("-sources.jar"):
                 return zipfile.ZipFile(os.path.join(base, name))
     raise SystemExit("Minecraft client jar not found; run a Gradle build first")
 
@@ -125,9 +132,14 @@ def process(namespace, name, jar):
 
 def main():
     jar = vanilla_jar()
+    wanted = set(sys.argv[1:])
     for name in VANILLA_ITEMS:
+        if wanted and name not in wanted:
+            continue
         process("minecraft", name, jar)
     for name in mod_items():
+        if wanted and name not in wanted:
+            continue
         process(MOD, name, jar)
     print(f"glow looks written for {len(VANILLA_ITEMS) + len(mod_items())} items")
 

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:raw_tin_block"
+  ],
+  "result": {
+    "id": "hardwrought:raw_tin",
+    "count": 9
+  }
+}

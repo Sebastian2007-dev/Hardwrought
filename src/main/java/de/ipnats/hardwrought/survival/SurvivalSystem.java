@@ -220,6 +220,16 @@ public final class SurvivalSystem {
         return player.isCreative() ? PlayerVitals.MAX_STAMINA : vitals(player).stamina();
     }
 
+    /**
+     * Called after a respawn. A player who has died starts their diet over from the middle, and no
+     * longer thirsty; one coming back from the End keeps what they had.
+     */
+    public void respawned(ServerPlayer player, boolean alive) {
+        if (alive) return;
+        save.setVitals(player.getUUID(), vitals(player)
+                .withNutrition(Nutrition.START).withHydration(PlayerVitals.MAX_HYDRATION));
+    }
+
     /** Operator and test entry point; ordinary gameplay changes these values through the ticks. */
     public void setVitalsForTesting(ServerPlayer player, PlayerVitals vitals) {
         save.setVitals(player.getUUID(), vitals);

@@ -1,0 +1,8 @@
+{
+  "parent": "hardwrought:block/magic_table_left_base",
+  "textures": {
+    "wood": "minecraft:block/crimson_stem",
+    "planks": "minecraft:block/crimson_planks",
+    "particle": "minecraft:block/crimson_planks"
+  }
+}

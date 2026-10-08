@@ -4,13 +4,16 @@
 	"compatibilityLevel": "JAVA_25",
 	"client": [
 		"AbstractContainerScreenMixin",
+		"CameraMixin",
 		"CreateWorldGameTabMixin",
 		"DeathScreenMixin",
 		"FluidRendererMixin",
+		"GlobalSettingsUniformMixin",
 		"GuiGraphicsExtractorAccessor",
 		"InventoryScreenMixin",
 		"LightmapRenderStateExtractorMixin",
 		"MinecraftGasPushMixin",
+		"MouseHandlerMixin",
 		"RecipeBookScreenAccessor"
 	],
 	"injectors": {

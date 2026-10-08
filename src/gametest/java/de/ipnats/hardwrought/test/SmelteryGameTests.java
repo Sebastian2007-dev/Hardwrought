@@ -39,6 +39,21 @@ public final class SmelteryGameTests {
         helper.succeed();
     }
 
+    @GameTest
+    public void aTankLayerCanBeSelectedForTheNextCast(GameTestHelper helper) {
+        BlockPos pos = helper.absolutePos(new BlockPos(1, 1, 1));
+        helper.getLevel().setBlockAndUpdate(pos, SmelteryBlocks.CONTROLLER.defaultBlockState());
+        SmelteryControllerBlockEntity smeltery =
+                (SmelteryControllerBlockEntity) helper.getLevel().getBlockEntity(pos);
+        smeltery.addFluidForTesting("iron", MoltenMetals.INGOT);
+        smeltery.addFluidForTesting("gold", MoltenMetals.INGOT);
+        helper.assertTrue("iron".equals(smeltery.bottomCastable()), "The oldest layer starts at the bottom");
+        helper.assertTrue(smeltery.selectForCasting("gold") && "gold".equals(smeltery.bottomCastable()),
+                "Clicking a visible layer makes it the next metal poured");
+        helper.assertFalse(smeltery.selectForCasting("carbon"), "A missing or uncastable bath cannot be selected");
+        helper.succeed();
+    }
+
     /** Builds a smeltery with a tank of one by one by two, a drain east of it, a faucet and a table. */
     private static BlockPos build(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
@@ -102,6 +117,48 @@ public final class SmelteryGameTests {
             helper.assertTrue(table.result().is(Alloys.STEEL_INGOT),
                     "The faucet pours it into the cast, and it sets into a steel bar: " + table.amount() + " mB of " + table.metal());
         });
+    }
+
+    @GameTest(maxTicks = 200)
+    public void aTankOfLavaInTheWallFiresTheSmeltery(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos controllerPos = build(helper);
+        // The south wall of the lower layer becomes a tank, filled with one bucket.
+        BlockPos tankPos = helper.absolutePos(new BlockPos(2, 2, 3));
+        level.setBlockAndUpdate(tankPos, SmelteryBlocks.TANK.defaultBlockState());
+        var tank = (de.ipnats.hardwrought.smeltery.SmelteryTankBlockEntity) level.getBlockEntity(tankPos);
+        tank.fill(de.ipnats.hardwrought.smeltery.SmelteryTankBlockEntity.BUCKET);
+        SmelteryControllerBlockEntity smeltery = (SmelteryControllerBlockEntity) level.getBlockEntity(controllerPos);
+        smeltery.setItem(1, new ItemStack(Items.IRON_INGOT));
+        helper.succeedWhen(() -> {
+            helper.assertTrue(tank.lava() < de.ipnats.hardwrought.smeltery.SmelteryTankBlockEntity.BUCKET,
+                    "The smeltery burns lava from its tank when it has no coal: " + tank.lava());
+            helper.assertTrue(smeltery.data().get(1) == (int) SmelteryControllerBlockEntity.LAVA_C,
+                    "and heads for the heat of lava: " + smeltery.data().get(1));
+        });
+    }
+
+    @GameTest
+    public void stackedTanksJoinAndFillFromTheBottom(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos lower = helper.absolutePos(new BlockPos(1, 1, 1));
+        BlockPos upper = lower.above();
+        level.setBlockAndUpdate(lower, SmelteryBlocks.TANK.defaultBlockState());
+        level.setBlockAndUpdate(upper, SmelteryBlocks.TANK.getStateForPlacement(
+                new net.minecraft.world.item.context.DirectionalPlaceContext(level, upper, Direction.DOWN,
+                        ItemStack.EMPTY, Direction.UP)));
+        helper.assertTrue(level.getBlockState(lower).getValue(net.minecraft.world.level.block.PipeBlock.UP)
+                        && level.getBlockState(upper).getValue(net.minecraft.world.level.block.PipeBlock.DOWN),
+                "Two tanks one on the other join");
+        var bottom = (de.ipnats.hardwrought.smeltery.SmelteryTankBlockEntity) level.getBlockEntity(lower);
+        var top = (de.ipnats.hardwrought.smeltery.SmelteryTankBlockEntity) level.getBlockEntity(upper);
+        int poured = de.ipnats.hardwrought.smeltery.SmelteryTankBlockEntity.fillGroup(level, upper, 5000);
+        helper.assertTrue(poured == 5000 && bottom.lava() == 4000 && top.lava() == 1000,
+                "Poured in at the top, the lava fills the bottom tank first: " + bottom.lava() + " / " + top.lava());
+        de.ipnats.hardwrought.smeltery.SmelteryTankBlockEntity.drainGroup(level, lower, 1500);
+        helper.assertTrue(top.lava() == 0 && bottom.lava() == 3500,
+                "and is taken from the top first: " + bottom.lava() + " / " + top.lava());
+        helper.succeed();
     }
 
     @GameTest

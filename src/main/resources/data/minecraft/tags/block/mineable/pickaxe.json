@@ -1,6 +1,8 @@
 {
   "replace": false,
   "values": [
+    "#hardwrought:raw_metal_blocks",
+    "hardwrought:rune_stone",
     {
       "id": "hardwrought:tin_ore",
       "required": false
@@ -144,6 +146,19 @@
     "hardwrought:smeltery_drain",
     "hardwrought:smeltery_controller",
     "hardwrought:faucet",
-    "hardwrought:casting_table"
+    "hardwrought:casting_table",
+    "hardwrought:smeltery_tank",
+    "hardwrought:silver_ore",
+    "hardwrought:deepslate_silver_ore",
+    "hardwrought:mithril_ore",
+    "hardwrought:deepslate_mithril_ore",
+    "hardwrought:adamantium_ore",
+    "hardwrought:deepslate_adamantium_ore",
+    "hardwrought:void_crystal_block",
+    "hardwrought:budding_void_crystal",
+    "hardwrought:small_void_crystal_bud",
+    "hardwrought:medium_void_crystal_bud",
+    "hardwrought:large_void_crystal_bud",
+    "hardwrought:void_crystal_cluster"
   ]
 }

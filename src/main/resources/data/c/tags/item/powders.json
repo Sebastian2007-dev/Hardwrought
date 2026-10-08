@@ -24,6 +24,9 @@
     "#c:powders/tungsten",
     "#c:powders/uranium",
     "#c:powders/thorium",
-    "#c:powders/platinum"
+    "#c:powders/platinum",
+    "#c:powders/silver",
+    "#c:powders/mithril",
+    "#c:powders/adamantium"
   ]
 }

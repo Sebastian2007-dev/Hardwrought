@@ -1,0 +1,4 @@
+{
+  "type": "minecraft:block",
+  "pools": [{ "condition": "minecraft:tool/can_silk_touch", "rolls": 1, "entries": [{ "type": "minecraft:item", "name": "hardwrought:large_void_crystal_bud" }] }]
+}

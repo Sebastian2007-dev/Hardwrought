@@ -8,6 +8,7 @@ import de.ipnats.hardwrought.smeltery.FaucetBlockEntity;
 import de.ipnats.hardwrought.smeltery.MoltenMetalBlock;
 import de.ipnats.hardwrought.smeltery.MoltenMetals;
 import de.ipnats.hardwrought.smeltery.SmelteryControllerBlockEntity;
+import de.ipnats.hardwrought.smeltery.SmelteryTankBlockEntity;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.block.MovingBlockRenderState;
@@ -128,7 +129,45 @@ public final class SmelteryRenderers {
             Direction facing = faucet.getBlockState().getValue(FaucetBlock.FACING);
             float cx = 0.5f - facing.getStepX() * 0.25f, cz = 0.5f - facing.getStepZ() * 0.25f;
             state.boxes.add(new Box(molten(faucet.getLevel(), faucet.getBlockPos(), faucet.pouring()),
-                    cx - 0.0625f, -1 + 15 / 16f, cz - 0.0625f, 0.125f, 10 / 16f + 1 / 16f, 0.125f));
+                    cx - 0.0625f, -1 / 16f, cz - 0.0625f, 0.125f, 6 / 16f, 0.125f));
+        }
+
+        @Override
+        public void submit(BoxState state, PoseStack pose, SubmitNodeCollector collector, CameraRenderState camera) {
+            SmelteryRenderers.submit(state.boxes, pose, collector);
+        }
+    }
+
+    /**
+     * A tank of lava in the wall: the lava behind its window, as high as the tank is full. Towards a
+     * joined tank there is no wall, so the lava runs to the edge and meets the lava next door.
+     */
+    public static class Tank implements BlockEntityRenderer<SmelteryTankBlockEntity, BoxState> {
+        public Tank(BlockEntityRendererProvider.Context context) { }
+
+        @Override
+        public BoxState createRenderState() {
+            return new BoxState();
+        }
+
+        @Override
+        public void extractRenderState(SmelteryTankBlockEntity tank, BoxState state, float partialTick, Vec3 camera,
+                                       ModelFeatureRenderer.CrumblingOverlay crumbling) {
+            BlockEntityRenderer.super.extractRenderState(tank, state, partialTick, camera, crumbling);
+            state.boxes.clear();
+            if (tank.lava() <= 0) return;
+            var block = tank.getBlockState();
+            float wall = 1f / 16f;
+            float x0 = joined(block, Direction.WEST) ? 0 : wall, x1 = joined(block, Direction.EAST) ? 1 : 1 - wall;
+            float z0 = joined(block, Direction.NORTH) ? 0 : wall, z1 = joined(block, Direction.SOUTH) ? 1 : 1 - wall;
+            float y0 = joined(block, Direction.DOWN) ? 0 : wall, y1 = joined(block, Direction.UP) ? 1 : 1 - wall;
+            float h = (y1 - y0) * tank.lava() / SmelteryTankBlockEntity.CAPACITY;
+            state.boxes.add(new Box(molten(tank.getLevel(), tank.getBlockPos(), "lava"), x0, y0, z0, x1 - x0, h, z1 - z0));
+        }
+
+        private static boolean joined(net.minecraft.world.level.block.state.BlockState block, Direction side) {
+            var property = net.minecraft.world.level.block.PipeBlock.PROPERTY_BY_DIRECTION.get(side);
+            return block.hasProperty(property) && block.getValue(property);
         }
 
         @Override

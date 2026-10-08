@@ -15,7 +15,9 @@ public final class MoltenColors {
             Map.entry("manganese", 0xB89A96), Map.entry("magnesium", 0xEDEDE0), Map.entry("aluminum", 0xD8DDE3),
             Map.entry("nickel", 0xD3CFA8), Map.entry("cobalt", 0x5A7DD8), Map.entry("chromium", 0xC8D8E4),
             Map.entry("uranium", 0x7FD04F), Map.entry("thorium", 0x9FA8A0), Map.entry("platinum", 0xD8ECF4),
-            Map.entry("netherite", 0x5A4448), Map.entry("carbon", 0x2A2626));
+            Map.entry("silver", 0xE7EEF2), Map.entry("mithril", 0x73E6D1), Map.entry("adamantium", 0xCA4868),
+            Map.entry("netherite", 0x5A4448), Map.entry("carbon", 0x2A2626),
+            Map.entry("lava", 0xFF7A1E));
 
     private MoltenColors() { }
 

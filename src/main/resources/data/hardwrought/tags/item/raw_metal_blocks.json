@@ -1,0 +1,26 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:raw_iron_block",
+    "minecraft:raw_copper_block",
+    "minecraft:raw_gold_block",
+    "hardwrought:raw_tin_block",
+    "hardwrought:raw_zinc_block",
+    "hardwrought:raw_lead_block",
+    "hardwrought:raw_manganese_block",
+    "hardwrought:raw_magnesium_block",
+    "hardwrought:raw_aluminum_block",
+    "hardwrought:raw_nickel_block",
+    "hardwrought:raw_cobalt_block",
+    "hardwrought:raw_chromium_block",
+    "hardwrought:raw_mercury_block",
+    "hardwrought:raw_titanium_block",
+    "hardwrought:raw_uranium_block",
+    "hardwrought:raw_thorium_block",
+    "hardwrought:raw_silver_block",
+    "hardwrought:raw_tungsten_block",
+    "hardwrought:raw_platinum_block",
+    "hardwrought:raw_mithril_block",
+    "hardwrought:raw_adamantium_block"
+  ]
+}

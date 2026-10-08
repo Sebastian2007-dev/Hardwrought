@@ -76,6 +76,7 @@ public final class ModItems {
     public static final Item HAMMER = register("hammer", Item::new, new Item.Properties().durability(96));
     /** The stone hammer with an iron head: three by three squares at the anvil. */
     public static final Item IRON_HAMMER = register("iron_hammer", Item::new, new Item.Properties().durability(320));
+    public static final Item STEEL_HAMMER = register("steel_hammer", Item::new, new Item.Properties().durability(1000));
     /** Worn on the strap; without them hot metal cannot be held. */
     public static final Item WOODEN_ANVIL = register("wooden_anvil",
             properties -> new BlockItem(ModBlocks.WOODEN_ANVIL, properties),

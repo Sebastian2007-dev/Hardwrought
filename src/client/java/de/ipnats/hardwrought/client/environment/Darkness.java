@@ -117,7 +117,9 @@ public final class Darkness {
 
     /** The light reaching the eyes, on the scale the lightmap shader adds up before its brightness curve. */
     private static float lightAtEyes(ClientLevel level, BlockPos eyes, LightmapRenderState state) {
-        float block = shaderBrightness(level.getBrightness(LightLayer.BLOCK, eyes)) * state.blockFactor;
+        // A carried light shines in the shaders rather than as block light, so it is added here by hand.
+        int blockLight = Math.max(level.getBrightness(LightLayer.BLOCK, eyes), DynamicLight.ownLevel());
+        float block = shaderBrightness(blockLight) * state.blockFactor;
         float sky = shaderBrightness(level.getBrightness(LightLayer.SKY, eyes)) * state.skyFactor;
         return Math.max(block, sky);
     }

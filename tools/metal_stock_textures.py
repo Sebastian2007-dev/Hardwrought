@@ -19,7 +19,8 @@ from drill_assets import ASSETS, ingot  # noqa: E402
 
 VANILLA = {"iron": "minecraft:iron_ingot", "copper": "minecraft:copper_ingot", "gold": "minecraft:gold_ingot"}
 MOD_METALS = ["bronze", "tin", "zinc", "lead", "manganese", "magnesium", "aluminum", "nickel", "cobalt",
-              "chromium", "titanium", "tungsten", "uranium", "thorium", "platinum"]
+              "chromium", "titanium", "tungsten", "uranium", "thorium", "platinum", "silver", "mithril",
+              "adamantium"]
 
 # Hand-authored value maps derived from the generated source concepts in art_source and the supplied
 # shape references. Encoding the lighting in the sprite rather than inferring it from the outline

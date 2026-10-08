@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "hardwrought:raw_tin_block",
+    "hardwrought:raw_zinc_block",
+    "hardwrought:raw_lead_block",
+    "hardwrought:raw_manganese_block",
+    "hardwrought:raw_magnesium_block",
+    "hardwrought:raw_aluminum_block"
+  ]
+}

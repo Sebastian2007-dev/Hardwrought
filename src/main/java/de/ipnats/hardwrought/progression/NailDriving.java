@@ -99,7 +99,7 @@ public final class NailDriving {
                 java.util.List.of(java.util.List.of(new ItemStack(ModItems.BRONZE_NAILS)),
                         // Any hammer drives a nail; the plainest is shown first.
                         java.util.List.of(new ItemStack(ModItems.WOODEN_HAMMER), new ItemStack(ModItems.HAMMER),
-                                new ItemStack(ModItems.IRON_HAMMER)),
+                                new ItemStack(ModItems.IRON_HAMMER), new ItemStack(ModItems.STEEL_HAMMER)),
                         java.util.List.of(new ItemStack(de.ipnats.hardwrought.core.registry.ModBlocks.HEWN_WORKBENCH))),
                 new ItemStack(de.ipnats.hardwrought.core.registry.ModBlocks.NAILED_WORKBENCH), ItemStack.EMPTY));
     }

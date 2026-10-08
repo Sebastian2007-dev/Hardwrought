@@ -89,7 +89,7 @@ public final class CoreGameTests {
         helper.assertTrue(runtime.materials().containsKey(Hardwrought.id("copper")), "Bundled materials loaded through datapack listener");
         helper.assertTrue(runtime.itemWeights().get(Hardwrought.id("filled_waterskin")) == 1.2,
                 "Bundled item mass is loaded through the datapack listener");
-        helper.assertTrue(runtime.foodNutrition().get(net.minecraft.resources.Identifier.withDefaultNamespace("apple")).vitamins() == 5,
+        helper.assertTrue(runtime.foodNutrition().get(net.minecraft.resources.Identifier.withDefaultNamespace("apple")).vitamins() == 12,
                 "Bundled food profile is loaded through the datapack listener");
         helper.assertTrue(runtime.materials().get(Hardwrought.id("copper")).tier() == 1, "Copper properties loaded");
         expectFailure(() -> runtime.materials().clear());
@@ -447,11 +447,31 @@ public final class CoreGameTests {
         runtime.survival().setVitalsForTesting(player, PlayerVitals.defaults());
         runtime.survival().consumeFood(player, new ItemStack(Items.CARROT));
         var afterCarrot = runtime.survival().vitals(player).nutrition();
-        helper.assertTrue(afterCarrot.vitamins() == diet.vitamins() + 7 && afterCarrot.protein() == diet.protein(),
+        helper.assertTrue(afterCarrot.vitamins() == diet.vitamins() + 18 && afterCarrot.protein() == diet.protein(),
                 "Each food fills its own nutrients: a carrot is vitamins, not protein");
         runtime.survival().consumeFood(player, new ItemStack(Items.MILK_BUCKET));
         helper.assertTrue(runtime.survival().vitals(player).nutrition().fat() > afterCarrot.fat(),
                 "Milk counts as food too");
+        helper.succeed();
+    }
+
+    /** Death resets the diet to the middle and thirst to none; coming back from the End does not. */
+    @GameTest
+    public void deathResetsDietAndThirst(GameTestHelper helper) {
+        var runtime = de.ipnats.hardwrought.core.events.CoreLifecycle.require(helper.getLevel().getServer());
+        net.minecraft.server.level.ServerPlayer player = (net.minecraft.server.level.ServerPlayer)
+                helper.makeMockServerPlayer(net.minecraft.world.level.GameType.SURVIVAL);
+        var starved = PlayerVitals.defaults().withHydration(12)
+                .withNutrition(new de.ipnats.hardwrought.survival.Nutrition(5, 90, 10, 3, 70));
+        runtime.survival().setVitalsForTesting(player, starved);
+        runtime.survival().respawned(player, true);
+        helper.assertTrue(runtime.survival().vitals(player).equals(starved),
+                "Leaving the End is no death and changes nothing");
+        runtime.survival().respawned(player, false);
+        var reborn = runtime.survival().vitals(player);
+        helper.assertTrue(reborn.nutrition().equals(de.ipnats.hardwrought.survival.Nutrition.START),
+                "After death every nutrient starts again at " + de.ipnats.hardwrought.survival.Nutrient.START);
+        helper.assertTrue(reborn.hydration() == PlayerVitals.MAX_HYDRATION, "After death the player is not thirsty");
         helper.succeed();
     }
 

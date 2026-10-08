@@ -51,11 +51,14 @@ public class Hardwrought implements ModInitializer {
 				de.ipnats.hardwrought.oil.CrudeOilBlock.CATCH_CHANCE, de.ipnats.hardwrought.oil.CrudeOilBlock.BURN_CHANCE);
 		de.ipnats.hardwrought.metallurgy.ModMetals.initialize();
 		de.ipnats.hardwrought.metallurgy.OrePowders.initialize();
+		de.ipnats.hardwrought.magic.VoidCrystal.initialize();
 		ModItems.initialize();
 		de.ipnats.hardwrought.metallurgy.Alloys.initialize();
 		de.ipnats.hardwrought.smeltery.SmelteryBlocks.initialize();
+		de.ipnats.hardwrought.magic.Magic.initialize();
 		de.ipnats.hardwrought.smithing.ToolParts.initialize();
 		de.ipnats.hardwrought.smithing.AlloyEquipment.initialize();
+		de.ipnats.hardwrought.smithing.NoDiamondGear.initialize();
 		de.ipnats.hardwrought.smithing.MetalStock.initialize();
 		de.ipnats.hardwrought.core.registry.ModBlockEntities.initialize();
 		de.ipnats.hardwrought.building.BuildingPhysics.initialize();
@@ -78,10 +81,12 @@ public class Hardwrought implements ModInitializer {
 		DataResourceLoader.get().registerReloadListener(id("rock"), new RockProfiles());
 		DataResourceLoader.get().registerReloadListener(id("structure"), new de.ipnats.hardwrought.building.StructuralProfiles());
 		CoreNetworking.initialize();
+		de.ipnats.hardwrought.fx.Fx.initialize();
 		SurvivalSystem.initializeEvents();
 		CombatSystem.initializeEvents();
 		WaterEvents.initialize();
 		de.ipnats.hardwrought.metallurgy.MetalWorldgen.initialize();
+		de.ipnats.hardwrought.magic.VoidCrystal.initializeWorldgen();
 		GeologyEvents.initialize();
 		ProgressionEvents.initialize();
 		de.ipnats.hardwrought.knowledge.KnowledgeEvents.initialize();

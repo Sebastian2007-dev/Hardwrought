@@ -40,9 +40,9 @@ import java.util.List;
  * <p>It gets hotter the better it is built, and that is the one way to bring the hard metals to forging
  * heat. On its own it holds about 1300 °C, enough for iron and titanium. A lining of refractory brick
  * takes it to 1600 °C, air driven through it by a bellows on a turning shaft to 2000 °C, and both
- * together to 2800 °C, enough to forge tungsten. A forge heats for the anvil and never melts
- * anything: every piece stops at the top of its forging range, however hot the fire. Melting is the
- * smeltery's work.
+ * together to 2800 °C, enough to forge tungsten. A piece lying in it follows the fire all the way:
+ * a smith who leaves iron in a fire that hot takes it out far past its working heat, and every blow
+ * on it then costs quality.
  *
  * <p>Coal laid in it has to be lit, and once lit the fire keeps itself going on whatever fuel is
  * there, whether or not anything lies in it to be heated, until the last coal is burnt.
@@ -70,6 +70,8 @@ public class ForgeBlockEntity extends BlockEntity implements Container, Extended
     /** How much of the gap to the fire a piece closes on each heating pass. */
     private static final double PIECE_RESPONSE = 0.03;
     private static final int HEATING_INTERVAL = 10;
+    /** How fast a piece cools in a fire gone down, against open air. */
+    private static final double EMBER_SHELTER = 0.7;
     /**
      * How far ahead a held piece's heat is stamped. Longer than a heating pass, so that neither the
      * server nor a client whose clock runs a little ahead ever sees it begin to cool while it lies here.
@@ -177,6 +179,7 @@ public class ForgeBlockEntity extends BlockEntity implements Container, Extended
         for (Direction side : Direction.Plane.HORIZONTAL) {
             BlockPos beside = pos.relative(side);
             if (level.getBlockState(beside).getBlock() instanceof BellowsBlock
+                    && BellowsBlock.blowsInto(level, beside, pos)
                     && Driveline.isDrivenInto(level, beside)) {
                 return true;
             }
@@ -300,8 +303,10 @@ public class ForgeBlockEntity extends BlockEntity implements Container, Extended
     }
 
     /**
-     * Brings every piece a step closer to the fire's heat, but no further than the top of its forging
-     * range, and keeps whatever it already has: nothing lying in a forge cools.
+     * Brings every piece a step closer to the fire's heat. While the fire burns, a piece keeps what it
+     * has, so a smith can take one out at a time while the rest wait; once the fire is out, the pieces
+     * cool with the embers.
+     * The working range only says when the anvil can work a piece; a piece follows the fire past it.
      */
     private void heatPieces(ServerLevel level, int layout) {
         var runtime = CoreLifecycle.find(level.getServer());
@@ -313,18 +318,25 @@ public class ForgeBlockEntity extends BlockEntity implements Container, Extended
             if (piece.isEmpty()) continue;
             Heat heat = piece.get(ModDataComponents.HEAT);
             double current = heat == null ? Heat.AMBIENT : heat.celsius();
-            double[] range = Smithing.workingRange(piece.getItem(), runtime.materials());
-            double ceiling = range == null ? temperature : Math.min(temperature, range[1]);
             double next = current;
-            if (ceiling > current) {
-                next = Math.min(ceiling, current + (temperature - current) * PIECE_RESPONSE);
+            if (temperature > current) {
+                next = current + (temperature - current) * PIECE_RESPONSE;
             }
             // Stamped until the next pass: a piece's heat only starts falling after its stamp, so
             // until then it holds exactly, and taken out it starts cooling from where it was.
             long until = now + HOLD_AHEAD;
+            if (heat != null && burnTicks <= 0 && temperature < current - 0.5) {
+                // A fire that has gone out no longer holds the piece: it cools with the embers, a little
+                // slower than in open air, since the bed of ash keeps some heat in.
+                next = temperature + (current - temperature) * Math.exp(-Heat.COOLING_PER_TICK * HEATING_INTERVAL * EMBER_SHELTER);
+            }
             if (next > current + 0.5) {
                 Smithing.heat(piece, next, now, runtime.materials());
                 piece.set(ModDataComponents.HEAT, new Heat((float) next, until));
+                moved = true;
+            } else if (next < current - 0.5) {
+                if (next < Heat.COLD_BELOW) piece.remove(ModDataComponents.HEAT);
+                else piece.set(ModDataComponents.HEAT, new Heat((float) next, until));
                 moved = true;
             } else if (heat != null && heat.since() < now + HOLD_AHEAD / 2) {
                 piece.set(ModDataComponents.HEAT, new Heat(heat.celsius(), until));

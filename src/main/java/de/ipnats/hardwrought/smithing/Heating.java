@@ -19,7 +19,6 @@ import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.OptionalDouble;
 
 /**
  * A furnace bringing a piece of metal to working heat for the anvil.
@@ -29,8 +28,7 @@ import java.util.OptionalDouble;
  * vanilla does all of it — fuel, cooking time, the slower brick furnace, the output slot — and the
  * only thing added afterwards is the heat, put on the piece as it comes out.
  *
- * <p>The piece comes out as hot as the furnace gets, but never past the top of its working range: a
- * fire hot enough to cast iron would only burn a pickaxe head.
+ * <p>The piece comes out as hot as the furnace gets.
  */
 public final class Heating {
     /** Ticks to bring one piece up to heat, before the furnace's own speed. */
@@ -57,17 +55,14 @@ public final class Heating {
 
     /**
      * What comes out of the furnace: the complete stack that went in — progress, quality and all —
-     * at the furnace's heat or the top of the piece's working range, whichever is lower. Heating is
-     * one operation on a load; unlike smelting it does not process the load one item at a time.
+     * at the furnace's heat. Heating is one operation on a load; unlike smelting it does not process
+     * the load one item at a time.
      */
     public static ItemStack heated(ServerLevel level, AbstractFurnaceBlockEntity furnace, ItemStack input) {
         ItemStack piece = input.copy();
         var runtime = CoreLifecycle.find(level.getServer());
         if (runtime == null) return piece;
-        OptionalDouble melting = Smelting.meltingPoint(piece.getItem(), runtime.materials());
-        double ceiling = melting.isPresent() ? melting.getAsDouble() * Smithing.WORKING_MAX : Double.MAX_VALUE;
-        Smithing.heat(piece, Math.min(Smelting.maxTemperature(furnace), ceiling), level.getGameTime(),
-                runtime.materials());
+        Smithing.heat(piece, Smelting.maxTemperature(furnace), level.getGameTime(), runtime.materials());
         return piece;
     }
 }

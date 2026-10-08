@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smithing_transform",
+  "addition": "#minecraft:netherite_tool_materials",
+  "base": "hardwrought:tungsten_steel_helmet",
+  "result": {
+    "id": "minecraft:netherite_helmet"
+  },
+  "template": "minecraft:netherite_upgrade_smithing_template"
+}

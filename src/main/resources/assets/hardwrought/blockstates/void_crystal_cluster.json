@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=down": { "model": "hardwrought:block/void_crystal_cluster", "x": 180 },
+    "facing=east": { "model": "hardwrought:block/void_crystal_cluster", "x": 90, "y": 90 },
+    "facing=north": { "model": "hardwrought:block/void_crystal_cluster", "x": 90 },
+    "facing=south": { "model": "hardwrought:block/void_crystal_cluster", "x": 90, "y": 180 },
+    "facing=up": { "model": "hardwrought:block/void_crystal_cluster" },
+    "facing=west": { "model": "hardwrought:block/void_crystal_cluster", "x": 90, "y": 270 }
+  }
+}

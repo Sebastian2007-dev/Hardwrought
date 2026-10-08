@@ -33,11 +33,13 @@ public final class CoreLifecycle {
             }
         });
         // A pack cannot be lost, and that has to hold across the one event that takes everything
-        // else: a player who has died comes back wearing one.
+        // else: a player who has died comes back wearing one. Their diet and thirst start over.
         net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents.AFTER_RESPAWN.register(
                 (oldPlayer, newPlayer, alive) -> {
                     CoreRuntime runtime = RUNTIMES.get(newPlayer.level().getServer());
-                    if (runtime != null) runtime.equipment().respawned(newPlayer);
+                    if (runtime == null) return;
+                    runtime.equipment().respawned(newPlayer);
+                    runtime.survival().respawned(newPlayer, alive);
                 });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             // The weight table lives in a datapack, so the client is told it once rather than

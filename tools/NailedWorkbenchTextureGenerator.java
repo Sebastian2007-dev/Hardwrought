@@ -61,6 +61,9 @@ public final class NailedWorkbenchTextureGenerator {
             BufferedImage bottom = copy(vanillaBottom);
             BufferedImage side = workedSide(vanillaBark, vanillaSide, hewnSide, seed, false);
             BufferedImage front = workedSide(vanillaBark, vanillaSide, hewnSide, seed, true);
+            // Hand retouching done on the oak bench in Blockbench, carried over to every timber.
+            applyEdit(side, root.resolve("art_source/bench_tiers/nailed_workbench_side_edit.png"), vanillaSide);
+            applyEdit(front, root.resolve("art_source/bench_tiers/nailed_workbench_front_edit.png"), vanillaSide);
             write(textures.resolve("nailed_workbench_top_" + wood.id + ".png"), top);
             write(textures.resolve("nailed_workbench_side_" + wood.id + ".png"), side);
             write(textures.resolve("nailed_workbench_front_" + wood.id + ".png"), front);
@@ -110,6 +113,26 @@ public final class NailedWorkbenchTextureGenerator {
             nail(out, 6, 5);
         }
         return out;
+    }
+
+    /**
+     * Paints a retouch layer over a face. The layer was taken from the hand-edited oak bench: every
+     * opaque pixel of it holds the colour painted there as a share of oak's stripped-wood average,
+     * 128 for one to one, so each timber gets the same strokes in its own colour. A missing layer
+     * leaves the face as generated.
+     */
+    private static void applyEdit(BufferedImage face, Path layer, BufferedImage stripped) throws IOException {
+        if (!Files.exists(layer)) return;
+        BufferedImage edit = ImageIO.read(layer.toFile());
+        int base = average(stripped);
+        for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) {
+            int pixel = edit.getRGB(x, y);
+            if ((pixel >>> 24) == 0) continue;
+            int r = clamp((int) Math.round((base >>> 16 & 255) * (pixel >>> 16 & 255) / 128.0));
+            int g = clamp((int) Math.round((base >>> 8 & 255) * (pixel >>> 8 & 255) / 128.0));
+            int b = clamp((int) Math.round((base & 255) * (pixel & 255) / 128.0));
+            face.setRGB(x, y, 0xff000000 | r << 16 | g << 8 | b);
+        }
     }
 
     private static void toolMark(BufferedImage image, int x, int y, int length,
@@ -165,7 +188,7 @@ public final class NailedWorkbenchTextureGenerator {
         Files.createDirectories(path.getParent());
         Files.writeString(path, """
                 {
-                  "parent": "minecraft:block/orientable_with_bottom",
+                  "parent": "hardwrought:block/nailed_workbench_base",
                   "textures": {
                     "top": "hardwrought:block/nailed_workbench_top_%s",
                     "side": "hardwrought:block/nailed_workbench_side_%s",

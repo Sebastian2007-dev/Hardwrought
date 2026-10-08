@@ -218,6 +218,7 @@ public final class ForgeMultiblock {
             for (Direction side : Direction.Plane.HORIZONTAL) {
                 BlockPos beside = member.relative(side);
                 if (level.getBlockState(beside).getBlock() instanceof BellowsBlock
+                        && BellowsBlock.blowsInto(level, beside, member)
                         && Driveline.isDrivenInto(level, beside)) return true;
             }
         }

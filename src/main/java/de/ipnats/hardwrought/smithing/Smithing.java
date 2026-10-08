@@ -33,8 +33,8 @@ public final class Smithing {
     /** Coldest a piece can be hammered without straining it. */
     public static final double WORKING_MIN = 0.55;
     /**
-     * Top of the hammering range as a share of the melting point: forging heat, not melting heat.
-     * No furnace or forge heats a piece past it; melting is the smeltery's work.
+     * Top of the hammering range as a share of the melting point. A fire hotter than this still heats
+     * a piece past it; blows on a piece that hot cost quality.
      */
     public static final double WORKING_MAX = 0.85;
     /** Quenched from above this, iron hardens. */
@@ -196,7 +196,8 @@ public final class Smithing {
             List<ItemStack> hammers = new ArrayList<>();
             for (Item hammer : List.of(de.ipnats.hardwrought.core.registry.ModItems.WOODEN_HAMMER,
                     de.ipnats.hardwrought.core.registry.ModItems.HAMMER,
-                    de.ipnats.hardwrought.core.registry.ModItems.IRON_HAMMER)) {
+                    de.ipnats.hardwrought.core.registry.ModItems.IRON_HAMMER,
+                    de.ipnats.hardwrought.core.registry.ModItems.STEEL_HAMMER)) {
                 if (Hammers.reach(new ItemStack(hammer)) >= Hammers.reachNeeded(recipe.result())) {
                     hammers.add(new ItemStack(hammer));
                 }

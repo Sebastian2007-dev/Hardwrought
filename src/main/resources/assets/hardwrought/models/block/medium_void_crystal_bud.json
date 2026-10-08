@@ -1,0 +1,4 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": { "cross": "hardwrought:block/medium_void_crystal_bud" }
+}

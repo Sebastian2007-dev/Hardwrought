@@ -1,5 +1,6 @@
 {
   "values": [
+    "#hardwrought:raw_metal_blocks/diamond",
     {
       "id": "hardwrought:tungsten_ore",
       "required": false
@@ -14,6 +15,22 @@
     },
     {
       "id": "hardwrought:deepslate_platinum_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:mithril_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_mithril_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:adamantium_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_adamantium_ore",
       "required": false
     }
   ]

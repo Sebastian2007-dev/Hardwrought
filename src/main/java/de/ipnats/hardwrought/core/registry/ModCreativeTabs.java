@@ -41,6 +41,7 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.WOODEN_HAMMER);
                         output.accept(ModItems.HAMMER);
                         output.accept(ModItems.IRON_HAMMER);
+                        output.accept(ModItems.STEEL_HAMMER);
                         output.accept(ModItems.SMITHING_GLOVES);
                         output.accept(ModItems.WOODEN_ANVIL);
                         output.accept(ModItems.FORGE);
@@ -61,6 +62,8 @@ public final class ModCreativeTabs {
                         output.accept(de.ipnats.hardwrought.metallurgy.Alloys.STAINLESS_STEEL_INGOT);
                         output.accept(de.ipnats.hardwrought.metallurgy.Alloys.TUNGSTEN_STEEL_INGOT);
                         de.ipnats.hardwrought.smeltery.SmelteryBlocks.items().forEach(output::accept);
+                        de.ipnats.hardwrought.magic.Magic.items().forEach(output::accept);
+                        de.ipnats.hardwrought.magic.VoidCrystal.items().forEach(output::accept);
                         de.ipnats.hardwrought.smithing.AlloyEquipment.all().forEach(output::accept);
                         output.accept(ModItems.BRONZE_INGOT);
                         output.accept(ModItems.LIGHTING_STICKS);
@@ -133,6 +136,7 @@ public final class ModCreativeTabs {
                             output.accept(de.ipnats.hardwrought.metallurgy.ModMetals.ore(metal));
                             output.accept(de.ipnats.hardwrought.metallurgy.ModMetals.deepslateOre(metal));
                             output.accept(de.ipnats.hardwrought.metallurgy.ModMetals.raw(metal));
+                            output.accept(de.ipnats.hardwrought.metallurgy.ModMetals.rawBlock(metal));
                             output.accept(de.ipnats.hardwrought.metallurgy.OrePowders.powder(metal));
                             output.accept(de.ipnats.hardwrought.metallurgy.ModMetals.ingot(metal));
                         }

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:raw_cobalt_block"
+  ],
+  "result": {
+    "id": "hardwrought:raw_cobalt",
+    "count": 9
+  }
+}

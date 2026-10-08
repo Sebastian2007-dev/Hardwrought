@@ -64,10 +64,22 @@
       "model": "hardwrought:block/molten/platinum"
     },
     "metal=21": {
-      "model": "hardwrought:block/molten/netherite"
+      "model": "hardwrought:block/molten/silver"
     },
     "metal=22": {
+      "model": "hardwrought:block/molten/mithril"
+    },
+    "metal=23": {
+      "model": "hardwrought:block/molten/adamantium"
+    },
+    "metal=24": {
+      "model": "hardwrought:block/molten/netherite"
+    },
+    "metal=25": {
       "model": "hardwrought:block/molten/carbon"
+    },
+    "metal=26": {
+      "model": "hardwrought:block/molten/lava"
     }
   }
 }

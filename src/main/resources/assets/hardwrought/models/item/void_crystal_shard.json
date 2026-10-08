@@ -1,0 +1,4 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": { "layer0": "hardwrought:item/void_crystal_shard" }
+}

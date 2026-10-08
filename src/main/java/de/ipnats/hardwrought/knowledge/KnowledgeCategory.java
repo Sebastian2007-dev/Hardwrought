@@ -52,6 +52,10 @@ public enum KnowledgeCategory {
         if (itemLike == null) return MATERIALS;
         Item item = itemLike.asItem();
         ItemStack stack = new ItemStack(item);
+        if (item instanceof de.ipnats.hardwrought.magic.WandItem
+                || item == de.ipnats.hardwrought.magic.Magic.RUNE_STONE.asItem()) {
+            return MAGIC;
+        }
         if (stack.has(DataComponents.POTION_CONTENTS)) return MEDICINE;
         if (stack.has(DataComponents.FOOD)) return AGRICULTURE;
         if (stack.has(DataComponents.TOOL) || stack.is(ItemTags.SWORDS)

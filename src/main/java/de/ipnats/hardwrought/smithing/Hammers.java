@@ -4,12 +4,13 @@ import de.ipnats.hardwrought.core.registry.ModItems;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * The three smith's hammers and how much of the metal one blow of each moves.
+ * The four smith's hammers and how much of the metal one blow of each moves.
  *
  * <p>A wooden mallet only dents the square it lands on. A stone head is heavier and spreads the blow
- * over two by two squares; an iron one over three by three. The iron hammer is made from the stone
- * one — its handle and binding, with an iron head in place of the stone — so there is no skipping
- * the rung below.
+ * over two by two squares; an iron one over three by three; a steel one over four by four, and it
+ * lasts three times as long. Each is made from the one below — its handle and binding, with the
+ * better head in place of the old — so there is no skipping a rung: the iron hammer's head wants a
+ * stone hammer to forge it, the steel hammer's head an iron one.
  */
 public final class Hammers {
     private Hammers() { }
@@ -19,15 +20,24 @@ public final class Hammers {
         if (stack.is(ModItems.WOODEN_HAMMER)) return 1;
         if (stack.is(ModItems.HAMMER)) return 2;
         if (stack.is(ModItems.IRON_HAMMER)) return 3;
+        if (stack.is(ModItems.STEEL_HAMMER)) return 4;
         return 0;
     }
 
-    /** The least hammer a piece needs to be forged: a hammer head wants at least a stone one. */
+    /**
+     * The least hammer a piece needs to be forged: a hammer head or a sheet of armor wants at least a
+     * stone one, a steel hammer head an iron one.
+     */
     public static int reachNeeded(net.minecraft.world.item.Item result) {
         ToolParts.SmithMetal metal = ToolParts.metalOf(result);
+        if (metal != null) {
+            for (ToolParts.Part part : ToolParts.ARMOR) {
+                if (metal.parts().contains(part) && ToolParts.part(metal, part) == result) return 2;
+            }
+        }
         if (metal != null && metal.parts().contains(ToolParts.Part.HAMMER_HEAD)
                 && ToolParts.part(metal, ToolParts.Part.HAMMER_HEAD) == result) {
-            return 2;
+            return metal == ToolParts.SmithMetal.STEEL ? 3 : 2;
         }
         return 1;
     }

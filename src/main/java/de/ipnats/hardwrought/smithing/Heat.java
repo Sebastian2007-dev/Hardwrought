@@ -56,4 +56,19 @@ public record Heat(float celsius, long since) {
     public static boolean hot(ItemStack stack, long now) {
         return of(stack, now) > COLD_BELOW;
     }
+
+    /**
+     * Whether two hot stacks go together although each remembers its own heat: the same thing, alike
+     * in everything but when it came out of the fire. Otherwise every bar off the anvil would sit in a
+     * slot of its own until it had cooled. The stack they make keeps the heat of the one it was added
+     * to; a hot piece and a cold one still lie apart until the hot one has cooled.
+     */
+    public static boolean stackTogether(ItemStack a, ItemStack b) {
+        if (a.isEmpty() || b.isEmpty() || a.getItem() != b.getItem()) return false;
+        if (!a.has(ModDataComponents.HEAT) || !b.has(ModDataComponents.HEAT)) return false;
+        ItemStack plainA = a.copy(), plainB = b.copy();
+        plainA.remove(ModDataComponents.HEAT);
+        plainB.remove(ModDataComponents.HEAT);
+        return ItemStack.isSameItemSameComponents(plainA, plainB);
+    }
 }

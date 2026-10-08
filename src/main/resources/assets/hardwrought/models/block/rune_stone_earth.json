@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "hardwrought:block/rune_stone_earth",
+    "side": "hardwrought:block/rune_stone_side",
+    "top": "minecraft:block/chiseled_stone_bricks"
+  }
+}

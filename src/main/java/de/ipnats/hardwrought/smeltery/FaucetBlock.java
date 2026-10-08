@@ -30,10 +30,10 @@ public class FaucetBlock extends Block implements EntityBlock {
     private static final java.util.Map<Direction, VoxelShape> SHAPES = new java.util.EnumMap<>(Direction.class);
 
     static {
-        SHAPES.put(Direction.NORTH, Block.box(4, 10, 10, 12, 16, 16));
-        SHAPES.put(Direction.SOUTH, Block.box(4, 10, 0, 12, 16, 6));
-        SHAPES.put(Direction.WEST, Block.box(10, 10, 4, 16, 16, 12));
-        SHAPES.put(Direction.EAST, Block.box(0, 10, 4, 6, 16, 12));
+        SHAPES.put(Direction.NORTH, Block.box(4, 3, 5, 12, 14, 16));
+        SHAPES.put(Direction.SOUTH, Block.box(4, 3, 0, 12, 14, 11));
+        SHAPES.put(Direction.WEST, Block.box(5, 3, 4, 16, 14, 12));
+        SHAPES.put(Direction.EAST, Block.box(0, 3, 4, 11, 14, 12));
     }
 
     public FaucetBlock(Properties properties) {

@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###",
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": "hardwrought:raw_lead"
+  },
+  "result": {
+    "id": "hardwrought:raw_lead_block"
+  }
+}

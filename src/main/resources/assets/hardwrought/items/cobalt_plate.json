@@ -1,19 +1,6 @@
 {
   "model": {
-    "type": "minecraft:condition",
-    "property": "hardwrought:hot",
-    "on_true": {
-      "type": "minecraft:model",
-      "model": "hardwrought:item/glow/hardwrought_cobalt_plate",
-      "tints": [
-        {
-          "type": "hardwrought:heat"
-        }
-      ]
-    },
-    "on_false": {
-      "type": "minecraft:model",
-      "model": "hardwrought:item/cobalt_plate"
-    }
+    "type": "minecraft:model",
+    "model": "hardwrought:item/cobalt_plate"
   }
 }

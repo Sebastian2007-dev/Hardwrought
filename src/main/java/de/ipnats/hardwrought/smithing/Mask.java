@@ -74,7 +74,7 @@ public final class Mask {
     /**
      * One blow of the hammer on a square: every square it covers that is wrong is put right — metal
      * standing proud is driven in, a gap is filled from the mass around it. How much it covers is the
-     * hammer's {@link Hammers#reach}: one square, two by two, or three by three. A blow that finds
+     * hammer's {@link Hammers#reach}: one square, two by two, three by three or four by four. A blow that finds
      * nothing wrong where it lands changes nothing, which is how a wasted blow is told apart.
      */
     public Mask strike(int x, int y, Mask target, int reach) {

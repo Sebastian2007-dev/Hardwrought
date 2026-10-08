@@ -1,12 +1,11 @@
 {
-  "type": "minecraft:crafting_shaped",
+  "type": "minecraft:crafting_transmute",
   "category": "equipment",
-  "pattern": [
-    "PPP",
-    "P P"
-  ],
-  "key": {
-    "P": "hardwrought:steel_plate"
+  "input": "hardwrought:steel_helmet_shell",
+  "material": "minecraft:leather",
+  "material_count": {
+    "min": 1,
+    "max": 1
   },
   "result": {
     "id": "hardwrought:steel_helmet"

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:raw_magnesium_block"
+  ],
+  "result": {
+    "id": "hardwrought:raw_magnesium",
+    "count": 9
+  }
+}

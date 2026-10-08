@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "H": "hardwrought:steel_hammer_head",
+    "I": "hardwrought:iron_hammer"
+  },
+  "pattern": [
+    "H",
+    "I"
+  ],
+  "result": {
+    "id": "hardwrought:steel_hammer"
+  }
+}

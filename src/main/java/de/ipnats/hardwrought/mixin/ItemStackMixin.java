@@ -45,4 +45,15 @@ public abstract class ItemStackMixin {
         double factor = ForgeQuality.durabilityFactor((ItemStack) (Object) this);
         return factor == 1.0 || durability <= 0 ? durability : Math.max(1, (int) Math.round(durability * factor));
     }
+
+    /**
+     * Hot pieces of the same kind stack, whenever each was taken from the fire; see
+     * {@link de.ipnats.hardwrought.smithing.Heat#stackTogether}.
+     */
+    @Inject(method = "isSameItemSameComponents", at = @At("RETURN"), cancellable = true)
+    private static void hardwrought$hotPiecesStack(ItemStack a, ItemStack b, CallbackInfoReturnable<Boolean> callback) {
+        if (!callback.getReturnValueZ() && de.ipnats.hardwrought.smithing.Heat.stackTogether(a, b)) {
+            callback.setReturnValue(true);
+        }
+    }
 }

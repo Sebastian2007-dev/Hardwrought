@@ -26,6 +26,7 @@ import java.util.Map;
 public final class ModMetals {
     private static final Map<Metal, Block> ORES = new EnumMap<>(Metal.class);
     private static final Map<Metal, Block> DEEPSLATE_ORES = new EnumMap<>(Metal.class);
+    private static final Map<Metal, Block> RAW_BLOCKS = new EnumMap<>(Metal.class);
     private static final Map<Metal, Item> RAW = new EnumMap<>(Metal.class);
     private static final Map<Metal, Item> INGOTS = new EnumMap<>(Metal.class);
 
@@ -36,12 +37,14 @@ public final class ModMetals {
         for (Metal metal : Metal.values()) {
             ORES.put(metal, registerOre(metal.oreId(), Blocks.IRON_ORE));
             DEEPSLATE_ORES.put(metal, registerOre(metal.deepslateOreId(), Blocks.DEEPSLATE_IRON_ORE));
+            RAW_BLOCKS.put(metal, registerRawBlock(metal.rawBlockId()));
         }
         // Items are registered after every ore block exists, so a block item never looks for a
         // block that has not been registered yet.
         for (Metal metal : Metal.values()) {
             registerBlockItem(metal.oreId(), ORES.get(metal));
             registerBlockItem(metal.deepslateOreId(), DEEPSLATE_ORES.get(metal));
+            registerBlockItem(metal.rawBlockId(), RAW_BLOCKS.get(metal));
             RAW.put(metal, registerItem(metal.rawId()));
             INGOTS.put(metal, registerItem(metal.ingotId()));
         }
@@ -57,6 +60,10 @@ public final class ModMetals {
 
     public static Item raw(Metal metal) {
         return required(RAW, metal);
+    }
+
+    public static Block rawBlock(Metal metal) {
+        return required(RAW_BLOCKS, metal);
     }
 
     public static Item ingot(Metal metal) {
@@ -77,6 +84,12 @@ public final class ModMetals {
         ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, Hardwrought.id(name));
         Block block = new DropExperienceBlock(net.minecraft.util.valueproviders.UniformInt.of(0, 2),
                 BlockBehaviour.Properties.ofFullCopy(copied).setId(key));
+        return Registry.register(BuiltInRegistries.BLOCK, key, block);
+    }
+
+    private static Block registerRawBlock(String name) {
+        ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, Hardwrought.id(name));
+        Block block = new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.RAW_IRON_BLOCK).setId(key));
         return Registry.register(BuiltInRegistries.BLOCK, key, block);
     }
 

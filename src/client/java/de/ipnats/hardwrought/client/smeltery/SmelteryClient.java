@@ -12,6 +12,7 @@ public final class SmelteryClient {
     public static void initialize() {
         MenuScreens.register(SmelteryMenu.TYPE, SmelteryScreen::new);
         BlockEntityRendererRegistry.register(SmelteryBlocks.CONTROLLER_ENTITY, SmelteryRenderers.Controller::new);
+        BlockEntityRendererRegistry.register(SmelteryBlocks.TANK_ENTITY, SmelteryRenderers.Tank::new);
         BlockEntityRendererRegistry.register(SmelteryBlocks.FAUCET_ENTITY, SmelteryRenderers.Faucet::new);
         BlockEntityRendererRegistry.register(SmelteryBlocks.CASTING_TABLE_ENTITY, SmelteryRenderers.Table::new);
     }

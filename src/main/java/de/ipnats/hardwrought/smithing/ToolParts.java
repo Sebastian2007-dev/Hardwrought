@@ -35,8 +35,14 @@ public final class ToolParts {
         DAGGER_BLADE(1),
         GREATSWORD_BLADE(4),
         HALBERD_HEAD(3),
-        /** The head of the iron hammer. Only a hammer of stone or better can forge it. */
-        HAMMER_HEAD(2);
+        /** The head of the iron or steel hammer: iron wants a hammer of stone or better, steel an iron one. */
+        HAMMER_HEAD(2),
+        // Armor, forged in sheets and put together with leather at the bench. Each takes as many bars as
+        // vanilla's piece took, and a hammer of stone or better: a mallet does not raise a helmet.
+        HELMET_SHELL(5),
+        CUIRASS(8),
+        GREAVES(7),
+        SABATONS(4);
 
         private final int ingots;
 
@@ -53,20 +59,27 @@ public final class ToolParts {
         }
     }
 
-    /** Every tool and weapon part, for the metals that make full equipment. */
+    /** Every tool, weapon and armor part, for the metals that make full equipment. */
     private static final Part[] EQUIPMENT = {Part.PICKAXE_HEAD, Part.AXE_HEAD, Part.SHOVEL_HEAD, Part.HOE_HEAD,
-            Part.SWORD_BLADE, Part.DAGGER_BLADE, Part.GREATSWORD_BLADE, Part.HALBERD_HEAD};
+            Part.SWORD_BLADE, Part.DAGGER_BLADE, Part.GREATSWORD_BLADE, Part.HALBERD_HEAD,
+            Part.HELMET_SHELL, Part.CUIRASS, Part.GREAVES, Part.SABATONS};
+
+    /** The armor parts. */
+    public static final java.util.Set<Part> ARMOR = java.util.EnumSet.of(Part.HELMET_SHELL, Part.CUIRASS, Part.GREAVES,
+            Part.SABATONS);
 
     /** A metal that tools are forged from: its material id and its ingot. */
     public enum SmithMetal {
         IRON("iron", () -> Items.IRON_INGOT, Part.values()),
         GOLD("gold", () -> Items.GOLD_INGOT, Part.PICKAXE_HEAD, Part.AXE_HEAD, Part.SHOVEL_HEAD,
-                Part.HOE_HEAD, Part.SWORD_BLADE),
+                Part.HOE_HEAD, Part.SWORD_BLADE, Part.HELMET_SHELL, Part.CUIRASS, Part.GREAVES, Part.SABATONS),
         COPPER("copper", () -> Items.COPPER_INGOT, Part.PICKAXE_HEAD, Part.AXE_HEAD, Part.SHOVEL_HEAD,
-                Part.HOE_HEAD, Part.SWORD_BLADE),
+                Part.HOE_HEAD, Part.SWORD_BLADE, Part.HELMET_SHELL, Part.CUIRASS, Part.GREAVES, Part.SABATONS),
         BRONZE("bronze", () -> ModItems.BRONZE_INGOT, Part.PICKAXE_HEAD, Part.AXE_HEAD),
-        // The metals above iron (see AlloyEquipment): every part but the hammer's head.
-        STEEL("steel", () -> de.ipnats.hardwrought.metallurgy.Alloys.STEEL_INGOT, EQUIPMENT),
+        // The metals above iron (see AlloyEquipment): every part but the hammer's head — which steel has too.
+        STEEL("steel", () -> de.ipnats.hardwrought.metallurgy.Alloys.STEEL_INGOT, Part.PICKAXE_HEAD, Part.AXE_HEAD,
+                Part.SHOVEL_HEAD, Part.HOE_HEAD, Part.SWORD_BLADE, Part.DAGGER_BLADE, Part.GREATSWORD_BLADE,
+                Part.HALBERD_HEAD, Part.HAMMER_HEAD, Part.HELMET_SHELL, Part.CUIRASS, Part.GREAVES, Part.SABATONS),
         STAINLESS_STEEL("stainless_steel", () -> de.ipnats.hardwrought.metallurgy.Alloys.STAINLESS_STEEL_INGOT, EQUIPMENT),
         TITANIUM("titanium", () -> de.ipnats.hardwrought.metallurgy.ModMetals.ingot(
                 de.ipnats.hardwrought.metallurgy.Metal.TITANIUM), EQUIPMENT),

@@ -481,6 +481,12 @@ public final class CoreClientGameTest implements FabricClientGameTest {
             level.setBlockAndUpdate(base.offset(1, 1, 3), de.ipnats.hardwrought.smeltery.SmelteryBlocks.FAUCET.defaultBlockState()
                     .setValue(de.ipnats.hardwrought.smeltery.FaucetBlock.FACING, net.minecraft.core.Direction.SOUTH));
             level.setBlockAndUpdate(base.offset(1, 0, 3), de.ipnats.hardwrought.smeltery.SmelteryBlocks.CASTING_TABLE.defaultBlockState());
+            // Two tanks of lava stacked in the front wall beside the controller, joined into one and
+            // filled a bucket past the lower one.
+            level.setBlockAndUpdate(base.offset(-1, 1, 2), de.ipnats.hardwrought.smeltery.SmelteryBlocks.TANK.defaultBlockState());
+            level.setBlockAndUpdate(base.offset(-1, 2, 2), de.ipnats.hardwrought.smeltery.SmelteryBlocks.TANK.defaultBlockState()
+                    .setValue(net.minecraft.world.level.block.PipeBlock.DOWN, true));
+            de.ipnats.hardwrought.smeltery.SmelteryTankBlockEntity.fillGroup(level, base.offset(-1, 2, 2), 6000);
             var smeltery = (de.ipnats.hardwrought.smeltery.SmelteryControllerBlockEntity) level.getBlockEntity(base.offset(0, 1, 2));
             smeltery.addFluidForTesting("steel", 6000);
             smeltery.addFluidForTesting("copper", 3000);
@@ -501,6 +507,16 @@ public final class CoreClientGameTest implements FabricClientGameTest {
         context.waitFor(client -> client.gui.screen() instanceof de.ipnats.hardwrought.client.smeltery.SmelteryScreen, 100);
         context.waitTicks(5);
         context.takeScreenshot("hardwrought-smeltery-screen");
+        // The thermometer's tooltip, which has to stay inside the screen.
+        double[] gauge = context.computeOnClient(client -> {
+            var window = client.getWindow();
+            double scale = window.getGuiScale();
+            int left = (window.getGuiScaledWidth() - 204) / 2, top = (window.getGuiScaledHeight() - 186) / 2;
+            return new double[] {(left + 193) * scale, (top + 50) * scale};
+        });
+        context.getInput().setCursorPos(gauge[0], gauge[1]);
+        context.waitTicks(3);
+        context.takeScreenshot("hardwrought-smeltery-heat-tooltip");
         context.runOnClient(client -> client.player.closeContainer());
     }
 
@@ -913,11 +929,12 @@ public final class CoreClientGameTest implements FabricClientGameTest {
         world.getServer().runOnServer(server -> server.getPlayerList().getPlayers().getFirst().setItemSlot(
                 net.minecraft.world.entity.EquipmentSlot.MAINHAND,
                 new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.TORCH)));
-        context.waitFor(client -> DynamicLight.placedAt() != null, 600);
+        context.waitFor(client -> DynamicLight.ownLevel() > 0, 600);
         context.runOnClient(client -> {
-            net.minecraft.core.BlockPos at = DynamicLight.placedAt();
-            if (!client.level.getBlockState(at).is(net.minecraft.world.level.block.Blocks.LIGHT)) {
-                throw new AssertionError("A carried torch must light the space it is carried through");
+            // The light is drawn by the shaders; nothing may be placed in the world for it.
+            if (DynamicLight.carried().stream().noneMatch(light -> light.carrier() == client.player)
+                    || client.level.getBlockState(client.player.blockPosition().above()).is(net.minecraft.world.level.block.Blocks.LIGHT)) {
+                throw new AssertionError("A carried torch must light the way as a shader light, not a light block");
             }
         });
 
@@ -998,7 +1015,7 @@ public final class CoreClientGameTest implements FabricClientGameTest {
         context.waitFor(client -> client.gameRenderer.mainCamera().attributeProbe()
                 .getValue(net.minecraft.world.attribute.EnvironmentAttributes.MOON_PHASE, 1f)
                 == net.minecraft.world.level.MoonPhase.NEW_MOON, 200);
-        context.waitFor(client -> DynamicLight.placedAt() == null, 200);
+        context.waitFor(client -> DynamicLight.ownLevel() == 0, 200);
         context.waitTicks(40);
         float early = context.computeOnClient(client -> de.ipnats.hardwrought.client.environment.Darkness.adaptation());
         context.waitTicks(260);

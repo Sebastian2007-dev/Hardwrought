@@ -36,7 +36,8 @@ public final class MoltenMetals {
     /** Every molten material, in the order the render states number them. */
     public static final List<String> ORDER = List.of("iron", "gold", "copper", "bronze", "steel", "stainless_steel",
             "tungsten_steel", "titanium", "tungsten", "tin", "zinc", "lead", "manganese", "magnesium", "aluminum",
-            "nickel", "cobalt", "chromium", "uranium", "thorium", "platinum", "netherite", CARBON);
+            "nickel", "cobalt", "chromium", "uranium", "thorium", "platinum", "silver", "mithril",
+            "adamantium", "netherite", CARBON, "lava");
 
     /** What one item gives: which material, how much of it. */
     public record Melt(String material, int amount) { }
@@ -145,6 +146,17 @@ public final class MoltenMetals {
         put(Items.COPPER_ORE, "copper", ORE_BLOCK);
         put(Items.DEEPSLATE_COPPER_ORE, "copper", ORE_BLOCK);
         put(OrePowders.powder(OrePowders.VanillaOre.COPPER), "copper", INGOT);
+        // Blocks of nine: raw ore pressed together, and bars stacked into a block.
+        for (Metal metal : Metal.values()) {
+            if (metal != Metal.MERCURY) put(ModMetals.rawBlock(metal).asItem(), metal.id(), 9 * INGOT);
+        }
+        put(Items.RAW_IRON_BLOCK, "iron", 9 * INGOT);
+        put(Items.RAW_GOLD_BLOCK, "gold", 9 * INGOT);
+        put(Items.RAW_COPPER_BLOCK, "copper", 9 * INGOT);
+        put(Items.IRON_BLOCK, "iron", 9 * INGOT);
+        put(Items.GOLD_BLOCK, "gold", 9 * INGOT);
+        // Every copper block, weathered or waxed, is nine bars of copper all the same.
+        for (Item copper : Items.COPPER_BLOCK.asList()) put(copper, "copper", 9 * INGOT);
         put(Items.NETHERITE_INGOT, "netherite", INGOT);
         INGOTS.put("netherite", Items.NETHERITE_INGOT);
         put(ModItems.BRONZE_MIXTURE, "bronze", INGOT);

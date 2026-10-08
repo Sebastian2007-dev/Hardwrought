@@ -119,6 +119,30 @@
     {
       "id": "hardwrought:deepslate_platinum_ore",
       "required": false
+    },
+    {
+      "id": "hardwrought:silver_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_silver_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:mithril_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_mithril_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:adamantium_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_adamantium_ore",
+      "required": false
     }
   ]
 }

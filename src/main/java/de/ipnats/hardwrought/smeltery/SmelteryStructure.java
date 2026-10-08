@@ -25,8 +25,11 @@ import java.util.WeakHashMap;
 public final class SmelteryStructure {
     public static final int MAX_WIDTH = 7, MAX_HEIGHT = 8;
 
-    /** A smeltery as found: its tank from corner to corner, its drains, and whether a bellows blows. */
-    public record Found(BlockPos min, BlockPos max, List<BlockPos> drains, boolean blown) {
+    /**
+     * A smeltery as found: its tank from corner to corner, its drains, its tanks of lava, and whether
+     * a bellows blows.
+     */
+    public record Found(BlockPos min, BlockPos max, List<BlockPos> drains, List<BlockPos> tanks, boolean blown) {
         public int volume() {
             return (max.getX() - min.getX() + 1) * (max.getY() - min.getY() + 1) * (max.getZ() - min.getZ() + 1);
         }
@@ -48,7 +51,7 @@ public final class SmelteryStructure {
     public static boolean isWall(BlockState state) {
         Block block = state.getBlock();
         return block == SmelteryBlocks.SMELTERY_BRICKS || block == SmelteryBlocks.SMELTERY_GLASS
-                || block == SmelteryBlocks.DRAIN || block == SmelteryBlocks.CONTROLLER;
+                || block == SmelteryBlocks.DRAIN || block == SmelteryBlocks.CONTROLLER || block == SmelteryBlocks.TANK;
     }
 
     private static boolean isTank(Level level, BlockPos pos) {
@@ -75,23 +78,26 @@ public final class SmelteryStructure {
             }
         }
         List<BlockPos> drains = new ArrayList<>();
+        List<BlockPos> tanks = new ArrayList<>();
         boolean blown = false;
         int top = bottom - 1;
         for (int y = bottom; y < bottom + MAX_HEIGHT; y++) {
             List<BlockPos> layerDrains = new ArrayList<>();
             boolean[] layerBlown = {false};
-            if (!layer(level, minX, maxX, minZ, maxZ, y, layerDrains, layerBlown)) break;
+            List<BlockPos> layerTanks = new ArrayList<>();
+            if (!layer(level, minX, maxX, minZ, maxZ, y, layerDrains, layerTanks, layerBlown)) break;
             top = y;
             drains.addAll(layerDrains);
+            tanks.addAll(layerTanks);
             blown |= layerBlown[0];
         }
         if (top < bottom || controller.getY() < bottom || controller.getY() > top) return null;
-        return new Found(new BlockPos(minX, bottom, minZ), new BlockPos(maxX, top, maxZ), drains, blown);
+        return new Found(new BlockPos(minX, bottom, minZ), new BlockPos(maxX, top, maxZ), drains, tanks, blown);
     }
 
     /** One layer of the tank: all of it empty, all of its ring wall. */
     private static boolean layer(Level level, int minX, int maxX, int minZ, int maxZ, int y,
-                                 List<BlockPos> drains, boolean[] blown) {
+                                 List<BlockPos> drains, List<BlockPos> tanks, boolean[] blown) {
         for (int x = minX; x <= maxX; x++) {
             for (int z = minZ; z <= maxZ; z++) {
                 if (!isTank(level, new BlockPos(x, y, z))) return false;
@@ -105,6 +111,7 @@ public final class SmelteryStructure {
                 BlockState state = level.getBlockState(pos);
                 if (!isWall(state)) return false;
                 if (state.getBlock() == SmelteryBlocks.DRAIN) drains.add(pos);
+                if (state.getBlock() == SmelteryBlocks.TANK) tanks.add(pos);
                 if (!blown[0] && ForgeBlockEntity.blown(level, pos)) blown[0] = true;
             }
         }

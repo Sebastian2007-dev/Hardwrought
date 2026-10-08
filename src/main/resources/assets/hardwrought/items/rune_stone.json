@@ -1,0 +1,104 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:block_state",
+    "block_state_property": "glyph",
+    "cases": [
+      {
+        "when": "fire",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:block/rune_stone_fire"
+        }
+      },
+      {
+        "when": "water",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:block/rune_stone_water"
+        }
+      },
+      {
+        "when": "wind",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:block/rune_stone_wind"
+        }
+      },
+      {
+        "when": "earth",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:block/rune_stone_earth"
+        }
+      },
+      {
+        "when": "light",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:block/rune_stone_light"
+        }
+      },
+      {
+        "when": "dark",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:block/rune_stone_dark"
+        }
+      },
+      {
+        "when": "arrow",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:block/rune_stone_arrow"
+        }
+      },
+      {
+        "when": "circle",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:block/rune_stone_circle"
+        }
+      },
+      {
+        "when": "triangle",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:block/rune_stone_triangle"
+        }
+      },
+      {
+        "when": "spiral",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:block/rune_stone_spiral"
+        }
+      },
+      {
+        "when": "square",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:block/rune_stone_square"
+        }
+      },
+      {
+        "when": "strike",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:block/rune_stone_strike"
+        }
+      },
+      {
+        "when": "lightning",
+        "model": {
+          "type": "minecraft:model",
+          "model": "hardwrought:block/rune_stone_lightning"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "hardwrought:block/rune_stone_fire"
+    }
+  }
+}

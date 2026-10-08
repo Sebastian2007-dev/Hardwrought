@@ -20,6 +20,7 @@ import net.minecraft.world.item.ItemStack;
  * thermometer on the right, the player's inventory below.
  */
 public class SmelteryMenu extends AbstractContainerMenu {
+    public static final int SELECT_FLUID_BUTTON = 100;
     public static final ExtendedMenuType<SmelteryMenu, BlockPos> TYPE = Registry.register(BuiltInRegistries.MENU,
             Hardwrought.id("smeltery"), new ExtendedMenuType<>(SmelteryMenu::new, BlockPos.STREAM_CODEC));
     public static final int FUEL_X = 8, FUEL_Y = 36;
@@ -31,7 +32,7 @@ public class SmelteryMenu extends AbstractContainerMenu {
     private final BlockPos pos;
 
     public SmelteryMenu(int id, Inventory inventory, BlockPos pos) {
-        this(id, inventory, new SimpleContainer(SmelteryControllerBlockEntity.CONTAINER_SIZE), new SimpleContainerData(4), pos);
+        this(id, inventory, new SimpleContainer(SmelteryControllerBlockEntity.CONTAINER_SIZE), new SimpleContainerData(SmelteryControllerBlockEntity.DATA_COUNT), pos);
     }
 
     public SmelteryMenu(int id, Inventory inventory, Container smeltery, ContainerData data, BlockPos pos) {
@@ -77,6 +78,20 @@ public class SmelteryMenu extends AbstractContainerMenu {
     public int burnLeft() { return data.get(2); }
 
     public int capacity() { return data.get(3); }
+
+    /**
+     * A melting place: {@link SmelteryControllerBlockEntity#TOO_COLD}, {@link SmelteryControllerBlockEntity#TANK_FULL},
+     * or how far along what lies there is, in thousandths.
+     */
+    public int meltState(int place) { return data.get(4 + place); }
+
+    @Override
+    public boolean clickMenuButton(Player player, int button) {
+        int material = button - SELECT_FLUID_BUTTON;
+        if (!(smeltery instanceof SmelteryControllerBlockEntity controller)
+                || material < 0 || material >= MoltenMetals.ORDER.size()) return false;
+        return controller.selectForCasting(MoltenMetals.ORDER.get(material));
+    }
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {

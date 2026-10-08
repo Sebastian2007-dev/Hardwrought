@@ -22,7 +22,7 @@ public final class ModBlocks {
     public static final HewnWorkbenchBlock HEWN_WORKBENCH = register("hewn_workbench",
             HewnWorkbenchBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.CRAFTING_TABLE));
-    /** Tier two: the same timber rebuilt as split boards and held together with iron nails. */
+    /** Tier two: the same hewn log tightened with bronze nails, with bark and stripped wood retained. */
     public static final NailedWorkbenchBlock NAILED_WORKBENCH = register("nailed_workbench",
             NailedWorkbenchBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.CRAFTING_TABLE));

@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###",
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": "hardwrought:raw_nickel"
+  },
+  "result": {
+    "id": "hardwrought:raw_nickel_block"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "hardwrought:pointed_stick",
+    "minecraft:stick",
+    "hardwrought:leaf_string"
+  ],
+  "result": {
+    "id": "hardwrought:wooden_wand"
+  }
+}

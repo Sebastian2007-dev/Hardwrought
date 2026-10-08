@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###",
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": "hardwrought:raw_zinc"
+  },
+  "result": {
+    "id": "hardwrought:raw_zinc_block"
+  }
+}

@@ -34,10 +34,11 @@ public class BellowsBlock extends Block implements net.minecraft.world.level.blo
         builder.add(FACING);
     }
 
-    /** Two boards with the leather between them, and the nozzle out of the front; drawn facing north. */
+    /** Two boards with the leather between them, a nozzle at the front and the drive at the rear; drawn facing north. */
     private static final java.util.Map<Direction, net.minecraft.world.phys.shapes.VoxelShape> SHAPES =
             net.minecraft.world.phys.shapes.Shapes.rotateHorizontal(net.minecraft.world.phys.shapes.Shapes.or(
-                    box(1, 0, 2, 15, 2, 16), box(2, 2, 3, 14, 7, 15), box(1, 7, 2, 15, 9, 16), box(6, 2, 0, 10, 6, 3)));
+                    box(1, 1, 3, 15, 3, 15), box(2, 3, 3, 14, 9, 15), box(1, 9, 3, 15, 11, 15),
+                    box(5, 3, 0, 11, 8, 4), box(5, 4, 14, 11, 8, 16)));
 
     @Override
     protected net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState state, net.minecraft.world.level.BlockGetter level,
@@ -48,7 +49,9 @@ public class BellowsBlock extends Block implements net.minecraft.world.level.blo
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+        Direction clicked = context.getClickedFace();
+        Direction output = clicked.getAxis().isHorizontal() ? clicked.getOpposite() : context.getHorizontalDirection();
+        return defaultBlockState().setValue(FACING, output);
     }
 
     @Override
@@ -61,10 +64,18 @@ public class BellowsBlock extends Block implements net.minecraft.world.level.blo
         return state.rotate(mirror.getRotation(state.getValue(FACING)));
     }
 
-    /** Worked from any side a shaft, gear or crank meets it on. */
+    /** The driveline meets the rear socket; the opposite face is reserved for the air nozzle. */
     @Override
     public float port(BlockState state, Direction face) {
-        return 1.0f;
+        return face == state.getValue(FACING).getOpposite() ? 1.0f : 0.0f;
+    }
+
+    /** Whether this bellows' visible front nozzle points into the given adjacent block. */
+    public static boolean blowsInto(net.minecraft.world.level.Level level, net.minecraft.core.BlockPos bellows,
+                                    net.minecraft.core.BlockPos target) {
+        BlockState state = level.getBlockState(bellows);
+        return state.getBlock() instanceof BellowsBlock
+                && bellows.relative(state.getValue(FACING)).equals(target);
     }
 
     @Override

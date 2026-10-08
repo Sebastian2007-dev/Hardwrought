@@ -24,7 +24,14 @@ The structure is checked again every second, so a broken wall shuts it off.
 | Fuel | Without bellows | With bellows |
 |---|---|---|
 | coal / charcoal | 1250 °C | 1650 °C |
-| coke (coal smelted in a furnace) | 2000 °C | 3600 °C |
+| coke (coal smelted in a furnace) | 2000 °C | 4200 °C |
+| lava from a smeltery tank | 1600 °C | 2000 °C |
+
+A **smeltery tank** (refractory brick around glass) is a wall block that holds four buckets of lava. You
+fill it and empty it with a bucket, and you can see through its window how full it is. Tanks set
+against each other join into one vessel. The frame between them goes away, and the lava fills them
+from the bottom up. The smeltery burns lava only when its fuel slot is empty. It takes 50 mB at a
+time, so one bucket lasts five minutes.
 
 The temperature moves slowly towards the fuel's heat. Burn times: coal 1200 ticks, coke 2400 ticks, a
 block of coal 10800 ticks. With coal alone copper, bronze and gold melt; iron needs bellows or coke;

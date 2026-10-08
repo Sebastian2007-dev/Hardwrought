@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:raw_mercury_block"
+  ],
+  "result": {
+    "id": "hardwrought:raw_mercury",
+    "count": 9
+  }
+}

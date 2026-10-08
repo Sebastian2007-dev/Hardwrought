@@ -8,6 +8,10 @@
       "id": "hardwrought:nailed_workbench",
       "required": false
     },
+    {
+      "id": "hardwrought:magic_table",
+      "required": false
+    },
     "hardwrought:wooden_anvil",
     "hardwrought:bellows"
   ]

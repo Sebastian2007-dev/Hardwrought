@@ -23,6 +23,7 @@ import de.ipnats.hardwrought.smithing.ToolParts;
 import de.ipnats.hardwrought.smithing.WoodenAnvilBlock;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -117,8 +118,8 @@ public final class SmithingGameTests {
             helper.assertTrue(furnace.getItem(0).isEmpty(),
                     "Heating consumes the complete input load instead of leaving two cold pieces behind");
             double celsius = Heat.of(out, level.getGameTime());
-            helper.assertTrue(celsius > 1100 && celsius <= 1540 * Smithing.WORKING_MAX + 1,
-                    "brought to working heat and no further: " + celsius);
+            helper.assertTrue(celsius > 1400 && celsius <= de.ipnats.hardwrought.metallurgy.Smelting.FURNACE_MAX_C + 1,
+                    "brought to the furnace's full heat: " + celsius);
             helper.assertTrue(smeltingFurnace.getItem(2).is(Items.GLASS)
                             && smeltingFurnace.getItem(2).getCount() == 1
                             && smeltingFurnace.getItem(0).is(Items.SAND)
@@ -328,6 +329,82 @@ public final class SmithingGameTests {
     }
 
     @GameTest
+    public void hotBarsStackWithEachOther(GameTestHelper helper) {
+        long now = helper.getLevel().getGameTime();
+        ItemStack first = new ItemStack(Items.IRON_INGOT), second = new ItemStack(Items.IRON_INGOT);
+        first.set(ModDataComponents.HEAT, new Heat(900f, now));
+        second.set(ModDataComponents.HEAT, new Heat(840f, now - 40));
+        helper.assertTrue(ItemStack.isSameItemSameComponents(first, second),
+                "Two hot bars off the anvil stack, whenever each came out of the fire");
+        helper.assertFalse(ItemStack.isSameItemSameComponents(first, new ItemStack(Items.IRON_INGOT)),
+                "a hot bar and a cold one still lie apart");
+        ItemStack gold = new ItemStack(Items.GOLD_INGOT);
+        gold.set(ModDataComponents.HEAT, new Heat(900f, now));
+        helper.assertFalse(ItemStack.isSameItemSameComponents(first, gold), "and iron is not gold, hot or not");
+        var inventory = new net.minecraft.world.SimpleContainer(4);
+        inventory.addItem(first);
+        inventory.addItem(second);
+        helper.assertTrue(inventory.getItem(0).getCount() == 2 && inventory.getItem(1).isEmpty(),
+                "Put away one after the other, they go onto one stack");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void armorIsForgedInPartsAndPutTogetherWithLeather(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        Item shell = ToolParts.part(ToolParts.SmithMetal.IRON, ToolParts.Part.HELMET_SHELL);
+        var forge = Smithing.recipeFor(Items.IRON_INGOT, BuiltInRegistries.ITEM.getKey(shell));
+        helper.assertTrue(forge != null && forge.count() == 5 && Hammers.reachNeeded(shell) == 2,
+                "A helmet shell is forged from five iron bars, with a stone hammer or better");
+        for (ToolParts.SmithMetal metal : List.of(ToolParts.SmithMetal.GOLD, ToolParts.SmithMetal.COPPER,
+                ToolParts.SmithMetal.STEEL, ToolParts.SmithMetal.TUNGSTEN_STEEL)) {
+            helper.assertTrue(metal.parts().containsAll(ToolParts.ARMOR), metal + " is forged into armor too");
+        }
+        var holder = level.recipeAccess().byKey(ResourceKey.create(Registries.RECIPE,
+                Identifier.withDefaultNamespace("iron_helmet"))).orElseThrow();
+        CraftingRecipe recipe = (CraftingRecipe) holder.value();
+        ItemStack part = new ItemStack(shell);
+        part.set(ModDataComponents.FORGE_QUALITY, new ForgeQuality(0.9f, ForgeQuality.Treatment.TEMPERED));
+        CraftingInput input = CraftingInput.of(2, 1, List.of(part, new ItemStack(Items.LEATHER)));
+        helper.assertTrue(recipe.matches(input, level), "A helmet shell and leather make a helmet");
+        ItemStack helmet = recipe.assemble(input);
+        helper.assertTrue(helmet.is(Items.IRON_HELMET) && ForgeQuality.of(helmet) != null
+                        && helmet.getMaxDamage() > new ItemStack(Items.IRON_HELMET).getMaxDamage(),
+                "an iron helmet that keeps how well its shell was forged: " + helmet);
+        ItemStack bar = new ItemStack(Items.IRON_INGOT);
+        CraftingInput bars = CraftingInput.of(3, 2, List.of(bar, bar, bar, bar, ItemStack.EMPTY, bar));
+        helper.assertFalse(recipe.matches(bars, level), "Bars laid in a helmet's shape are no helmet any more");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void diamondGearIsGoneAndNetheriteComesFromTungstenSteel(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        for (String gear : List.of("diamond_sword", "diamond_pickaxe", "diamond_helmet", "diamond_chestplate")) {
+            helper.assertTrue(level.recipeAccess().byKey(ResourceKey.create(Registries.RECIPE,
+                    Identifier.withDefaultNamespace(gear))).isEmpty(), gear + " can no longer be made");
+        }
+        var upgrade = level.recipeAccess().byKey(ResourceKey.create(Registries.RECIPE,
+                Identifier.withDefaultNamespace("netherite_sword_smithing"))).orElseThrow().value();
+        Item tungstenSword = de.ipnats.hardwrought.smithing.AlloyEquipment.tool(
+                de.ipnats.hardwrought.smithing.AlloyEquipment.Tier.TUNGSTEN_STEEL, de.ipnats.hardwrought.smithing.AlloyEquipment.Tool.SWORD);
+        helper.assertTrue(upgrade instanceof net.minecraft.world.item.crafting.SmithingTransformRecipe smithing
+                        && smithing.baseIngredient().acceptsItem(tungstenSword.builtInRegistryHolder())
+                        && !smithing.baseIngredient().acceptsItem(Items.DIAMOND_SWORD.builtInRegistryHolder()),
+                "Netherite is upgraded from tungsten steel, not diamond");
+        ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
+        sword.setDamageValue(sword.getMaxDamage() / 2);
+        ItemStack steel = de.ipnats.hardwrought.smithing.NoDiamondGear.replace(sword);
+        Item steelSword = de.ipnats.hardwrought.smithing.AlloyEquipment.tool(
+                de.ipnats.hardwrought.smithing.AlloyEquipment.Tier.STEEL, de.ipnats.hardwrought.smithing.AlloyEquipment.Tool.SWORD);
+        helper.assertTrue(steel.is(steelSword) && Math.abs(steel.getDamageValue() - steel.getMaxDamage() / 2) <= 1,
+                "A diamond sword that turns up somewhere is a steel one, as worn: " + steel);
+        helper.assertTrue(de.ipnats.hardwrought.smithing.NoDiamondGear.replace(new ItemStack(Items.DIAMOND)).is(Items.DIAMOND),
+                "The gem itself stays");
+        helper.succeed();
+    }
+
+    @GameTest
     public void aForgedHeadGivesItsQualityToTheToolItBecomes(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         var holder = level.recipeAccess().byKey(ResourceKey.create(Registries.RECIPE,
@@ -396,7 +473,8 @@ public final class SmithingGameTests {
                 "A plain forge heads for the heat coal alone gives");
 
         BlockPos bellows = forgePos.east();
-        level.setBlockAndUpdate(bellows, ModBlocks.BELLOWS.defaultBlockState());
+        level.setBlockAndUpdate(bellows, ModBlocks.BELLOWS.defaultBlockState()
+                .setValue(de.ipnats.hardwrought.smithing.BellowsBlock.FACING, Direction.WEST));
         helper.assertTrue(forge.target(level, forgePos, level.getBlockState(forgePos)) == ForgeBlockEntity.BASE_C,
                 "A bellows nobody works does nothing");
         level.setBlockAndUpdate(bellows.east(), ModBlocks.CRANK_BOX.defaultBlockState().setValue(CrankBoxBlock.TURNING, true));
@@ -406,8 +484,8 @@ public final class SmithingGameTests {
         helper.assertTrue(forge.target(level, forgePos, level.getBlockState(forgePos)) == ForgeBlockEntity.LINED_BELLOWS_C,
                 "and lined with refractory brick it reaches the most any forge can");
 
-        // Back to the ordinary 1300 °C forge: aluminum, melting at 660 °C, heats to the top of its
-        // forging range and stops there, however much hotter the fire is.
+        // Back to the ordinary 1300 °C forge: aluminum, melting at 660 °C, follows the fire far past
+        // its forging range.
         level.setBlockAndUpdate(forgePos, level.getBlockState(forgePos).setValue(ForgeBlock.LINED, false));
         level.setBlockAndUpdate(bellows.east(), Blocks.AIR.defaultBlockState());
         helper.assertTrue(forge.target(level, forgePos, level.getBlockState(forgePos)) == ForgeBlockEntity.BASE_C,
@@ -416,9 +494,10 @@ public final class SmithingGameTests {
                 "Raw aluminum goes into the metal place");
         helper.runAfterDelay(600, () -> {
             double celsius = Heat.of(forge.getItem(ForgeBlockEntity.FIRST_METAL), level.getGameTime());
-            double top = 660 * Smithing.WORKING_MAX;
-            helper.assertTrue(celsius > top - 5 && celsius <= top + 1,
-                    "Raw aluminum heats to forging heat and never towards melting: " + celsius);
+            helper.assertTrue(celsius > 800,
+                    "Raw aluminum follows the forge past its forging range: " + celsius);
+            helper.assertTrue(celsius <= forge.temperature() + 1,
+                    "and the workpiece never becomes hotter than the fire heating it");
             for (BlockPos pos : List.of(forgePos, bellows, bellows.east())) {
                 level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
             }
@@ -495,9 +574,7 @@ public final class SmithingGameTests {
                 "Coal does not go where the metal lies");
         helper.assertFalse(forge.canPlaceItem(1, new ItemStack(Items.COAL)),
                 "A forge on its own has a single fuel place");
-        ItemStack bar = new ItemStack(Items.IRON_INGOT);
-        bar.set(ModDataComponents.HEAT, new Heat(1000f, level.getGameTime() - 2000));
-        forge.setItem(ForgeBlockEntity.FIRST_METAL, bar);
+        forge.setItem(ForgeBlockEntity.FIRST_METAL, new ItemStack(Items.IRON_INGOT));
         helper.runAfterDelay(20, () -> {
             helper.assertTrue(forge.getItem(0).getCount() == 3 && forge.burnTicks() == 0,
                     "Coal laid in a forge does not catch by itself, metal or not");
@@ -505,6 +582,10 @@ public final class SmithingGameTests {
                     "but the pit shows it lying there");
             helper.assertTrue(forge.ignite(), "Lit, the coal catches");
             helper.assertFalse(forge.ignite(), "and a fire that is going cannot be lit again");
+            // A hot piece laid in a burning forge keeps its heat, however young the fire.
+            ItemStack bar = new ItemStack(Items.IRON_INGOT);
+            bar.set(ModDataComponents.HEAT, new Heat(1000f, level.getGameTime() - 2000));
+            forge.setItem(ForgeBlockEntity.FIRST_METAL, bar);
             helper.runAfterDelay(30, () -> {
                 helper.assertTrue(forge.getItem(0).getCount() == 2 && forge.burnTicks() > 1600,
                         "One coal catches and burns four times as long as in a furnace");
@@ -623,13 +704,14 @@ public final class SmithingGameTests {
                         && structure.fuelSlots() == 4 && structure.metalSlots() == 9,
                 "The 3x3 hearth has four fuel and nine metal places");
         ForgeBlockEntity controller = ForgeMultiblock.controller(level, structure);
+        // Pieces forged differently do not share a place; hot pieces of the same kind would.
         for (int i = 0; i < 9; i++) {
-            ItemStack piece = new ItemStack(Items.RAW_IRON);
-            piece.set(ModDataComponents.HEAT, new Heat(500f + i, 0));
+            ItemStack piece = new ItemStack(pickHead());
+            piece.set(ModDataComponents.FORGE_QUALITY, new ForgeQuality(0.1f * i, ForgeQuality.Treatment.AIR));
             helper.assertTrue(controller.place(piece, controller.layout()), "Every metal place takes a piece");
         }
-        ItemStack tenth = new ItemStack(Items.RAW_IRON);
-        tenth.set(ModDataComponents.HEAT, new Heat(900f, 0));
+        ItemStack tenth = new ItemStack(pickHead());
+        tenth.set(ModDataComponents.FORGE_QUALITY, new ForgeQuality(0.95f, ForgeQuality.Treatment.AIR));
         helper.assertFalse(controller.place(tenth, controller.layout()), "A tenth different piece does not fit");
         for (int i = 0; i < 4; i++) {
             helper.assertTrue(controller.place(new ItemStack(Items.COAL, 64), controller.layout()), "Four fuel places");
@@ -821,7 +903,29 @@ public final class SmithingGameTests {
         helper.assertTrue(Hammers.reachNeeded(ToolParts.part(ToolParts.SmithMetal.IRON, ToolParts.Part.HAMMER_HEAD)) == 2
                         && Hammers.reachNeeded(Items.IRON_INGOT) == 1,
                 "An iron hammer head wants at least a stone hammer; a bar can be beaten out with wood");
+        helper.assertTrue(Hammers.reach(new ItemStack(ModItems.STEEL_HAMMER)) == 4
+                        && empty.strike(8, 8, full, 4).count() == 16, "A steel blow moves four by four");
+        helper.assertTrue(Hammers.reachNeeded(ToolParts.part(ToolParts.SmithMetal.STEEL, ToolParts.Part.HAMMER_HEAD)) == 3,
+                "A steel hammer head wants an iron hammer");
         helper.succeed();
+    }
+
+    @GameTest(maxTicks = 80)
+    public void aForgeGoneOutLetsItsPiecesCool(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos pos = helper.absolutePos(new BlockPos(1, 1, 1));
+        level.setBlockAndUpdate(pos, ModBlocks.FORGE.defaultBlockState());
+        ForgeBlockEntity forge = (ForgeBlockEntity) level.getBlockEntity(pos);
+        ItemStack bar = new ItemStack(Items.IRON_INGOT);
+        bar.set(ModDataComponents.HEAT, new Heat(1200f, level.getGameTime()));
+        forge.setItem(ForgeBlockEntity.FIRST_METAL, bar);
+        helper.runAfterDelay(60, () -> {
+            double celsius = Heat.of(forge.getItem(ForgeBlockEntity.FIRST_METAL), level.getGameTime());
+            helper.assertTrue(forge.burnTicks() == 0 && celsius < 1170,
+                    "In a forge with no fire a piece cools with the embers: " + celsius);
+            level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+            helper.succeed();
+        });
     }
 
     /** Strikes every square that is still wrong until the piece is finished. */

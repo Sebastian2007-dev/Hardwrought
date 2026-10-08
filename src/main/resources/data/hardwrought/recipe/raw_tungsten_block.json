@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###",
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": "hardwrought:raw_tungsten"
+  },
+  "result": {
+    "id": "hardwrought:raw_tungsten_block"
+  }
+}

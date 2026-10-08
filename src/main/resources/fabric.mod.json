@@ -26,6 +26,10 @@
 		{
 			"config": "hardwrought.client.mixins.json",
 			"environment": "client"
+		},
+		{
+			"config": "hardwrought.sodium.mixins.json",
+			"environment": "client"
 		}
 	],
 	"depends": {

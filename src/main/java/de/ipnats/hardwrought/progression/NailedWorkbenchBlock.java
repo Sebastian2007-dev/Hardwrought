@@ -16,7 +16,8 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 
 /**
- * Tier two: the hewn bench rebuilt from split boards without losing the timber it came from.
+ * Tier two: the same hewn log tightened with bronze nails. Its bark base and stripped working band
+ * still show which tree it came from.
  *
  * <p>The first bench that keeps what is left on it. Whatever lies in the grid when the menu is
  * closed is still there next time — see {@link KeptGridBlockEntity}.

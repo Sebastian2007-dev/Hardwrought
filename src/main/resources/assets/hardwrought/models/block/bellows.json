@@ -1,260 +1,159 @@
 {
+  "__comment": "Directional bellows: air outlet north, mechanical drive socket south",
   "parent": "minecraft:block/block",
-  "__comment": "Two boards with leather pleated between them and a nozzle facing north.",
   "textures": {
-    "board": "hardwrought:block/hardwrought/machine_boards",
-    "leather": "hardwrought:block/hardwrought/bellows_leather",
-    "nozzle_side": "hardwrought:block/hardwrought/bellows_nozzle_side",
-    "nozzle_end": "hardwrought:block/hardwrought/bellows_nozzle_end",
-    "particle": "hardwrought:block/hardwrought/machine_boards"
+    "board": "minecraft:block/oak_planks",
+    "leather": "minecraft:block/brown_wool",
+    "nozzle_side": "minecraft:block/iron_block",
+    "nozzle_end": "minecraft:block/black_concrete",
+    "particle": "minecraft:block/oak_planks"
   },
   "elements": [
     {
-      "from": [
-        1,
-        0,
-        2
-      ],
-      "to": [
-        15,
-        2,
-        16
-      ],
+      "name": "Lower wooden plate",
+      "from": [1, 1, 3],
+      "to": [15, 3, 15],
       "faces": {
-        "north": {
-          "uv": [
-            0,
-            0,
-            16,
-            2
-          ],
-          "texture": "#board"
-        },
-        "south": {
-          "uv": [
-            0,
-            0,
-            16,
-            2
-          ],
-          "texture": "#board"
-        },
-        "east": {
-          "uv": [
-            0,
-            0,
-            16,
-            2
-          ],
-          "texture": "#board"
-        },
-        "west": {
-          "uv": [
-            0,
-            0,
-            16,
-            2
-          ],
-          "texture": "#board"
-        },
-        "up": {
-          "uv": [
-            1,
-            2,
-            15,
-            16
-          ],
-          "texture": "#board"
-        },
-        "down": {
-          "uv": [
-            1,
-            2,
-            15,
-            16
-          ],
-          "texture": "#board",
-          "cullface": "down"
-        }
+        "north": { "texture": "#board" },
+        "east": { "texture": "#board" },
+        "south": { "texture": "#board" },
+        "west": { "texture": "#board" },
+        "up": { "texture": "#board" },
+        "down": { "texture": "#board" }
       }
     },
     {
-      "from": [
-        2,
-        2,
-        3
-      ],
-      "to": [
-        14,
-        7,
-        15
-      ],
+      "name": "Upper hinged plate",
+      "from": [1, 8, 3],
+      "to": [15, 10, 15],
+      "rotation": { "angle": 22.5, "axis": "x", "origin": [8, 9, 14] },
       "faces": {
-        "north": {
-          "uv": [
-            2,
-            0,
-            14,
-            5
-          ],
-          "texture": "#leather"
-        },
-        "south": {
-          "uv": [
-            2,
-            0,
-            14,
-            5
-          ],
-          "texture": "#leather"
-        },
-        "east": {
-          "uv": [
-            2,
-            0,
-            14,
-            5
-          ],
-          "texture": "#leather"
-        },
-        "west": {
-          "uv": [
-            2,
-            0,
-            14,
-            5
-          ],
-          "texture": "#leather"
-        }
+        "north": { "texture": "#board" },
+        "east": { "texture": "#board" },
+        "south": { "texture": "#board" },
+        "west": { "texture": "#board" },
+        "up": { "texture": "#board" },
+        "down": { "texture": "#board" }
       }
     },
     {
-      "from": [
-        1,
-        7,
-        2
-      ],
-      "to": [
-        15,
-        9,
-        16
-      ],
+      "name": "Rear leather fold",
+      "from": [2, 3, 9],
+      "to": [14, 9, 15],
       "faces": {
-        "north": {
-          "uv": [
-            0,
-            0,
-            16,
-            2
-          ],
-          "texture": "#board"
-        },
-        "south": {
-          "uv": [
-            0,
-            0,
-            16,
-            2
-          ],
-          "texture": "#board"
-        },
-        "east": {
-          "uv": [
-            0,
-            0,
-            16,
-            2
-          ],
-          "texture": "#board"
-        },
-        "west": {
-          "uv": [
-            0,
-            0,
-            16,
-            2
-          ],
-          "texture": "#board"
-        },
-        "up": {
-          "uv": [
-            1,
-            2,
-            15,
-            16
-          ],
-          "texture": "#board"
-        },
-        "down": {
-          "uv": [
-            1,
-            2,
-            15,
-            16
-          ],
-          "texture": "#board"
-        }
+        "north": { "texture": "#leather" },
+        "east": { "texture": "#leather" },
+        "south": { "texture": "#leather" },
+        "west": { "texture": "#leather" },
+        "up": { "texture": "#leather" },
+        "down": { "texture": "#leather" }
       }
     },
     {
-      "from": [
-        6,
-        2,
-        0
-      ],
-      "to": [
-        10,
-        6,
-        3
-      ],
+      "name": "Middle leather fold",
+      "from": [3, 3, 5],
+      "to": [13, 8, 10],
       "faces": {
-        "east": {
-          "uv": [
-            6,
-            0,
-            10,
-            4
-          ],
-          "texture": "#nozzle_side"
-        },
-        "west": {
-          "uv": [
-            6,
-            0,
-            10,
-            4
-          ],
-          "texture": "#nozzle_side"
-        },
-        "up": {
-          "uv": [
-            6,
-            0,
-            10,
-            4
-          ],
-          "texture": "#nozzle_side"
-        },
-        "down": {
-          "uv": [
-            6,
-            0,
-            10,
-            4
-          ],
-          "texture": "#nozzle_side"
-        },
-        "north": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#nozzle_end",
-          "cullface": "north"
-        }
+        "north": { "texture": "#leather" },
+        "east": { "texture": "#leather" },
+        "south": { "texture": "#leather" },
+        "west": { "texture": "#leather" },
+        "up": { "texture": "#leather" },
+        "down": { "texture": "#leather" }
+      }
+    },
+    {
+      "name": "Front leather throat",
+      "from": [4, 3, 3],
+      "to": [12, 7, 6],
+      "faces": {
+        "north": { "texture": "#leather" },
+        "east": { "texture": "#leather" },
+        "south": { "texture": "#leather" },
+        "west": { "texture": "#leather" },
+        "up": { "texture": "#leather" },
+        "down": { "texture": "#leather" }
+      }
+    },
+    {
+      "name": "Nozzle collar",
+      "from": [5, 3, 1],
+      "to": [11, 8, 4],
+      "faces": {
+        "north": { "texture": "#nozzle_side" },
+        "east": { "texture": "#nozzle_side" },
+        "south": { "texture": "#nozzle_side" },
+        "west": { "texture": "#nozzle_side" },
+        "up": { "texture": "#nozzle_side" },
+        "down": { "texture": "#nozzle_side" }
+      }
+    },
+    {
+      "name": "Air nozzle",
+      "from": [6, 4, 0],
+      "to": [10, 7, 2],
+      "faces": {
+        "north": { "texture": "#nozzle_end", "cullface": "north" },
+        "east": { "texture": "#nozzle_side" },
+        "south": { "texture": "#nozzle_side" },
+        "west": { "texture": "#nozzle_side" },
+        "up": { "texture": "#nozzle_side" },
+        "down": { "texture": "#nozzle_side" }
+      }
+    },
+    {
+      "name": "Rear drive socket",
+      "from": [6, 4, 14],
+      "to": [10, 8, 16],
+      "faces": {
+        "north": { "texture": "#nozzle_side" },
+        "east": { "texture": "#nozzle_side" },
+        "south": { "texture": "#nozzle_end", "cullface": "south" },
+        "west": { "texture": "#nozzle_side" },
+        "up": { "texture": "#nozzle_side" },
+        "down": { "texture": "#nozzle_side" }
+      }
+    },
+    {
+      "name": "Left hinge bracket",
+      "from": [1, 3, 13],
+      "to": [3, 9, 15],
+      "faces": {
+        "north": { "texture": "#nozzle_side" },
+        "east": { "texture": "#nozzle_side" },
+        "south": { "texture": "#nozzle_side" },
+        "west": { "texture": "#nozzle_side" },
+        "up": { "texture": "#nozzle_side" },
+        "down": { "texture": "#nozzle_side" }
+      }
+    },
+    {
+      "name": "Right hinge bracket",
+      "from": [13, 3, 13],
+      "to": [15, 9, 15],
+      "faces": {
+        "north": { "texture": "#nozzle_side" },
+        "east": { "texture": "#nozzle_side" },
+        "south": { "texture": "#nozzle_side" },
+        "west": { "texture": "#nozzle_side" },
+        "up": { "texture": "#nozzle_side" },
+        "down": { "texture": "#nozzle_side" }
       }
     }
-  ]
+  ],
+  "display": {
+    "gui": {
+      "rotation": [30, 225, 0],
+      "translation": [0, 0, 0],
+      "scale": [0.75, 0.75, 0.75]
+    },
+    "ground": {
+      "translation": [0, 3, 0],
+      "scale": [0.4, 0.4, 0.4]
+    },
+    "fixed": {
+      "rotation": [0, 180, 0],
+      "scale": [0.65, 0.65, 0.65]
+    }
+  }
 }

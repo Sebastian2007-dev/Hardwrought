@@ -1,5 +1,6 @@
 {
   "values": [
+    "#hardwrought:raw_metal_blocks/iron",
     {
       "id": "hardwrought:nickel_ore",
       "required": false
@@ -54,6 +55,22 @@
     },
     {
       "id": "hardwrought:deepslate_thorium_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:silver_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:deepslate_silver_ore",
+      "required": false
+    },
+    {
+      "id": "hardwrought:void_crystal_block",
+      "required": false
+    },
+    {
+      "id": "hardwrought:void_crystal_cluster",
       "required": false
     }
   ]

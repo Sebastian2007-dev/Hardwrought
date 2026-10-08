@@ -32,7 +32,7 @@ import java.util.List;
 public final class MetalGameTests {
     @GameTest
     public void everyMetalIsARealOreAndARealIngot(GameTestHelper helper) {
-        helper.assertTrue(Metal.values().length == 15,
+        helper.assertTrue(Metal.values().length == 18,
                 "Every metal the specification names is in the table");
         for (Metal metal : Metal.values()) {
             helper.assertTrue(ModMetals.ore(metal) != null && ModMetals.deepslateOre(metal) != null,
@@ -45,8 +45,8 @@ public final class MetalGameTests {
             helper.assertTrue(metal.maxY() > metal.minY(),
                     metal.id() + " sits in a band that is the right way up");
         }
-        helper.assertTrue(Metal.byId("tungsten") == Metal.TUNGSTEN && Metal.byId("mithril") == null,
-                "Metals are found by name, and only the ones that exist");
+        helper.assertTrue(Metal.byId("tungsten") == Metal.TUNGSTEN && Metal.byId("mithril") == Metal.MITHRIL,
+                "Metals are found by name, including the magical metals");
 
         // A block item that does not take its name from its block asks for a translation key that
         // nobody writes, and shows up in the inventory as "item.hardwrought.deepslate_cobalt_ore".
@@ -104,6 +104,29 @@ public final class MetalGameTests {
         helper.assertTrue(ores.contains(Identifier.withDefaultNamespace("ore_iron_middle"))
                         || ores.contains(Identifier.withDefaultNamespace("ore_coal_upper")),
                 "and vanilla's own veins are still exactly where they were");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void voidCrystalHasTheAmethystLifeCycle(GameTestHelper helper) {
+        helper.assertTrue(de.ipnats.hardwrought.magic.VoidCrystal.BLOCK
+                        instanceof net.minecraft.world.level.block.AmethystBlock,
+                "The solid void-crystal block has amethyst resonance behaviour");
+        helper.assertTrue(de.ipnats.hardwrought.magic.VoidCrystal.BUDDING
+                        instanceof de.ipnats.hardwrought.magic.BuddingVoidCrystalBlock,
+                "Void crystal has a budding block that grows crystal stages");
+        for (var stage : List.of(de.ipnats.hardwrought.magic.VoidCrystal.SMALL_BUD,
+                de.ipnats.hardwrought.magic.VoidCrystal.MEDIUM_BUD,
+                de.ipnats.hardwrought.magic.VoidCrystal.LARGE_BUD,
+                de.ipnats.hardwrought.magic.VoidCrystal.CLUSTER)) {
+            helper.assertTrue(stage instanceof net.minecraft.world.level.block.AmethystClusterBlock,
+                    "Every void-crystal growth stage uses amethyst placement and waterlogging rules");
+        }
+        helper.assertTrue(helper.getLevel().registryAccess().lookupOrThrow(Registries.PLACED_FEATURE)
+                        .get(de.ipnats.hardwrought.magic.VoidCrystal.GEODE).isPresent(),
+                "Void-crystal geodes are loaded into world generation");
+        helper.assertTrue(de.ipnats.hardwrought.magic.VoidCrystal.SHARD != net.minecraft.world.item.Items.AIR,
+                "A mature cluster has a real shard item to drop");
         helper.succeed();
     }
 

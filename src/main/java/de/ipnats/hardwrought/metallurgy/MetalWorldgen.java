@@ -17,7 +17,7 @@ import java.util.List;
  * Puts the ores of {@link Metal} into the ground, and touches nothing that was already there.
  *
  * <p>Vanilla ore generation is deliberately left exactly as it is — an earlier attempt at replacing
- * it made a world that read as empty. These are additions: fifteen new ores in the depth bands their
+ * it made a world that read as empty. These are additions: eighteen new ores in the depth bands their
  * table states, each of them scarce, and every vanilla vein still where it always was.
  */
 public final class MetalWorldgen {

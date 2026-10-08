@@ -1,0 +1,394 @@
+{
+  "variants": {
+    "facing=north,part=left,wood=oak": {
+      "model": "hardwrought:block/magic_table_left_oak"
+    },
+    "facing=east,part=left,wood=oak": {
+      "model": "hardwrought:block/magic_table_left_oak",
+      "y": 90
+    },
+    "facing=south,part=left,wood=oak": {
+      "model": "hardwrought:block/magic_table_left_oak",
+      "y": 180
+    },
+    "facing=west,part=left,wood=oak": {
+      "model": "hardwrought:block/magic_table_left_oak",
+      "y": 270
+    },
+    "facing=north,part=right,wood=oak": {
+      "model": "hardwrought:block/magic_table_right_oak"
+    },
+    "facing=east,part=right,wood=oak": {
+      "model": "hardwrought:block/magic_table_right_oak",
+      "y": 90
+    },
+    "facing=south,part=right,wood=oak": {
+      "model": "hardwrought:block/magic_table_right_oak",
+      "y": 180
+    },
+    "facing=west,part=right,wood=oak": {
+      "model": "hardwrought:block/magic_table_right_oak",
+      "y": 270
+    },
+    "facing=north,part=left,wood=spruce": {
+      "model": "hardwrought:block/magic_table_left_spruce"
+    },
+    "facing=east,part=left,wood=spruce": {
+      "model": "hardwrought:block/magic_table_left_spruce",
+      "y": 90
+    },
+    "facing=south,part=left,wood=spruce": {
+      "model": "hardwrought:block/magic_table_left_spruce",
+      "y": 180
+    },
+    "facing=west,part=left,wood=spruce": {
+      "model": "hardwrought:block/magic_table_left_spruce",
+      "y": 270
+    },
+    "facing=north,part=right,wood=spruce": {
+      "model": "hardwrought:block/magic_table_right_spruce"
+    },
+    "facing=east,part=right,wood=spruce": {
+      "model": "hardwrought:block/magic_table_right_spruce",
+      "y": 90
+    },
+    "facing=south,part=right,wood=spruce": {
+      "model": "hardwrought:block/magic_table_right_spruce",
+      "y": 180
+    },
+    "facing=west,part=right,wood=spruce": {
+      "model": "hardwrought:block/magic_table_right_spruce",
+      "y": 270
+    },
+    "facing=north,part=left,wood=birch": {
+      "model": "hardwrought:block/magic_table_left_birch"
+    },
+    "facing=east,part=left,wood=birch": {
+      "model": "hardwrought:block/magic_table_left_birch",
+      "y": 90
+    },
+    "facing=south,part=left,wood=birch": {
+      "model": "hardwrought:block/magic_table_left_birch",
+      "y": 180
+    },
+    "facing=west,part=left,wood=birch": {
+      "model": "hardwrought:block/magic_table_left_birch",
+      "y": 270
+    },
+    "facing=north,part=right,wood=birch": {
+      "model": "hardwrought:block/magic_table_right_birch"
+    },
+    "facing=east,part=right,wood=birch": {
+      "model": "hardwrought:block/magic_table_right_birch",
+      "y": 90
+    },
+    "facing=south,part=right,wood=birch": {
+      "model": "hardwrought:block/magic_table_right_birch",
+      "y": 180
+    },
+    "facing=west,part=right,wood=birch": {
+      "model": "hardwrought:block/magic_table_right_birch",
+      "y": 270
+    },
+    "facing=north,part=left,wood=jungle": {
+      "model": "hardwrought:block/magic_table_left_jungle"
+    },
+    "facing=east,part=left,wood=jungle": {
+      "model": "hardwrought:block/magic_table_left_jungle",
+      "y": 90
+    },
+    "facing=south,part=left,wood=jungle": {
+      "model": "hardwrought:block/magic_table_left_jungle",
+      "y": 180
+    },
+    "facing=west,part=left,wood=jungle": {
+      "model": "hardwrought:block/magic_table_left_jungle",
+      "y": 270
+    },
+    "facing=north,part=right,wood=jungle": {
+      "model": "hardwrought:block/magic_table_right_jungle"
+    },
+    "facing=east,part=right,wood=jungle": {
+      "model": "hardwrought:block/magic_table_right_jungle",
+      "y": 90
+    },
+    "facing=south,part=right,wood=jungle": {
+      "model": "hardwrought:block/magic_table_right_jungle",
+      "y": 180
+    },
+    "facing=west,part=right,wood=jungle": {
+      "model": "hardwrought:block/magic_table_right_jungle",
+      "y": 270
+    },
+    "facing=north,part=left,wood=acacia": {
+      "model": "hardwrought:block/magic_table_left_acacia"
+    },
+    "facing=east,part=left,wood=acacia": {
+      "model": "hardwrought:block/magic_table_left_acacia",
+      "y": 90
+    },
+    "facing=south,part=left,wood=acacia": {
+      "model": "hardwrought:block/magic_table_left_acacia",
+      "y": 180
+    },
+    "facing=west,part=left,wood=acacia": {
+      "model": "hardwrought:block/magic_table_left_acacia",
+      "y": 270
+    },
+    "facing=north,part=right,wood=acacia": {
+      "model": "hardwrought:block/magic_table_right_acacia"
+    },
+    "facing=east,part=right,wood=acacia": {
+      "model": "hardwrought:block/magic_table_right_acacia",
+      "y": 90
+    },
+    "facing=south,part=right,wood=acacia": {
+      "model": "hardwrought:block/magic_table_right_acacia",
+      "y": 180
+    },
+    "facing=west,part=right,wood=acacia": {
+      "model": "hardwrought:block/magic_table_right_acacia",
+      "y": 270
+    },
+    "facing=north,part=left,wood=dark_oak": {
+      "model": "hardwrought:block/magic_table_left_dark_oak"
+    },
+    "facing=east,part=left,wood=dark_oak": {
+      "model": "hardwrought:block/magic_table_left_dark_oak",
+      "y": 90
+    },
+    "facing=south,part=left,wood=dark_oak": {
+      "model": "hardwrought:block/magic_table_left_dark_oak",
+      "y": 180
+    },
+    "facing=west,part=left,wood=dark_oak": {
+      "model": "hardwrought:block/magic_table_left_dark_oak",
+      "y": 270
+    },
+    "facing=north,part=right,wood=dark_oak": {
+      "model": "hardwrought:block/magic_table_right_dark_oak"
+    },
+    "facing=east,part=right,wood=dark_oak": {
+      "model": "hardwrought:block/magic_table_right_dark_oak",
+      "y": 90
+    },
+    "facing=south,part=right,wood=dark_oak": {
+      "model": "hardwrought:block/magic_table_right_dark_oak",
+      "y": 180
+    },
+    "facing=west,part=right,wood=dark_oak": {
+      "model": "hardwrought:block/magic_table_right_dark_oak",
+      "y": 270
+    },
+    "facing=north,part=left,wood=pale_oak": {
+      "model": "hardwrought:block/magic_table_left_pale_oak"
+    },
+    "facing=east,part=left,wood=pale_oak": {
+      "model": "hardwrought:block/magic_table_left_pale_oak",
+      "y": 90
+    },
+    "facing=south,part=left,wood=pale_oak": {
+      "model": "hardwrought:block/magic_table_left_pale_oak",
+      "y": 180
+    },
+    "facing=west,part=left,wood=pale_oak": {
+      "model": "hardwrought:block/magic_table_left_pale_oak",
+      "y": 270
+    },
+    "facing=north,part=right,wood=pale_oak": {
+      "model": "hardwrought:block/magic_table_right_pale_oak"
+    },
+    "facing=east,part=right,wood=pale_oak": {
+      "model": "hardwrought:block/magic_table_right_pale_oak",
+      "y": 90
+    },
+    "facing=south,part=right,wood=pale_oak": {
+      "model": "hardwrought:block/magic_table_right_pale_oak",
+      "y": 180
+    },
+    "facing=west,part=right,wood=pale_oak": {
+      "model": "hardwrought:block/magic_table_right_pale_oak",
+      "y": 270
+    },
+    "facing=north,part=left,wood=poplar": {
+      "model": "hardwrought:block/magic_table_left_poplar"
+    },
+    "facing=east,part=left,wood=poplar": {
+      "model": "hardwrought:block/magic_table_left_poplar",
+      "y": 90
+    },
+    "facing=south,part=left,wood=poplar": {
+      "model": "hardwrought:block/magic_table_left_poplar",
+      "y": 180
+    },
+    "facing=west,part=left,wood=poplar": {
+      "model": "hardwrought:block/magic_table_left_poplar",
+      "y": 270
+    },
+    "facing=north,part=right,wood=poplar": {
+      "model": "hardwrought:block/magic_table_right_poplar"
+    },
+    "facing=east,part=right,wood=poplar": {
+      "model": "hardwrought:block/magic_table_right_poplar",
+      "y": 90
+    },
+    "facing=south,part=right,wood=poplar": {
+      "model": "hardwrought:block/magic_table_right_poplar",
+      "y": 180
+    },
+    "facing=west,part=right,wood=poplar": {
+      "model": "hardwrought:block/magic_table_right_poplar",
+      "y": 270
+    },
+    "facing=north,part=left,wood=mangrove": {
+      "model": "hardwrought:block/magic_table_left_mangrove"
+    },
+    "facing=east,part=left,wood=mangrove": {
+      "model": "hardwrought:block/magic_table_left_mangrove",
+      "y": 90
+    },
+    "facing=south,part=left,wood=mangrove": {
+      "model": "hardwrought:block/magic_table_left_mangrove",
+      "y": 180
+    },
+    "facing=west,part=left,wood=mangrove": {
+      "model": "hardwrought:block/magic_table_left_mangrove",
+      "y": 270
+    },
+    "facing=north,part=right,wood=mangrove": {
+      "model": "hardwrought:block/magic_table_right_mangrove"
+    },
+    "facing=east,part=right,wood=mangrove": {
+      "model": "hardwrought:block/magic_table_right_mangrove",
+      "y": 90
+    },
+    "facing=south,part=right,wood=mangrove": {
+      "model": "hardwrought:block/magic_table_right_mangrove",
+      "y": 180
+    },
+    "facing=west,part=right,wood=mangrove": {
+      "model": "hardwrought:block/magic_table_right_mangrove",
+      "y": 270
+    },
+    "facing=north,part=left,wood=cherry": {
+      "model": "hardwrought:block/magic_table_left_cherry"
+    },
+    "facing=east,part=left,wood=cherry": {
+      "model": "hardwrought:block/magic_table_left_cherry",
+      "y": 90
+    },
+    "facing=south,part=left,wood=cherry": {
+      "model": "hardwrought:block/magic_table_left_cherry",
+      "y": 180
+    },
+    "facing=west,part=left,wood=cherry": {
+      "model": "hardwrought:block/magic_table_left_cherry",
+      "y": 270
+    },
+    "facing=north,part=right,wood=cherry": {
+      "model": "hardwrought:block/magic_table_right_cherry"
+    },
+    "facing=east,part=right,wood=cherry": {
+      "model": "hardwrought:block/magic_table_right_cherry",
+      "y": 90
+    },
+    "facing=south,part=right,wood=cherry": {
+      "model": "hardwrought:block/magic_table_right_cherry",
+      "y": 180
+    },
+    "facing=west,part=right,wood=cherry": {
+      "model": "hardwrought:block/magic_table_right_cherry",
+      "y": 270
+    },
+    "facing=north,part=left,wood=bamboo": {
+      "model": "hardwrought:block/magic_table_left_bamboo"
+    },
+    "facing=east,part=left,wood=bamboo": {
+      "model": "hardwrought:block/magic_table_left_bamboo",
+      "y": 90
+    },
+    "facing=south,part=left,wood=bamboo": {
+      "model": "hardwrought:block/magic_table_left_bamboo",
+      "y": 180
+    },
+    "facing=west,part=left,wood=bamboo": {
+      "model": "hardwrought:block/magic_table_left_bamboo",
+      "y": 270
+    },
+    "facing=north,part=right,wood=bamboo": {
+      "model": "hardwrought:block/magic_table_right_bamboo"
+    },
+    "facing=east,part=right,wood=bamboo": {
+      "model": "hardwrought:block/magic_table_right_bamboo",
+      "y": 90
+    },
+    "facing=south,part=right,wood=bamboo": {
+      "model": "hardwrought:block/magic_table_right_bamboo",
+      "y": 180
+    },
+    "facing=west,part=right,wood=bamboo": {
+      "model": "hardwrought:block/magic_table_right_bamboo",
+      "y": 270
+    },
+    "facing=north,part=left,wood=crimson": {
+      "model": "hardwrought:block/magic_table_left_crimson"
+    },
+    "facing=east,part=left,wood=crimson": {
+      "model": "hardwrought:block/magic_table_left_crimson",
+      "y": 90
+    },
+    "facing=south,part=left,wood=crimson": {
+      "model": "hardwrought:block/magic_table_left_crimson",
+      "y": 180
+    },
+    "facing=west,part=left,wood=crimson": {
+      "model": "hardwrought:block/magic_table_left_crimson",
+      "y": 270
+    },
+    "facing=north,part=right,wood=crimson": {
+      "model": "hardwrought:block/magic_table_right_crimson"
+    },
+    "facing=east,part=right,wood=crimson": {
+      "model": "hardwrought:block/magic_table_right_crimson",
+      "y": 90
+    },
+    "facing=south,part=right,wood=crimson": {
+      "model": "hardwrought:block/magic_table_right_crimson",
+      "y": 180
+    },
+    "facing=west,part=right,wood=crimson": {
+      "model": "hardwrought:block/magic_table_right_crimson",
+      "y": 270
+    },
+    "facing=north,part=left,wood=warped": {
+      "model": "hardwrought:block/magic_table_left_warped"
+    },
+    "facing=east,part=left,wood=warped": {
+      "model": "hardwrought:block/magic_table_left_warped",
+      "y": 90
+    },
+    "facing=south,part=left,wood=warped": {
+      "model": "hardwrought:block/magic_table_left_warped",
+      "y": 180
+    },
+    "facing=west,part=left,wood=warped": {
+      "model": "hardwrought:block/magic_table_left_warped",
+      "y": 270
+    },
+    "facing=north,part=right,wood=warped": {
+      "model": "hardwrought:block/magic_table_right_warped"
+    },
+    "facing=east,part=right,wood=warped": {
+      "model": "hardwrought:block/magic_table_right_warped",
+      "y": 90
+    },
+    "facing=south,part=right,wood=warped": {
+      "model": "hardwrought:block/magic_table_right_warped",
+      "y": 180
+    },
+    "facing=west,part=right,wood=warped": {
+      "model": "hardwrought:block/magic_table_right_warped",
+      "y": 270
+    }
+  }
+}

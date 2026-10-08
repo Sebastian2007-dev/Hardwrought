@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "hardwrought:raw_tungsten_block",
+    "hardwrought:raw_platinum_block",
+    "hardwrought:raw_mithril_block",
+    "hardwrought:raw_adamantium_block"
+  ]
+}

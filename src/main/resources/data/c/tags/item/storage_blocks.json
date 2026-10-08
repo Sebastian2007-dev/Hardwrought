@@ -1,0 +1,77 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#c:storage_blocks/raw_tin",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks/raw_zinc",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks/raw_lead",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks/raw_manganese",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks/raw_magnesium",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks/raw_aluminum",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks/raw_nickel",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks/raw_cobalt",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks/raw_chromium",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks/raw_mercury",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks/raw_titanium",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks/raw_uranium",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks/raw_thorium",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks/raw_silver",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks/raw_tungsten",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks/raw_platinum",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks/raw_mithril",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks/raw_adamantium",
+      "required": false
+    }
+  ]
+}

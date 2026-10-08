@@ -1,5 +1,5 @@
 {
-  "parent": "minecraft:block/orientable_with_bottom",
+  "parent": "hardwrought:block/nailed_workbench_base",
   "textures": {
     "top": "hardwrought:block/nailed_workbench_top_cherry",
     "side": "hardwrought:block/nailed_workbench_side_cherry",

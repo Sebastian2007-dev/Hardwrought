@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    "hardwrought:raw_nickel_block",
+    "hardwrought:raw_cobalt_block",
+    "hardwrought:raw_chromium_block",
+    "hardwrought:raw_mercury_block",
+    "hardwrought:raw_titanium_block",
+    "hardwrought:raw_uranium_block",
+    "hardwrought:raw_thorium_block",
+    "hardwrought:raw_silver_block"
+  ]
+}

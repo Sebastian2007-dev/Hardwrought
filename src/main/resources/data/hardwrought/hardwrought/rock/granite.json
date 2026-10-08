@@ -79,6 +79,17 @@
       "min_grade": 0.02,
       "max_grade": 0.16,
       "drill_tier": 5
+    },
+    {
+      "ore": "hardwrought:mithril_ore",
+      "weight": 1,
+      "min_y": -180,
+      "max_y": -64,
+      "min_radius": 10,
+      "max_radius": 22,
+      "min_grade": 0.01,
+      "max_grade": 0.1,
+      "drill_tier": 5
     }
   ]
 }
