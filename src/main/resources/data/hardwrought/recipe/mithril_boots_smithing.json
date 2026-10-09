@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": "hardwrought:mithril_upgrade_smithing_template",
+  "base": "minecraft:netherite_boots",
+  "addition": "hardwrought:mithril_ingot",
+  "result": {
+    "id": "hardwrought:mithril_boots"
+  }
+}

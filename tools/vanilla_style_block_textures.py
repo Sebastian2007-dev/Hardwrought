@@ -241,6 +241,12 @@ def dark_steel():
 
 
 def crusher_jaw():
+    source = ROOT / "art_source/machinery/basic_crusher_top_source.png"
+    if source.exists():
+        # Keep the approved AI-assisted concept as the source of truth while
+        # retaining the pack's crisp 16x16 pixel-art resolution.
+        with Image.open(source) as generated:
+            return generated.convert("RGBA").resize((16, 16), Image.Resampling.NEAREST)
     image = recolour(vanilla("grindstone_side"),
                      ((58, 58, 55), (86, 85, 80), (118, 116, 108), (151, 148, 137), (188, 182, 167)))
     draw = ImageDraw.Draw(image)

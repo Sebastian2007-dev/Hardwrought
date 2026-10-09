@@ -10,8 +10,8 @@ public record SurvivalSnapshotPayload(double stamina, double hydration, Nutritio
                                       double bodyTemperature, double ambientTemperature,
                                       double carriedKg, double capacityKg,
                                       boolean sleeping, double sleepQuality,
-                                      double stress) implements CustomPacketPayload {
-    public static final Type<SurvivalSnapshotPayload> TYPE = new Type<>(Hardwrought.id("survival_snapshot_v2"));
+                                      double stress, double heightHabit, double depthHabit) implements CustomPacketPayload {
+    public static final Type<SurvivalSnapshotPayload> TYPE = new Type<>(Hardwrought.id("survival_snapshot_v3"));
     public static final StreamCodec<RegistryFriendlyByteBuf, SurvivalSnapshotPayload> CODEC = new StreamCodec<>() {
         @Override public SurvivalSnapshotPayload decode(RegistryFriendlyByteBuf b) {
             double stamina = b.readDouble();
@@ -19,7 +19,8 @@ public record SurvivalSnapshotPayload(double stamina, double hydration, Nutritio
             Nutrition nutrition = new Nutrition(b.readDouble(), b.readDouble(), b.readDouble(), b.readDouble(),
                     b.readDouble()).clamped();
             return new SurvivalSnapshotPayload(stamina, hydration, nutrition, b.readDouble(), b.readDouble(),
-                    b.readDouble(), b.readDouble(), b.readDouble(), b.readBoolean(), b.readDouble(), b.readDouble());
+                    b.readDouble(), b.readDouble(), b.readDouble(), b.readBoolean(), b.readDouble(), b.readDouble(),
+                    b.readDouble(), b.readDouble());
         }
         @Override public void encode(RegistryFriendlyByteBuf b, SurvivalSnapshotPayload p) {
             b.writeDouble(p.stamina); b.writeDouble(p.hydration);
@@ -29,6 +30,7 @@ public record SurvivalSnapshotPayload(double stamina, double hydration, Nutritio
             b.writeDouble(p.fatigue); b.writeDouble(p.bodyTemperature);
             b.writeDouble(p.ambientTemperature); b.writeDouble(p.carriedKg); b.writeDouble(p.capacityKg);
             b.writeBoolean(p.sleeping); b.writeDouble(p.sleepQuality); b.writeDouble(p.stress);
+            b.writeDouble(p.heightHabit); b.writeDouble(p.depthHabit);
         }
     };
     @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }

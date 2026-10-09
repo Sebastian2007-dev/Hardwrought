@@ -32,7 +32,15 @@
     "hardwrought:tungsten_steel_helmet",
     "hardwrought:tungsten_steel_chestplate",
     "hardwrought:tungsten_steel_leggings",
-    "hardwrought:tungsten_steel_boots"
+    "hardwrought:tungsten_steel_boots",
+    "hardwrought:mithril_helmet",
+    "hardwrought:mithril_chestplate",
+    "hardwrought:mithril_leggings",
+    "hardwrought:mithril_boots",
+    "hardwrought:adamant_helmet",
+    "hardwrought:adamant_chestplate",
+    "hardwrought:adamant_leggings",
+    "hardwrought:adamant_boots"
   ],
   "slash_resistance": 0.7,
   "pierce_resistance": 0.5,

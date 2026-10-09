@@ -11,7 +11,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
  * energy and nutrient fields are simply no longer read, and the diet starts from the middle.
  */
 public record PlayerVitals(double stamina, double hydration, Nutrition nutrition,
-                           double fatigue, double bodyTemperature, double wetness, double stress) {
+                           double fatigue, double bodyTemperature, double wetness, double stress,
+                           double heightHabit, double depthHabit) {
     public static final double MAX_STAMINA = 100.0;
     public static final double MAX_HYDRATION = 100.0;
     private static final Codec<PlayerVitals> RAW_CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -22,40 +23,49 @@ public record PlayerVitals(double stamina, double hydration, Nutrition nutrition
             Codec.DOUBLE.fieldOf("body_temperature").forGetter(PlayerVitals::bodyTemperature),
             Codec.DOUBLE.fieldOf("wetness").forGetter(PlayerVitals::wetness),
             // Added after Milestone 1, so worlds saved before it keep loading.
-            Codec.DOUBLE.optionalFieldOf("stress", 0.0).forGetter(PlayerVitals::stress)
+            Codec.DOUBLE.optionalFieldOf("stress", 0.0).forGetter(PlayerVitals::stress),
+            // How used the body is to thin air and to the pressure of the deep, 0 to 1 (see Altitude#habit).
+            Codec.DOUBLE.optionalFieldOf("height_habit", 0.0).forGetter(PlayerVitals::heightHabit),
+            Codec.DOUBLE.optionalFieldOf("depth_habit", 0.0).forGetter(PlayerVitals::depthHabit)
     ).apply(instance, PlayerVitals::new));
     public static final Codec<PlayerVitals> CODEC = RAW_CODEC.validate(value -> value.valid()
             ? com.mojang.serialization.DataResult.success(value)
             : com.mojang.serialization.DataResult.error(() -> "Invalid survival value"));
 
     public static PlayerVitals defaults() {
-        return new PlayerVitals(100, 100, Nutrition.START, 15, 37, 0, 0);
+        return new PlayerVitals(100, 100, Nutrition.START, 15, 37, 0, 0, 0, 0);
     }
 
     public PlayerVitals normalized() {
         return new PlayerVitals(clamp(stamina, 0, 100), clamp(hydration, 0, 100),
                 nutrition == null ? Nutrition.START : nutrition.clamped(), clamp(fatigue, 0, 100),
-                clamp(bodyTemperature, 30, 43), clamp(wetness, 0, 1), clamp(stress, 0, 100));
+                clamp(bodyTemperature, 30, 43), clamp(wetness, 0, 1), clamp(stress, 0, 100),
+                clamp(heightHabit, 0, 1), clamp(depthHabit, 0, 1));
     }
 
     public PlayerVitals withStress(double value) {
-        return new PlayerVitals(stamina, hydration, nutrition, fatigue, bodyTemperature, wetness, value).normalized();
+        return new PlayerVitals(stamina, hydration, nutrition, fatigue, bodyTemperature, wetness, value,
+                heightHabit, depthHabit).normalized();
+    }
+
+    public PlayerVitals withHabits(double height, double depth) {
+        return new PlayerVitals(stamina, hydration, nutrition, fatigue, bodyTemperature, wetness, stress, height, depth).normalized();
     }
 
     public PlayerVitals withFatigue(double value) {
-        return new PlayerVitals(stamina, hydration, nutrition, value, bodyTemperature, wetness, stress).normalized();
+        return new PlayerVitals(stamina, hydration, nutrition, value, bodyTemperature, wetness, stress, heightHabit, depthHabit).normalized();
     }
 
     public PlayerVitals withStamina(double value) {
-        return new PlayerVitals(value, hydration, nutrition, fatigue, bodyTemperature, wetness, stress).normalized();
+        return new PlayerVitals(value, hydration, nutrition, fatigue, bodyTemperature, wetness, stress, heightHabit, depthHabit).normalized();
     }
 
     public PlayerVitals withHydration(double value) {
-        return new PlayerVitals(stamina, value, nutrition, fatigue, bodyTemperature, wetness, stress).normalized();
+        return new PlayerVitals(stamina, value, nutrition, fatigue, bodyTemperature, wetness, stress, heightHabit, depthHabit).normalized();
     }
 
     public PlayerVitals withNutrition(Nutrition value) {
-        return new PlayerVitals(stamina, hydration, value, fatigue, bodyTemperature, wetness, stress).normalized();
+        return new PlayerVitals(stamina, hydration, value, fatigue, bodyTemperature, wetness, stress, heightHabit, depthHabit).normalized();
     }
 
     public PlayerVitals drink(double amount) {
@@ -65,7 +75,7 @@ public record PlayerVitals(double stamina, double hydration, Nutrition nutrition
     /** What eating something brings: its nutrients, as much of them as the body takes in, and its water. */
     public PlayerVitals eat(Nutrition food, double water, double absorbed) {
         return new PlayerVitals(stamina, hydration + water, nutrition.plus(food, absorbed), fatigue,
-                bodyTemperature, wetness, stress).normalized();
+                bodyTemperature, wetness, stress, heightHabit, depthHabit).normalized();
     }
 
     public static double clamp(double value, double min, double max) {
@@ -79,7 +89,9 @@ public record PlayerVitals(double stamina, double hydration, Nutrition nutrition
                 && stamina >= 0 && stamina <= 100 && hydration >= 0 && hydration <= 100
                 && fatigue >= 0 && fatigue <= 100
                 && bodyTemperature >= 30 && bodyTemperature <= 43 && wetness >= 0 && wetness <= 1
-                && stress >= 0 && stress <= 100;
+                && stress >= 0 && stress <= 100
+                && Double.isFinite(heightHabit) && heightHabit >= 0 && heightHabit <= 1
+                && Double.isFinite(depthHabit) && depthHabit >= 0 && depthHabit <= 1;
     }
 
     private static boolean finite(double... values) {

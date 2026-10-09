@@ -28,6 +28,10 @@ Two datapack files state it, and they have to agree:
 The dimension type alone would leave the new depth as void — terrain exists only where the noise
 settings reach, which is why both are overridden and why a test asserts both.
 
+> **Since then the shape of the land has been changed on purpose**: great mountain ranges, caves of
+> every kind down to the floor, and lava only under the abyss. See [worldgen.md](worldgen.md). What
+> follows describes the prototype as it was first built.
+
 The noise settings are **vanilla's own overworld settings** with nothing changed but that range. The
 terrain is the terrain everyone knows — ordinary land with ordinary mountains — and what is new is
 how far the world reaches above and below it. Amplified terrain was tried here and thrown out: it

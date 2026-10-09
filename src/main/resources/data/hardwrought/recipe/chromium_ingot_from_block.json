@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:chromium_block"
+  ],
+  "result": {
+    "id": "hardwrought:chromium_ingot",
+    "count": 9
+  }
+}

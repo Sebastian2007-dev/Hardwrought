@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " M ",
+    "MBM",
+    " M "
+  ],
+  "key": {
+    "M": "hardwrought:mithril_ingot",
+    "B": "hardwrought:cast_blank"
+  },
+  "result": {
+    "id": "hardwrought:mithril_upgrade_smithing_template",
+    "count": 1
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "replace": false,
+  "values": [
+    "hardwrought:mithril_sword",
+    "hardwrought:adamant_sword",
+    "hardwrought:steel_sword",
+    "hardwrought:steel_dagger",
+    "hardwrought:steel_greatsword",
+    "hardwrought:stainless_steel_sword",
+    "hardwrought:stainless_steel_dagger",
+    "hardwrought:stainless_steel_greatsword",
+    "hardwrought:titanium_sword",
+    "hardwrought:titanium_dagger",
+    "hardwrought:titanium_greatsword",
+    "hardwrought:tungsten_steel_sword",
+    "hardwrought:tungsten_steel_dagger",
+    "hardwrought:tungsten_steel_greatsword"
+  ]
+}

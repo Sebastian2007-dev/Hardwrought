@@ -774,4 +774,58 @@ public final class WaterFlowGameTests {
         }
         helper.succeed();
     }
+
+    /**
+     * Water standing beside a field leaves the field alone: a puddle the rain left, a channel that
+     * runs over, must not clear the wheat it reaches. It washes wild growth away and goes round what
+     * was planted.
+     */
+    @GameTest(maxTicks = 200)
+    public void waterGoesRoundWhatWasPlanted(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos base = helper.absolutePos(new BlockPos(4, 6, 4));
+        for (int x = -3; x <= 3; x++) {
+            for (int y = -2; y <= 1; y++) {
+                for (int z = -3; z <= 3; z++) {
+                    boolean basin = y == -2 || (Math.abs(x) == 3 || Math.abs(z) == 3) && y <= 0;
+                    level.setBlockAndUpdate(base.offset(x, y, z), basin
+                            ? Blocks.STONE.defaultBlockState() : Blocks.AIR.defaultBlockState());
+                }
+            }
+        }
+        // A field of wheat with one bare place in the middle, a sapling at one corner, and one tuft of wild grass.
+        for (int x = -2; x <= 2; x++) {
+            for (int z = -2; z <= 2; z++) {
+                boolean middle = x == 0 && z == 0;
+                level.setBlockAndUpdate(base.offset(x, -1, z), middle ? Blocks.STONE.defaultBlockState() : Blocks.FARMLAND.defaultBlockState());
+                if (!middle) level.setBlockAndUpdate(base.offset(x, 0, z), Blocks.WHEAT.defaultBlockState());
+            }
+        }
+        level.setBlockAndUpdate(base.offset(2, -1, 2), Blocks.DIRT.defaultBlockState());
+        level.setBlockAndUpdate(base.offset(2, 0, 2), Blocks.OAK_SAPLING.defaultBlockState());
+        level.setBlockAndUpdate(base.offset(1, -1, 0), Blocks.DIRT.defaultBlockState());
+        level.setBlockAndUpdate(base.offset(1, 0, 0), Blocks.SHORT_GRASS.defaultBlockState());
+        level.setBlockAndUpdate(base, Blocks.WATER.defaultBlockState());
+
+        helper.runAfterDelay(120, () -> {
+            int wheat = 0;
+            for (int x = -2; x <= 2; x++) {
+                for (int z = -2; z <= 2; z++) if (level.getBlockState(base.offset(x, 0, z)).is(Blocks.WHEAT)) wheat++;
+            }
+            helper.assertTrue(wheat == 22, "Every stalk of the field still stands beside the water: " + wheat + " of 22");
+            helper.assertTrue(level.getBlockState(base.offset(2, 0, 2)).is(Blocks.OAK_SAPLING), "and so does the sapling");
+            helper.assertFalse(level.getBlockState(base.offset(1, 0, 0)).is(Blocks.SHORT_GRASS),
+                    "while wild grass in its way is washed out as before");
+            helper.assertTrue(WaterStorage.amount(level, base.offset(1, 0, 0)) > 0, "and the water goes where the grass was");
+            for (int x = -3; x <= 3; x++) {
+                for (int y = -2; y <= 1; y++) {
+                    for (int z = -3; z <= 3; z++) {
+                        WaterStorage.setAmount(level, base.offset(x, y, z), 0);
+                        level.setBlockAndUpdate(base.offset(x, y, z), Blocks.AIR.defaultBlockState());
+                    }
+                }
+            }
+            helper.succeed();
+        });
+    }
 }

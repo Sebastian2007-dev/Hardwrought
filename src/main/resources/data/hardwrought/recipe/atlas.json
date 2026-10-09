@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:book",
+    "minecraft:compass"
+  ],
+  "result": {
+    "id": "hardwrought:atlas",
+    "count": 1
+  }
+}

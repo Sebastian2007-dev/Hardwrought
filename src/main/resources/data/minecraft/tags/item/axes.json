@@ -1,0 +1,15 @@
+{
+  "replace": false,
+  "values": [
+    "hardwrought:mithril_axe",
+    "hardwrought:adamant_axe",
+    "hardwrought:steel_axe",
+    "hardwrought:steel_halberd",
+    "hardwrought:stainless_steel_axe",
+    "hardwrought:stainless_steel_halberd",
+    "hardwrought:titanium_axe",
+    "hardwrought:titanium_halberd",
+    "hardwrought:tungsten_steel_axe",
+    "hardwrought:tungsten_steel_halberd"
+  ]
+}

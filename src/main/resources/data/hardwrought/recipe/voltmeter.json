@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "G": "minecraft:glass_pane",
+    "W": "hardwrought:copper_wire",
+    "C": "minecraft:compass",
+    "I": "minecraft:iron_ingot"
+  },
+  "pattern": [
+    " G ",
+    "WCW",
+    " I "
+  ],
+  "result": {
+    "id": "hardwrought:voltmeter",
+    "count": 1
+  }
+}

@@ -19,9 +19,9 @@ import java.util.Map;
  *
  * <p>Raw ore goes in, and so does a finished ingot: filing a bar back down is how metal is got into
  * a mixture such as bronze, which is made from powders. Coal and charcoal are ground too: their
- * powder is the carbon that turns iron into steel. Gems and the like drop as finished items already,
- * and a crusher that ground diamonds into diamond powder would be a way to destroy them rather than
- * to work them.
+ * powder is the carbon that turns iron into steel. Lapis lazuli is ground as well, because its powder
+ * is the ink of enchanting. Other gems drop as finished items already, and a crusher that ground
+ * diamonds into diamond powder would be a way to destroy them rather than to work them.
  */
 public final class Crushing {
     private static final Map<Item, Item> RESULTS = new HashMap<>();
@@ -71,6 +71,8 @@ public final class Crushing {
             // Coal is the one fuel ground down on purpose: powder is the carbon a steel charge takes up.
             RESULTS.put(Items.COAL, OrePowders.powder(OrePowders.VanillaOre.COAL));
             RESULTS.put(Items.CHARCOAL, OrePowders.powder(OrePowders.VanillaOre.COAL));
+            // And lapis lazuli is the one gem: its powder is what runes are written with (see RuneEnchanting).
+            RESULTS.put(Items.LAPIS_LAZULI, OrePowders.powder(OrePowders.VanillaOre.LAPIS_LAZULI));
             for (Metal metal : Metal.values()) {
                 RESULTS.put(ModMetals.raw(metal), OrePowders.powder(metal));
                 RESULTS.put(ModMetals.ingot(metal), OrePowders.powder(metal));

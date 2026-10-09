@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:platinum_block"
+  ],
+  "result": {
+    "id": "hardwrought:platinum_ingot",
+    "count": 9
+  }
+}

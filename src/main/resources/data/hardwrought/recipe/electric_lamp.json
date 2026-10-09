@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "G": "minecraft:glass",
+    "W": "hardwrought:copper_wire",
+    "I": "minecraft:iron_nugget"
+  },
+  "pattern": [
+    "G",
+    "W",
+    "I"
+  ],
+  "result": {
+    "id": "hardwrought:electric_lamp",
+    "count": 1
+  }
+}

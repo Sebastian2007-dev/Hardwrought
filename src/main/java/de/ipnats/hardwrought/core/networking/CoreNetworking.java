@@ -22,6 +22,15 @@ public final class CoreNetworking {
         PayloadTypeRegistry.serverboundPlay().register(ForgingPayloads.Begin.TYPE, ForgingPayloads.Begin.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ForgingPayloads.Strike.TYPE, ForgingPayloads.Strike.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ForgingPayloads.Cancel.TYPE, ForgingPayloads.Cancel.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(AtlasPayloads.Tiles.TYPE, AtlasPayloads.Tiles.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(AtlasPayloads.Markers.TYPE, AtlasPayloads.Markers.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(AtlasPayloads.Request.TYPE, AtlasPayloads.Request.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(AtlasPayloads.Mark.TYPE, AtlasPayloads.Mark.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(AtlasPayloads.Unmark.TYPE, AtlasPayloads.Unmark.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(UpgradePayloads.Open.TYPE, UpgradePayloads.Open.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(UpgradePayloads.Finish.TYPE, UpgradePayloads.Finish.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(RunePayloads.Open.TYPE, RunePayloads.Open.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(RunePayloads.Write.TYPE, RunePayloads.Write.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(GrindingPayloads.Open.TYPE, GrindingPayloads.Open.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(GrindingPayloads.Pass.TYPE, GrindingPayloads.Pass.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SleepRequestPayload.TYPE, SleepRequestPayload.CODEC);

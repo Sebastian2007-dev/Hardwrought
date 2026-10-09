@@ -150,6 +150,9 @@ public final class MoltenMetals {
         for (Metal metal : Metal.values()) {
             if (metal != Metal.MERCURY) put(ModMetals.rawBlock(metal).asItem(), metal.id(), 9 * INGOT);
         }
+        for (String material : de.ipnats.hardwrought.metallurgy.MetalBlocks.materials()) {
+            put(de.ipnats.hardwrought.metallurgy.MetalBlocks.block(material).asItem(), material, 9 * INGOT);
+        }
         put(Items.RAW_IRON_BLOCK, "iron", 9 * INGOT);
         put(Items.RAW_GOLD_BLOCK, "gold", 9 * INGOT);
         put(Items.RAW_COPPER_BLOCK, "copper", 9 * INGOT);

@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "segment=0": {
+      "model": "hardwrought:block/mast_base"
+    },
+    "segment=1": {
+      "model": "hardwrought:block/mast_pole"
+    },
+    "segment=2": {
+      "model": "hardwrought:block/mast_pole"
+    },
+    "segment=3": {
+      "model": "hardwrought:block/mast_top"
+    }
+  }
+}

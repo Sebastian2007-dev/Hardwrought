@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "hardwrought:mithril_hoe",
+    "hardwrought:adamant_hoe",
+    "hardwrought:steel_hoe",
+    "hardwrought:stainless_steel_hoe",
+    "hardwrought:titanium_hoe",
+    "hardwrought:tungsten_steel_hoe"
+  ]
+}

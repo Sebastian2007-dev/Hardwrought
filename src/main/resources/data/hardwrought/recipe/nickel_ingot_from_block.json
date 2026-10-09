@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:nickel_block"
+  ],
+  "result": {
+    "id": "hardwrought:nickel_ingot",
+    "count": 9
+  }
+}

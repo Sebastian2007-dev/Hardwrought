@@ -32,7 +32,7 @@ public final class SurvivalHud {
     public static final int PANEL_X = 10;
     public static final int PANEL_Y = 10;
     public static final int PANEL_WIDTH = 122;
-    public static final int PANEL_HEIGHT = 136;
+    public static final int PANEL_HEIGHT = 150;
     /** The first free pixel under the panel, border included. */
     public static final int PANEL_BOTTOM = PANEL_Y + PANEL_HEIGHT;
 
@@ -202,6 +202,10 @@ public final class SurvivalHud {
         String stress = String.format(Locale.ROOT, "%.0f / 100", values.stress());
         graphics.text(client.font, stress, x + (width - client.font.width(stress)) / 2,
                 y + 84, 0xFFC9D0D4, false);
+
+        // How used the body is to the heights and to the deep: what earns a longer stay in either.
+        String habits = I18n.get("hud.hardwrought.habits", Math.round(values.heightHabit() * 100), Math.round(values.depthHabit() * 100));
+        graphics.text(client.font, habits, x + (width - client.font.width(habits)) / 2, y + 128, 0xFFC9D0D4, false);
 
         // Carry weight is only a fair rule if a player can see where they stand against it.
         graphics.text(client.font, I18n.get("hud.hardwrought.carried"), x, y + 96, 0xFFE8EDF0, true);

@@ -30,7 +30,12 @@
       "de.ipnats.hardwrought.test.SharedCellGameTests",
       "de.ipnats.hardwrought.test.MobGameTests",
       "de.ipnats.hardwrought.test.SmelteryGameTests",
-      "de.ipnats.hardwrought.test.SteelTierGameTests"
+      "de.ipnats.hardwrought.test.SteelTierGameTests",
+      "de.ipnats.hardwrought.test.EnchantingGameTests",
+      "de.ipnats.hardwrought.test.UpgradeGameTests",
+      "de.ipnats.hardwrought.test.AtlasGameTests",
+      "de.ipnats.hardwrought.test.WorldgenGameTests",
+      "de.ipnats.hardwrought.test.ElectricityGameTests"
     ],
     "fabric-client-gametest": [
       "de.ipnats.hardwrought.test.FxClientGameTest",
@@ -39,7 +44,10 @@
       "de.ipnats.hardwrought.test.MachineryClientGameTest",
       "de.ipnats.hardwrought.test.LightingClientGameTest",
       "de.ipnats.hardwrought.test.MagicClientGameTest",
-      "de.ipnats.hardwrought.test.SmelteryClientGameTest"
+      "de.ipnats.hardwrought.test.SmelteryClientGameTest",
+      "de.ipnats.hardwrought.test.EnchantingClientGameTest",
+      "de.ipnats.hardwrought.test.AtlasClientGameTest",
+      "de.ipnats.hardwrought.test.ElectricityClientGameTest"
     ]
   }
 }

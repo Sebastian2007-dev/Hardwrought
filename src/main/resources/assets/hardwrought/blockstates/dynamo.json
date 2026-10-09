@@ -1,0 +1,18 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "hardwrought:block/dynamo"
+    },
+    "facing=south": {
+      "model": "hardwrought:block/dynamo"
+    },
+    "facing=east": {
+      "model": "hardwrought:block/dynamo",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "hardwrought:block/dynamo",
+      "y": 90
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "type": "minecraft:min",
+  "left": {
+    "type": "minecraft:add",
+    "left": {
+      "type": "minecraft:add",
+      "left": {
+        "type": "minecraft:noise",
+        "noise": "hardwrought:deep_cavern",
+        "xz_scale": 1.0,
+        "y_scale": 1.6
+      },
+      "right": 0.95
+    },
+    "right": {
+      "type": "minecraft:mul",
+      "left": -0.75,
+      "right": {
+        "type": "minecraft:add",
+        "left": 1.0,
+        "right": {
+          "type": "minecraft:mul",
+          "left": -1.0,
+          "right": {
+            "type": "minecraft:abs",
+            "input": {
+              "type": "minecraft:gradient",
+              "axis": "y",
+              "from_coordinate": -195,
+              "from_value": -1.0,
+              "to_coordinate": -85,
+              "to_value": 1.0
+            }
+          }
+        }
+      }
+    }
+  },
+  "right": {
+    "type": "minecraft:add",
+    "left": {
+      "type": "minecraft:add",
+      "left": {
+        "type": "minecraft:noise",
+        "noise": "hardwrought:abyss",
+        "xz_scale": 0.6,
+        "y_scale": 1.2
+      },
+      "right": 1.0
+    },
+    "right": {
+      "type": "minecraft:mul",
+      "left": -0.95,
+      "right": {
+        "type": "minecraft:add",
+        "left": 1.0,
+        "right": {
+          "type": "minecraft:mul",
+          "left": -1.0,
+          "right": {
+            "type": "minecraft:abs",
+            "input": {
+              "type": "minecraft:gradient",
+              "axis": "y",
+              "from_coordinate": -243,
+              "from_value": -1.0,
+              "to_coordinate": -187,
+              "to_value": 1.0
+            }
+          }
+        }
+      }
+    }
+  }
+}

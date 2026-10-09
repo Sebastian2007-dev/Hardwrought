@@ -62,9 +62,13 @@ public final class ModCreativeTabs {
                         output.accept(de.ipnats.hardwrought.metallurgy.Alloys.STAINLESS_STEEL_INGOT);
                         output.accept(de.ipnats.hardwrought.metallurgy.Alloys.TUNGSTEN_STEEL_INGOT);
                         de.ipnats.hardwrought.smeltery.SmelteryBlocks.items().forEach(output::accept);
+                        de.ipnats.hardwrought.electricity.ElectricBlocks.items().forEach(output::accept);
                         de.ipnats.hardwrought.magic.Magic.items().forEach(output::accept);
                         de.ipnats.hardwrought.magic.VoidCrystal.items().forEach(output::accept);
                         de.ipnats.hardwrought.smithing.AlloyEquipment.all().forEach(output::accept);
+                        de.ipnats.hardwrought.smithing.UpgradeEquipment.all().forEach(output::accept);
+                        output.accept(de.ipnats.hardwrought.atlas.Atlas.ITEM);
+                        de.ipnats.hardwrought.metallurgy.MetalBlocks.items().forEach(output::accept);
                         output.accept(ModItems.BRONZE_INGOT);
                         output.accept(ModItems.LIGHTING_STICKS);
                         output.accept(ModItems.BRICK_FURNACE);

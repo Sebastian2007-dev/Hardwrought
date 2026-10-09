@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "hardwrought:mithril_shovel",
+    "hardwrought:adamant_shovel",
+    "hardwrought:steel_shovel",
+    "hardwrought:stainless_steel_shovel",
+    "hardwrought:titanium_shovel",
+    "hardwrought:tungsten_steel_shovel"
+  ]
+}

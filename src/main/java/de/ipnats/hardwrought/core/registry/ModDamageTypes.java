@@ -28,6 +28,14 @@ public final class ModDamageTypes {
     public static final ResourceKey<DamageType> DEHYDRATION =
             ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("dehydration"));
 
+    /** Too long in the thin air of the heights or under the pressure of the deep. Armor is no help. */
+    public static final ResourceKey<DamageType> EXPOSURE =
+            ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("exposure"));
+
+    /** Section 76: a live wire touched, or live water stood in. Armor is no help; metal least of all. */
+    public static final ResourceKey<DamageType> ELECTROCUTION =
+            ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("electrocution"));
+
     public static final TagKey<DamageType> IS_SUFFOCATING =
             TagKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("is_suffocating"));
 

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "charge=0": {
+      "model": "hardwrought:block/battery_0"
+    },
+    "charge=1": {
+      "model": "hardwrought:block/battery_1"
+    },
+    "charge=2": {
+      "model": "hardwrought:block/battery_2"
+    },
+    "charge=3": {
+      "model": "hardwrought:block/battery_3"
+    },
+    "charge=4": {
+      "model": "hardwrought:block/battery_4"
+    }
+  }
+}

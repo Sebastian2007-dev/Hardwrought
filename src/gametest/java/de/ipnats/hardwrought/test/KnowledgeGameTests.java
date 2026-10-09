@@ -290,6 +290,15 @@ public final class KnowledgeGameTests {
         helper.assertTrue(used.recipes().stream().anyMatch(view -> view.result().options().stream()
                         .anyMatch(known -> known.stack().is(ModItems.COMPENDIUM))),
                 "Section 83: what a thing is used in is the other half of the browser");
+        // A part and its leather: the recipe takes exactly two for leggings and three for a
+        // chestplate, and the page has to show that many, or the grid's silence makes no sense.
+        for (var piece : java.util.Map.of("iron_leggings", 2, "iron_chestplate", 3, "iron_pickaxe", 2, "iron_sword", 1).entrySet()) {
+            CompendiumPagePayload page = knowledge.compendium().answer(player, knowledge, new CompendiumRequestPayload(
+                    CompendiumPagePayload.MODE_RECIPES, net.minecraft.resources.Identifier.withDefaultNamespace(piece.getKey()), ""));
+            helper.assertTrue(page.recipes().stream().anyMatch(view -> view.inputs().size() == 1 + piece.getValue()),
+                    "The page for " + piece.getKey() + " shows its part and " + piece.getValue() + " of what goes with it: "
+                            + page.recipes().stream().map(view -> view.inputs().size()).toList());
+        }
         knowledge.forget(player.getUUID());
         helper.succeed();
     }

@@ -54,10 +54,13 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.magic.VoidCrystal.initialize();
 		ModItems.initialize();
 		de.ipnats.hardwrought.metallurgy.Alloys.initialize();
+		de.ipnats.hardwrought.metallurgy.MetalBlocks.initialize();
 		de.ipnats.hardwrought.smeltery.SmelteryBlocks.initialize();
+		de.ipnats.hardwrought.electricity.ElectricBlocks.initialize();
 		de.ipnats.hardwrought.magic.Magic.initialize();
 		de.ipnats.hardwrought.smithing.ToolParts.initialize();
 		de.ipnats.hardwrought.smithing.AlloyEquipment.initialize();
+		de.ipnats.hardwrought.smithing.UpgradeEquipment.initialize();
 		de.ipnats.hardwrought.smithing.NoDiamondGear.initialize();
 		de.ipnats.hardwrought.smithing.MetalStock.initialize();
 		de.ipnats.hardwrought.core.registry.ModBlockEntities.initialize();
@@ -94,6 +97,9 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.smithing.SmithingEvents.initialize();
 		de.ipnats.hardwrought.smithing.Forging.initialize();
 		de.ipnats.hardwrought.smithing.Grinding.initialize();
+		de.ipnats.hardwrought.enchanting.RuneEnchanting.initialize();
+		de.ipnats.hardwrought.smithing.Upgrading.initialize();
+		de.ipnats.hardwrought.atlas.Atlas.initialize();
 		de.ipnats.hardwrought.machinery.KineticReadout.initialize();
 		de.ipnats.hardwrought.progression.Weaving.initialize();
 		de.ipnats.hardwrought.progression.StructureLoot.initialize();

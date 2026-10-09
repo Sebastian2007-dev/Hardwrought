@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "hardwrought:adamant"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "hardwrought:adamant"
+      }
+    ]
+  }
+}

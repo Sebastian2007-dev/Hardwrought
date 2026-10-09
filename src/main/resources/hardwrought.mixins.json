@@ -39,6 +39,7 @@
 		"MobAccessor",
 		"PhantomSpawnerMixin",
 		"PlayerMixin",
+		"NoiseBasedChunkGeneratorLavaMixin",
 		"RecipeManagerAccessor",
 		"ServerLevelHearingMixin",
 		"StructureTemplateMixin",

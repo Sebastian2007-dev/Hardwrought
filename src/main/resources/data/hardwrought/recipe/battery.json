@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "W": "hardwrought:copper_wire",
+    "L": "hardwrought:lead_ingot",
+    "S": "hardwrought:sulfur",
+    "G": "minecraft:glass"
+  },
+  "pattern": [
+    " W ",
+    "LSL",
+    "LGL"
+  ],
+  "result": {
+    "id": "hardwrought:battery",
+    "count": 1
+  }
+}

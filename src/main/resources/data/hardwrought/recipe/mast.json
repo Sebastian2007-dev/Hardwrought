@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "I": "hardwrought:insulator",
+    "L": "#minecraft:logs"
+  },
+  "pattern": [
+    "I",
+    "L",
+    "L"
+  ],
+  "result": {
+    "id": "hardwrought:mast",
+    "count": 1
+  }
+}

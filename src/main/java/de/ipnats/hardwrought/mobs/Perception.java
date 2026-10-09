@@ -133,6 +133,8 @@ public final class Perception {
         if (!(target instanceof Player player)) return 1;
         int light = Math.max(level.getMaxLocalRawBrightness(player.blockPosition()), heldLight(player));
         double seen = DARK_VISIBILITY + (1 - DARK_VISIBILITY) * light / 15.0;
+        // Runes are noticed: whoever carries them is seen from farther off for each (see Hardship).
+        seen *= de.ipnats.hardwrought.survival.Hardship.scent(player);
         // Movement catches the eye: a sprinting player is noticed from farther off.
         return player.isSprinting() ? seen * SPRINT_VISIBILITY : seen;
     }

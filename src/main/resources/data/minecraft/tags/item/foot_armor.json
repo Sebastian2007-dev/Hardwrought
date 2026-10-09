@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "hardwrought:mithril_boots",
+    "hardwrought:adamant_boots",
+    "hardwrought:steel_boots",
+    "hardwrought:stainless_steel_boots",
+    "hardwrought:titanium_boots",
+    "hardwrought:tungsten_steel_boots"
+  ]
+}

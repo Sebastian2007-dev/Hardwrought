@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "hardwrought:mithril_helmet",
+    "hardwrought:adamant_helmet",
+    "hardwrought:steel_helmet",
+    "hardwrought:stainless_steel_helmet",
+    "hardwrought:titanium_helmet",
+    "hardwrought:tungsten_steel_helmet"
+  ]
+}

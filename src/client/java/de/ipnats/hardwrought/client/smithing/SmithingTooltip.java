@@ -33,6 +33,34 @@ public final class SmithingTooltip {
                             ? ChatFormatting.GOLD : ChatFormatting.YELLOW));
                 }
             }
+            if (stack.is(de.ipnats.hardwrought.atlas.Atlas.ITEM)) {
+                lines.add(Component.translatable("tooltip.hardwrought.atlas").withStyle(ChatFormatting.GRAY));
+            }
+            // What its runes cost whoever carries the piece: seen from farther off, and mended more often.
+            if (de.ipnats.hardwrought.survival.Hardship.runes(stack) > 0) {
+                int runes = de.ipnats.hardwrought.survival.Hardship.runes(stack), over = de.ipnats.hardwrought.survival.Hardship.overcharge(stack);
+                lines.add(Component.translatable("tooltip.hardwrought.arcane_burden",
+                        Math.round(100 * (runes * de.ipnats.hardwrought.survival.Hardship.SCENT_PER_RUNE
+                                + over * de.ipnats.hardwrought.survival.Hardship.SCENT_PER_OVERCHARGE)),
+                        Math.round(100 * de.ipnats.hardwrought.survival.Hardship.wearChance(stack))).withStyle(ChatFormatting.DARK_PURPLE));
+            }
+            // What a part still wants to become a tool or a piece of armor: the recipe takes exactly
+            // this many, and a grid with fewer in it simply shows nothing.
+            var unfinished = de.ipnats.hardwrought.smithing.ToolParts.partOf(stack.getItem());
+            if (unfinished != null) {
+                var needs = switch (unfinished) {
+                    case HELMET_SHELL, SABATONS -> Component.translatable("tooltip.hardwrought.part_leather", 1);
+                    case GREAVES -> Component.translatable("tooltip.hardwrought.part_leather", 2);
+                    case CUIRASS -> Component.translatable("tooltip.hardwrought.part_leather", 3);
+                    case SWORD_BLADE, DAGGER_BLADE -> Component.translatable("tooltip.hardwrought.part_sticks", 1);
+                    case HAMMER_HEAD -> Component.translatable("tooltip.hardwrought.part_hammer");
+                    default -> Component.translatable("tooltip.hardwrought.part_sticks", 2);
+                };
+                lines.add(needs.withStyle(ChatFormatting.GRAY));
+            }
+            if (de.ipnats.hardwrought.smithing.UpgradeEquipment.templates().contains(stack.getItem())) {
+                lines.add(Component.translatable("tooltip.hardwrought.upgrade_template").withStyle(ChatFormatting.GRAY));
+            }
             var cast = de.ipnats.hardwrought.smeltery.Casts.of(stack);
             var unfired = de.ipnats.hardwrought.smeltery.Casts.unfired(stack);
             if (stack.is(de.ipnats.hardwrought.smeltery.Casts.BLANK)) {

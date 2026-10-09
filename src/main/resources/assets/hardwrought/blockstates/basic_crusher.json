@@ -1,0 +1,64 @@
+{
+  "variants": {
+    "broken=false,facing=north,running=false": {
+      "model": "hardwrought:block/basic_crusher"
+    },
+    "broken=false,facing=north,running=true": {
+      "model": "hardwrought:block/basic_crusher"
+    },
+    "broken=true,facing=north,running=false": {
+      "model": "hardwrought:block/basic_crusher"
+    },
+    "broken=true,facing=north,running=true": {
+      "model": "hardwrought:block/basic_crusher"
+    },
+    "broken=false,facing=east,running=false": {
+      "model": "hardwrought:block/basic_crusher",
+      "y": 90
+    },
+    "broken=false,facing=east,running=true": {
+      "model": "hardwrought:block/basic_crusher",
+      "y": 90
+    },
+    "broken=true,facing=east,running=false": {
+      "model": "hardwrought:block/basic_crusher",
+      "y": 90
+    },
+    "broken=true,facing=east,running=true": {
+      "model": "hardwrought:block/basic_crusher",
+      "y": 90
+    },
+    "broken=false,facing=south,running=false": {
+      "model": "hardwrought:block/basic_crusher",
+      "y": 180
+    },
+    "broken=false,facing=south,running=true": {
+      "model": "hardwrought:block/basic_crusher",
+      "y": 180
+    },
+    "broken=true,facing=south,running=false": {
+      "model": "hardwrought:block/basic_crusher",
+      "y": 180
+    },
+    "broken=true,facing=south,running=true": {
+      "model": "hardwrought:block/basic_crusher",
+      "y": 180
+    },
+    "broken=false,facing=west,running=false": {
+      "model": "hardwrought:block/basic_crusher",
+      "y": 270
+    },
+    "broken=false,facing=west,running=true": {
+      "model": "hardwrought:block/basic_crusher",
+      "y": 270
+    },
+    "broken=true,facing=west,running=false": {
+      "model": "hardwrought:block/basic_crusher",
+      "y": 270
+    },
+    "broken=true,facing=west,running=true": {
+      "model": "hardwrought:block/basic_crusher",
+      "y": 270
+    }
+  }
+}

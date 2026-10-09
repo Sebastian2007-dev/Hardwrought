@@ -58,6 +58,9 @@ public final class SurvivalSystem {
     private static final Identifier MOVEMENT_MODIFIER = Hardwrought.id("carry_movement_penalty");
     private static final Identifier JUMP_MODIFIER = Hardwrought.id("carry_jump_penalty");
     private static final Identifier MINING_MODIFIER = Hardwrought.id("fatigue_mining_penalty");
+    private static final Identifier WOUND_SPEED_MODIFIER = Hardwrought.id("wound_movement_penalty");
+    private static final Identifier WOUND_MINING_MODIFIER = Hardwrought.id("wound_mining_penalty");
+    private static final Identifier WOUND_JUMP_MODIFIER = Hardwrought.id("wound_jump_penalty");
     private static final Identifier DIET_ATTACK_MODIFIER = Hardwrought.id("diet_attack_penalty");
     private static final Identifier DIET_MOVEMENT_MODIFIER = Hardwrought.id("diet_movement_penalty");
     private static final Identifier DIET_HEALTH_MODIFIER = Hardwrought.id("diet_health_penalty");
@@ -141,6 +144,11 @@ public final class SurvivalSystem {
     public static final double FATIGUE_PER_SECOND_CARBON_DIOXIDE = 0.035;
     /** One metabolism pass is one second, so these are the intervals of the periodic hazards. */
     private static final int AIR_DAMAGE_PASSES = 2;
+    /** The strain at which a body in thin air or under pressure starts to fail, and the passes between two points of damage. */
+    public static final double STRAIN_FAILING = 100;
+    static final int STRAIN_DAMAGE_PASSES = 4;
+    /** How far along their strain each player has last been told they are: 0 to 3. */
+    private final java.util.Map<UUID, Integer> strainTold = new java.util.HashMap<>();
     private static final int THERMAL_DAMAGE_PASSES = 10;
     /** Metabolism passes between two points of damage from having no water left at all. */
     static final int DEHYDRATION_DAMAGE_PASSES = 4;
@@ -280,7 +288,8 @@ public final class SurvivalSystem {
         if (exempt(player)) return;
         PlayerVitals v = vitals(player);
         save.setVitals(player.getUUID(), new PlayerVitals(v.stamina() + stamina, v.hydration() + hydration,
-                v.nutrition(), v.fatigue(), v.bodyTemperature() + bodyTemperature, v.wetness(), v.stress()).normalized());
+                v.nutrition(), v.fatigue(), v.bodyTemperature() + bodyTemperature, v.wetness(), v.stress(),
+                v.heightHabit(), v.depthHabit()).normalized());
     }
 
     public void drink(ServerPlayer player, double amount) {
@@ -408,6 +417,7 @@ public final class SurvivalSystem {
 
     public void disconnect(UUID id) {
         restedNotice.remove(id);
+        strainTold.remove(id);
         lastHandDrink.remove(id);
         outdoorSleepers.remove(id);
         lastOnGround.remove(id);
@@ -495,7 +505,8 @@ public final class SurvivalSystem {
                         ? value.stress() + OVERSLEEP_STRESS_PER_TICK : value.stress();
                 value = new PlayerVitals(value.stamina() + SLEEP_RECOVERY_PER_TICK * quality,
                         value.hydration(), value.nutrition(),
-                        newFatigue, value.bodyTemperature(), value.wetness(), newStress).normalized();
+                        newFatigue, value.bodyTemperature(), value.wetness(), newStress,
+                        value.heightHabit(), value.depthHabit()).normalized();
                 // Ultra: health does not come back by itself, only in a sleep good enough to count.
                 if (quality > Ultra.HEALING_SLEEP && Ultra.active(server) && player.getHealth() < player.getMaxHealth()) {
                     player.heal(Ultra.SLEEP_HEAL_PER_TICK);
@@ -507,7 +518,7 @@ public final class SurvivalSystem {
                 restedNotice.remove(player.getUUID());
             }
             if (delta != 0) value = value.withStamina(value.stamina() + delta);
-            if (value.stamina() <= 0.1) player.setSprinting(false);
+            if (value.stamina() <= 0.1 || Hardship.crippled(player.getHealth(), player.getMaxHealth())) player.setSprinting(false);
             save.setVitals(player.getUUID(), value);
         }
     }
@@ -591,18 +602,28 @@ public final class SurvivalSystem {
             double fatigue = v.fatigue() + (player.isSleeping() ? 0
                     : (FATIGUE_PER_SECOND_AWAKE + workEnergy * 0.002) * fatigueFactor
                     + carbonDioxideStress * FATIGUE_PER_SECOND_CARBON_DIOXIDE);
-            double stress = player.isSleeping() ? v.stress()
-                    : Math.max(0, v.stress() - STRESS_RECOVERY_PER_SECOND);
+            // Thin air and the pressure of the deep wear the body down for as long as it is in them;
+            // out of them it recovers, awake, as from any other strain.
+            // A body that has been there often takes less of it, and gets used to whichever of the two it is in.
+            double pressureStress = de.ipnats.hardwrought.environment.Altitude.pressureStress(player.getBlockY());
+            double strain = de.ipnats.hardwrought.environment.Altitude.strain(oxygenStress, player.getBlockY(),
+                    v.heightHabit(), v.depthHabit());
+            double heightHabit = de.ipnats.hardwrought.environment.Altitude.habit(v.heightHabit(), oxygenStress, v.nutrition().balanced());
+            double depthHabit = de.ipnats.hardwrought.environment.Altitude.habit(v.depthHabit(), pressureStress, v.nutrition().balanced());
+            double stress = strain > 0 ? v.stress() + strain
+                    : player.isSleeping() ? v.stress() : Math.max(0, v.stress() - STRESS_RECOVERY_PER_SECOND);
             PlayerVitals next = new PlayerVitals(v.stamina(),
                     v.hydration() - 0.035 - activityWater - heatWater - badWater - workWater - armorWater
                             + hydrationRegeneration(player),
-                    diet.drained(1.0, energyUse - BASAL_ENERGY_PER_SECOND), fatigue, body, wetness, stress)
+                    diet.drained(1.0, energyUse - BASAL_ENERGY_PER_SECOND), fatigue, body, wetness, stress,
+                    heightHabit, depthHabit)
                     .normalized();
             // Bad air drains the reserve directly; resting cannot out-recover it.
             double airDrain = oxygenStress * 0.45 + carbonDioxideStress * 0.30 + carbonMonoxideStress * 0.35;
             if (airDrain > 0) next = next.withStamina(next.stamina() - airDrain);
             save.setVitals(player.getUUID(), next);
             applyAirDamage(player, gases);
+            applyStrain(player, strain, next.stress());
             if (metabolismPasses % THERMAL_DAMAGE_PASSES == 0
                     && (next.bodyTemperature() < 34.0 || next.bodyTemperature() > 40.5)) {
                 player.hurtServer(player.level(), next.bodyTemperature() < 34.0
@@ -637,6 +658,22 @@ public final class SurvivalSystem {
      * Section 18: suffocation and carbon monoxide get their own damage types, so a death message
      * names the real cause and armor cannot protect against a gas.
      */
+    /**
+     * What a body under strain is told, and what happens to one that stays past its limit: a word at
+     * half way, at three quarters and at the end, and then health, a point every few seconds, until
+     * it leaves the heights or the deep. Strain from anything else — a restless sleep — never kills.
+     */
+    private void applyStrain(ServerPlayer player, double strain, double stress) {
+        int reached = strain <= 0 ? 0 : stress >= STRAIN_FAILING ? 3 : stress >= 75 ? 2 : stress >= 50 ? 1 : 0;
+        Integer told = strainTold.put(player.getUUID(), reached);
+        if (reached > (told == null ? 0 : told)) {
+            player.sendOverlayMessage(Component.translatable("message.hardwrought.strain." + reached));
+        }
+        if (reached == 3 && metabolismPasses % STRAIN_DAMAGE_PASSES == 0) {
+            player.hurtServer(player.level(), damageSource(player.level(), ModDamageTypes.EXPOSURE), 1.0f);
+        }
+    }
+
     private void applyAirDamage(ServerPlayer player, GasMixture gases) {
         if (metabolismPasses % AIR_DAMAGE_PASSES != 0) return;
         ServerLevel level = player.level();
@@ -664,6 +701,11 @@ public final class SurvivalSystem {
         updateModifier(player.getAttribute(Attributes.MOVEMENT_SPEED), MOVEMENT_MODIFIER, speedPenalty);
         updateModifier(player.getAttribute(Attributes.JUMP_STRENGTH), JUMP_MODIFIER, jumpPenalty);
         updateModifier(player.getAttribute(Attributes.BLOCK_BREAK_SPEED), MINING_MODIFIER, miningPenalty);
+        // A hurt body does less (see Hardship): slower on its feet and at its work, the worse the wounds.
+        double wound = Hardship.wound(player.getHealth(), player.getMaxHealth());
+        updateModifier(player.getAttribute(Attributes.MOVEMENT_SPEED), WOUND_SPEED_MODIFIER, -Hardship.WOUND_SPEED * wound);
+        updateModifier(player.getAttribute(Attributes.BLOCK_BREAK_SPEED), WOUND_MINING_MODIFIER, -Hardship.WOUND_MINING * wound);
+        updateModifier(player.getAttribute(Attributes.JUMP_STRENGTH), WOUND_JUMP_MODIFIER, -Hardship.WOUND_JUMP * wound);
         applyDiet(player, v.nutrition());
     }
 
@@ -709,6 +751,9 @@ public final class SurvivalSystem {
         updateModifier(player.getAttribute(Attributes.MOVEMENT_SPEED), MOVEMENT_MODIFIER, 0);
         updateModifier(player.getAttribute(Attributes.JUMP_STRENGTH), JUMP_MODIFIER, 0);
         updateModifier(player.getAttribute(Attributes.BLOCK_BREAK_SPEED), MINING_MODIFIER, 0);
+        updateModifier(player.getAttribute(Attributes.MOVEMENT_SPEED), WOUND_SPEED_MODIFIER, 0);
+        updateModifier(player.getAttribute(Attributes.BLOCK_BREAK_SPEED), WOUND_MINING_MODIFIER, 0);
+        updateModifier(player.getAttribute(Attributes.JUMP_STRENGTH), WOUND_JUMP_MODIFIER, 0);
         applyDiet(player, Nutrition.START);
     }
 
@@ -836,6 +881,6 @@ public final class SurvivalSystem {
         PlayerVitals v = vitals(player);
         ServerPlayNetworking.send(player, new SurvivalSnapshotPayload(v.stamina(), v.hydration(), v.nutrition(),
                 v.fatigue(), v.bodyTemperature(), ambient,
-                carried, capacity(player), player.isSleeping(), quality, v.stress()));
+                carried, capacity(player), player.isSleeping(), quality, v.stress(), v.heightHabit(), v.depthHabit()));
     }
 }

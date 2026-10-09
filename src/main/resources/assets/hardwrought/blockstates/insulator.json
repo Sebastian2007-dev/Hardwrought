@@ -1,0 +1,30 @@
+{
+  "variants": {
+    "facing=up": {
+      "model": "hardwrought:block/insulator"
+    },
+    "facing=down": {
+      "model": "hardwrought:block/insulator",
+      "x": 180
+    },
+    "facing=north": {
+      "model": "hardwrought:block/insulator",
+      "x": 90
+    },
+    "facing=east": {
+      "model": "hardwrought:block/insulator",
+      "x": 90,
+      "y": 90
+    },
+    "facing=south": {
+      "model": "hardwrought:block/insulator",
+      "x": 90,
+      "y": 180
+    },
+    "facing=west": {
+      "model": "hardwrought:block/insulator",
+      "x": 90,
+      "y": 270
+    }
+  }
+}

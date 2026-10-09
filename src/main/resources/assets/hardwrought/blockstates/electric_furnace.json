@@ -1,0 +1,64 @@
+{
+  "variants": {
+    "broken=false,facing=north,running=false": {
+      "model": "hardwrought:block/electric_furnace"
+    },
+    "broken=false,facing=north,running=true": {
+      "model": "hardwrought:block/electric_furnace"
+    },
+    "broken=true,facing=north,running=false": {
+      "model": "hardwrought:block/electric_furnace"
+    },
+    "broken=true,facing=north,running=true": {
+      "model": "hardwrought:block/electric_furnace"
+    },
+    "broken=false,facing=east,running=false": {
+      "model": "hardwrought:block/electric_furnace",
+      "y": 90
+    },
+    "broken=false,facing=east,running=true": {
+      "model": "hardwrought:block/electric_furnace",
+      "y": 90
+    },
+    "broken=true,facing=east,running=false": {
+      "model": "hardwrought:block/electric_furnace",
+      "y": 90
+    },
+    "broken=true,facing=east,running=true": {
+      "model": "hardwrought:block/electric_furnace",
+      "y": 90
+    },
+    "broken=false,facing=south,running=false": {
+      "model": "hardwrought:block/electric_furnace",
+      "y": 180
+    },
+    "broken=false,facing=south,running=true": {
+      "model": "hardwrought:block/electric_furnace",
+      "y": 180
+    },
+    "broken=true,facing=south,running=false": {
+      "model": "hardwrought:block/electric_furnace",
+      "y": 180
+    },
+    "broken=true,facing=south,running=true": {
+      "model": "hardwrought:block/electric_furnace",
+      "y": 180
+    },
+    "broken=false,facing=west,running=false": {
+      "model": "hardwrought:block/electric_furnace",
+      "y": 270
+    },
+    "broken=false,facing=west,running=true": {
+      "model": "hardwrought:block/electric_furnace",
+      "y": 270
+    },
+    "broken=true,facing=west,running=false": {
+      "model": "hardwrought:block/electric_furnace",
+      "y": 270
+    },
+    "broken=true,facing=west,running=true": {
+      "model": "hardwrought:block/electric_furnace",
+      "y": 270
+    }
+  }
+}

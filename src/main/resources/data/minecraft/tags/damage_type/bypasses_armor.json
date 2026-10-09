@@ -3,6 +3,8 @@
     "hardwrought:bad_air",
     "hardwrought:smoke",
     "hardwrought:carbon_monoxide",
-    "hardwrought:dehydration"
+    "hardwrought:dehydration",
+    "hardwrought:exposure",
+    "hardwrought:electrocution"
   ]
 }

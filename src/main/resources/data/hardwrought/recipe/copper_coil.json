@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "W": "hardwrought:copper_wire",
+    "I": "minecraft:iron_nugget"
+  },
+  "pattern": [
+    " W ",
+    "WIW",
+    " W "
+  ],
+  "result": {
+    "id": "hardwrought:copper_coil",
+    "count": 2
+  }
+}

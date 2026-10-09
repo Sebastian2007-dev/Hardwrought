@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": "hardwrought:adamant_upgrade_smithing_template",
+  "base": "hardwrought:mithril_leggings",
+  "addition": "hardwrought:adamantium_ingot",
+  "result": {
+    "id": "hardwrought:adamant_leggings"
+  }
+}

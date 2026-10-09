@@ -827,4 +827,36 @@ public final class EnvironmentGameTests {
             helper.succeed();
         });
     }
+
+    /**
+     * Rising gas under a full layer that can go no higher spreads the layer at its edge and does not
+     * hang beneath it. Under a roof here; under the clouds it is the same rule.
+     */
+    @GameTest(maxTicks = 300)
+    public void risingGasSpreadsALayerInsteadOfHangingUnderIt(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        // A closed gallery of stone, seven long and two high inside.
+        for (int x = 0; x <= 8; x++) {
+            for (int y = 1; y <= 4; y++) {
+                for (int z = 0; z <= 2; z++) {
+                    boolean inside = x >= 1 && x <= 7 && y >= 2 && y <= 3 && z == 1;
+                    level.setBlock(helper.absolutePos(new BlockPos(x, y, z)),
+                            inside ? Blocks.AIR.defaultBlockState() : Blocks.STONE.defaultBlockState(), 2);
+                }
+            }
+        }
+        BlockState full = Gases.with(Blocks.AIR.defaultBlockState(), Gas.DECAYED_CARBON_DIOXIDE, Gas.CAPACITY);
+        // Under the roof a full layer six long, with room only at its far end; and more gas under its near end.
+        for (int x = 1; x <= 6; x++) level.setBlock(helper.absolutePos(new BlockPos(x, 3, 1)), full, 2);
+        BlockPos under = helper.absolutePos(new BlockPos(1, 2, 1));
+        BlockPos end = helper.absolutePos(new BlockPos(7, 3, 1));
+        level.setBlockAndUpdate(under, full);
+        helper.succeedWhen(() -> {
+            helper.assertTrue(Gases.total(level.getBlockState(end)) == Gas.CAPACITY,
+                    "What pressed in from below has come out at the layer's edge: " + Gases.total(level.getBlockState(end)));
+            int below = 0;
+            for (int x = 1; x <= 7; x++) below += Gases.total(level.getBlockState(helper.absolutePos(new BlockPos(x, 2, 1))));
+            helper.assertTrue(below == 0, "and nothing is left hanging under the layer: " + below);
+        });
+    }
 }

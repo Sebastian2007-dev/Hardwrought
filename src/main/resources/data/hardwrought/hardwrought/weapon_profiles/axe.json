@@ -12,7 +12,9 @@
     "hardwrought:steel_axe",
     "hardwrought:stainless_steel_axe",
     "hardwrought:titanium_axe",
-    "hardwrought:tungsten_steel_axe"
+    "hardwrought:tungsten_steel_axe",
+    "hardwrought:mithril_axe",
+    "hardwrought:adamant_axe"
   ],
   "damage": {
     "slash": 0.7,

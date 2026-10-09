@@ -19,6 +19,7 @@ public class HardwroughtClient implements ClientModInitializer {
 		de.ipnats.hardwrought.client.environment.DynamicLight.initialize();
 		de.ipnats.hardwrought.client.environment.PlacedLights.initialize();
 		de.ipnats.hardwrought.client.magic.MagicClient.initialize();
+		de.ipnats.hardwrought.client.atlas.AtlasClient.initialize();
 		de.ipnats.hardwrought.client.environment.Darkness.initialize();
 		de.ipnats.hardwrought.client.smeltery.SmelteryClient.initialize();
 		net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
@@ -33,6 +34,7 @@ public class HardwroughtClient implements ClientModInitializer {
 		net.fabricmc.fabric.api.client.rendering.v1.PictureInPictureRendererRegistry.register(
 				context -> new de.ipnats.hardwrought.client.knowledge.MultiblockViewRenderer());
 		de.ipnats.hardwrought.client.machinery.MachineryClient.initialize();
+		de.ipnats.hardwrought.client.electricity.ElectricityClient.initialize();
 		de.ipnats.hardwrought.client.fx.FxClient.initialize();
 	}
 }

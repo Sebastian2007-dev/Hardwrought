@@ -16,6 +16,8 @@ public abstract class ItemStackRustMixin {
     @ModifyVariable(method = "hurtAndBreak(ILnet/minecraft/server/level/ServerLevel;Lnet/minecraft/server/level/ServerPlayer;Ljava/util/function/Consumer;)V",
             at = @At("HEAD"), argsOnly = true, ordinal = 0)
     private int hardwrought$rustWear(int amount, int original, ServerLevel level, ServerPlayer player, Consumer<ItemStack> onBreak) {
-        return Rust.wear((ItemStack) (Object) this, amount, level.getRandom());
+        ItemStack stack = (ItemStack) (Object) this;
+        // And a piece with runes on it wears faster for each of them (see Hardship).
+        return de.ipnats.hardwrought.survival.Hardship.wear(stack, Rust.wear(stack, amount, level.getRandom()), level.getRandom());
     }
 }

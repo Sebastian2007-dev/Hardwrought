@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:steel_block"
+  ],
+  "result": {
+    "id": "hardwrought:steel_ingot",
+    "count": 9
+  }
+}

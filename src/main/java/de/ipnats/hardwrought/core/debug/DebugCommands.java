@@ -45,6 +45,12 @@ public final class DebugCommands {
                             context.getSource().sendSuccess(() -> Component.literal("Hardwrought: Profiling zurueckgesetzt."), false);
                             return 1;
                         })))
+                        .then(literal("locate").then(literal("mountain")
+                                .executes(context -> locateMountain(context.getSource(), 900))
+                                .then(net.minecraft.commands.Commands.argument("height",
+                                                com.mojang.brigadier.arguments.IntegerArgumentType.integer(100, 1000))
+                                        .executes(context -> locateMountain(context.getSource(),
+                                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "height"))))))
                         .then(knowledge(registries))
                         .then(literal("debug")
                                 .then(literal("on").executes(context -> toggle(context.getSource(), true)))
@@ -256,6 +262,36 @@ public final class DebugCommands {
                 .withNutrition(de.ipnats.hardwrought.survival.Nutrition.START));
         source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
                 "Hardwrought: alle Naehrstoffe auf %.0f gesetzt.", de.ipnats.hardwrought.survival.Nutrient.START)), false);
+        return 1;
+    }
+
+    /**
+     * {@code locate mountain [height]}: the nearest place where the land stands at least that high
+     * (900 where none is given), read off the terrain function without generating anything. The
+     * answer can be clicked to put the teleport in the chat line.
+     */
+    private static int locateMountain(CommandSourceStack source, int height) {
+        var level = source.getLevel();
+        var from = net.minecraft.core.BlockPos.containing(source.getPosition());
+        if (de.ipnats.hardwrought.worldgen.MountainFinder.landHeight(level, from.getX(), from.getZ()) == null) {
+            source.sendFailure(Component.literal("Hardwrought: diese Welt hat kein erzeugtes Gelaende, in dem sich suchen laesst."));
+            return 0;
+        }
+        var found = de.ipnats.hardwrought.worldgen.MountainFinder.nearest(level, from, height);
+        if (found == null) {
+            source.sendFailure(Component.literal(String.format(Locale.ROOT,
+                    "Hardwrought: kein Land ueber %d im Umkreis von %d Bloecken.", height,
+                    de.ipnats.hardwrought.worldgen.MountainFinder.REACH)));
+            return 0;
+        }
+        int away = (int) Math.round(Math.hypot(found.getX() - from.getX(), found.getZ() - from.getZ()));
+        // A little above the figure: the peaks stand higher than the land they are carved from.
+        String teleport = String.format(Locale.ROOT, "/tp @s %d %d %d", found.getX(), Math.min(found.getY() + 90, 1020), found.getZ());
+        source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "Berg: Land auf etwa %d bei x %d, z %d, %d Bloecke entfernt. Gipfel liegen etwas hoeher. ",
+                found.getY(), found.getX(), found.getZ(), away)).append(Component.literal("[" + teleport + "]")
+                .withStyle(style -> style.withColor(net.minecraft.ChatFormatting.GREEN)
+                        .withClickEvent(new net.minecraft.network.chat.ClickEvent.SuggestCommand(teleport)))), false);
         return 1;
     }
 

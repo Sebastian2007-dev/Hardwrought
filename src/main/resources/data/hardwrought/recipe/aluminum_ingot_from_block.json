@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:aluminum_block"
+  ],
+  "result": {
+    "id": "hardwrought:aluminum_ingot",
+    "count": 9
+  }
+}

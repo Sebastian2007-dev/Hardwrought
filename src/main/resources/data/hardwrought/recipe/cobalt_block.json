@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###",
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": "hardwrought:cobalt_ingot"
+  },
+  "result": {
+    "id": "hardwrought:cobalt_block"
+  }
+}

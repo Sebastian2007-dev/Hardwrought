@@ -269,7 +269,7 @@ public final class CoreGameTests {
     @GameTest
     public void survivalProtocolRoundTrip(GameTestHelper helper) {
         var payload = new SurvivalSnapshotPayload(75, 60, new de.ipnats.hardwrought.survival.Nutrition(20, 40, 60, 80, 95),
-                31, 36.8, 12.5, 24, 45, true, 0.7, 12.5);
+                31, 36.8, 12.5, 24, 45, true, 0.7, 12.5, 0.25, 0.75);
         var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), helper.getLevel().registryAccess());
         try {
             SurvivalSnapshotPayload.CODEC.encode(buffer, payload);
@@ -504,6 +504,48 @@ public final class CoreGameTests {
         survival.afflict(watching, -10, 0, -10);
         helper.assertTrue(survival.vitals(watching).equals(dry) && survival.stamina(watching) == PlayerVitals.MAX_STAMINA,
                 "whose vitals stand still: " + survival.vitals(watching));
+        helper.succeed();
+    }
+
+    /** The two hardships: wounds slow, and runes are noticed and wear the piece. */
+    @GameTest
+    public void theWorldPushesBack(GameTestHelper helper) {
+        var level = helper.getLevel();
+        // Wounds.
+        helper.assertTrue(de.ipnats.hardwrought.survival.Hardship.wound(20, 20) == 0
+                        && de.ipnats.hardwrought.survival.Hardship.wound(12, 20) == 0
+                        && Math.abs(de.ipnats.hardwrought.survival.Hardship.wound(6, 20) - 0.5) < 1e-6
+                        && de.ipnats.hardwrought.survival.Hardship.wound(0, 20) == 1,
+                "A body is sound down to six tenths of its health, and wounded the worse below that");
+        helper.assertTrue(!de.ipnats.hardwrought.survival.Hardship.crippled(6, 20)
+                        && de.ipnats.hardwrought.survival.Hardship.crippled(5, 20), "Under three tenths it cannot run");
+
+        // The arcane burden.
+        var registry = level.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT);
+        var protection = registry.getOrThrow(net.minecraft.world.item.enchantment.Enchantments.PROTECTION);
+        var unbreaking = registry.getOrThrow(net.minecraft.world.item.enchantment.Enchantments.UNBREAKING);
+        ItemStack plain = new ItemStack(Items.IRON_CHESTPLATE), runed = new ItemStack(Items.IRON_CHESTPLATE);
+        runed.enchant(protection, 6);
+        runed.enchant(unbreaking, 3);
+        helper.assertTrue(de.ipnats.hardwrought.survival.Hardship.runes(runed) == 2
+                        && de.ipnats.hardwrought.survival.Hardship.overcharge(runed) == 2
+                        && de.ipnats.hardwrought.survival.Hardship.runes(plain) == 0,
+                "Two runes, one of them charged two levels over");
+        helper.assertTrue(de.ipnats.hardwrought.survival.Hardship.wearChance(plain) == 0
+                        && Math.abs(de.ipnats.hardwrought.survival.Hardship.wearChance(runed) - 0.28) < 1e-9,
+                "A piece wears faster for its runes, most for the overcharged: "
+                        + de.ipnats.hardwrought.survival.Hardship.wearChance(runed));
+        int worn = 0;
+        for (int i = 0; i < 1000; i++) worn += de.ipnats.hardwrought.survival.Hardship.wear(runed, 1, level.getRandom());
+        helper.assertTrue(worn > 1150 && worn < 1420 && de.ipnats.hardwrought.survival.Hardship.wear(plain, 3, level.getRandom()) == 3,
+                "which shows in the wear, and not on a piece without runes: " + worn + " for a thousand");
+        net.minecraft.server.level.ServerPlayer wearer = (net.minecraft.server.level.ServerPlayer)
+                helper.makeMockServerPlayer(net.minecraft.world.level.GameType.SURVIVAL);
+        helper.assertTrue(de.ipnats.hardwrought.survival.Hardship.scent(wearer) == 1, "Somebody without runes is noticed as ever");
+        wearer.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, runed);
+        helper.assertTrue(Math.abs(de.ipnats.hardwrought.survival.Hardship.scent(wearer) - 1.2) < 1e-9,
+                "and with them from farther off: " + de.ipnats.hardwrought.survival.Hardship.scent(wearer));
+
         helper.succeed();
     }
 

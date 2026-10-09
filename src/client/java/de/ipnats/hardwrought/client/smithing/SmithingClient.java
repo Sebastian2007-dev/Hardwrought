@@ -16,6 +16,11 @@ public final class SmithingClient {
         ClientPlayNetworking.registerGlobalReceiver(de.ipnats.hardwrought.core.networking.GrindingPayloads.Open.TYPE,
                 (payload, context) -> net.minecraft.client.Minecraft.getInstance().gui.setScreen(
                         new GrindingScreen(payload.grindstone())));
+        ClientPlayNetworking.registerGlobalReceiver(de.ipnats.hardwrought.core.networking.RunePayloads.Open.TYPE,
+                (payload, context) -> net.minecraft.client.Minecraft.getInstance().gui.setScreen(
+                        new de.ipnats.hardwrought.client.enchanting.RuneScreen(payload)));
+        ClientPlayNetworking.registerGlobalReceiver(de.ipnats.hardwrought.core.networking.UpgradePayloads.Open.TYPE,
+                (payload, context) -> net.minecraft.client.Minecraft.getInstance().gui.setScreen(new UpgradeScreen(payload)));
         ClientPlayNetworking.registerGlobalReceiver(ForgingPayloads.Open.TYPE, (payload, context) ->
                 net.minecraft.client.Minecraft.getInstance().gui.setScreen(new ForgingScreen(payload.anvil(), payload.results())));
     }

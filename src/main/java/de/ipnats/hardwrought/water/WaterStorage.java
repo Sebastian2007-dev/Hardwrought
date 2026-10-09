@@ -151,7 +151,7 @@ public final class WaterStorage {
         }
         if (!isFreeWater(state) && !state.isAir()) {
             // Water does not stop at a tuft of grass or a torch: it washes them out of its way.
-            if (!state.is(BlockTags.WASHED_AWAY_BY_FLUIDS)) return;
+            if (!washedAway(state)) return;
             Block.dropResources(state, level, pos);
         }
         int display = WaterAmounts.displayLevel(amount);
@@ -210,8 +210,8 @@ public final class WaterStorage {
     }
 
     /**
-     * True where water could stand: empty space, water that is not already full, or anything a fluid
-     * washes away.
+     * True where water could stand: empty space, water that is not already full, or anything water
+     * washes away (see {@link #washedAway}).
      *
      * <p>That last part is not a detail. A hillside is covered in grass tufts and flowers, and
      * treating them as walls left a bucket of water sitting in place on open ground because every
@@ -226,7 +226,25 @@ public final class WaterStorage {
         BlockState state = level.getBlockState(pos);
         if (state.isAir()) return true;
         if (containsWater(state) || isWaterloggable(state)) return true;
-        return state.is(BlockTags.WASHED_AWAY_BY_FLUIDS);
+        return washedAway(state);
+    }
+
+    /**
+     * Whether water takes this out of its way. What vanilla's fluids wash away, but not what somebody
+     * planted: crops, saplings, a berry bush, a pumpkin's stem. Water goes round a field.
+     *
+     * <p>It used to clear one. A puddle left by the rain spreads like any other water, and each time
+     * it reached the next stalk of wheat the stalk was gone: a field beside a low place did not
+     * survive a wet week. A flood that would really flatten a field is rarer in play than rain is,
+     * and a farm is worth more than that realism.
+     */
+    public static boolean washedAway(BlockState state) {
+        if (!state.is(BlockTags.WASHED_AWAY_BY_FLUIDS)) return false;
+        return !(state.is(BlockTags.CROPS) || state.is(BlockTags.SAPLINGS)
+                || state.getBlock() instanceof net.minecraft.world.level.block.CropBlock
+                || state.getBlock() instanceof net.minecraft.world.level.block.StemBlock
+                || state.getBlock() instanceof net.minecraft.world.level.block.AttachedStemBlock
+                || state.getBlock() instanceof net.minecraft.world.level.block.SweetBerryBushBlock);
     }
 
     private static void updateDisplay(ServerLevel level, BlockPos pos, int amount) {
@@ -244,7 +262,7 @@ public final class WaterStorage {
         }
         if (containsWater(state) && !isFreeWater(state)) return;
         if (!isFreeWater(state) && !state.isAir()) {
-            if (!state.is(BlockTags.WASHED_AWAY_BY_FLUIDS)) return;
+            if (!washedAway(state)) return;
             Block.dropResources(state, level, pos);
         }
         BlockState target = Blocks.WATER.defaultBlockState().setValue(

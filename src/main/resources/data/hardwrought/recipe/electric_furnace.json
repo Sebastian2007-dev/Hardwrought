@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "B": "minecraft:brick",
+    "W": "hardwrought:copper_wire",
+    "F": "minecraft:furnace",
+    "I": "minecraft:iron_ingot"
+  },
+  "pattern": [
+    "BBB",
+    "WFW",
+    "BIB"
+  ],
+  "result": {
+    "id": "hardwrought:electric_furnace",
+    "count": 1
+  }
+}

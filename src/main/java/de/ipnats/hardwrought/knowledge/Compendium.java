@@ -143,6 +143,24 @@ public final class Compendium {
         return new CompendiumPagePayload(mode, subject, heading, recipes, sources, List.of());
     }
 
+    /**
+     * How many of its material a part-and-material recipe takes. The recipe keeps the number to
+     * itself, so it is read the way a datapack would write it.
+     */
+    private static int materialCount(RecipeHolder<?> holder) {
+        try {
+            var json = net.minecraft.world.item.crafting.Recipe.DIRECT_CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE,
+                    holder.value()).getOrThrow().getAsJsonObject();
+            var count = json.get("material_count");
+            if (count == null) return 1;
+            if (count.isJsonPrimitive()) return count.getAsInt();
+            var min = count.getAsJsonObject().get("min");
+            return min == null ? 1 : min.getAsInt();
+        } catch (RuntimeException unreadable) {
+            return 1;
+        }
+    }
+
     private CompendiumPagePayload.Recipe view(RecipeHolder<?> holder, RecipeDisplay display,
                                               ContextMap context, PlayerKnowledge known,
                                               Map<Identifier, de.ipnats.hardwrought.core.registry.MaterialDefinition> materials) {
@@ -155,6 +173,16 @@ public final class Compendium {
             for (SlotDisplay ingredient : shaped.ingredients()) inputs.add(slot(ingredient, context, known));
         } else if (display instanceof ShapelessCraftingRecipeDisplay shapeless) {
             for (SlotDisplay ingredient : shapeless.ingredients()) inputs.add(slot(ingredient, context, known));
+            // A part and its handle, or its leather: the recipe takes an exact number of the second,
+            // which vanilla's display leaves out. Shown once, a pair of greaves looked as if one piece
+            // of leather made leggings of it, and the grid then silently gave nothing.
+            if (holder.value() instanceof net.minecraft.world.item.crafting.TransmuteRecipe && inputs.size() >= 2) {
+                CompendiumPagePayload.Slot piece = inputs.getFirst(), material = inputs.getLast();
+                int count = Math.clamp(materialCount(holder), 1, CompendiumPagePayload.MAX_SLOTS - 1);
+                inputs.clear();
+                inputs.add(piece);
+                for (int i = 0; i < count; i++) inputs.add(material);
+            }
         } else if (display instanceof FurnaceRecipeDisplay furnace) {
             inputs.add(slot(furnace.ingredient(), context, known));
             inputs.add(slot(furnace.fuel(), context, known));

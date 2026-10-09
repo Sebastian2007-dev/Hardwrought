@@ -1,0 +1,22 @@
+{
+  "weights": {
+    "hardwrought:mithril_pickaxe": 1.06,
+    "hardwrought:mithril_axe": 1.19,
+    "hardwrought:mithril_shovel": 0.86,
+    "hardwrought:mithril_hoe": 0.73,
+    "hardwrought:mithril_sword": 0.86,
+    "hardwrought:mithril_helmet": 1.65,
+    "hardwrought:mithril_chestplate": 5.94,
+    "hardwrought:mithril_leggings": 4.29,
+    "hardwrought:mithril_boots": 1.45,
+    "hardwrought:adamant_pickaxe": 2.21,
+    "hardwrought:adamant_axe": 2.48,
+    "hardwrought:adamant_shovel": 1.79,
+    "hardwrought:adamant_hoe": 1.52,
+    "hardwrought:adamant_sword": 1.79,
+    "hardwrought:adamant_helmet": 3.45,
+    "hardwrought:adamant_chestplate": 12.42,
+    "hardwrought:adamant_leggings": 8.97,
+    "hardwrought:adamant_boots": 3.04
+  }
+}

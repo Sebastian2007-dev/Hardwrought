@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "hardwrought:mithril_chestplate",
+    "hardwrought:adamant_chestplate",
+    "hardwrought:steel_chestplate",
+    "hardwrought:stainless_steel_chestplate",
+    "hardwrought:titanium_chestplate",
+    "hardwrought:tungsten_steel_chestplate"
+  ]
+}

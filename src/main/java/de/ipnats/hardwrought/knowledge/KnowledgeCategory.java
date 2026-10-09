@@ -90,7 +90,11 @@ public enum KnowledgeCategory {
     private static boolean isCircuitry(ItemStack stack) {
         String path = key(stack.getItem());
         return path.contains("redstone") || path.contains("copper_bulb") || path.contains("comparator")
-                || path.contains("repeater") || path.contains("lever") || path.contains("wire");
+                || path.contains("repeater") || path.contains("lever") || path.contains("wire")
+                || path.contains("dynamo") || path.contains("insulator") || path.contains("electric")
+                || path.contains("voltmeter") || path.contains("copper_cable") || path.equals("mast")
+                || path.equals("battery") || path.equals("basic_crusher") || path.equals("sawmill")
+                || path.equals("plate_press") || path.equals("copper_coil");
     }
 
     private static boolean isLiving(Item item) {

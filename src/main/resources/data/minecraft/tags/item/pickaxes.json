@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "hardwrought:mithril_pickaxe",
+    "hardwrought:adamant_pickaxe",
+    "hardwrought:steel_pickaxe",
+    "hardwrought:stainless_steel_pickaxe",
+    "hardwrought:titanium_pickaxe",
+    "hardwrought:tungsten_steel_pickaxe"
+  ]
+}

@@ -33,7 +33,10 @@ import java.util.Map;
  *       a gas block with room, or past a lighter (or heavier) gas that is in its way, one unit for one.
  *   <li>Where that is closed, sideways toward the nearest place within four blocks where it could go
  *       on, the way water finds the edge of a ledge.
- *   <li>Where there is none, it joins the fuller of its neighbours: a unit beside seven makes eight,
+ *   <li>Rising gas that is held down by a full layer which cannot rise either — under the clouds, under
+ *       a roof — presses into it, and the layer grows at its edge: gas spreads across the sky as a
+ *       layer and does not hang under it in a heap.
+ *   <li>Where there is none of that, it joins the fuller of its neighbours: a unit beside seven makes eight,
  *       two beside seven make eight and leave one. Gas gathers into full blocks rather than spreading
  *       into a thin film, and a settled pocket stops ticking.
  * </ol>
@@ -58,6 +61,10 @@ public class GasBlock extends Block {
     public static final int RISING_STEP = 2;
     /** How far sideways gas looks for a way on. */
     private static final int SLOPE_SEARCH = 4;
+    /** How many blocks of a full layer are followed to find its edge: a layer some thirty blocks across. */
+    private static final int LAYER_SEARCH = 768;
+    /** How many blocks up a stack of full gas is followed to see whether it is held down. */
+    private static final int LAYER_DEPTH = 16;
     /**
      * The chance for each unit of carbon dioxide, on each random tick, to break down into the light
      * form. A block gets a random tick about every 1365 ticks, so a unit lasts about a day: 24000.
@@ -199,7 +206,71 @@ public class GasBlock extends Block {
         Direction toward = slope(level, pos, gas);
         if (toward != null && move(level, pos, pos.relative(toward), gas, units, false) > 0) return true;
 
+        // Rising gas held down by gas that cannot rise itself pushes that layer outward instead of
+        // hanging under it.
+        if (drift == Direction.UP && displace(level, pos, onward, gas)) return true;
+
         return gather(level, pos, gas, units);
+    }
+
+    /**
+     * Rising gas under a layer that is full and can itself go no higher — at the clouds, or under a
+     * roof — presses into it, and the layer gives way at its edge: one unit goes in from below, one
+     * comes out where the layer ends. Gas is gas, so it is the same as if this unit had gone to the
+     * edge itself, and that is how it is done.
+     *
+     * <p>Without this, what arrives under a full layer more than a few blocks wide found no way round
+     * it and hung beneath it, and what came after hung beneath that: a mountain upside down under
+     * the clouds, where it should be a layer spreading across the sky.
+     */
+    private static boolean displace(ServerLevel level, BlockPos pos, BlockPos held, Gas gas) {
+        if (!heldDown(level, held)) return false;
+        BlockPos edge = edgeOf(level, held);
+        if (edge == null) return false;
+        level.setBlock(edge, Gases.with(level.getBlockState(edge), gas, 1), Block.UPDATE_ALL);
+        level.setBlock(pos, Gases.with(level.getBlockState(pos), gas, -1), Block.UPDATE_ALL);
+        return true;
+    }
+
+    /**
+     * Whether the gas here is full and cannot rise: everything above it, up to the clouds or to a
+     * roof, is full gas too. Gas with room over it is only on its way up, and is left to rise.
+     */
+    private static boolean heldDown(ServerLevel level, BlockPos pos) {
+        int ceiling = cloudCeiling(level);
+        BlockPos.MutableBlockPos at = pos.mutable();
+        for (int step = 0; step < LAYER_DEPTH; step++) {
+            BlockState state = level.getBlockState(at);
+            if (!Gases.isGas(state) || Gases.room(state) > 0) return false;
+            if (at.getY() >= ceiling && openSky(level, at)) return true;
+            at.move(Direction.UP);
+            if (!level.isInWorldBounds(at) || !level.isLoaded(at)) return true;
+            BlockState above = level.getBlockState(at);
+            if (!Gases.isGas(above)) return Gases.room(above) == 0;
+        }
+        return true;
+    }
+
+    /**
+     * The nearest place along a full layer of gas, at its own level, that still has room: the layer's
+     * edge. Null where the layer is closed in, or wider than is worth following.
+     */
+    private static BlockPos edgeOf(ServerLevel level, BlockPos start) {
+        ArrayDeque<BlockPos> queue = new ArrayDeque<>();
+        java.util.Set<Long> seen = new java.util.HashSet<>();
+        queue.add(start);
+        seen.add(start.asLong());
+        while (!queue.isEmpty() && seen.size() <= LAYER_SEARCH) {
+            BlockPos at = queue.poll();
+            for (Direction side : Direction.Plane.HORIZONTAL) {
+                BlockPos next = at.relative(side);
+                if (!seen.add(next.asLong()) || !level.isLoaded(next)) continue;
+                BlockState state = level.getBlockState(next);
+                if (Gases.room(state) > 0) return next;
+                if (Gases.isGas(state)) queue.add(next);
+            }
+        }
+        return null;
     }
 
     private static int tickDelay(BlockState state) {

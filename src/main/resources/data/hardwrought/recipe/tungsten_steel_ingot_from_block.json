@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:tungsten_steel_block"
+  ],
+  "result": {
+    "id": "hardwrought:tungsten_steel_ingot",
+    "count": 9
+  }
+}

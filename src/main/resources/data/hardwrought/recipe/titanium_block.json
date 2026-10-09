@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###",
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": "hardwrought:titanium_ingot"
+  },
+  "result": {
+    "id": "hardwrought:titanium_block"
+  }
+}

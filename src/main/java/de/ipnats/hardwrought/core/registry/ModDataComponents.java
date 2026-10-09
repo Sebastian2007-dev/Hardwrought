@@ -36,6 +36,13 @@ public final class ModDataComponents {
                     .networkSynchronized(de.ipnats.hardwrought.smithing.ForgeQuality.STREAM_CODEC)
                     .build());
 
+    /** The runes written on a piece, where they lie (see {@code enchanting/RuneEnchanting}). */
+    public static final DataComponentType<de.ipnats.hardwrought.enchanting.RuneWork.Marks> RUNES =
+            register("runes", DataComponentType.<de.ipnats.hardwrought.enchanting.RuneWork.Marks>builder()
+                    .persistent(de.ipnats.hardwrought.enchanting.RuneWork.Marks.CODEC)
+                    .networkSynchronized(de.ipnats.hardwrought.enchanting.RuneWork.Marks.STREAM_CODEC)
+                    .build());
+
     /** A piece half-way through the anvil, and what it is becoming. */
     public static final DataComponentType<de.ipnats.hardwrought.smithing.ForgingState> FORGING_STATE =
             register("forging_state", DataComponentType.<de.ipnats.hardwrought.smithing.ForgingState>builder()

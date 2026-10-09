@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:cache",
+  "input": {
+    "type": "minecraft:clamp",
+    "input": {
+      "type": "minecraft:mul",
+      "left": {
+        "type": "minecraft:add",
+        "left": {
+          "type": "minecraft:noise",
+          "noise": "hardwrought:mountain_range",
+          "xz_scale": 1.0,
+          "y_scale": 0.0
+        },
+        "right": -0.1
+      },
+      "right": 1.67
+    },
+    "min": 0.0,
+    "max": 1.0
+  }
+}

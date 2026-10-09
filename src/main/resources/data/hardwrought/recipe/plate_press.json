@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "P": "minecraft:piston",
+    "W": "hardwrought:copper_wire",
+    "D": "hardwrought:dynamo"
+  },
+  "pattern": [
+    "IPI",
+    "WDW",
+    "IPI"
+  ],
+  "result": {
+    "id": "hardwrought:plate_press",
+    "count": 1
+  }
+}
