@@ -52,9 +52,104 @@ public final class DebugCommands {
                                         .executes(context -> locateMountain(context.getSource(),
                                                 com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "height"))))))
                         .then(knowledge(registries))
+                        .then(season())
+                        .then(weather())
                         .then(literal("debug")
                                 .then(literal("on").executes(context -> toggle(context.getSource(), true)))
                                 .then(literal("off").executes(context -> toggle(context.getSource(), false))))));
+    }
+
+    /**
+     * {@code season <season> [day]}: runs the calendar forward to that day of that season.
+     *
+     * <p>Forward, always, and by whole days. The season is worked out from the world clock and
+     * nothing else (see {@link de.ipnats.hardwrought.environment.SeasonCycle}), which is what keeps
+     * it free of saved state and impossible to desynchronise — so the honest way to change it is to
+     * move the clock, and the honest direction to move a clock is forwards. Whole days because the
+     * result then happens at the hour it was asked at: a world set to winter at noon is still at
+     * noon, and the winter can actually be looked at.
+     *
+     * <p>It is a debug tool and it says so: up to a year of game time can pass in one command.
+     */
+    private static LiteralArgumentBuilder<CommandSourceStack> season() {
+        LiteralArgumentBuilder<CommandSourceStack> command = literal("season");
+        for (de.ipnats.hardwrought.environment.Season season
+                : de.ipnats.hardwrought.environment.Season.values()) {
+            command = command.then(literal(season.serializedName())
+                    .executes(context -> setSeason(context.getSource(), season, 1))
+                    .then(argument("day", com.mojang.brigadier.arguments.IntegerArgumentType.integer(
+                                    1, de.ipnats.hardwrought.environment.SeasonCycle.DAYS_PER_SEASON))
+                            .executes(context -> setSeason(context.getSource(), season,
+                                    com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "day")))));
+        }
+        return command;
+    }
+
+    /**
+     * {@code weather fog [thickness|clear]}: put an autumn morning on the world now.
+     *
+     * <p>A natural fog is rolled at about one autumn morning in three, which is the right rate to
+     * live with and a hopeless rate to test against. This sets one directly. It lasts until the
+     * next dawn and is never saved, so a forced fog cannot quietly outlive the session it was made
+     * in — and {@code clear} hands the morning straight back to the calendar.
+     */
+    private static LiteralArgumentBuilder<CommandSourceStack> weather() {
+        return literal("weather").then(literal("fog")
+                .executes(context -> setFog(context.getSource(),
+                        de.ipnats.hardwrought.environment.SeasonState.thickestFog()))
+                .then(literal("clear").executes(context -> setFog(context.getSource(), null)))
+                .then(argument("thickness", com.mojang.brigadier.arguments.FloatArgumentType.floatArg(0f, 1f))
+                        .executes(context -> setFog(context.getSource(),
+                                com.mojang.brigadier.arguments.FloatArgumentType.getFloat(context, "thickness")))));
+    }
+
+    private static int setFog(CommandSourceStack source, Float thickness) {
+        var overworld = source.getServer().getLevel(net.minecraft.world.level.Level.OVERWORLD);
+        if (overworld == null) {
+            source.sendFailure(Component.literal("Hardwrought: diese Welt hat keine Oberwelt."));
+            return 0;
+        }
+        de.ipnats.hardwrought.environment.SeasonState.force(overworld, thickness);
+        if (thickness == null) {
+            source.sendSuccess(() -> Component.literal(
+                    "Hardwrought: Nebel wieder dem Kalender ueberlassen."), true);
+            return 1;
+        }
+        boolean smothering = thickness
+                >= de.ipnats.hardwrought.environment.SeasonFogRules.SMOTHERING;
+        source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "Hardwrought: Nebel auf %.0f %% bis zum naechsten Morgen.%s", thickness * 100,
+                smothering ? " Dicht genug: Untote brennen nicht, Monster spawnen am Tag."
+                        : " Zu duenn, um die Sonne abzuhalten.")), true);
+        return 1;
+    }
+
+    private static int setSeason(CommandSourceStack source,
+                                 de.ipnats.hardwrought.environment.Season season, int day) {
+        var server = source.getServer();
+        var clock = server.registryAccess().get(net.minecraft.world.clock.WorldClocks.OVERWORLD).orElse(null);
+        if (clock == null) {
+            source.sendFailure(Component.literal("Hardwrought: diese Welt hat keine Oberwelt-Uhr."));
+            return 0;
+        }
+        long now = server.clockManager().getInstance(clock).totalTicks();
+        long advance = de.ipnats.hardwrought.environment.SeasonCycle.ticksUntil(now, season, day);
+        // The season's name is translated rather than printed as its registry id: this line is read
+        // by a person, and "jetzt winter" in an otherwise German sentence reads like a bug.
+        if (advance == 0) {
+            source.sendSuccess(() -> Component.literal("Hardwrought: es ist bereits ")
+                    .append(Component.translatable(season.translationKey()))
+                    .append(Component.literal(String.format(Locale.ROOT, ", Tag %d.", day))), false);
+            return 1;
+        }
+        server.clockManager().addTicks(clock, Math.toIntExact(advance));
+        long days = advance / de.ipnats.hardwrought.environment.SeasonCycle.TICKS_PER_DAY;
+        source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                        "Hardwrought: Kalender um %d Tage vorgestellt — jetzt ", days))
+                .append(Component.translatable(season.translationKey()))
+                .append(Component.literal(String.format(Locale.ROOT, ", Tag %d von %d.", day,
+                        de.ipnats.hardwrought.environment.SeasonCycle.DAYS_PER_SEASON))), true);
+        return 1;
     }
 
     /**
@@ -215,6 +310,33 @@ public final class DebugCommands {
                 runtime.waterFlow().signals(), runtime.waterFlow().worldLookups(),
                 runtime.waterFlow().signals() == 0 ? 0.0
                         : 100.0 * runtime.waterFlow().worldLookups() / runtime.waterFlow().signals())), false);
+
+        // Does what is drawn match what is held? A cell whose block state says one thing and whose
+        // stored amount says another looks full while the simulation sees a trickle, and every
+        // symptom of that reads as "the water is stuck". Worth asking outright rather than
+        // inferring from the two numbers side by side.
+        int mismatched = 0;
+        StringBuilder worst = new StringBuilder();
+        for (net.minecraft.core.BlockPos cell : net.minecraft.core.BlockPos.betweenClosed(
+                pos.offset(-4, -4, -4), pos.offset(4, 4, 4))) {
+            var cellState = level.getBlockState(cell);
+            if (!de.ipnats.hardwrought.water.WaterStorage.isFreeWater(cellState)) continue;
+            int held = de.ipnats.hardwrought.water.WaterStorage.amount(level, cell);
+            int shown = cellState.getValue(net.minecraft.world.level.block.LiquidBlock.LEVEL);
+            int ought = de.ipnats.hardwrought.water.WaterAmounts.displayLevel(held);
+            if (shown == ought) continue;
+            mismatched++;
+            if (worst.length() < 90) {
+                worst.append(String.format(Locale.ROOT, " %s=%dmB/Stufe%d(statt%d)",
+                        cell.toShortString(), held, shown, ought));
+            }
+        }
+        int desynced = mismatched;
+        String examples = worst.toString();
+        source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "Darstellung: %s%s", desynced == 0 ? "stimmt mit den Mengen ueberein"
+                        : desynced + " Zellen im Umkreis 4 zeigen etwas anderes als sie halten:",
+                examples)), false);
 
         var body = de.ipnats.hardwrought.water.WaterBody.scan(level, pos);
         source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,

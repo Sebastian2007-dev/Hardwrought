@@ -45,6 +45,8 @@ public class Hardwrought implements ModInitializer {
 		WaterStorage.initialize();
 		de.ipnats.hardwrought.water.WaterCurrent.initialize();
 		WaterQualityStorage.initialize();
+		de.ipnats.hardwrought.water.FrozenWater.initialize();
+		de.ipnats.hardwrought.water.BucketMachinery.initialize();
 		de.ipnats.hardwrought.oil.ModFluids.initialize();
 		ModBlocks.initialize();
 		net.fabricmc.fabric.api.registry.FlammableBlockRegistry.getDefaultInstance().add(ModBlocks.CRUDE_OIL,
@@ -66,6 +68,8 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.core.registry.ModBlockEntities.initialize();
 		de.ipnats.hardwrought.building.BuildingPhysics.initialize();
 		de.ipnats.hardwrought.building.SharedCell.initialize();
+		de.ipnats.hardwrought.environment.SeasonState.initialize();
+		de.ipnats.hardwrought.environment.SeasonCommands.initialize();
 		de.ipnats.hardwrought.mobs.MobSystem.initialize();
 		de.ipnats.hardwrought.mobs.SleepDebt.initialize();
 		de.ipnats.hardwrought.smithing.Rust.initialize();

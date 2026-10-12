@@ -191,6 +191,25 @@ public final class WaterStorage {
         if (changed) markChanged(firstChunk, table);
     }
 
+    /**
+     * Makes the block state agree with the amount, if it has drifted.
+     *
+     * <p>Everything in this class writes the two together, so a cell that disagrees should not
+     * exist — and one was found in a played world holding an eighth of a block while drawn as a
+     * full one. Rather than leave a world carrying that, any cell the solver looks at is checked:
+     * it is one state read on a cell already in hand, and it repairs rather than merely detects.
+     */
+    public static void healDisplay(ServerLevel level, BlockPos pos, int amount) {
+        if (amount <= 0) return;
+        BlockState state = level.getBlockState(pos);
+        if (!isFreeWater(state)) return;
+        int shown = state.getValue(LiquidBlock.LEVEL);
+        int ought = WaterAmounts.displayLevel(amount);
+        if (shown == ought) return;
+        setWaterDisplay(level, pos, state,
+                Blocks.WATER.defaultBlockState().setValue(LiquidBlock.LEVEL, ought));
+    }
+
     /** Free water is water that can move: a plain water block, not a waterlogged stair or a kelp. */
     public static boolean isFreeWater(BlockState state) {
         return state.is(Blocks.WATER) && state.hasProperty(LiquidBlock.LEVEL);

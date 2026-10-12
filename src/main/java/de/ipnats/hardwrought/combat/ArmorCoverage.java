@@ -15,6 +15,12 @@ import java.util.Map;
  */
 public record ArmorCoverage(double slashResistance, double pierceResistance, double bluntResistance,
                             double staminaDrain, double insulation) {
+    /*
+     * Insulation used to be summed rather than weighted, which made four pieces of anything come to
+     * roughly 0.5 whatever they were made of, and left plate insulating better than leather because
+     * its figure was higher. Weighting it by the same coverage the resistances use means a full set
+     * is worth exactly its material's number and a single helmet is worth a seventh of it.
+     */
     public static final ArmorCoverage NONE = new ArmorCoverage(0, 0, 0, 0, 0);
     /** Insulation used for a worn piece whose material has no profile yet. */
     public static final double DEFAULT_INSULATION = 0.12;
@@ -23,9 +29,10 @@ public record ArmorCoverage(double slashResistance, double pierceResistance, dou
     private static final double[] COVERAGE = {0.15, 0.40, 0.30, 0.15};
 
     public ArmorCoverage {
+        // Insulation alone may be negative: metal takes heat off a body rather than keeping it on.
         if (!finite(slashResistance, pierceResistance, bluntResistance, staminaDrain, insulation)
                 || slashResistance < 0 || pierceResistance < 0 || bluntResistance < 0
-                || staminaDrain < 0 || insulation < 0) {
+                || staminaDrain < 0 || insulation < -1 || insulation > 1) {
             throw new IllegalArgumentException("Invalid armor coverage");
         }
     }
@@ -42,7 +49,7 @@ public record ArmorCoverage(double slashResistance, double pierceResistance, dou
             double coverage = COVERAGE[index];
             ArmorProfile profile = profiles.get(BuiltInRegistries.ITEM.getKey(piece.getItem()));
             if (profile == null) {
-                insulation += DEFAULT_INSULATION;
+                insulation += coverage * DEFAULT_INSULATION;
                 continue;
             }
             // A piece protects as well as it was made (ForgeQuality); one nobody forged, as its material does.
@@ -51,7 +58,9 @@ public record ArmorCoverage(double slashResistance, double pierceResistance, dou
             pierce += made * profile.pierceResistance();
             blunt += made * profile.bluntResistance();
             drain += profile.staminaDrain();
-            insulation += profile.insulation().orElse(DEFAULT_INSULATION);
+            // Insulation is weighted by area like the resistances are, not summed. A helmet is not
+            // a coat, and four pieces of one material come to exactly that material's own figure.
+            insulation += coverage * profile.insulation().orElse(DEFAULT_INSULATION);
         }
         return new ArmorCoverage(slash, pierce, blunt, drain, insulation);
     }

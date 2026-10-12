@@ -4,10 +4,12 @@
 	"compatibilityLevel": "JAVA_25",
 	"client": [
 		"AbstractContainerScreenMixin",
+		"BiomeColorsMixin",
 		"CameraMixin",
 		"CreateWorldGameTabMixin",
 		"DeathScreenMixin",
 		"FluidRendererMixin",
+		"FogRendererMixin",
 		"GlobalSettingsUniformMixin",
 		"GuiGraphicsExtractorAccessor",
 		"InventoryScreenMixin",

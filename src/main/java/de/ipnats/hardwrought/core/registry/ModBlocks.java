@@ -18,6 +18,15 @@ import java.util.function.Function;
 public final class ModBlocks {
     public static final Block DIRT_SLAB = register("dirt_slab", SlabBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.DIRT));
+
+    /**
+     * Sections 23.1 and 24: ice the shape of the water it froze from. Vanilla ice is a whole block,
+     * which finite water cannot use. Random ticks are on so that ice in a thaw goes without waiting
+     * for a simulation pass to walk past it.
+     */
+    public static final de.ipnats.hardwrought.water.ThinIceBlock THIN_ICE = register("thin_ice",
+            de.ipnats.hardwrought.water.ThinIceBlock::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.ICE).randomTicks().noOcclusion());
     /** Section 71: the first workbench is cut out of a log, not joined out of boards. */
     public static final HewnWorkbenchBlock HEWN_WORKBENCH = register("hewn_workbench",
             HewnWorkbenchBlock::new,

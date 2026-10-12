@@ -24,7 +24,36 @@ public final class CarryWeight {
      */
     public static final double BASE_CAPACITY_KG = 85.0;
 
+    /**
+     * What going over the allowance costs. The load these are multiplied by is the fraction past
+     * the limit, so a player at twice their capacity has a load of 1.0 and pays the whole of it.
+     *
+     * <p>These used to be gentle, and for a good reason at the time: the old 45 kg allowance put a
+     * fresh player over the limit with one stack of cobblestone, so a hard penalty punished nobody
+     * but the innocent. The allowance was fixed; the gentleness outlived its cause and left
+     * overloading as something a player could simply choose to ignore. Being over the limit is a
+     * decision now — leave it behind or carry it home — and it is priced like one. It is still not
+     * a wall: at the cap a player walks at half speed and clears a block from a standing jump,
+     * which is slow and miserable rather than stuck.
+     */
+    public static final double OVERLOAD_SPEED_PER_LOAD = 0.45;
+    public static final double OVERLOAD_SPEED_CAP = 0.50;
+    public static final double OVERLOAD_JUMP_PER_LOAD = 0.40;
+    public static final double OVERLOAD_JUMP_CAP = 0.45;
+    /** Stamina drained per tick per point of load while on the move. */
+    public static final double OVERLOAD_STAMINA_PER_LOAD = 0.007;
+    /** Extra kcal per second per point of load: carrying it home is work, and work is eaten. */
+    public static final double OVERLOAD_ENERGY_PER_LOAD = 2.0;
+    /** How much slower the reserve comes back under load: at the limit it refills half as fast. */
+    public static final double OVERLOAD_RECOVERY_PER_LOAD = 2.0;
+
     private CarryWeight() { }
+
+    /** How far past the allowance a player is, as a fraction of it; zero while they are inside it. */
+    public static double load(double carriedKg, double capacityKg) {
+        if (capacityKg <= 0) return 0;
+        return Math.max(0, carriedKg / capacityKg - 1.0);
+    }
 
     public static double calculate(ServerPlayer player, Map<Identifier, Double> definitions) {
         double total = 0;

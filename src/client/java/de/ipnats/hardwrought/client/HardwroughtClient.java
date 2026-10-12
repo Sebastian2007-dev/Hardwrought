@@ -21,6 +21,9 @@ public class HardwroughtClient implements ClientModInitializer {
 		de.ipnats.hardwrought.client.magic.MagicClient.initialize();
 		de.ipnats.hardwrought.client.atlas.AtlasClient.initialize();
 		de.ipnats.hardwrought.client.environment.Darkness.initialize();
+		de.ipnats.hardwrought.client.environment.BucketTooltip.initialize();
+		de.ipnats.hardwrought.client.environment.SeasonClient.initialize();
+		de.ipnats.hardwrought.client.environment.SeasonFog.initialize();
 		de.ipnats.hardwrought.client.smeltery.SmelteryClient.initialize();
 		net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
 				de.ipnats.hardwrought.core.registry.ModBlockEntities.SHARED_CELL,

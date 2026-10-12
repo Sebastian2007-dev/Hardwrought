@@ -68,7 +68,6 @@ public final class SurvivalSystem {
     private static final double SPRINT_STAMINA_PER_TICK = 0.010;
     private static final double SWIM_STAMINA_PER_TICK = 0.008;
     private static final double CLIMB_STAMINA_PER_TICK = 0.006;
-    private static final double OVERLOAD_STAMINA_PER_TICK = 0.002;
     private static final double JUMP_STAMINA = 0.30;
     /**
      * What having broken one block costs on top of the effort the material itself took. Public for
@@ -482,8 +481,8 @@ public final class SurvivalSystem {
             lastOnGround.put(player.getUUID(), player.onGround());
 
             double carried = carriedWeight(player);
-            double load = Math.max(0, carried / capacity(player) - 1.0);
-            if (active && load > 0) delta -= OVERLOAD_STAMINA_PER_TICK * load;
+            double load = CarryWeight.load(carried, capacity(player));
+            if (active && load > 0) delta -= CarryWeight.OVERLOAD_STAMINA_PER_LOAD * load;
             if (active) delta -= ARMOR_STAMINA_PER_TICK * armorStaminaDrain(player);
             // Stamina regeneration refills the reserve whatever the player is doing, stronger per level.
             var staminaRegeneration = player.getEffect(de.ipnats.hardwrought.core.registry.ModEffects.STAMINA_REGENERATION);
@@ -556,9 +555,9 @@ public final class SurvivalSystem {
             double oxygenStress = gases.oxygenStress();
             double carbonDioxideStress = gases.carbonDioxideStress();
             double carbonMonoxideStress = gases.carbonMonoxideStress();
+            boolean immersed = player.isInWater();
             double ambient = ambientTemperature(player, air);
             double wetness = player.isInWaterOrRain() ? Math.min(1, v.wetness() + 0.12) : Math.max(0, v.wetness() - 0.025);
-            double insulation = ArmorCoverage.of(player, server.getOrThrow(ArmorProfiles.KEY)).insulation();
             double armorMass = 0;
             for (EquipmentSlot slot : ARMOR_SLOTS) {
                 ItemStack armor = player.getItemBySlot(slot);
@@ -566,30 +565,27 @@ public final class SurvivalSystem {
                     armorMass += CarryWeight.perItem(armor, server.getOrThrow(ItemWeightDefinitions.KEY));
                 }
             }
-            double environmentDelta = ambient - 20.0;
-            double exposure = environmentDelta < 0 ? Math.max(0.35, 1.0 - insulation * 1.8)
-                    : 1.0 + armorMass * 0.025;
-            double targetBody = 37.0 + environmentDelta * 0.055 * exposure;
-            if (ambient < 20) {
-                // Sections 14 and 15: wind and wet clothing both accelerate heat loss.
-                targetBody -= wetness * 1.2;
-                targetBody -= air.wind() * (1.0 - Math.min(0.9, insulation)) * 1.4;
-            }
-            // Lacking fat, there is nothing between the body and the cold.
-            if (ambient < 20 && v.nutrition().low(Nutrient.FAT)) targetBody -= FAT_LACK_COLD;
-            if (player.isSprinting() || player.isSwimming()) targetBody += 0.45 + armorMass * 0.015;
+            // The rune moves the air towards what the body wanted; everything after it is ordinary weather.
+            double feltAmbient = Temperance.temper(ambient, Temperance.of(player), immersed);
+            double insulation = Thermal.wornInsulation(
+                    ArmorCoverage.of(player, server.getOrThrow(ArmorProfiles.KEY)).insulation(), wetness);
+            double targetBody = Thermal.targetBody(feltAmbient, immersed, insulation, armorMass,
+                    air.wind(), wetness, v.nutrition().low(Nutrient.FAT),
+                    player.isSprinting() || player.isSwimming());
             double body = v.bodyTemperature() + (targetBody - v.bodyTemperature()) * 0.020;
             ActivityLoad work = activity.remove(player.getUUID());
             double workEnergy = work == null ? 0 : work.energy;
             double workWater = work == null ? 0 : work.water;
             double activityWater = player.isSprinting() ? 0.045 : (player.isSwimming() ? 0.035 : 0);
-            double heatWater = Math.max(0, ambient - 28) * 0.006;
+            double heatWater = Math.max(0, feltAmbient - 28) * 0.006;
             double armorWater = armorMass * 0.0025;
         double badWater = thirstDrain(player);
-            double excessLoad = Math.max(0, carried / capacity(player) - 1.0);
-            double coldEnergy = Math.max(0, 10 - ambient) * 0.08;
+            double excessLoad = CarryWeight.load(carried, capacity(player));
+            // Keeping warm is eaten. A tempered or well-dressed player pays much less of this.
+            double coldEnergy = Math.max(0, 10 - feltAmbient) * 0.08;
             // Sprinting and swimming are not counted here: vanilla already charges the hunger bar for them.
-            double energyUse = BASAL_ENERGY_PER_SECOND + workEnergy + coldEnergy + excessLoad * 0.8;
+            double energyUse = BASAL_ENERGY_PER_SECOND + workEnergy + coldEnergy
+                    + excessLoad * CarryWeight.OVERLOAD_ENERGY_PER_LOAD;
             // Section 18.1: thin air makes every breath harder work.
             energyUse += oxygenStress * 0.55;
             Nutrition diet = v.nutrition();
@@ -624,10 +620,13 @@ public final class SurvivalSystem {
             save.setVitals(player.getUUID(), next);
             applyAirDamage(player, gases);
             applyStrain(player, strain, next.stress());
-            if (metabolismPasses % THERMAL_DAMAGE_PASSES == 0
-                    && (next.bodyTemperature() < 34.0 || next.bodyTemperature() > 40.5)) {
-                player.hurtServer(player.level(), next.bodyTemperature() < 34.0
-                        ? player.level().damageSources().freeze() : player.level().damageSources().hotFloor(), 1.0f);
+            if (metabolismPasses % THERMAL_DAMAGE_PASSES == 0) {
+                float thermal = Thermal.thermalDamage(next.bodyTemperature());
+                if (thermal > 0) {
+                    player.hurtServer(player.level(), next.bodyTemperature() < Thermal.FREEZING_BODY
+                            ? player.level().damageSources().freeze()
+                            : player.level().damageSources().hotFloor(), thermal);
+                }
             }
             if (metabolismPasses % DEHYDRATION_DAMAGE_PASSES == 0) parch(player, next);
             applyPenalties(player, next, carried);
@@ -651,7 +650,8 @@ public final class SurvivalSystem {
         // Mob specification §§ 6 and 9: a husk's or a stray's hit leaves the player winded.
         double winded = player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.WINDED)
                 ? de.ipnats.hardwrought.mobs.MobHits.WINDED_RECOVERY : 1.0;
-        return hydration * energy * nourished * rest * thermal * air * calm * winded / (1.0 + load);
+        return hydration * energy * nourished * rest * thermal * air * calm * winded
+                / (1.0 + CarryWeight.OVERLOAD_RECOVERY_PER_LOAD * load);
     }
 
     /**
@@ -691,12 +691,14 @@ public final class SurvivalSystem {
     }
 
     private void applyPenalties(ServerPlayer player, PlayerVitals v, double carried) {
-        double load = Math.max(0, carried / capacity(player) - 1.0);
+        double load = CarryWeight.load(carried, capacity(player));
         double exhaustion = exhaustion(v.stamina());
-        // Both penalties ramp gently and stop well short of crippling. A player who is overloaded
-        // should feel heavy, not broken: at the cap they still sprint and still clear a single block.
-        double speedPenalty = -Math.min(0.30, load * 0.18 + exhaustion * 0.18);
-        double jumpPenalty = -Math.min(0.25, load * 0.15 + exhaustion * 0.22);
+        // Overloading is priced like the decision it is (see CarryWeight), while being tired out
+        // stays the gentler of the two: a spent player should still be able to walk home.
+        double speedPenalty = -Math.min(CarryWeight.OVERLOAD_SPEED_CAP,
+                load * CarryWeight.OVERLOAD_SPEED_PER_LOAD + exhaustion * 0.18);
+        double jumpPenalty = -Math.min(CarryWeight.OVERLOAD_JUMP_CAP,
+                load * CarryWeight.OVERLOAD_JUMP_PER_LOAD + exhaustion * 0.22);
         double miningPenalty = -Math.min(0.75, exhaustion * 0.45 + v.fatigue() / 300.0);
         updateModifier(player.getAttribute(Attributes.MOVEMENT_SPEED), MOVEMENT_MODIFIER, speedPenalty);
         updateModifier(player.getAttribute(Attributes.JUMP_STRENGTH), JUMP_MODIFIER, jumpPenalty);
@@ -765,13 +767,23 @@ public final class SurvivalSystem {
     }
 
     /**
-     * Room temperature from the environment model plus whatever is local to this player. Section 17
-     * asks for radiant heat before the whole room warms up, so a nearby flame still counts by itself.
+     * What this particular player is standing in, as against what the place is. The environment
+     * model gives the air; this adds the three things that belong to one body rather than to a
+     * location — the water it is in, the fires it is near, and whatever is breathing fire at it.
+     *
+     * <p>A player in water answers to the water and not to the air above it, and the two are
+     * nowhere near the same number (see {@link Thermal#waterTemperature}). That one substitution is
+     * what makes a lake a relief in a summer desert and a way to die in a winter tundra, without
+     * either case being written down anywhere.
      */
     private double ambientTemperature(ServerPlayer player, EnvironmentReading air) {
         double temperature = air.temperature();
-        if (player.isInWater()) temperature -= 6.0;
-        if (radiantHeatNearby(player)) temperature += 8.0;
+        if (player.isInWater()) temperature = Thermal.waterTemperature(temperature);
+        ServerLevel level = player.level();
+        // Section 17: an open flame warms what is near it long before it warms the room.
+        if (level.hasChunkAt(player.blockPosition())) {
+            temperature += de.ipnats.hardwrought.environment.RadiantHeat.nearby(level, player.blockPosition());
+        }
         // Mob specification §§ 21 and 22: blazes and magma cubes heat what is around them.
         temperature += de.ipnats.hardwrought.mobs.MobHeat.nearby(player);
         return PlayerVitals.clamp(temperature, -35, 55);
@@ -779,20 +791,6 @@ public final class SurvivalSystem {
 
     private double ambientTemperature(ServerPlayer player) {
         return ambientTemperature(player, environment.reading(player));
-    }
-
-    /** A bounded 7x5x7 look-around, never a world scan and never a chunk load. */
-    private static boolean radiantHeatNearby(ServerPlayer player) {
-        ServerLevel level = player.level();
-        BlockPos pos = player.blockPosition();
-        if (!level.hasChunkAt(pos)) return false;
-        return BlockPos.betweenClosedStream(pos.offset(-3, -2, -3), pos.offset(3, 2, 3))
-                .map(level::getBlockState).anyMatch(SurvivalSystem::isHeatSource);
-    }
-
-    private static boolean isHeatSource(BlockState state) {
-        return state.is(Blocks.FIRE) || state.is(Blocks.SOUL_FIRE) || state.is(Blocks.CAMPFIRE)
-                || state.is(Blocks.SOUL_CAMPFIRE) || state.is(Blocks.LAVA);
     }
 
     private double calculateSleepQuality(ServerPlayer player, BlockPos pos) {

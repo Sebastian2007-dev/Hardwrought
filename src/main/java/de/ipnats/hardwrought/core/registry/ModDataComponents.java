@@ -22,6 +22,21 @@ public final class ModDataComponents {
                             buffer -> WaterQuality.byOrdinal(ByteBufCodecs.VAR_INT.decode(buffer))))
                     .build());
 
+    /**
+     * How much water a container actually holds, in millibuckets.
+     *
+     * <p>A bucket in this mod is not full or empty, it is however full it is. Dipping it in a
+     * puddle gets a puddle's worth, and pouring it into a cell with room for half of it leaves half
+     * of it in the bucket. The amount has to travel with the item, so it lives here beside the
+     * quality of what is in it.
+     */
+    public static final DataComponentType<Integer> WATER_AMOUNT = register("water_amount",
+            DataComponentType.<Integer>builder()
+                    .persistent(com.mojang.serialization.Codec.intRange(
+                            0, de.ipnats.hardwrought.water.WaterAmounts.BUCKET))
+                    .networkSynchronized(ByteBufCodecs.VAR_INT)
+                    .build());
+
     /** Section 38: how hot a piece of metal is. Cools on its own; see {@code Heat}. */
     public static final DataComponentType<de.ipnats.hardwrought.smithing.Heat> HEAT = register("heat",
             DataComponentType.<de.ipnats.hardwrought.smithing.Heat>builder()

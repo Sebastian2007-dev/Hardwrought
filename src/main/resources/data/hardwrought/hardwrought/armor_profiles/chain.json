@@ -9,5 +9,5 @@
   "pierce_resistance": 0.3,
   "blunt_resistance": 0.1,
   "stamina_drain": 0.12,
-  "insulation": 0.06
+  "insulation": -0.25
 }

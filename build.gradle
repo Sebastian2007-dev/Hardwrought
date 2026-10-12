@@ -52,6 +52,38 @@ dependencies {
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 }
 
+/**
+ * Automated client runs are played back by nobody, and at full volume they are played back loudly.
+ * This drops the master volume in the run directories before a launch, creating options.txt if the
+ * directory has none yet and leaving every other setting in it alone. Kept in the build rather than
+ * in the file itself because both run directories are generated and are not in version control.
+ */
+def quietVolume = "0.05"
+def quietRunDirectory = { File directory ->
+    directory.mkdirs()
+    File options = new File(directory, "options.txt")
+    List<String> lines = options.exists() ? options.readLines("UTF-8") : []
+    boolean written = false
+    lines = lines.collect { line ->
+        if (!line.startsWith("soundCategory_master:")) return line
+        written = true
+        return "soundCategory_master:" + quietVolume
+    }
+    if (!written) lines += "soundCategory_master:" + quietVolume
+    options.withWriter("UTF-8") { writer -> lines.each { writer.writeLine(it) } }
+}
+
+tasks.register("quietTestRuns") {
+    description = "Turns the master volume down in the generated client-test run directory."
+    doLast {
+        quietRunDirectory(file("build/run/clientGameTest"))
+    }
+}
+
+tasks.configureEach { task ->
+    if (task.name == "runClientGameTest") task.dependsOn("quietTestRuns")
+}
+
 processResources {
 	def version = project.version
 	inputs.property "version", version

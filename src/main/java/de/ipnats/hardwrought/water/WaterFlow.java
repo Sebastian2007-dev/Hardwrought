@@ -39,12 +39,23 @@ import java.util.Map;
  */
 public final class WaterFlow {
     /** Cells moved per tick, so this remains a hard ceiling on the simulation work. */
-    public static final int BUDGET_PER_PASS = 1024;
+    public static final int BUDGET_PER_PASS = 4_096;
     /**
      * Wall-clock guard for one server tick. A cell count alone is not enough because changing a
      * visible block is much more expensive than inspecting a settled one.
+     *
+     * <p>Measured rather than guessed. At 1.5 ms the solver managed about 550 cells a tick while
+     * one transfer wakes eleven, so it produced work faster than it consumed it and the queue sat
+     * permanently at {@link #MAX_ACTIVE} — at which point {@code activate} starts dropping cells
+     * and water simply stops moving at the edges of whatever is happening. That is the whole of
+     * "the water does not go very far". The same reading had the server itself at 6 ms of its 50,
+     * so the simulation was starving beside eight times its own budget in spare capacity.
+     *
+     * <p>Five milliseconds is still a fifth of a conservative tick, and the congestion backoff
+     * below is untouched: the moment the server does get busy this drops back to half a
+     * millisecond and then to a tenth, so a heavier world cannot be dragged under by water.
     */
-    public static final long MAX_NANOS_PER_TICK = 1_500_000L;
+    public static final long MAX_NANOS_PER_TICK = 5_000_000L;
     /** Back off before water competes with entities, falling blocks and networking for a 50 ms tick. */
     private static final long CONGESTED_TICK_NANOS = 35_000_000L;
     private static final long OVERLOADED_TICK_NANOS = 45_000_000L;
@@ -235,12 +246,16 @@ public final class WaterFlow {
         if (!level.hasChunkAt(pos)) return;
         int amount = WaterStorage.amount(level, pos);
         if (amount <= 0) return;
+        // A cell whose block state disagrees with what it holds looks full while the simulation
+        // sees a trickle, and every symptom of that reads as water being stuck. Correcting it here
+        // costs a state read on a cell already being worked on, and heals worlds that have one.
+        WaterStorage.healDisplay(level, pos, amount);
 
         amount = fall(level, pos, amount);
         if (amount <= 0) return;
         amount = rise(level, pos, amount);
         if (amount <= 0) return;
-        if (amount >= WaterAmounts.SPREAD_THRESHOLD) level(level, pos, amount);
+        level(level, pos, amount);
     }
 
     /**
@@ -275,13 +290,29 @@ public final class WaterFlow {
                 Math.min(move, WaterAmounts.MAX_FALL_PER_PASS));
     }
 
-    /** Rule three: water levels out. Each neighbour with less gets a share of the difference. */
+    /**
+     * Rule three: water levels out. Each neighbour with less gets a share of the difference.
+     *
+     * <p>The spread threshold applies to <em>wetting new ground</em> and to nothing else. That
+     * distinction is the whole of this rule and it was missing: the threshold used to gate the
+     * entire call, so a cell holding less than an eighth of a block would not level with anything,
+     * including the cell beside it holding four times as much. Water therefore spread until every
+     * cell it had reached was under the threshold and then stopped dead, uneven, wherever it
+     * happened to be — a dug pit came to rest as a wedge and stayed one.
+     *
+     * <p>Keeping the threshold on dry neighbours keeps the behaviour it was written for: a film
+     * does not creep on across a floor forever, and no cell is drawn as an eighth of a block that
+     * is not really there. Two cells that both already hold water have neither problem, and
+     * {@link WaterAmounts#LEVELLING_THRESHOLD} is what stops them jittering.
+     */
     private void level(ServerLevel level, BlockPos pos, int amount) {
         int mine = amount;
         for (Direction side : SIDES) {
             BlockPos next = pos.relative(side);
             if (!WaterStorage.canHold(level, next)) continue;
             int theirs = WaterStorage.amount(level, next);
+            // A film may settle with water it can reach, but may not go wetting dry ground.
+            if (theirs <= 0 && mine < WaterAmounts.SPREAD_THRESHOLD) continue;
             int difference = mine - theirs;
             if (difference < WaterAmounts.LEVELLING_THRESHOLD) continue;
             // Half the difference is the exact equilibrium of this pair. Rounding up is safe: an

@@ -185,9 +185,25 @@ public final class CombatGameTests {
         zombie.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
         helper.assertTrue(combat.armorCoverage(zombie).resistance(CombatDamageType.SLASH) < 0.70,
                 "An uncovered slot lowers the average resistance");
+        // Specification section 36: there is no universally perfect armor, and this is where it is
+        // paid. Leather holds warmth against the body; a steel plate is a radiator strapped to one.
+        helper.assertTrue(combat.armorCoverage(zombie).insulation() < 0,
+                "Metal armor conducts heat away rather than keeping it, so its insulation is negative");
+        equipLeather(zombie);
+        double leather = combat.armorCoverage(zombie).insulation();
+        helper.assertTrue(leather > 0.5,
+                "A full suit of leather is the warmest thing a player can wear: " + leather);
+        equipPlate(zombie);
+        helper.assertTrue(combat.armorCoverage(zombie).insulation() < leather,
+                "Whatever the numbers become, leather must never insulate worse than plate");
+
+        // One unprofiled piece on an otherwise bare body is worth its share of the default, no more.
+        strip(zombie);
         zombie.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.CARVED_PUMPKIN));
-        helper.assertTrue(combat.armorCoverage(zombie).insulation() > 0,
-                "A worn piece without a profile still insulates by the documented default");
+        double pumpkin = combat.armorCoverage(zombie).insulation();
+        helper.assertTrue(pumpkin > 0 && pumpkin < ArmorCoverage.DEFAULT_INSULATION,
+                "A worn piece without a profile insulates by the default, weighted by what it covers: "
+                        + pumpkin);
         zombie.discard();
         helper.succeed();
     }
@@ -406,6 +422,20 @@ public final class CombatGameTests {
                                            LivingEntity attacker, Item weapon) {
         attacker.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(weapon));
         return sources.mobAttack(attacker);
+    }
+
+    private static void equipLeather(LivingEntity entity) {
+        entity.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.LEATHER_HELMET));
+        entity.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.LEATHER_CHESTPLATE));
+        entity.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.LEATHER_LEGGINGS));
+        entity.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.LEATHER_BOOTS));
+    }
+
+    private static void strip(LivingEntity entity) {
+        for (EquipmentSlot slot : new EquipmentSlot[]{
+                EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
+            entity.setItemSlot(slot, ItemStack.EMPTY);
+        }
     }
 
     private static void equipPlate(LivingEntity entity) {

@@ -36,21 +36,30 @@ second. Disconnecting or restarting a world does not reset the values.
   stamina spent is charged as 1.6 kcal, which is what ties a morning of breaking rock to being
   hungry at the end of it.
 - **Carry weight:** all 41 player inventory slots are weighed. The base capacity is **85 kg**; excess
-  weight slows movement and jumping and raises stamina cost. Every item says what it weighs in its
-  tooltip, and the vitals panel (**H**) shows the load against the allowance.
+  weight slows movement and jumping, drains stamina, costs calories and slows recovery. Every item
+  says what it weighs in its tooltip, and the frame round the portrait in the vitals panel (**H**)
+  turns from white towards red as the load passes the allowance.
 
   The numbers are game numbers, not physics — a Minecraft block is a cubic metre of stone and would
   weigh tonnes. What they are sized against is a working trip: three stacks of blocks, four tools and
   a stack of bread comes to 78 kg and is carried entirely free. A full inventory of rubble is 800 kg
   and is meant to be felt.
 
-  Both penalties ramp gently and stop well short of crippling: movement at −30 %, jumping at −25 %,
-  however much is carried. An overloaded player is heavy, not broken — they still sprint, and they
-  still clear a single block. This was not always true: a block used to weigh 0.75 kg against a 45 kg
-  allowance, so **one stack of cobblestone put a fresh player permanently over the limit** and the
-  penalties reached their old caps of −55 % and −65 % at about two and a half stacks. The effect was
-  a player at full stamina who could not sprint and could barely jump, with nothing on screen saying
-  why. Hence both the softer numbers and the two readouts.
+  What being over the allowance costs is written once in `CarryWeight` and read from there by the
+  system, the HUD and the tests. The figure the costs scale with is the **load**: how far past the
+  limit the player is, as a fraction of it, so 170 kg against an 85 kg allowance is a load of 1.0.
+  Per point of load: **−45 % movement speed** (capped at −50 %), **−40 % jump height** (capped at
+  −45 %), 0.007 stamina a tick while moving, 2.0 kcal a second, and a reserve that refills at
+  `1 / (1 + 2 × load)` of its usual rate.
+
+  These used to be far gentler — −18 % and −15 % per point of load against caps of −30 % and
+  −25 % — and for a good reason at the time. A block used to weigh 0.75 kg against a 45 kg
+  allowance, so **one stack of cobblestone put a fresh player permanently over the limit**, and a
+  hard penalty punished nobody but the innocent. The allowance was fixed; the gentleness outlived
+  its cause and left overloading as something a player could simply decide not to care about.
+  Carrying too much is a decision now — leave it behind or haul it home — and it is priced like
+  one. It is still not a wall: at the cap a player walks at half speed and clears a block from a
+  standing jump, which is slow and miserable rather than stuck.
 - **Fatigue:** a day-scale value. Staying awake through one full Minecraft day and night costs about
   30 of 100, so a whole cycle can always be seen through without being forced to sleep, and one night
   of good sleep clears more than a day of being awake builds up. Bad air adds to it but stays in the
@@ -77,6 +86,10 @@ second. Disconnecting or restarting a world does not reset the values.
   a declared neutral input here and is supplied for real by the Milestone-3 environment model, which
   also took over the ambient temperature; this system now only adds what is local to one player.
 
+  The model itself has since moved out into `Thermal`, and with it the season, snow, ice and fog
+  that make it matter — all of that is in **[docs/seasons.md](seasons.md)**, which is the place to
+  read before changing any of these numbers.
+
 ## Content and assets
 
 The waterskin is crafted from four leather and one glass bottle. Its item texture is stored
@@ -88,10 +101,23 @@ at `assets/hardwrought/textures/item/filled_waterskin.png`; the generated source
 Ten green stamina drops sit directly above the vanilla hearts and ten blue hydration drops directly
 above the hunger bar, which is itself the calorie reserve. The hydration row disappears underwater so
 Minecraft's air bubbles stay clear. Empty and partially filled drops make both values readable
-without a large status panel. `H` toggles a compact panel in the upper-left corner. It contains a
-0–2400 kcal bar with the exact figure underneath, a thin 0–100 fatigue bar with its number, a
-blue-to-red body-temperature scale with a position marker and the exact Celsius value, a 0–100
-restlessness bar and the carried load. `V` remains the sleep/wake key.
+without a large status panel. `H` toggles a small panel in the upper-left corner, 148 × 33 pixels of
+it: the player's own head and shoulders in a framed window, and beside it a blue-to-red
+body-temperature scale with a position marker and the exact Celsius value, and a thin 0–100 fatigue
+bar with its number. `V` remains the sleep/wake key.
+
+The panel used to be three times that size and carried strain, altitude habit and the carried load in
+kilogrammes as well. Those are gone on purpose: they were a column of figures a body has no way of
+knowing about itself, which is a HUD saying what the game should be making the player feel. The two
+rows that are left carry no written labels either — a scale running blue to red and ending in °C is a
+thermometer whatever is printed over it, and two words would have cost a third of the panel to say
+what it already says.
+
+The load is still shown, but as the colour of the frame round the portrait: bone white inside the
+allowance, sliding to red over the 80 % past it where the penalty itself ramps hardest, with the
+figure printed across the bottom of the window from 90 % of the allowance upwards — the point where
+it starts to cost something. A slide rather than a switch, because a frame that only flipped at the
+limit would lie about what is happening to the legs.
 
 Generated texture prompt:
 
@@ -111,6 +137,7 @@ Generated texture prompt:
 - `FoodNutritionDefinitions` loads exact `hardwrought/food_nutrition/*.json` profiles.
 - `SurvivalSnapshotPayload` is the bounded server-to-client view.
 - `SurvivalHud` renders the snapshot and owns the sleep key binding.
+- `VitalsPortrait` draws the framed head-and-shoulders window and owns the load-to-colour rule.
 
 Additional nutrition and weight profiles can be supplied by datapacks without changing the saved
 player schema or network authority model. Reloads reject duplicate or invalid entries as a unit.

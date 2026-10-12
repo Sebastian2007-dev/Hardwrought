@@ -592,6 +592,96 @@ public final class WaterFlowGameTests {
         helper.succeed();
     }
 
+    /**
+     * A dug pit, filled from one corner, has to come to rest with a flat surface.
+     *
+     * <p>This is the shape a player actually makes and the one that was reported standing as a
+     * frozen wedge. It is several blocks deep, so it is the multi-layer case rather than the single
+     * sheet, and it runs the real simulation rather than stepping cells by hand.
+     */
+    @GameTest(maxTicks = 600)
+    public void aDugPitComesToRestLevel(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos base = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE_OFFSET);
+        int width = 5;
+        int depth = 3;
+        for (int x = -1; x <= width; x++) {
+            for (int z = -1; z <= width; z++) {
+                for (int y = -depth - 1; y <= 2; y++) {
+                    boolean wall = x < 0 || z < 0 || x == width || z == width || y == -depth - 1;
+                    level.setBlockAndUpdate(base.offset(x, y, z), wall
+                            ? Blocks.STONE.defaultBlockState() : Blocks.AIR.defaultBlockState());
+                }
+            }
+        }
+        // Three blocks of water heaped in one corner. Deliberately little: spread over this floor
+        // it comes to well under the threshold at which a film stops wetting dry ground, so the
+        // water cannot reach every corner — and whatever it does reach has to come to rest level
+        // with itself. That is the case that stood as a frozen wedge in play, and the reason is
+        // that the threshold used to stop thin water levelling at all, not merely spreading.
+        int poured = 0;
+        for (int y = -depth; y <= -1; y++) {
+            BlockPos corner = base.offset(0, y, 0);
+            level.setBlockAndUpdate(corner, Blocks.WATER.defaultBlockState());
+            WaterStorage.setAmount(level, corner, WaterAmounts.BLOCK);
+            poured += WaterAmounts.BLOCK;
+            WaterFlow.disturb(level, corner);
+        }
+        final int total = poured;
+
+        helper.runAfterDelay(400, () -> {
+            try {
+                int[][] columns = new int[width][width];
+                int sum = 0;
+                int lowest = Integer.MAX_VALUE;
+                int highest = Integer.MIN_VALUE;
+                for (int x = 0; x < width; x++) {
+                    for (int z = 0; z < width; z++) {
+                        int column = 0;
+                        for (int y = -depth; y <= 2; y++) {
+                            column += WaterStorage.amount(level, base.offset(x, y, z));
+                        }
+                        columns[x][z] = column;
+                        sum += column;
+                        // Only the wet part has to be level. Water too thin to wet new ground is
+                        // meant to leave corners dry; what it must never do is leave the part it
+                        // did reach standing at different heights.
+                        if (column > 0) {
+                            lowest = Math.min(lowest, column);
+                            highest = Math.max(highest, column);
+                        }
+                    }
+                }
+                StringBuilder profile = new StringBuilder();
+                for (int x = 0; x < width; x++) {
+                    profile.append(System.lineSeparator()).append("      ");
+                    for (int z = 0; z < width; z++) {
+                        profile.append(String.format(java.util.Locale.ROOT, "%5d", columns[x][z]));
+                    }
+                }
+                helper.assertTrue(sum == total, String.format(java.util.Locale.ROOT,
+                        "A pit loses nothing: %d of %d mB.%s", sum, total, profile));
+                // One visible eighth is the bound, not LEVELLING_THRESHOLD: pairs stop equalising
+                // once they are within ten millibuckets of each other, and across a five by five
+                // floor those tolerances add up. Under an eighth is flat to the eye, which is the
+                // property that matters.
+                helper.assertTrue(highest - lowest < WaterAmounts.DISPLAY_STEP, String.format(
+                        java.util.Locale.ROOT,
+                        "and the water it reached comes to rest level: deepest wet column %d mB, "
+                                + "shallowest %d mB.%s", highest, lowest, profile));
+            } finally {
+                for (int x = -1; x <= width; x++) {
+                    for (int z = -1; z <= width; z++) {
+                        for (int y = -depth - 1; y <= 2; y++) {
+                            level.setBlockAndUpdate(base.offset(x, y, z), Blocks.AIR.defaultBlockState());
+                        }
+                    }
+                }
+            }
+            helper.succeed();
+        });
+    }
+
     private static int total(ServerLevel level, BlockPos base, int height) {
         int sum = 0;
         for (int y = 0; y < height; y++) sum += WaterStorage.amount(level, base.above(y));

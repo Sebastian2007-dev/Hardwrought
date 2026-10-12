@@ -21,6 +21,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 
 public final class WaterGameTests {
@@ -385,6 +386,80 @@ public final class WaterGameTests {
                 "Clean water never does this");
         helper.assertTrue(de.ipnats.hardwrought.water.WaterQuality.SALT.illnessRisk() > 0.0,
                 "Sea water does");
+        helper.succeed();
+    }
+
+    /**
+     * A bucket that holds a measured amount, and the two sums that must come out.
+     *
+     * <p>Water taken out of the world equals water in the bucket; water poured out of the bucket
+     * equals water in the world. The old all-or-nothing bucket kept those true by refusing
+     * everything awkward — a puddle could not be dipped and a nearly full cell could not be topped
+     * up. Keeping them true while also doing the awkward cases is the whole of this change.
+     */
+    @GameTest
+    public void aBucketHoldsWhateverItCouldGet(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos pos = helper.absolutePos(new BlockPos(1, 2, 1)).offset(WORKSPACE_OFFSET, 0, WORKSPACE_OFFSET);
+        try {
+            level.setBlockAndUpdate(pos.below(), Blocks.STONE.defaultBlockState());
+            level.setBlockAndUpdate(pos, Blocks.WATER.defaultBlockState());
+
+            // A puddle holding a third of a block gives a third of a bucket, not nothing.
+            int puddle = de.ipnats.hardwrought.water.WaterAmounts.BLOCK / 3;
+            de.ipnats.hardwrought.water.WaterStorage.setAmount(level, pos, puddle);
+            int drawn = de.ipnats.hardwrought.water.WaterDraw.drawUpTo(level, pos,
+                    de.ipnats.hardwrought.water.BucketWater.CAPACITY);
+            helper.assertTrue(drawn == puddle, "A dip takes what is there: " + drawn + " of " + puddle);
+            helper.assertTrue(de.ipnats.hardwrought.water.WaterStorage.amount(level, pos) == 0,
+                    "and leaves the puddle empty rather than partly drained");
+
+            ItemStack bucket = de.ipnats.hardwrought.water.BucketWater.with(
+                    new ItemStack(Items.BUCKET), drawn, de.ipnats.hardwrought.water.WaterQuality.FRESH);
+            helper.assertTrue(bucket.is(Items.WATER_BUCKET), "Any water at all makes it a water bucket");
+            helper.assertTrue(de.ipnats.hardwrought.water.BucketWater.held(bucket) == puddle,
+                    "and it carries exactly what was taken");
+            helper.assertTrue(!de.ipnats.hardwrought.water.BucketWater.isFull(bucket),
+                    "A third of a bucket is not a bucketful, whatever the item id says");
+            helper.assertTrue(de.ipnats.hardwrought.water.BucketWater.room(bucket)
+                            == de.ipnats.hardwrought.water.BucketWater.CAPACITY - puddle,
+                    "and it has room for the rest");
+
+            // Topping it up out of a fuller cell fills it and no further.
+            de.ipnats.hardwrought.water.WaterStorage.setAmount(level, pos,
+                    de.ipnats.hardwrought.water.WaterAmounts.BLOCK);
+            int topped = de.ipnats.hardwrought.water.WaterDraw.drawUpTo(level, pos,
+                    de.ipnats.hardwrought.water.BucketWater.room(bucket));
+            bucket = de.ipnats.hardwrought.water.BucketWater.with(bucket,
+                    de.ipnats.hardwrought.water.BucketWater.held(bucket) + topped,
+                    de.ipnats.hardwrought.water.WaterQuality.FRESH);
+            helper.assertTrue(de.ipnats.hardwrought.water.BucketWater.isFull(bucket),
+                    "A second dip fills it: " + de.ipnats.hardwrought.water.BucketWater.held(bucket));
+            helper.assertTrue(de.ipnats.hardwrought.water.WaterStorage.amount(level, pos)
+                            == de.ipnats.hardwrought.water.WaterAmounts.BLOCK - topped,
+                    "and takes from the world exactly what it gained");
+
+            // An unmarked bucket is a full one: creative and other mods hand those out.
+            helper.assertTrue(de.ipnats.hardwrought.water.BucketWater.held(
+                            new ItemStack(Items.WATER_BUCKET))
+                            == de.ipnats.hardwrought.water.BucketWater.CAPACITY,
+                    "A bucket with nothing written on it has to read as full, never as empty");
+
+            // Emptying it down to nothing gives the empty item back.
+            ItemStack emptied = de.ipnats.hardwrought.water.BucketWater.with(bucket, 0, null);
+            helper.assertTrue(emptied.is(Items.BUCKET)
+                            && de.ipnats.hardwrought.water.BucketWater.held(emptied) == 0,
+                    "Pouring the last of it out leaves an empty bucket");
+
+            // The visible step never reads as empty while there is water in it.
+            helper.assertTrue(de.ipnats.hardwrought.water.BucketWater.modelStep(1) >= 1,
+                    "One millibucket still shows as some water");
+            helper.assertTrue(de.ipnats.hardwrought.water.BucketWater.modelStep(0) == 0,
+                    "and none shows as none");
+        } finally {
+            level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+            level.setBlockAndUpdate(pos.below(), Blocks.AIR.defaultBlockState());
+        }
         helper.succeed();
     }
 }

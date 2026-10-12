@@ -394,13 +394,23 @@ public final class CoreGameTests {
         helper.assertTrue(hoard > capacity * 3,
                 "Hauling a full inventory of stone is meant to be felt");
 
-        // Whatever the load, the penalties stay survivable: still sprinting, still clearing a block.
+        // Hauling too much is meant to hurt, and from the first kilogramme over rather than only
+        // once the load is absurd; what it must never do is stop a player getting home.
+        helper.assertTrue(de.ipnats.hardwrought.survival.CarryWeight.load(capacity, capacity) == 0.0,
+                "A player exactly at the allowance pays nothing");
+        double justOver = de.ipnats.hardwrought.survival.CarryWeight.load(capacity * 1.25, capacity);
+        helper.assertTrue(justOver * de.ipnats.hardwrought.survival.CarryWeight.OVERLOAD_SPEED_PER_LOAD > 0.10,
+                "A quarter over the allowance is already felt in the legs");
         for (double carried : new double[]{0, capacity, capacity * 2, capacity * 20, hoard}) {
-            double load = Math.max(0, carried / capacity - 1.0);
-            double speed = Math.min(0.30, load * 0.18);
-            double jump = Math.min(0.25, load * 0.15);
-            helper.assertTrue(speed <= 0.30 && jump <= 0.25,
+            double load = de.ipnats.hardwrought.survival.CarryWeight.load(carried, capacity);
+            double speed = Math.min(de.ipnats.hardwrought.survival.CarryWeight.OVERLOAD_SPEED_CAP,
+                    load * de.ipnats.hardwrought.survival.CarryWeight.OVERLOAD_SPEED_PER_LOAD);
+            double jump = Math.min(de.ipnats.hardwrought.survival.CarryWeight.OVERLOAD_JUMP_CAP,
+                    load * de.ipnats.hardwrought.survival.CarryWeight.OVERLOAD_JUMP_PER_LOAD);
+            helper.assertTrue(speed < 1.0 && jump < 1.0,
                     "Overload slows and weighs down; it never stops a player moving");
+            helper.assertTrue(speed <= 0.55 && jump <= 0.55,
+                    "However much is carried, a player keeps most of their speed and their jump");
         }
         helper.assertTrue(de.ipnats.hardwrought.survival.SurvivalSystem.exhaustion(
                         de.ipnats.hardwrought.survival.PlayerVitals.MAX_STAMINA) == 0.0,
