@@ -89,8 +89,10 @@ public final class WaterStorage {
                 int amount = entry.getIntValue();
                 if (amount <= 0 || amount >= WaterAmounts.BLOCK) continue;
                 BlockState state = chunk.getBlockState(BlockPos.of(entry.getLongKey()));
-                if (containsWater(state) && !isFreeWater(state)) {
-                    levels.put(entry.getLongKey(), (byte) WaterAmounts.displayLevel(amount));
+                // Step 0 is a carrier within half a step of full, drawn as vanilla draws it.
+                int step = WaterAmounts.displayLevel(amount);
+                if (step > 0 && containsWater(state) && !isFreeWater(state)) {
+                    levels.put(entry.getLongKey(), (byte) step);
                 }
             }
         }
@@ -107,7 +109,11 @@ public final class WaterStorage {
         // more than a block and is drawn exactly the same way.
         // Reading a full lake must stay read-only. getAttachedOrCreate used to attach an empty map
         // to every inspected chunk, marking it dirty even though no precise amount existed there.
-        WaterChunkData table = level.getChunkAt(pos).getAttached(PARTIAL_WATER);
+        return amountIn(level.getChunkAt(pos), state, pos);
+    }
+
+    private static int amountIn(LevelChunk chunk, BlockState state, BlockPos pos) {
+        WaterChunkData table = chunk.getAttached(PARTIAL_WATER);
         int stored = table == null ? WaterChunkData.MISSING : table.get(pos.asLong());
         if (stored != WaterChunkData.MISSING) return WaterAmounts.clamp(stored);
         if (isFreeWater(state)) {
@@ -117,6 +123,36 @@ public final class WaterStorage {
         // A newly placed waterlogged block, bubble column or water plant starts with one finite
         // block. Partial amounts are kept in the table and therefore returned above.
         return WaterAmounts.BLOCK;
+    }
+
+    /** What {@link #probe} answers for a cell that neither holds water nor could. */
+    public static final int WALL = -1;
+
+    /**
+     * Both questions the solver asks of a neighbour, answered together: how much water stands in
+     * this cell, or {@link #WALL} where none could. Zero is a cell that is dry and open.
+     *
+     * <p>Asking {@link #canHold} and then {@link #amount} resolved the chunk four times for one
+     * cell, and a step asks seven cells. That was most of what a step cost. This resolves it once,
+     * and like the solver's wake-up path it never loads a chunk to find out.
+     */
+    public static int probe(ServerLevel level, BlockPos pos) {
+        if (level.isOutsideBuildHeight(pos.getY())) return WALL;
+        LevelChunk chunk = level.getChunkSource().getChunkNow(pos.getX() >> 4, pos.getZ() >> 4);
+        if (chunk == null) return WALL;
+        BlockState state = chunk.getBlockState(pos);
+        if (containsWater(state)) return amountIn(chunk, state, pos);
+        return state.isAir() || isWaterloggable(state) || washedAway(state) ? 0 : WALL;
+    }
+
+    /** {@link #probe(ServerLevel, BlockPos)} for a position that is not worth allocating. */
+    public static int probe(ServerLevel level, int x, int y, int z) {
+        if (level.isOutsideBuildHeight(y)) return WALL;
+        LevelChunk chunk = level.getChunkSource().getChunkNow(x >> 4, z >> 4);
+        if (chunk == null) return WALL;
+        BlockState state = chunk.getBlockState(new BlockPos(x, y, z));
+        if (containsWater(state)) return amountIn(chunk, state, new BlockPos(x, y, z));
+        return state.isAir() || isWaterloggable(state) || washedAway(state) ? 0 : WALL;
     }
 
     /**

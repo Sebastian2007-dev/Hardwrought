@@ -25,6 +25,9 @@ Durchläufe über alle Zellen.
 
 ## Befund 1: Ein ruhender See bleibt nicht ruhend
 
+> **Stand 12.10.2026:** Behoben, aber nicht über Ausweg A oder B. Ausweg A lässt verbundene
+> Schächte einen Block auseinander stehen. Siehe [`water-pressure.md`](water-pressure.md).
+
 Sonde 1:
 
 ```

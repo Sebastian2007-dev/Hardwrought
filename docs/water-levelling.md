@@ -92,6 +92,9 @@ test levels either way, so it is not proven to be what anyone saw.
 
 ## The levelling solver, and why it was taken out
 
+> **12 October 2026:** the pressure model this section assumes has been replaced, and the sideways
+> cap now only applies to wetting dry ground. See [`water-pressure.md`](water-pressure.md).
+
 ### The problem it was for
 
 `WaterFlow` moves water a cell at a time and caps sideways transfer at `MAX_SPREAD_PER_PASS = 60`

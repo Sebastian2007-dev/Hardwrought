@@ -306,10 +306,11 @@ public final class DebugCommands {
                 source.getServer().getAverageTickTimeNanos() / 1_000_000.0)), false);
 
         source.sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
-                "Weckrufe: %d | davon mit Weltzugriff %d (%.1f %%)",
+                "Weckrufe: %d | davon mit Weltzugriff %d (%.1f %%) | Blattlaeufe %d | versickert %d mB | getrocknet %d mB | ins Void %d mB",
                 runtime.waterFlow().signals(), runtime.waterFlow().worldLookups(),
                 runtime.waterFlow().signals() == 0 ? 0.0
-                        : 100.0 * runtime.waterFlow().worldLookups() / runtime.waterFlow().signals())), false);
+                        : 100.0 * runtime.waterFlow().worldLookups() / runtime.waterFlow().signals(),
+                runtime.waterFlow().pressureSearches(), runtime.waterFlow().seeped(), runtime.waterFlow().dried(), runtime.waterFlow().voided())), false);
 
         // Does what is drawn match what is held? A cell whose block state says one thing and whose
         // stored amount says another looks full while the simulation sees a trickle, and every

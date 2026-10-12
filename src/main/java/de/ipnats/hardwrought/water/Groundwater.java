@@ -226,6 +226,28 @@ public final class Groundwater {
         save.clearAquifer(regionKey(level, pos));
     }
 
+    /**
+     * Puts water into the ground: what a trace of surface water does when it has nowhere to run.
+     * Returns what the region took, which is everything up to the room it has left. Ground that is
+     * saturated takes nothing, and the trace stays on it.
+     */
+    public int soak(ServerLevel level, BlockPos pos, int millibuckets) {
+        if (millibuckets <= 0) return 0;
+        int capacity = capacity(level, pos);
+        if (capacity <= 0) return 0;
+        AquiferState current = state(level, pos, capacity);
+        int taken = Math.min(millibuckets, capacity - current.stored());
+        if (taken <= 0) return 0;
+        store(level, pos, new AquiferState(current.stored() + taken, save.ticks()), capacity);
+        return taken;
+    }
+
+    /** {@link #soak} for callers that only have a level. Nothing is taken where there is no aquifer. */
+    public static int soakAt(ServerLevel level, BlockPos pos, int millibuckets) {
+        Groundwater groundwater = of(level);
+        return groundwater == null ? 0 : groundwater.soak(level, pos, millibuckets);
+    }
+
     /** Convenience for callers that only have a level, used by the seepage pass. */
     public static int drawAt(ServerLevel level, BlockPos pos, int millibuckets) {
         Groundwater groundwater = of(level);
