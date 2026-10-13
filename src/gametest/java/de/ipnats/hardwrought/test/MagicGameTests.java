@@ -222,6 +222,40 @@ public final class MagicGameTests {
         helper.succeed();
     }
 
+    /** What a hand does that a ruler would not: run on past where it began, stop short, come back past a tip. */
+    @GameTest
+    public void handDrawnShapesAreReadAsMeant(GameTestHelper helper) {
+        helper.assertTrue(read(rune(Rune.LIGHT, 60, 150),
+                        path(200, 80, 250, 80, 260, 90, 260, 180, 250, 190, 160, 190, 150, 180, 150, 90, 160, 80, 225, 80)).trap(),
+                "A square with its corners rounded off, run on past where it began, is a square, not a circle");
+        helper.assertTrue(read(rune(Rune.LIGHT, 60, 150),
+                        path(150, 90, 160, 80, 250, 80, 260, 90, 260, 180, 250, 190, 160, 190, 150, 180, 150, 104)).trap(),
+                "and one that stops a little short of its start");
+        helper.assertTrue(read(rune(Rune.FIRE, 60, 150), path(200, 60, 270, 190, 130, 190, 192, 76)).burst(),
+                "A triangle left a little open is still a triangle");
+        List<float[]> overrun = new ArrayList<>();
+        for (int i = 0; i <= 54; i++) {
+            double a = -Math.PI / 2 + i / 48.0 * Math.PI * 2;
+            overrun.add(new float[] {150 + 90 * (float) Math.cos(a), 150 + 70 * (float) Math.sin(a)});
+        }
+        Spell shield = read(stroke(overrun));
+        helper.assertTrue(shield.shield() && shield.core() == null, "A squashed circle run on past its start is a plain shield");
+        Spell ahead = read(rune(Rune.FIRE, 80, 150), path(220, 260, 220, 60, 200, 92, 221, 52, 240, 92));
+        helper.assertTrue(ahead.placement() == Spell.Placement.ARROW && ahead.aimY() < -0.9,
+                "An arrow whose head comes back a little past its tip still points up the page");
+        List<float[]> wave = new ArrayList<>();
+        for (int i = 0; i <= 60; i++) {
+            double t = i / 60.0;
+            wave.add(new float[] {60 + 220 * (float) t, 150 - 26 * (float) Math.sin(2 * Math.PI * 1.5 * t + 0.3)});
+        }
+        helper.assertTrue(RuneRecognizer.read(stroke(wave).xs(), stroke(wave).ys()).rune() == Rune.WATER,
+                "Water drawn half a wave longer is still Water");
+        var hooked = path(100, 250, 200, 100, 190, 104);
+        helper.assertTrue(RuneRecognizer.read(hooked.xs(), hooked.ys()).rune() == Rune.FIRE,
+                "Fire with a flick of the hand at its end is still Fire");
+        helper.succeed();
+    }
+
     @GameTest
     public void everyShapeWithRunesIsASpellOfItsOwn(GameTestHelper helper) {
         // Light in a circle, Dark in a square, Fire in a triangle: three spells, all cast.

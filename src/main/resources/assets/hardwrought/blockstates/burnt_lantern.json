@@ -1,0 +1,76 @@
+{
+  "variants": {
+    "hanging=false,variant=lantern,waterlogged=false": {
+      "model": "hardwrought:block/unlit/lantern"
+    },
+    "hanging=false,variant=lantern,waterlogged=true": {
+      "model": "hardwrought:block/unlit/lantern"
+    },
+    "hanging=true,variant=lantern,waterlogged=false": {
+      "model": "hardwrought:block/unlit/lantern_hanging"
+    },
+    "hanging=true,variant=lantern,waterlogged=true": {
+      "model": "hardwrought:block/unlit/lantern_hanging"
+    },
+    "hanging=false,variant=soul_lantern,waterlogged=false": {
+      "model": "hardwrought:block/unlit/soul_lantern"
+    },
+    "hanging=false,variant=soul_lantern,waterlogged=true": {
+      "model": "hardwrought:block/unlit/soul_lantern"
+    },
+    "hanging=true,variant=soul_lantern,waterlogged=false": {
+      "model": "hardwrought:block/unlit/soul_lantern_hanging"
+    },
+    "hanging=true,variant=soul_lantern,waterlogged=true": {
+      "model": "hardwrought:block/unlit/soul_lantern_hanging"
+    },
+    "hanging=false,variant=copper_lantern,waterlogged=false": {
+      "model": "hardwrought:block/unlit/copper_lantern"
+    },
+    "hanging=false,variant=copper_lantern,waterlogged=true": {
+      "model": "hardwrought:block/unlit/copper_lantern"
+    },
+    "hanging=true,variant=copper_lantern,waterlogged=false": {
+      "model": "hardwrought:block/unlit/copper_lantern_hanging"
+    },
+    "hanging=true,variant=copper_lantern,waterlogged=true": {
+      "model": "hardwrought:block/unlit/copper_lantern_hanging"
+    },
+    "hanging=false,variant=exposed_copper_lantern,waterlogged=false": {
+      "model": "hardwrought:block/unlit/exposed_copper_lantern"
+    },
+    "hanging=false,variant=exposed_copper_lantern,waterlogged=true": {
+      "model": "hardwrought:block/unlit/exposed_copper_lantern"
+    },
+    "hanging=true,variant=exposed_copper_lantern,waterlogged=false": {
+      "model": "hardwrought:block/unlit/exposed_copper_lantern_hanging"
+    },
+    "hanging=true,variant=exposed_copper_lantern,waterlogged=true": {
+      "model": "hardwrought:block/unlit/exposed_copper_lantern_hanging"
+    },
+    "hanging=false,variant=weathered_copper_lantern,waterlogged=false": {
+      "model": "hardwrought:block/unlit/weathered_copper_lantern"
+    },
+    "hanging=false,variant=weathered_copper_lantern,waterlogged=true": {
+      "model": "hardwrought:block/unlit/weathered_copper_lantern"
+    },
+    "hanging=true,variant=weathered_copper_lantern,waterlogged=false": {
+      "model": "hardwrought:block/unlit/weathered_copper_lantern_hanging"
+    },
+    "hanging=true,variant=weathered_copper_lantern,waterlogged=true": {
+      "model": "hardwrought:block/unlit/weathered_copper_lantern_hanging"
+    },
+    "hanging=false,variant=oxidized_copper_lantern,waterlogged=false": {
+      "model": "hardwrought:block/unlit/oxidized_copper_lantern"
+    },
+    "hanging=false,variant=oxidized_copper_lantern,waterlogged=true": {
+      "model": "hardwrought:block/unlit/oxidized_copper_lantern"
+    },
+    "hanging=true,variant=oxidized_copper_lantern,waterlogged=false": {
+      "model": "hardwrought:block/unlit/oxidized_copper_lantern_hanging"
+    },
+    "hanging=true,variant=oxidized_copper_lantern,waterlogged=true": {
+      "model": "hardwrought:block/unlit/oxidized_copper_lantern_hanging"
+    }
+  }
+}

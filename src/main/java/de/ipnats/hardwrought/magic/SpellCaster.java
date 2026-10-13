@@ -324,6 +324,14 @@ public final class SpellCaster {
             }
             return name;
         }
+        // A combination is called by its own name, once every rune in it is known.
+        Combos.Combo combo = Combos.find(spell);
+        if (combo != null && spell.elements().stream().allMatch(element -> RuneKnowledge.knows(player, element.rune()))) {
+            MutableComponent name = Component.translatable(combo.translationKey()).withColor(combo.core().color());
+            int extra = (int) spell.elements().stream().skip(1).filter(element -> !combo.with().contains(element.rune())).count();
+            if (extra > 0) name.append(Component.literal(" +" + extra));
+            return name;
+        }
         MutableComponent name = spell.core() == null ? glyphName(player, Glyph.of(Sign.CIRCLE))
                 : runeName(player, spell.core());
         if (spell.placement() != Spell.Placement.FRONT) {

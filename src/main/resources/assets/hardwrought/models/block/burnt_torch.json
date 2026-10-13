@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/template_torch_unlit",
+  "textures": {
+    "torch": "hardwrought:block/burnt_torch"
+  }
+}

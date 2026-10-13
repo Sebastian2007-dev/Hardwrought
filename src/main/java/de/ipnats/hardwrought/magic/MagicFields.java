@@ -108,10 +108,15 @@ final class MagicFields {
 
     private static void pulse(Field field) {
         Vec3 at = field.position();
-        Fx.play(field.spell.level(), FxEffect.SIGIL, at.add(0, -0.95, 0), at, SpellEffects.color(field.spell), 1.2f, null);
-        SpellEffects.impactEffect(field.spell, at, field.spell.area() * 0.6);
+        if (Combos.apply(SpellForm.FIELD, field.spell, at, (spell, where) -> plainPulse(spell, where, field.follows))) return;
+        plainPulse(field.spell, at, field.follows);
+    }
+
+    private static void plainPulse(SpellEffects.Release spell, Vec3 at, boolean follows) {
+        Fx.play(spell.level(), FxEffect.SIGIL, at.add(0, -0.95, 0), at, SpellEffects.color(spell), 1.2f, null);
+        SpellEffects.impactEffect(spell, at, spell.area() * 0.6);
         // A field on the caster acts on them; one laid out acts on everything else in it.
-        SpellEffects.strike(field.spell, at, field.spell.area(), field.follows);
+        SpellEffects.strike(spell, at, spell.area(), follows);
     }
 
     private static boolean sprung(Field field) {
@@ -121,7 +126,8 @@ final class MagicFields {
                 entity -> entity.isAlive() && entity != field.spell.caster() && !entity.isSpectator());
         if (near.isEmpty()) return false;
         field.spell.level().playSound(null, at.x, at.y, at.z, SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.PLAYERS, 1, 0.6f);
-        SpellEffects.burst(field.spell, at.add(0, 0.5, 0));
+        Vec3 sprung = at.add(0, 0.5, 0);
+        if (!Combos.apply(SpellForm.TRAP, field.spell, sprung, SpellEffects::burst)) SpellEffects.burst(field.spell, sprung);
         return true;
     }
 }

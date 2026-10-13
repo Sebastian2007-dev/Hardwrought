@@ -51,6 +51,18 @@ public final class ModEffects {
     public static final Holder<MobEffect> HYDRATION_REGENERATION = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
             Hardwrought.id("hydration_regeneration"), new de.ipnats.hardwrought.survival.ThirstEffect(MobEffectCategory.BENEFICIAL, 0x8FE3FF));
 
+    /**
+     * Magic: the veil of Darkness worked on oneself. Truly unseen, armour and what is held included,
+     * and no monster can set on what it cannot see. A marker; {@code Veil} does the work and lifts it
+     * the moment its bearer strikes at anyone.
+     */
+    public static final Holder<MobEffect> VEILED = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("veiled"), new de.ipnats.hardwrought.survival.ThirstEffect(MobEffectCategory.BENEFICIAL, 0x3A1F5C));
+
+    /** Magic: Fire and Earth worked on oneself. Whoever strikes its bearer by hand catches fire. A marker. */
+    public static final Holder<MobEffect> EMBER_SKIN = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("ember_skin"), new de.ipnats.hardwrought.survival.ThirstEffect(MobEffectCategory.BENEFICIAL, 0xFF6A2A));
+
     /** Brewed from an awkward potion and a cactus, which keeps its water through any drought. */
     public static final Holder<net.minecraft.world.item.alchemy.Potion> HYDRATION_REGENERATION_POTION = potion(
             "hydration_regeneration", HYDRATION_REGENERATION, 3600, 0);

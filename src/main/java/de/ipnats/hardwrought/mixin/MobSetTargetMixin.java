@@ -14,6 +14,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MobSetTargetMixin {
     @Unique private boolean hardwrought$hadTarget;
 
+    /** Nothing sets on what it cannot see: a veiled body is no target; see {@link de.ipnats.hardwrought.magic.Veil}. */
+    @Inject(method = "setTarget", at = @At("HEAD"), cancellable = true)
+    private void hardwrought$notVeiled(LivingEntity target, CallbackInfo callback) {
+        if (target != null && de.ipnats.hardwrought.magic.Veil.veiled(target)) callback.cancel();
+    }
+
     @Inject(method = "setTarget", at = @At("HEAD"))
     private void hardwrought$before(LivingEntity target, CallbackInfo callback) {
         hardwrought$hadTarget = ((Mob) (Object) this).getTarget() != null;

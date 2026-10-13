@@ -13,6 +13,7 @@
 		"BiomeFreezeMixin",
 		"BiomePrecipitationMixin",
 		"BlockBehaviourLeavesMixin",
+		"BlockStateBurnMixin",
 		"BlockStateGrowthMixin",
 		"BlockItemStructureMixin",
 		"FallingBlockEntityStructureMixin",

@@ -234,6 +234,23 @@ public final class ModBlocks {
             de.ipnats.hardwrought.mobs.TreeHeartBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.CREAKING_HEART));
 
+    /** Section 20: a torch that has burnt down to charcoal; see {@code LightBurn}. It gives no light and drops a stick. */
+    public static final de.ipnats.hardwrought.environment.BurntTorchBlock BURNT_TORCH = register("burnt_torch",
+            de.ipnats.hardwrought.environment.BurntTorchBlock::new,
+            BlockBehaviour.Properties.of().noCollision().instabreak().sound(net.minecraft.world.level.block.SoundType.WOOD)
+                    .pushReaction(net.minecraft.world.level.material.PushReaction.POPPED));
+    public static final de.ipnats.hardwrought.environment.BurntWallTorchBlock BURNT_WALL_TORCH = register("burnt_wall_torch",
+            de.ipnats.hardwrought.environment.BurntWallTorchBlock::new,
+            BlockBehaviour.Properties.of().overrideLootTable(BURNT_TORCH.getLootTable()).overrideDescription(BURNT_TORCH.getDescriptionId())
+                    .noCollision().instabreak().sound(net.minecraft.world.level.block.SoundType.WOOD)
+                    .pushReaction(net.minecraft.world.level.material.PushReaction.POPPED));
+    /** A lantern gone dark; which lantern it was is its variant. Lit again, it is that lantern once more. */
+    public static final de.ipnats.hardwrought.environment.BurntLanternBlock BURNT_LANTERN = register("burnt_lantern",
+            de.ipnats.hardwrought.environment.BurntLanternBlock::new,
+            BlockBehaviour.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.METAL).forceSolidOn().strength(3.5f)
+                    .sound(net.minecraft.world.level.block.SoundType.LANTERN).noOcclusion()
+                    .pushReaction(net.minecraft.world.level.material.PushReaction.POPPED));
+
     private ModBlocks() { }
 
     private static <T extends Block> T register(String name, Function<BlockBehaviour.Properties, T> factory,

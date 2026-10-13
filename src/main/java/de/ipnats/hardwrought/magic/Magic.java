@@ -59,6 +59,8 @@ public final class Magic {
         MagicTasks.initialize();
         MagicShields.initialize();
         MagicFields.initialize();
+        Veil.initialize();
+        ComboEffects.initialize();
         RuneRuins.initialize();
         PayloadTypeRegistry.serverboundPlay().register(CastSpellPayload.TYPE, CastSpellPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ShieldPayload.TYPE, ShieldPayload.CODEC);

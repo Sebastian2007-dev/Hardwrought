@@ -46,6 +46,7 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.water.WaterCurrent.initialize();
 		WaterQualityStorage.initialize();
 		de.ipnats.hardwrought.water.FrozenWater.initialize();
+		de.ipnats.hardwrought.environment.LightBurn.initialize();
 		de.ipnats.hardwrought.water.BucketMachinery.initialize();
 		de.ipnats.hardwrought.oil.ModFluids.initialize();
 		ModBlocks.initialize();

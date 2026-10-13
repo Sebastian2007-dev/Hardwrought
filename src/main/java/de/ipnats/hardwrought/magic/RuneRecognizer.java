@@ -23,14 +23,19 @@ public final class RuneRecognizer {
     /**
      * The mean distance between stroke and template, in units of the stroke's size, at which a
      * drawing no longer counts as that rune at all. Accuracy falls linearly from 1 to 0 up to it.
+     * Set so that strokes score as they did before the alignment became elastic, which brings a
+     * stroke closer to its template: a careful hand still draws about 0.9, a hurried one about 0.7.
      */
-    private static final double MISS = 0.34;
+    private static final double MISS = 0.28;
     /** Below this accuracy a stroke is not read as any rune: the magic does not answer it. */
     public static final double NO_RUNE = 0.25;
     /** A stroke shorter than this, in the units it was drawn in, is a slip of the hand. */
     public static final double MIN_LENGTH = 12;
 
-    /** Each rune's ideal shape, and the other ways it may rightly be drawn: Lightning zigzags either way. */
+    /**
+     * Each rune's ideal shape, and the other ways it may rightly be drawn: Lightning zigzags either
+     * way, and Water's wave may run on half a wave longer, down again at its end.
+     */
     private static final Map<Rune, List<double[][]>> TEMPLATES = new EnumMap<>(Rune.class);
 
     static {
@@ -41,6 +46,15 @@ public final class RuneRecognizer {
                 List<float[]> mirrored = new ArrayList<>();
                 for (float[] point : rune.shape()) mirrored.add(new float[] {1200 - point[0], point[1]});
                 shapes.add(normalize(toArray(mirrored)));
+            }
+            if (rune == Rune.WATER) {
+                // The sheet's wave in the same space, carried on to one and a half waves.
+                List<float[]> longer = new ArrayList<>();
+                for (int i = 0; i <= 40; i++) {
+                    double t = i / 40.0;
+                    longer.add(new float[] {(float) (205 + 850 * t), (float) (624 - 96 * Math.sin(2 * Math.PI * 1.5 * t + 0.4))});
+                }
+                shapes.add(normalize(toArray(longer)));
             }
             TEMPLATES.put(rune, shapes);
         }
@@ -66,43 +80,171 @@ public final class RuneRecognizer {
         if (xs.length < 2 || xs.length != ys.length || length(xs, ys) < MIN_LENGTH) {
             return new Reading(null, 0, null, 0);
         }
-        double[][] stroke = normalize(resample(xs, ys));
+        double[][] stroke = prepare(xs, ys);
         Rune best = null, second = null;
-        double bestScore = 0, secondScore = 0;
+        Match bestMatch = null, secondMatch = null;
         for (Map.Entry<Rune, List<double[][]>> entry : TEMPLATES.entrySet()) {
-            double score = 0;
-            for (double[][] template : entry.getValue()) score = Math.max(score, accuracy(stroke, template));
-            if (score > bestScore) {
+            Match match = match(stroke, entry.getValue());
+            if (bestMatch == null || match.cost() < bestMatch.cost()) {
                 second = best;
-                secondScore = bestScore;
+                secondMatch = bestMatch;
                 best = entry.getKey();
-                bestScore = score;
-            } else if (score > secondScore) {
+                bestMatch = match;
+            } else if (secondMatch == null || match.cost() < secondMatch.cost()) {
                 second = entry.getKey();
-                secondScore = score;
+                secondMatch = match;
             }
         }
-        if (bestScore < NO_RUNE) return new Reading(null, bestScore, best, bestScore);
-        return new Reading(best, bestScore, second, secondScore);
+        double accuracy = bestMatch.accuracy(), secondAccuracy = secondMatch == null ? 0 : secondMatch.accuracy();
+        if (accuracy < NO_RUNE) return new Reading(null, accuracy, best, accuracy);
+        return new Reading(best, accuracy, second, secondAccuracy);
     }
 
     /** How closely a stroke follows one particular rune, from 0 to 1. */
     public static double accuracy(float[] xs, float[] ys, Rune rune) {
         if (xs.length < 2 || length(xs, ys) < MIN_LENGTH) return 0;
-        double[][] stroke = normalize(resample(xs, ys));
-        double best = 0;
-        for (double[][] template : TEMPLATES.get(rune)) best = Math.max(best, accuracy(stroke, template));
+        return match(prepare(xs, ys), TEMPLATES.get(rune)).accuracy();
+    }
+
+    /** The stroke as it is compared: without the hooks at its ends, resampled, centred and scaled. */
+    static double[][] prepare(float[] xs, float[] ys) {
+        double[][] fine = dehook(resample(xs, ys, FINE));
+        float[] fx = new float[fine.length], fy = new float[fine.length];
+        for (int i = 0; i < fine.length; i++) {
+            fx[i] = (float) fine[i][0];
+            fy[i] = (float) fine[i][1];
+        }
+        return normalize(resample(fx, fy));
+    }
+
+    /** Points a stroke is resampled to while its hooks are looked for. */
+    private static final int FINE = 96;
+    /** A hook is at most this share of the stroke's length. */
+    private static final double HOOK_LENGTH = 0.1;
+    /** And turns away from the rest of the stroke by at least this many degrees. */
+    private static final double HOOK_TURN = 60;
+
+    /**
+     * The stroke without the little hooks a hand makes as the button goes down or comes up: a short
+     * piece at either end that sets off in quite another direction than the stroke then takes. They
+     * are no part of any rune, and left in they drag the whole stroke's alignment with its template.
+     */
+    static double[][] dehook(double[][] p) {
+        int n = p.length;
+        int limit = (int) (HOOK_LENGTH * (n - 1));
+        int span = Math.max(3, limit);
+        int start = 0, end = n - 1;
+        double bestStart = HOOK_TURN, bestEnd = HOOK_TURN;
+        for (int c = 2; c <= limit; c++) {
+            double turnStart = turn(p[0], p[c], p[Math.min(n - 1, c + span)]);
+            if (turnStart >= bestStart) {
+                bestStart = turnStart;
+                start = c;
+            }
+            double turnEnd = turn(p[n - 1], p[n - 1 - c], p[Math.max(0, n - 1 - c - span)]);
+            if (turnEnd >= bestEnd) {
+                bestEnd = turnEnd;
+                end = n - 1 - c;
+            }
+        }
+        if (start == 0 && end == n - 1) return p;
+        return java.util.Arrays.copyOfRange(p, start, end + 1);
+    }
+
+    /** How sharply a path from a through b turns on towards c, in degrees. */
+    private static double turn(double[] a, double[] b, double[] c) {
+        double ux = b[0] - a[0], uy = b[1] - a[1], vx = c[0] - b[0], vy = c[1] - b[1];
+        double lu = Math.hypot(ux, uy), lv = Math.hypot(vx, vy);
+        if (lu < 1e-9 || lv < 1e-9) return 0;
+        return Math.toDegrees(Math.acos(Math.max(-1, Math.min(1, (ux * vx + uy * vy) / (lu * lv)))));
+    }
+
+    /**
+     * How a stroke lies against a rune: the cost that decides which rune it is, and the accuracy it
+     * was drawn with.
+     */
+    private record Match(double cost, double accuracy) { }
+
+    /** How far apart two strokes may slide along each other while they are aligned, in points. */
+    static final int BAND = 6;
+    /**
+     * How much a difference in the way the pen is heading counts against a difference in where it is,
+     * in deciding which rune a stroke is. Position alone mistakes a crescent for an upright line, and a
+     * wave for a notched level line; the turn of the pen tells them apart.
+     */
+    static final double DIRECTION = 0.2;
+
+    /** The best of a rune's ideal shapes, run forwards or backwards. */
+    private static Match match(double[][] stroke, List<double[][]> templates) {
+        Match best = null;
+        for (double[][] template : templates) {
+            for (boolean backward : new boolean[] {false, true}) {
+                Match match = warped(stroke, template, backward);
+                if (best == null || match.cost() < best.cost()) best = match;
+            }
+        }
         return best;
     }
 
-    private static double accuracy(double[][] stroke, double[][] template) {
-        double forward = 0, backward = 0;
-        for (int i = 0; i < POINTS; i++) {
-            forward += distance(stroke[i], template[i]);
-            backward += distance(stroke[i], template[POINTS - 1 - i]);
+    /** Unit tangent at every point. */
+    private static double[][] tangents(double[][] p) {
+        int n = p.length;
+        double[][] t = new double[n][];
+        for (int i = 0; i < n; i++) {
+            double[] a = p[Math.max(0, i - 2)], b = p[Math.min(n - 1, i + 2)];
+            double dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy);
+            t[i] = l < 1e-9 ? new double[] {0, 0} : new double[] {dx / l, dy / l};
         }
-        double mean = Math.min(forward, backward) / POINTS;
-        return Math.max(0, 1 - mean / MISS);
+        return t;
+    }
+
+    /**
+     * A stroke against one template. Point i of the stroke is not held to point i of the template:
+     * they are aligned elastically (dynamic time warping, within a band of {@value #BAND} points), so a
+     * notch drawn a little off centre or a wave with one hump wider than the other still lines up with
+     * its rune. The alignment weighs where the pen is and which way it heads; the accuracy is how far,
+     * along that alignment, the stroke lies from the template.
+     */
+    private static Match warped(double[][] stroke, double[][] template, boolean backward) {
+        int n = POINTS;
+        double[][] ts = tangents(stroke), tt = tangents(template);
+        double sign = backward ? -1 : 1;
+        double[][] cost = new double[n][n], apart = new double[n][n];
+        int[][] steps = new int[n][n];
+        for (double[] row : cost) java.util.Arrays.fill(row, Double.MAX_VALUE);
+        for (int i = 0; i < n; i++) {
+            for (int j = Math.max(0, i - BAND); j <= Math.min(n - 1, i + BAND); j++) {
+                int k = backward ? n - 1 - j : j;
+                double distance = distance(stroke[i], template[k]);
+                double d = distance + DIRECTION * Math.hypot(ts[i][0] - sign * tt[k][0], ts[i][1] - sign * tt[k][1]) / 2;
+                int fromI = -1, fromJ = -1;
+                if (i > 0 && cost[i - 1][j] < Double.MAX_VALUE) {
+                    fromI = i - 1;
+                    fromJ = j;
+                }
+                if (j > 0 && cost[i][j - 1] < Double.MAX_VALUE && (fromI < 0 || cost[i][j - 1] < cost[fromI][fromJ])) {
+                    fromI = i;
+                    fromJ = j - 1;
+                }
+                if (i > 0 && j > 0 && cost[i - 1][j - 1] < Double.MAX_VALUE
+                        && (fromI < 0 || cost[i - 1][j - 1] <= cost[fromI][fromJ])) {
+                    fromI = i - 1;
+                    fromJ = j - 1;
+                }
+                if (fromI < 0) {
+                    if (i > 0 || j > 0) continue;
+                    cost[i][j] = d;
+                    apart[i][j] = distance;
+                    steps[i][j] = 1;
+                    continue;
+                }
+                cost[i][j] = cost[fromI][fromJ] + d;
+                apart[i][j] = apart[fromI][fromJ] + distance;
+                steps[i][j] = steps[fromI][fromJ] + 1;
+            }
+        }
+        int count = steps[n - 1][n - 1];
+        return new Match(cost[n - 1][n - 1] / count, Math.max(0, 1 - apart[n - 1][n - 1] / count / MISS));
     }
 
     private static double distance(double[] a, double[] b) {

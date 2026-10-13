@@ -74,7 +74,16 @@ public final class Freezing {
         if (WaterStorage.containsWater(level.getBlockState(pos.above()))) return false;
         if (!level.canSeeSky(pos.above())) return false;
         if (airTemperature(level, pos.above()) > FREEZES_AT) return false;
+        return freeze(level, pos);
+    }
 
+    /**
+     * Freeze this surface cell now, whatever the air: magic's cold. The ice is the same as weather's,
+     * holds the same water, and thaws again by the same rule once the air is warm.
+     */
+    public static boolean freeze(ServerLevel level, BlockPos pos) {
+        if (!WaterStorage.isFreeWater(level.getBlockState(pos))) return false;
+        if (WaterStorage.containsWater(level.getBlockState(pos.above()))) return false;
         int held = WaterStorage.amount(level, pos);
         if (held <= 0) return false;
         BlockState ice = ModBlocks.THIN_ICE.defaultBlockState()

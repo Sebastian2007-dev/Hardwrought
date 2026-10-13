@@ -107,6 +107,7 @@ final class SpellEffects {
                     land(r, at);
                     return;
                 }
+                if (Combos.apply(SpellForm.STREAM, r, at, (spell, to) -> stream(spell, eye, look, to))) return;
                 stream(r, eye, look, at);
             }
             case ARROW -> {
@@ -152,13 +153,25 @@ final class SpellEffects {
             burst(r, at);
             return;
         }
+        if (r.placement() == Spell.Placement.ARROW && Combos.apply(SpellForm.BOLT, r, at, SpellEffects::strikeHere)) return;
         if (r.placement() != Spell.Placement.FRONT) impactEffect(r, at, 1.5);
         strike(r, at, 1.0 + 0.5 * (r.area() - 2), false);
         if (r.core() == Rune.FIRE && !r.inverted()) ignite(r.level(), at, r.direction());
     }
 
+    /** What a spell sent along an arrow does where it lands, when no combination takes it. */
+    private static void strikeHere(Release r, Vec3 at) {
+        impactEffect(r, at, 1.5);
+        strike(r, at, 1.0 + 0.5 * (r.area() - 2), false);
+    }
+
     /** A burst all around the point; the caster at its heart is spared. */
     static void burst(Release r, Vec3 at) {
+        if (Combos.apply(SpellForm.BURST, r, at, SpellEffects::plainBurst)) return;
+        plainBurst(r, at);
+    }
+
+    private static void plainBurst(Release r, Vec3 at) {
         double radius = r.area() + 1;
         impactEffect(r, at, radius);
         if (r.core() == Rune.FIRE && !r.inverted() && r.power() >= 1.5) {
@@ -234,14 +247,21 @@ final class SpellEffects {
      * Wet targets — in water, or under rain — take half again as much.
      */
     private static void chain(Release r, LivingEntity first, double p, DamageSource source) {
+        chain(r, first, p, source, 2 + (p >= 1.5 ? 1 : 0) + (r.area() > 2.25 ? 1 : 0), 5, false);
+    }
+
+    /**
+     * Lightning leaping from one living thing to the next nearest within range, so many times, weaker
+     * at every leap; soaked, everything it strikes counts as wet.
+     */
+    static void chain(Release r, LivingEntity first, double p, DamageSource source, int leaps, double range, boolean soaked) {
         java.util.Set<LivingEntity> struck = new java.util.HashSet<>();
         LivingEntity target = first;
         Vec3 from = target.position().add(0, target.getBbHeight() / 2, 0);
-        int leaps = 2 + (p >= 1.5 ? 1 : 0) + (r.area() > 2.25 ? 1 : 0);
         double strength = p;
         for (int i = 0; i <= leaps && target != null; i++) {
             struck.add(target);
-            double wet = target.isInWaterOrRain() ? 1.5 : 1;
+            double wet = soaked || target.isInWaterOrRain() ? 1.5 : 1;
             target.hurtServer(r.level(), source, (float) (3.5 * strength * wet));
             target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 20, 3), r.caster());
             Vec3 at = target.position().add(0, target.getBbHeight() / 2, 0);
@@ -249,7 +269,7 @@ final class SpellEffects {
             from = at;
             strength *= 0.6;
             Vec3 here = at;
-            target = r.level().getEntitiesOfClass(LivingEntity.class, new AABB(here, here).inflate(5),
+            target = r.level().getEntitiesOfClass(LivingEntity.class, new AABB(here, here).inflate(range),
                             e -> e.isAlive() && !struck.contains(e) && e != r.caster() && !e.isSpectator()).stream()
                     .min(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(here))).orElse(null);
         }
@@ -279,6 +299,7 @@ final class SpellEffects {
                 else target.hurtServer(r.level(), source, (float) (3 * p));
             }
             case DARK -> {
+                Veil.lift(target);
                 target.removeEffect(MobEffects.INVISIBILITY);
                 target.addEffect(new MobEffectInstance(MobEffects.GLOWING, ticks * 3), r.caster());
             }
@@ -292,6 +313,7 @@ final class SpellEffects {
 
     /** Runes inside a circle, worked on the caster; every element mixed in works on them too. */
     private static void self(Release r) {
+        if (Combos.apply(SpellForm.SELF, r, r.caster().position(), (spell, at) -> self(spell))) return;
         for (Rune element : r.blend()) self(r.as(element));
         ServerPlayer caster = r.caster();
         Vec3 at = caster.position();
@@ -396,7 +418,7 @@ final class SpellEffects {
     }
 
     /** The ground under a point: where a trap is laid. */
-    private static Vec3 ground(ServerLevel level, Vec3 at) {
+    static Vec3 ground(ServerLevel level, Vec3 at) {
         BlockHitResult down = level.clip(new ClipContext(at, at.add(0, -6, 0), ClipContext.Block.COLLIDER,
                 ClipContext.Fluid.NONE, net.minecraft.world.phys.shapes.CollisionContext.empty()));
         return down.getType() == HitResult.Type.BLOCK ? down.getLocation().add(0, 0.05, 0) : at;
@@ -430,7 +452,7 @@ final class SpellEffects {
     }
 
     /** Water puts out fire around it. */
-    private static void douse(ServerLevel level, Vec3 at, double radius) {
+    static void douse(ServerLevel level, Vec3 at, double radius) {
         BlockPos center = BlockPos.containing(at);
         int r = (int) Math.ceil(radius);
         for (BlockPos pos : BlockPos.betweenClosed(center.offset(-r, -r, -r), center.offset(r, r, r))) {

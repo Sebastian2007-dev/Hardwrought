@@ -8,10 +8,13 @@
     "fabric-gametest": [
       "de.ipnats.hardwrought.test.CoreGameTests",
       "de.ipnats.hardwrought.test.MagicGameTests",
+      "de.ipnats.hardwrought.test.ComboGameTests",
       "de.ipnats.hardwrought.test.SigilGameTests",
       "de.ipnats.hardwrought.test.EquipmentGameTests",
       "de.ipnats.hardwrought.test.CombatGameTests",
       "de.ipnats.hardwrought.test.EnvironmentGameTests",
+      "de.ipnats.hardwrought.test.LightBurnGameTests",
+      "de.ipnats.hardwrought.test.LootTableGameTests",
       "de.ipnats.hardwrought.test.ThermalGameTests",
       "de.ipnats.hardwrought.test.SeasonGameTests",
       "de.ipnats.hardwrought.test.WaterGameTests",
