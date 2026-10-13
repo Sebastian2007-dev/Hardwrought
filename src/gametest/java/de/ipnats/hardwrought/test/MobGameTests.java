@@ -1,11 +1,15 @@
 package de.ipnats.hardwrought.test;
 
+import de.ipnats.hardwrought.core.registry.ModBlocks;
 import de.ipnats.hardwrought.core.registry.ModItems;
 import de.ipnats.hardwrought.mobs.Breaching;
 import de.ipnats.hardwrought.mobs.CreeperLeap;
+import de.ipnats.hardwrought.mobs.HeartWood;
 import de.ipnats.hardwrought.mobs.MobEquipment;
 import de.ipnats.hardwrought.mobs.Perception;
 import de.ipnats.hardwrought.mobs.SleepDebt;
+import de.ipnats.hardwrought.mobs.TreeHeartBlock;
+import de.ipnats.hardwrought.mobs.TreeHearts;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
@@ -21,6 +25,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CreakingHeartBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
@@ -185,14 +190,54 @@ public final class MobGameTests {
     }
 
     @GameTest
-    public void creakingsHauntOrdinaryForestsToo(GameTestHelper helper) {
+    public void creakingHeartsGrowInEveryForest(GameTestHelper helper) {
         var biomes = helper.getLevel().registryAccess().lookupOrThrow(Registries.BIOME);
-        var spawns = biomes.getOrThrow(Biomes.FOREST).value().getAttributes().applyModifier(
-                net.minecraft.world.attribute.EnvironmentAttributes.NATURAL_MOB_SPAWNS,
-                net.minecraft.world.level.biome.MobSpawnSettings.EMPTY);
-        boolean forest = spawns.getMobsInCategory(MobCategory.MONSTER).unwrap().stream()
-                .anyMatch(entry -> entry.value().type() == EntityTypes.CREAKING);
-        helper.assertTrue(forest, "A creaking can spawn in an ordinary forest");
+        double forest = TreeHearts.chance(biomes.getOrThrow(Biomes.FOREST));
+        double dark = TreeHearts.chance(biomes.getOrThrow(Biomes.DARK_FOREST));
+        helper.assertTrue(forest > 0, "A heart can grow in an ordinary forest");
+        helper.assertTrue(dark > forest, "and more readily in a dark one");
+        helper.assertTrue(dark < 0.1, "but less readily than in the pale garden, where vanilla grows one tree in ten");
+        helper.assertTrue(TreeHearts.chance(biomes.getOrThrow(Biomes.PALE_GARDEN)) == 0,
+                "The pale garden keeps vanilla's hearts");
+        helper.assertTrue(TreeHearts.chance(biomes.getOrThrow(Biomes.DESERT)) == 0, "A desert grows none");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void aTreeHeartWakesBetweenLogsOfItsOwnWood(GameTestHelper helper) {
+        BlockPos below = new BlockPos(1, 1, 1), heart = below.above(), above = heart.above();
+        helper.setBlock(below, Blocks.BIRCH_LOG);
+        helper.setBlock(above, Blocks.BIRCH_LOG);
+        BlockState birchHeart = ModBlocks.TREE_CREAKING_HEART.defaultBlockState().setValue(TreeHeartBlock.WOOD, HeartWood.BIRCH);
+        helper.setBlock(heart, birchHeart);
+        helper.assertTrue(CreakingHeartBlock.hasRequiredLogs(birchHeart, helper.getLevel(), helper.absolutePos(heart)),
+                "A birch heart lives between birch logs");
+        helper.setBlock(above, Blocks.PALE_OAK_LOG);
+        helper.assertFalse(CreakingHeartBlock.hasRequiredLogs(birchHeart, helper.getLevel(), helper.absolutePos(heart)),
+                "but not with pale oak above it");
+        helper.assertTrue(HeartWood.of(Blocks.PALE_OAK_LOG.defaultBlockState()) == null,
+                "Pale oak is left to vanilla's own heart");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void aHurtOakHeartBleedsResinAlongOak(GameTestHelper helper) {
+        BlockPos below = new BlockPos(2, 1, 2), heart = below.above(), above = heart.above();
+        helper.setBlock(below, Blocks.OAK_LOG);
+        helper.setBlock(above, Blocks.OAK_LOG);
+        helper.setBlock(heart, ModBlocks.TREE_CREAKING_HEART.defaultBlockState()
+                .setValue(TreeHeartBlock.WOOD, HeartWood.OAK)
+                .setValue(CreakingHeartBlock.STATE, net.minecraft.world.level.block.state.properties.CreakingHeartState.AWAKE));
+        var creaking = helper.spawnWithNoFreeWill(EntityTypes.CREAKING, new BlockPos(4, 1, 4));
+        net.minecraft.world.level.block.entity.CreakingHeartBlockEntity entity = helper.getBlockEntity(heart,
+                net.minecraft.world.level.block.entity.CreakingHeartBlockEntity.class);
+        entity.setCreakingInfo(creaking);
+        entity.creakingHurt();
+        int resin = 0;
+        for (BlockPos pos : BlockPos.betweenClosed(new BlockPos(1, 0, 1), new BlockPos(3, 4, 3))) {
+            if (helper.getBlockState(pos).is(Blocks.RESIN_CLUMP)) resin++;
+        }
+        helper.assertTrue(resin > 0, "Resin creeps out along the oak around the heart");
         helper.succeed();
     }
 

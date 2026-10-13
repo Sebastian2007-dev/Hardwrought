@@ -80,8 +80,13 @@ adds nothing.
 
 One wither skeleton in five spawns with a bow and fights as an archer; its arrows burn, as vanilla's do.
 
-Creakings spawn naturally in the dark: very rarely in any forest (weight 1), rarely in dark and old-growth
-forests (3), and commonly in the pale garden (30).
+Creakings come from creaking hearts, and those grow in the trees of every forest, taiga, jungle, cherry grove
+and mangrove swamp: in one tree in 300 in an ordinary forest, one in 100 in dark and old-growth forests, and,
+as in vanilla, one pale oak in ten in the pale garden. A heart outside pale oak wears the bark of its tree
+(oak, spruce, birch, jungle, acacia, dark oak, mangrove, cherry, poplar), wakes between logs of that wood,
+and the creaking it calls is made of the same wood. Hurting that creaking makes the heart bleed resin
+along its own logs, as a pale oak heart does along pale oak. Broken with silk touch it gives vanilla's heart, which
+takes on the bark again when set between two logs of another wood.
 
 ## The rest
 
@@ -91,4 +96,4 @@ Everything else of the mob specification is in [mobs-2.md](mobs-2.md).
 
 `MobGameTests`: tool chance and tiers, what each tool breaks, an axe zombie cutting into a plank box
 while a bare-handed one cannot, the creeper's leap, sleep debt, noise muffled by walls and heard by an idle
-zombie — but not from a player in creative mode — and creakings in the forest spawn list.
+zombie — but not from a player in creative mode — how likely a heart is to grow by biome, and a birch heart waking only between birch logs.

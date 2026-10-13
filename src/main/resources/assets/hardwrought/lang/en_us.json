@@ -433,6 +433,7 @@
   "block.hardwrought.shaft_bar": "Shaft Bar",
   "block.hardwrought.hand_crank": "Hand Crank",
   "block.hardwrought.hand_crank_handle": "Hand Crank Handle",
+  "block.hardwrought.tree_creaking_heart": "Creaking Heart",
   "block.hardwrought.starter_crusher": "Starter Crusher",
   "message.hardwrought.too_tired_to_crank": "You are too exhausted to turn the crank.",
   "block.hardwrought.brick_furnace": "Brick Furnace",
@@ -1141,8 +1142,6 @@
   "season.hardwrought.summer": "summer",
   "season.hardwrought.autumn": "autumn",
   "season.hardwrought.winter": "winter",
-  "commands.hardwrought.day": "Day %s · year %s · %s, day %s of %s",
-  "commands.hardwrought.season": "It is %s — day %s of %s, %s still to come, then %s.",
-  "commands.hardwrought.season.effects": "Plants grow at %s %%, and it rains %s %% as often as usual.",
+  "commands.hardwrought.day": "It is day %s (day %s/%s of %s)",
   "tooltip.hardwrought.bucket_water": "%s / %s mB of water"
 }

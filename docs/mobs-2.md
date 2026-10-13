@@ -45,7 +45,7 @@ again.
 | 18 | Silverfish | Mining stone below y 0 may break into a nest: 0.2 %, plus 0.006 % per block of depth, releases three to six silverfish set on the miner. Infested stone within two blocks of a block being mined is shaken open. |
 | 19 | Endermite | Endermites within 32 blocks go to where an ender pearl lands. |
 | 20 | Phantom | Sleep debt; see mobs-1. |
-| 39 | Creaking | Forest spawns; see mobs-1. In the dark it is a quarter faster. |
+| 39 | Creaking | Hearts in the trees of every forest, in their bark; see mobs-1. In the dark it is a quarter faster. |
 
 ## Nether
 

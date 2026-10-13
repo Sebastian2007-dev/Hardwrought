@@ -229,6 +229,11 @@ public final class ModBlocks {
     public static final Block HAND_CRANK_HANDLE = register("hand_crank_handle", Block::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_FENCE).noOcclusion());
 
+    /** Mob specification § 39.1: a creaking heart grown into a tree that is not pale oak. */
+    public static final de.ipnats.hardwrought.mobs.TreeHeartBlock TREE_CREAKING_HEART = register("tree_creaking_heart",
+            de.ipnats.hardwrought.mobs.TreeHeartBlock::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.CREAKING_HEART));
+
     private ModBlocks() { }
 
     private static <T extends Block> T register(String name, Function<BlockBehaviour.Properties, T> factory,

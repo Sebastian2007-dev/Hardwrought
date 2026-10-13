@@ -26,6 +26,8 @@
 		"CraftingMenuAccessor",
 		"CraftingMenuMixin",
 		"CraftingRecipeMixin",
+		"CreakingHeartBlockEntityMixin",
+		"CreakingHeartBlockMixin",
 		"CreeperLeapMixin",
 		"DoorBlockSharedCellMixin",
 		"ContainerEntityMixin",
@@ -53,6 +55,7 @@
 		"ServerLevelWeatheringMixin",
 		"StructureTemplateMixin",
 		"TrapDoorBlockAccessor",
+		"TreeFeatureMixin",
 		"WaterFluidMixin",
 		"WitherSkeletonEquipmentMixin",
 		"ZombieEquipmentMixin"

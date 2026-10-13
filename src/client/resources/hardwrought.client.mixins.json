@@ -6,6 +6,8 @@
 		"AbstractContainerScreenMixin",
 		"BiomeColorsMixin",
 		"CameraMixin",
+		"CreakingRendererMixin",
+		"CreakingRenderStateMixin",
 		"CreateWorldGameTabMixin",
 		"DeathScreenMixin",
 		"FluidRendererMixin",

@@ -433,6 +433,7 @@
   "block.hardwrought.shaft_bar": "Wellenstange",
   "block.hardwrought.hand_crank": "Handkurbel",
   "block.hardwrought.hand_crank_handle": "Handkurbelgriff",
+  "block.hardwrought.tree_creaking_heart": "Knarzherz",
   "block.hardwrought.starter_crusher": "Einfacher Brecher",
   "message.hardwrought.too_tired_to_crank": "Du bist zu erschöpft, um die Kurbel zu drehen.",
   "block.hardwrought.brick_furnace": "Ziegelofen",
@@ -1141,8 +1142,6 @@
   "season.hardwrought.summer": "Sommer",
   "season.hardwrought.autumn": "Herbst",
   "season.hardwrought.winter": "Winter",
-  "commands.hardwrought.day": "Tag %s · Jahr %s · %s, Tag %s von %s",
-  "commands.hardwrought.season": "Es ist %s — Tag %s von %s, noch %s, dann %s.",
-  "commands.hardwrought.season.effects": "Pflanzen wachsen mit %s %%, und es regnet %s %% so oft wie sonst.",
+  "commands.hardwrought.day": "Es ist Tag %s (Tag %s/%s im %s)",
   "tooltip.hardwrought.bucket_water": "%s / %s mB Wasser"
 }

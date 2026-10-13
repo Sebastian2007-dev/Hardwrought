@@ -930,8 +930,8 @@ public final class CoreClientGameTest implements FabricClientGameTest {
     }
 
     /**
-     * The three calendar commands, run the way a player runs them. {@code /day} and {@code /season}
-     * only tell, so what is checked of them is that they are registered and go through at all;
+     * The two calendar commands, run the way a player runs them. {@code /day} only tells, so what
+     * is checked of it is that it is registered and goes through at all;
      * {@code /hardwrought season} changes something, so what is checked of it is that the
      * change actually arrives — on the server, where the calendar lives, and on the client, which
      * is told separately and could silently disagree.
@@ -939,7 +939,6 @@ public final class CoreClientGameTest implements FabricClientGameTest {
     private static void verifySeasonCommands(ClientGameTestContext context,
                                              net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
         context.runOnClient(client -> client.player.connection.sendCommand("day"));
-        context.runOnClient(client -> client.player.connection.sendCommand("season"));
         context.waitTicks(2);
 
         de.ipnats.hardwrought.environment.Season before = world.getServer().computeOnServer(server ->
