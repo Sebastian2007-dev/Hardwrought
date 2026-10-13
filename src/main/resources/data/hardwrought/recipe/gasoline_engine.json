@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "S": "hardwrought:spark_plug",
+    "K": "hardwrought:engine_piston",
+    "C": "hardwrought:crankshaft",
+    "P": "hardwrought:steel_plate",
+    "B": "hardwrought:bearing"
+  },
+  "pattern": [
+    "KSK",
+    "PCP",
+    "PBP"
+  ],
+  "result": {
+    "id": "hardwrought:gasoline_engine"
+  }
+}

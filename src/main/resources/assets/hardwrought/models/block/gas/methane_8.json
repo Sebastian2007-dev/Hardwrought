@@ -1,0 +1,78 @@
+{
+  "__comment": "The carbon dioxide haze recoloured yellow: 8 units of methane. Set a hair inside the block so it never fights a haze in the same block.",
+  "textures": {
+    "haze": "hardwrought:block/gas/methane_8",
+    "particle": "hardwrought:block/gas/methane_8"
+  },
+  "elements": [
+    {
+      "from": [
+        0.02,
+        0.02,
+        0.02
+      ],
+      "to": [
+        15.98,
+        15.98,
+        15.98
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#haze"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#haze"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#haze"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#haze"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#haze"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#haze"
+        }
+      }
+    }
+  ]
+}

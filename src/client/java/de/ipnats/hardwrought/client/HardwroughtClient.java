@@ -25,6 +25,7 @@ public class HardwroughtClient implements ClientModInitializer {
 		de.ipnats.hardwrought.client.environment.SeasonClient.initialize();
 		de.ipnats.hardwrought.client.environment.SeasonFog.initialize();
 		de.ipnats.hardwrought.client.smeltery.SmelteryClient.initialize();
+		de.ipnats.hardwrought.client.fluids.FluidsClient.initialize();
 		net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
 				de.ipnats.hardwrought.core.registry.ModBlockEntities.SHARED_CELL,
 				de.ipnats.hardwrought.client.environment.SharedCellRenderer::new);

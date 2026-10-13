@@ -328,8 +328,8 @@ public final class MachineryGameTests {
             level.setBlockAndUpdate(base, Blocks.CHEST.defaultBlockState());
             level.setBlockAndUpdate(base.east(4), Blocks.CHEST.defaultBlockState());
             layPipes(level, base, ModBlocks.ITEM_PIPE_BRONZE);
-            helper.assertTrue(level.getBlockState(base.east()).getValue(net.minecraft.world.level.block.PipeBlock.WEST)
-                            && level.getBlockState(base.east(3)).getValue(net.minecraft.world.level.block.PipeBlock.EAST),
+            helper.assertTrue(de.ipnats.hardwrought.machinery.ConnectedPipeBlock.link(level.getBlockState(base.east()), Direction.WEST).joined()
+                            && de.ipnats.hardwrought.machinery.ConnectedPipeBlock.link(level.getBlockState(base.east(3)), Direction.EAST).joined(),
                     "The pipes join both chests");
             helper.assertTrue(feed(level, base, 5) == ItemPipeTier.BRONZE.batch(), "A bronze pipe takes one at a time");
             runPipes(level, base, 3 * ItemPipeTier.BRONZE.ticksPerBlock() - 5);
@@ -351,15 +351,7 @@ public final class MachineryGameTests {
 
     private static void layPipes(ServerLevel level, BlockPos base, Block pipe) {
         for (int step = 1; step <= 3; step++) level.setBlock(base.east(step), pipe.defaultBlockState(), 2);
-        for (int step = 1; step <= 3; step++) {
-            BlockPos pos = base.east(step);
-            BlockState state = level.getBlockState(pos);
-            for (Direction side : Direction.values()) {
-                state = state.setValue(net.minecraft.world.level.block.PipeBlock.PROPERTY_BY_DIRECTION.get(side),
-                        ItemPipeBlock.joins(level, pos, side));
-            }
-            level.setBlock(pos, state, 2);
-        }
+        for (int step = 1; step <= 3; step++) de.ipnats.hardwrought.machinery.ConnectedPipeBlock.refresh(level, base.east(step));
     }
 
     /** Puts cobblestone into the first pipe from the chest's side; how many it took. */

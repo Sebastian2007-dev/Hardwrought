@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "T": "hardwrought:transistor",
+    "M": "hardwrought:microchip",
+    "C": "hardwrought:capacitor",
+    "B": "hardwrought:basic_circuit"
+  },
+  "pattern": [
+    "TMT",
+    "CBC"
+  ],
+  "result": {
+    "id": "hardwrought:advanced_circuit"
+  }
+}

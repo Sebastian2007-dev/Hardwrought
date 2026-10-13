@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": "hardwrought:bronze_ingot",
+    "R": "hardwrought:steel_rod",
+    "C": "hardwrought:redstone_coil"
+  },
+  "pattern": [
+    " B ",
+    "CRC",
+    " R "
+  ],
+  "result": {
+    "id": "hardwrought:fuel_injector"
+  }
+}

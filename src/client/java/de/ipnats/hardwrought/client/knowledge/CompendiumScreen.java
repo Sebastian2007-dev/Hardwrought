@@ -195,6 +195,8 @@ public class CompendiumScreen extends Screen {
         this.mode = mode;
         this.subject = subject;
         this.page = 0;
+        cardScroll = 0;
+        journalScroll = 0;
         if (mode == CompendiumPagePayload.MODE_RECIPES || mode == CompendiumPagePayload.MODE_USAGES) {
             selectedMethod = CompendiumPagePayload.METHOD_CRAFTING;
             methodChosen = false;
@@ -279,7 +281,16 @@ public class CompendiumScreen extends Screen {
     private void turnPage(int direction) {
         int pages = pageCount();
         page = Math.floorMod(page + direction, Math.max(1, pages));
+        cardScroll = 0;
+        journalScroll = 0;
     }
+
+    /** How far a page of recipe cards taller than the page is scrolled, and by how much it is too tall. */
+    private int cardScroll;
+    private int cardOverflow;
+    /** How many rows a journal note longer than both pages is scrolled, and by how many it is too long. */
+    private int journalScroll;
+    private int journalOverflow;
 
     /**
      * Whether this page is about a food. The left page of a food is kept for what it brings to a
@@ -314,7 +325,38 @@ public class CompendiumScreen extends Screen {
     }
 
     private List<CompendiumPagePayload.Recipe> recipesFor(CompendiumPagePayload current, int method) {
-        return current.recipes().stream().filter(recipe -> recipe.method() == method).toList();
+        return current.recipes().stream().filter(recipe -> tabOf(current, recipe) == method).toList();
+    }
+
+    /**
+     * The machines this page's in-world recipes are worked in, in the order they first appear. Each
+     * gets a bookmark of its own, with the machine on it, after the fixed ones: the refinery's cuts are
+     * under the refinery, the cracker's under the cracker. What is done by hand stays under the log.
+     */
+    private static List<CompendiumPagePayload.Slot> stations(CompendiumPagePayload current) {
+        List<CompendiumPagePayload.Slot> stations = new ArrayList<>();
+        java.util.Set<net.minecraft.world.item.Item> seen = new java.util.HashSet<>();
+        for (CompendiumPagePayload.Recipe recipe : current.recipes()) {
+            if (recipe.method() != CompendiumPagePayload.METHOD_IN_WORLD || recipe.station().isEmpty()) continue;
+            if (seen.add(recipe.station().options().getFirst().stack().getItem())) stations.add(recipe.station());
+        }
+        return stations;
+    }
+
+    /** The bookmark a recipe is under: its method, or for a machine's recipe that machine's own. */
+    private static int tabOf(CompendiumPagePayload current, CompendiumPagePayload.Recipe recipe) {
+        if (recipe.method() != CompendiumPagePayload.METHOD_IN_WORLD || recipe.station().isEmpty()) return recipe.method();
+        net.minecraft.world.item.Item machine = recipe.station().options().getFirst().stack().getItem();
+        List<CompendiumPagePayload.Slot> stations = stations(current);
+        for (int index = 0; index < stations.size(); index++) {
+            if (stations.get(index).options().getFirst().stack().is(machine)) return METHOD_COUNT + index;
+        }
+        return recipe.method();
+    }
+
+    /** Every bookmark this page could have: the fixed methods, then one for each machine. */
+    private static int tabCount(CompendiumPagePayload current) {
+        return METHOD_COUNT + (current == null ? 0 : stations(current).size());
     }
 
     private boolean methodAvailable(CompendiumPagePayload current, int method) {
@@ -326,7 +368,7 @@ public class CompendiumScreen extends Screen {
     private List<Integer> availableMethods(CompendiumPagePayload current) {
         if (current == null) return List.of();
         List<Integer> methods = new ArrayList<>();
-        for (int method = 0; method < METHOD_COUNT; method++) {
+        for (int method = 0; method < tabCount(current); method++) {
             if (methodAvailable(current, method)) methods.add(method);
         }
         return methods;
@@ -335,7 +377,7 @@ public class CompendiumScreen extends Screen {
     private int effectiveMethod(CompendiumPagePayload current) {
         if (methodChosen) return selectedMethod;
         if (methodAvailable(current, selectedMethod)) return selectedMethod;
-        for (int method = 0; method < METHOD_COUNT; method++) {
+        for (int method = 0; method < tabCount(current); method++) {
             if (methodAvailable(current, method)) return method;
         }
         return selectedMethod;
@@ -445,10 +487,20 @@ public class CompendiumScreen extends Screen {
             graphics.blitSprite(RenderPipelines.GUI_TEXTURED,
                     method == active ? METHOD_TAB_SELECTED_SPRITE : METHOD_TAB_SPRITE,
                     x, y, METHOD_TAB_SIZE, METHOD_TAB_SIZE);
-            graphics.item(METHOD_ICONS[method], x + 4, y + 3);
+            Component label;
+            if (method < METHOD_COUNT) {
+                graphics.item(METHOD_ICONS[method], x + 4, y + 3);
+                label = Component.translatable(methodKey(method));
+            } else {
+                // A machine's bookmark carries the machine, as a shadow until the player has held one.
+                var machine = knownOptions(stations(current).get(method - METHOD_COUNT)).getFirst();
+                boolean known = machine.level() > 0;
+                ShadowItem.render(graphics, machine.stack(), x + 4, y + 3, known);
+                label = known ? machine.stack().getHoverName()
+                        : Component.translatable(methodKey(CompendiumPagePayload.METHOD_IN_WORLD));
+            }
             if (inside(mouseX, mouseY, x, y, METHOD_TAB_SIZE, METHOD_TAB_SIZE)) {
-                graphics.setComponentTooltipForNextFrame(font,
-                        List.of(Component.translatable(methodKey(method))), mouseX, mouseY);
+                graphics.setComponentTooltipForNextFrame(font, List.of(label), mouseX, mouseY);
             }
         }
     }
@@ -596,35 +648,56 @@ public class CompendiumScreen extends Screen {
             int y = wrapInk(graphics,
                     Component.translatable("gui.hardwrought.compendium.unread"),
                     leftContentX(), top + JOURNAL_TEXT_TOP, wrap, FADED_COLOR);
+            // Scrambled glyphs come out wider than the letters they stand for: kept to the page.
+            graphics.enableScissor(leftContentX(), y, leftContentX() + CONTENT_WIDTH, top + CONTENT_BOTTOM);
             for (int line = 0; line < 4; line++) {
                 ink(graphics, scrawl(26 + line % 3 * 4), leftContentX(), y + 10 + line * 12,
                         SCRAWL_COLOR);
             }
+            graphics.disableScissor();
             return;
         }
         List<FormattedCharSequence> lines = font.split(Component.translatable(textKey(note.id())), wrap);
         int linesPerPage = JOURNAL_LINES;
-        for (int index = 0; index < Math.min(lines.size(), linesPerPage * 2); index++) {
-            int x = index < linesPerPage ? leftContentX() : rightContentX();
-            ink(graphics, lines.get(index), x, top + JOURNAL_TEXT_TOP + index % linesPerPage * JOURNAL_LINE,
-                    TEXT_COLOR);
-        }
+        int visible = linesPerPage * 2;
+        // The note as rows running down the left page and on down the right: its text, and once it has
+        // been followed, a blank row and the mark beside its tick.
+        List<FormattedCharSequence> rows = new ArrayList<>(lines);
+        int followedFrom = -1;
         if (note.state() == Journal.DONE) {
-            // Wrapped beside its tick, and kept on one page: a mark split across the spine would
-            // read as two things.
             List<FormattedCharSequence> followed = font.split(
                     Component.translatable("gui.hardwrought.compendium.followed"), CONTENT_WIDTH - 12);
-            int followedIndex = Math.min(lines.size() + 1, linesPerPage * 2 - followed.size());
-            if (followedIndex < linesPerPage && followedIndex + followed.size() > linesPerPage) {
-                followedIndex = linesPerPage;
+            int at = lines.size() + 1;
+            // Kept on one page where everything fits: a mark split across the spine would read as two things.
+            if (at + followed.size() <= visible && at < linesPerPage && at + followed.size() > linesPerPage) {
+                at = linesPerPage;
             }
-            int followedX = followedIndex < linesPerPage ? leftContentX() : rightContentX();
-            int y = top + JOURNAL_TEXT_TOP + followedIndex % linesPerPage * JOURNAL_LINE;
-            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, FOLLOWED_SPRITE, followedX, y, 9, 9);
-            for (FormattedCharSequence line : followed) {
-                ink(graphics, line, followedX + 12, y, DONE_COLOR);
-                y += JOURNAL_LINE;
+            while (rows.size() < at) rows.add(FormattedCharSequence.EMPTY);
+            followedFrom = rows.size();
+            rows.addAll(followed);
+        }
+        // Only a note longer than both pages scrolls; one that fits stands still.
+        journalOverflow = Math.max(0, rows.size() - visible);
+        journalScroll = Math.clamp(journalScroll, 0, journalOverflow);
+        for (int row = journalScroll; row < Math.min(rows.size(), journalScroll + visible); row++) {
+            int index = row - journalScroll;
+            int x = index < linesPerPage ? leftContentX() : rightContentX();
+            int y = top + JOURNAL_TEXT_TOP + index % linesPerPage * JOURNAL_LINE;
+            if (followedFrom >= 0 && row >= followedFrom) {
+                if (row == followedFrom) graphics.blitSprite(RenderPipelines.GUI_TEXTURED, FOLLOWED_SPRITE, x, y, 9, 9);
+                ink(graphics, rows.get(row), x + 12, y, DONE_COLOR);
+            } else {
+                ink(graphics, rows.get(row), x, y, TEXT_COLOR);
             }
+        }
+        if (journalOverflow > 0) {
+            int from = top + JOURNAL_TEXT_TOP, to = from + linesPerPage * JOURNAL_LINE;
+            int track = to - from;
+            int thumb = Math.max(8, track * visible / rows.size());
+            int thumbAt = from + (track - thumb) * journalScroll / journalOverflow;
+            int barX = rightContentX() + CONTENT_WIDTH + 2;
+            graphics.fill(barX, from, barX + 2, to, 0x30000000);
+            graphics.fill(barX, thumbAt, barX + 2, thumbAt + thumb, 0xA0000000 | (FADED_COLOR & 0xFFFFFF));
         }
     }
 
@@ -803,11 +876,35 @@ public class CompendiumScreen extends Screen {
             return;
         }
         List<List<CompendiumPagePayload.Recipe>> pages = recipePages(recipes);
-        int y = originY;
-        for (CompendiumPagePayload.Recipe recipe : pages.get(Math.min(page, pages.size() - 1))) {
+        List<CompendiumPagePayload.Recipe> shown = pages.get(Math.min(page, pages.size() - 1));
+        // A card taller than the page — a long instruction — is cut off above the controls and
+        // scrolled to with the wheel, never drawn over them or off the paper.
+        int total = -CARD_GAP;
+        for (CompendiumPagePayload.Recipe recipe : shown) total += card(recipe).height() + CARD_GAP;
+        int clipBottom = top + CONTENT_BOTTOM;
+        cardOverflow = Math.max(0, total - (clipBottom - originY));
+        cardScroll = Math.clamp(cardScroll, 0, cardOverflow);
+        int hotspotsBefore = hotspots.size();
+        graphics.enableScissor(rightContentX() - 2, originY, rightContentX() + CONTENT_WIDTH + 4, clipBottom);
+        int y = originY - cardScroll;
+        for (CompendiumPagePayload.Recipe recipe : shown) {
             Card card = card(recipe);
             drawCard(graphics, recipe, card, rightContentX(), y);
             y += card.height() + CARD_GAP;
+        }
+        graphics.disableScissor();
+        // What was scrolled out of sight cannot be pointed at either.
+        for (int index = hotspots.size() - 1; index >= hotspotsBefore; index--) {
+            Hotspot hotspot = hotspots.get(index);
+            if (hotspot.y() < originY || hotspot.y() + 16 > clipBottom) hotspots.remove(index);
+        }
+        if (cardOverflow > 0) {
+            int track = clipBottom - originY;
+            int thumb = Math.max(8, track * track / (track + cardOverflow));
+            int at = originY + (track - thumb) * cardScroll / cardOverflow;
+            int barX = rightContentX() + CONTENT_WIDTH + 2;
+            graphics.fill(barX, originY, barX + 2, clipBottom, 0x30000000);
+            graphics.fill(barX, at, barX + 2, at + thumb, 0xA0000000 | (FADED_COLOR & 0xFFFFFF));
         }
     }
 
@@ -949,6 +1046,16 @@ public class CompendiumScreen extends Screen {
 
     private void slot(GuiGraphicsExtractor graphics, int x, int y, ItemStack stack, boolean known) {
         drawSlotBackground(graphics, x, y);
+        var ingredient = de.ipnats.hardwrought.knowledge.FluidIcons.of(stack);
+        if (ingredient != null) {
+            // A liquid or a gas as itself, with how much in the tooltip; a click opens its bucket or canister.
+            FluidIconRenderer.render(graphics, ingredient, x, y);
+            var container = de.ipnats.hardwrought.knowledge.FluidIcons.container(ingredient);
+            hotspots.add(new Hotspot(x, y, container == null ? stack : new ItemStack(container), true,
+                    List.of(ingredient.name(), ingredient.quantity().copy().withStyle(net.minecraft.ChatFormatting.GRAY)),
+                    container != null));
+            return;
+        }
         ShadowItem.render(graphics, stack, x, y, known);
         hotspots.add(new Hotspot(x, y, stack, known, null, true));
     }
@@ -1067,6 +1174,21 @@ public class CompendiumScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (scrollY != 0 && mode != MODE_HOME) {
+            // A page of cards too tall for the paper scrolls first, and turns once it is at its end.
+            boolean recipePage = mode == CompendiumPagePayload.MODE_RECIPES || mode == CompendiumPagePayload.MODE_USAGES;
+            int step = (int) Math.signum(scrollY) * LINE_HEIGHT * 2;
+            if (recipePage && cardOverflow > 0 && mouseX >= rightContentX()
+                    && ((step < 0 && cardScroll < cardOverflow) || (step > 0 && cardScroll > 0))) {
+                cardScroll = Math.clamp(cardScroll - step, 0, cardOverflow);
+                return true;
+            }
+            // A note too long for both pages likewise: a row at a time, then on to the next note.
+            int rows = scrollY > 0 ? -1 : 1;
+            if (mode == CompendiumPagePayload.MODE_JOURNAL && journalOverflow > 0
+                    && ((rows > 0 && journalScroll < journalOverflow) || (rows < 0 && journalScroll > 0))) {
+                journalScroll = Math.clamp(journalScroll + rows, 0, journalOverflow);
+                return true;
+            }
             turnPage(scrollY > 0 ? -1 : 1);
             return true;
         }

@@ -52,6 +52,7 @@ public final class DebugCommands {
                                         .executes(context -> locateMountain(context.getSource(),
                                                 com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "height"))))))
                         .then(knowledge(registries))
+                        .then(de.ipnats.hardwrought.oil.RigDebug.command())
                         .then(season())
                         .then(weather())
                         .then(literal("debug")

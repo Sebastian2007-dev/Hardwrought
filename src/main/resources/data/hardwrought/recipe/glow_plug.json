@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "R": "minecraft:redstone",
+    "F": "hardwrought:fireclay",
+    "S": "hardwrought:steel_plate"
+  },
+  "pattern": [
+    " R ",
+    " F ",
+    " S "
+  ],
+  "result": {
+    "id": "hardwrought:glow_plug",
+    "count": 2
+  }
+}

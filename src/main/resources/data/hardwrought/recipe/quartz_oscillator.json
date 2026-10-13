@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "G": "minecraft:gold_nugget",
+    "Q": "minecraft:quartz",
+    "P": "hardwrought:plastic_pellets"
+  },
+  "pattern": [
+    " G ",
+    " Q ",
+    " P "
+  ],
+  "result": {
+    "id": "hardwrought:quartz_oscillator",
+    "count": 2
+  }
+}

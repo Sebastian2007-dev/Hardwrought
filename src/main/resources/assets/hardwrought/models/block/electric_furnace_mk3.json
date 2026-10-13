@@ -1,0 +1,9 @@
+{
+  "parent": "hardwrought:block/electric_furnace",
+  "textures": {
+    "iron": "hardwrought:block/hardwrought/lamp_base_mk3",
+    "front": "hardwrought:block/hardwrought/electric_furnace_front",
+    "jaw": "hardwrought:block/hardwrought/electric_furnace_top",
+    "particle": "hardwrought:block/hardwrought/dynamo_iron"
+  }
+}

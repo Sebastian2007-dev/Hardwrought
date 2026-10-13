@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "running=false": {
+      "model": "hardwrought:block/reformer"
+    },
+    "running=true": {
+      "model": "hardwrought:block/reformer"
+    }
+  }
+}

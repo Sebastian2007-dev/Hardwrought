@@ -254,7 +254,8 @@ public final class KnowledgeGameTests {
         for (KnowledgeCategory category : KnowledgeCategory.values()) shelved += knowledge.shelf(category).size();
         int registered = 0;
         for (Item item : BuiltInRegistries.ITEM) {
-            if (item != Items.AIR) registered++;
+            // The book's liquid icon stands for liquids and has no shelf of its own.
+            if (item != Items.AIR && item != de.ipnats.hardwrought.knowledge.FluidIcons.ICON) registered++;
         }
         helper.assertTrue(shelved == registered,
                 "Every item belongs to one shelf: " + shelved + " shelved of " + registered);

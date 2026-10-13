@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "P": "hardwrought:steel_plate",
+    "C": "hardwrought:basic_circuit",
+    "G": "hardwrought:glow_plug",
+    "D": "hardwrought:diesel_generator",
+    "M": "hardwrought:electric_motor"
+  },
+  "pattern": [
+    "PCP",
+    "GDG",
+    "PMP"
+  ],
+  "result": {
+    "id": "hardwrought:large_diesel_controller"
+  }
+}

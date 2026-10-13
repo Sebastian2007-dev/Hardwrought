@@ -1,0 +1,9 @@
+{
+  "parent": "hardwrought:block/item_pipe/core",
+  "textures": {
+    "pipe": "minecraft:block/smooth_stone",
+    "trim": "minecraft:block/yellow_terracotta",
+    "end": "minecraft:block/black_concrete",
+    "particle": "minecraft:block/smooth_stone"
+  }
+}

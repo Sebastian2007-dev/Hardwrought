@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "R": "hardwrought:redstone_coil",
+    "K": "hardwrought:coke_block",
+    "B": "hardwrought:refractory_brick",
+    "C": "hardwrought:basic_circuit"
+  },
+  "pattern": [
+    "RKR",
+    "BCB",
+    "BBB"
+  ],
+  "result": {
+    "id": "hardwrought:arc_furnace"
+  }
+}

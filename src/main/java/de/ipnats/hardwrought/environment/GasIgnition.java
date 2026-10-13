@@ -19,6 +19,11 @@ import java.util.Set;
  * Section 18.3: firedamp. Methane between five and fifteen percent of the air — three to seven units
  * in a gas block — goes off at the first flame it touches, and the whole connected pocket goes with
  * it. What burns becomes carbon dioxide, one unit for one, as methane does.
+ *
+ * <p>A pocket too rich to explode on its own, more than seven units, still goes off at a flame: at its
+ * edge the gas is thinned by the air into the window, and the edge sets off the rest. Thin gas, below
+ * three units, does not. A flame carried into the gas sets it off as much as one standing in it: a torch
+ * or a lantern in hand, or a player on fire. The safety lamp is made for this, and does not.
  */
 public final class GasIgnition {
     /** The most gas blocks one blast takes with it; a mine-sized pocket is still bounded work. */
@@ -32,9 +37,65 @@ public final class GasIgnition {
         return methane >= GasMixture.METHANE_EXPLOSIVE_MIN && methane <= GasMixture.METHANE_EXPLOSIVE_MAX;
     }
 
+    /** Whether a flame sets off the methane here: from the bottom of the window up, rich gas too. */
+    public static boolean ignitable(BlockState state) {
+        return Gases.units(state, Gas.METHANE) * Gas.METHANE.fractionPerUnit() >= GasMixture.METHANE_EXPLOSIVE_MIN;
+    }
+
+    /** How often players are checked for a flame they carry into gas. */
+    private static final int CARRIED_CHECK = 5;
+
+    public static void initialize() {
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_LEVEL_TICK.register(level -> {
+            if (level.getGameTime() % CARRIED_CHECK != 0) return;
+            for (net.minecraft.server.level.ServerPlayer player : List.copyOf(level.players())) {
+                if (player.isSpectator() || !carriesFlame(player)) continue;
+                BlockPos gas = gasAround(level, BlockPos.containing(player.getEyePosition()));
+                if (gas == null) gas = gasAround(level, player.blockPosition());
+                if (gas != null) ignite(level, gas);
+            }
+        });
+    }
+
+    /** A torch or lantern in either hand, or being on fire. */
+    public static boolean carriesFlame(net.minecraft.world.entity.LivingEntity entity) {
+        if (entity.isOnFire()) return true;
+        for (net.minecraft.world.InteractionHand hand : net.minecraft.world.InteractionHand.values()) {
+            net.minecraft.world.item.ItemStack held = entity.getItemInHand(hand);
+            if (held.is(net.minecraft.world.item.Items.TORCH) || held.is(net.minecraft.world.item.Items.SOUL_TORCH)
+                    || held.is(net.minecraft.world.item.Items.LANTERN) || held.is(net.minecraft.world.item.Items.SOUL_LANTERN)
+                    || held.is(net.minecraft.world.item.Items.COPPER_TORCH)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** The ignitable gas at a place, or, where one stands in a block gas passes through, beside it. */
+    private static BlockPos gasAround(ServerLevel level, BlockPos pos) {
+        if (!level.isLoaded(pos)) return null;
+        BlockState state = level.getBlockState(pos);
+        if (ignitable(state)) return pos;
+        if (!Gases.permeable(state)) return null;
+        for (Direction direction : Direction.values()) {
+            BlockPos next = pos.relative(direction);
+            if (level.isLoaded(next) && ignitable(level.getBlockState(next))) return next;
+        }
+        return null;
+    }
+
     /** Anything that burns in the open: fire, lava, a torch or candle, a lit hearth, furnace or forge. */
     public static boolean isFlame(BlockState state) {
         if (RoomScan.isCombustionSource(state)) return true;
+        if (state.is(net.minecraft.world.level.block.Blocks.LANTERN) || state.is(net.minecraft.world.level.block.Blocks.SOUL_LANTERN)
+                || state.is(net.minecraft.world.level.block.Blocks.COPPER_TORCH)
+                || state.is(net.minecraft.world.level.block.Blocks.COPPER_WALL_TORCH)) {
+            return true;
+        }
+        if (state.getBlock() instanceof de.ipnats.hardwrought.power.GasBurnerBlock
+                || state.getBlock() instanceof de.ipnats.hardwrought.power.PetroleumLampBlock) {
+            return state.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.LIT);
+        }
         return state.getBlock() instanceof AbstractFurnaceBlock
                 && state.getOptionalValue(BlockStateProperties.LIT).orElse(false);
     }

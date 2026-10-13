@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "side": "hardwrought:block/cracker_side",
+    "end": "hardwrought:block/cracker_top"
+  }
+}

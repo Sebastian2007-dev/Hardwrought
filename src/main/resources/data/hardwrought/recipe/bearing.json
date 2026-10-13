@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:steel_plate",
+    "N": "minecraft:iron_nugget"
+  },
+  "pattern": [
+    " P ",
+    "PNP",
+    " P "
+  ],
+  "result": {
+    "id": "hardwrought:bearing",
+    "count": 4
+  }
+}

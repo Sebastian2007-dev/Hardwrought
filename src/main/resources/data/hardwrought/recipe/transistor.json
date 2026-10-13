@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "W": "hardwrought:copper_wire",
+    "G": "minecraft:gold_nugget",
+    "S": "hardwrought:silicon_wafer",
+    "P": "hardwrought:plastic_pellets"
+  },
+  "pattern": [
+    "WGW",
+    " S ",
+    " P "
+  ],
+  "result": {
+    "id": "hardwrought:transistor",
+    "count": 4
+  }
+}

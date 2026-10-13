@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "hardwrought:block/burning_stack"
+    },
+    "lit=true": {
+      "model": "hardwrought:block/burning_stack_lit"
+    }
+  }
+}

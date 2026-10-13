@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:steel_plate",
+    "R": "hardwrought:steel_rod"
+  },
+  "pattern": [
+    "PPP",
+    " R ",
+    " R "
+  ],
+  "result": {
+    "id": "hardwrought:engine_piston",
+    "count": 2
+  }
+}

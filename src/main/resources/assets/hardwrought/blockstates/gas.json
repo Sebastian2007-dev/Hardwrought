@@ -140,6 +140,70 @@
       "apply": {
         "model": "hardwrought:block/gas/haze_8"
       }
+    },
+    {
+      "when": {
+        "methane": "1"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/methane_1"
+      }
+    },
+    {
+      "when": {
+        "methane": "2"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/methane_2"
+      }
+    },
+    {
+      "when": {
+        "methane": "3"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/methane_3"
+      }
+    },
+    {
+      "when": {
+        "methane": "4"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/methane_4"
+      }
+    },
+    {
+      "when": {
+        "methane": "5"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/methane_5"
+      }
+    },
+    {
+      "when": {
+        "methane": "6"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/methane_6"
+      }
+    },
+    {
+      "when": {
+        "methane": "7"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/methane_7"
+      }
+    },
+    {
+      "when": {
+        "methane": "8"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas/methane_8"
+      }
     }
   ]
 }

@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "running=false": {
+      "model": "hardwrought:block/arc_furnace"
+    },
+    "running=true": {
+      "model": "hardwrought:block/arc_furnace"
+    }
+  }
+}

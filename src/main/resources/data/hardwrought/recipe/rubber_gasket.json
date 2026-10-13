@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "R": "hardwrought:rubber"
+  },
+  "pattern": [
+    " R ",
+    "R R",
+    " R "
+  ],
+  "result": {
+    "id": "hardwrought:rubber_gasket",
+    "count": 4
+  }
+}

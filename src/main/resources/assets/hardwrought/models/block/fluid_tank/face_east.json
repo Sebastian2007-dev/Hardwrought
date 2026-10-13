@@ -1,0 +1,42 @@
+{
+  "textures": {
+    "side": "hardwrought:block/fluid_tank_side",
+    "end": "hardwrought:block/fluid_tank_top",
+    "particle": "hardwrought:block/fluid_tank_side"
+  },
+  "elements": [
+    {
+      "from": [
+        15.99,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#side",
+          "cullface": "east"
+        },
+        "west": {
+          "uv": [
+            16,
+            0,
+            0,
+            16
+          ],
+          "texture": "#side"
+        }
+      }
+    }
+  ]
+}

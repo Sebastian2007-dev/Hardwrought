@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "hardwrought:block/petroleum_lamp"
+    },
+    "lit=true": {
+      "model": "hardwrought:block/petroleum_lamp"
+    }
+  }
+}

@@ -39,6 +39,14 @@ public final class ElectricBlocks {
     public static final MachineBlock ELECTRIC_FURNACE = machine(Machine.FURNACE);
     public static final MachineBlock SAWMILL = machine(Machine.SAWMILL);
     public static final MachineBlock PLATE_PRESS = machine(Machine.PRESS);
+    public static final MachineBlock BASIC_CRUSHER_MK2 = machine(Machine.CRUSHER_MK2);
+    public static final MachineBlock BASIC_CRUSHER_MK3 = machine(Machine.CRUSHER_MK3);
+    public static final MachineBlock ELECTRIC_FURNACE_MK2 = machine(Machine.FURNACE_MK2);
+    public static final MachineBlock ELECTRIC_FURNACE_MK3 = machine(Machine.FURNACE_MK3);
+    public static final MachineBlock SAWMILL_MK2 = machine(Machine.SAWMILL_MK2);
+    public static final MachineBlock SAWMILL_MK3 = machine(Machine.SAWMILL_MK3);
+    public static final MachineBlock PLATE_PRESS_MK2 = machine(Machine.PRESS_MK2);
+    public static final MachineBlock PLATE_PRESS_MK3 = machine(Machine.PRESS_MK3);
 
     // Never placed: the look of a strung wire, drawn piece by piece along its sag.
     public static final Block WIRE_STRAND = strand("wire_strand", 0);
@@ -73,7 +81,9 @@ public final class ElectricBlocks {
             new BlockEntityType<>(BatteryBlockEntity::new, Set.of(BATTERY)));
     /** One kind of entity for every machine: which machine it is, its block says. */
     public static final BlockEntityType<MachineBlockEntity> MACHINE_ENTITY = entity("basic_crusher",
-            new BlockEntityType<>(MachineBlockEntity::new, Set.of(BASIC_CRUSHER, ELECTRIC_FURNACE, SAWMILL, PLATE_PRESS)));
+            new BlockEntityType<>(MachineBlockEntity::new, Set.of(BASIC_CRUSHER, ELECTRIC_FURNACE, SAWMILL, PLATE_PRESS,
+                    BASIC_CRUSHER_MK2, BASIC_CRUSHER_MK3, ELECTRIC_FURNACE_MK2, ELECTRIC_FURNACE_MK3, SAWMILL_MK2, SAWMILL_MK3,
+                    PLATE_PRESS_MK2, PLATE_PRESS_MK3)));
 
     private ElectricBlocks() { }
 
@@ -85,7 +95,10 @@ public final class ElectricBlocks {
     /** Everything a player can hold, for the creative tab. */
     public static List<Item> items() {
         return List.of(DYNAMO.asItem(), COPPER_COIL.asItem(), INSULATOR.asItem(), MAST.asItem(), BATTERY.asItem(), ELECTRIC_LAMP.asItem(),
-                BASIC_CRUSHER.asItem(), ELECTRIC_FURNACE.asItem(), SAWMILL.asItem(), PLATE_PRESS.asItem(), COPPER_WIRE, COPPER_CABLE, METER);
+                BASIC_CRUSHER.asItem(), ELECTRIC_FURNACE.asItem(), SAWMILL.asItem(), PLATE_PRESS.asItem(),
+                BASIC_CRUSHER_MK2.asItem(), BASIC_CRUSHER_MK3.asItem(), ELECTRIC_FURNACE_MK2.asItem(), ELECTRIC_FURNACE_MK3.asItem(),
+                SAWMILL_MK2.asItem(), SAWMILL_MK3.asItem(), PLATE_PRESS_MK2.asItem(), PLATE_PRESS_MK3.asItem(),
+                COPPER_WIRE, COPPER_CABLE, METER);
     }
 
     private static MachineBlock machine(Machine machine) {

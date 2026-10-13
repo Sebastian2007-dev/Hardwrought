@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "G": "minecraft:glass"
+  },
+  "pattern": [
+    "PGP",
+    "G G",
+    "PGP"
+  ],
+  "result": {
+    "id": "hardwrought:fluid_tank"
+  }
+}

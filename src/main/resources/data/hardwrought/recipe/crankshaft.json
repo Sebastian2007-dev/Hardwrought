@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "R": "hardwrought:steel_rod",
+    "B": "hardwrought:bearing"
+  },
+  "pattern": [
+    "R  ",
+    "BRB",
+    "  R"
+  ],
+  "result": {
+    "id": "hardwrought:crankshaft"
+  }
+}

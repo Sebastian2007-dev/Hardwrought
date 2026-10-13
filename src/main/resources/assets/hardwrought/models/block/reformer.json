@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "side": "hardwrought:block/reformer_side",
+    "end": "hardwrought:block/reformer_top"
+  }
+}

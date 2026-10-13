@@ -92,7 +92,7 @@ public final class OilGameTests {
         helper.succeed();
     }
 
-    @GameTest(maxTicks = 400)
+    @GameTest(maxTicks = 560)
     public void aRigBoresIntoOilAndPumpsIt(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos base = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE);
@@ -101,7 +101,10 @@ public final class OilGameTests {
         place(level, used, base, ModBlocks.CRANK_BOX.defaultBlockState().setValue(CrankBoxBlock.TURNING, true));
         place(level, used, rigPos, ModBlocks.DRILLING_RIG.defaultBlockState());
         DrillingRigBlockEntity rig = (DrillingRigBlockEntity) level.getBlockEntity(rigPos);
-        Reservoir reservoir = new Reservoir(Reservoir.Kind.OIL, 9_000, 9_000,
+        // A region of its own each run: the test world is kept between runs, and so is what was drawn
+        // from a reservoir, so one shared key would run dry over many runs and slow the well down.
+        int region = 9_000 + level.getRandom().nextInt(1_000_000);
+        Reservoir reservoir = new Reservoir(Reservoir.Kind.OIL, region, region,
                 rigPos.below(40), 30, 8, 1.0);
         rig.overrideReservoirForTesting(reservoir);
         var save = CoreLifecycle.require(level.getServer()).saveData();
@@ -116,7 +119,8 @@ public final class OilGameTests {
             helper.assertTrue(rig.stage() == DrillingRigBlockEntity.Stage.WELL, "Breaking into it, it becomes a well");
             helper.assertTrue(rig.oil() > 0 && rig.gas() > 0, "that brings up oil, and the gas of its cap with it");
         });
-        helper.runAfterDelay(260, () -> {
+        // 50 mB a second at a crank's sixteen turns: a bucket after twenty seconds of pumping.
+        helper.runAfterDelay(30 + 420, () -> {
             try {
                 ItemStack bucket = rig.drawOil();
                 helper.assertTrue(bucket.is(ModItems.CRUDE_OIL_BUCKET), "A bucketful comes off it as crude oil");

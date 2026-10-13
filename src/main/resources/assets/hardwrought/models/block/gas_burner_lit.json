@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "side": "hardwrought:block/gas_burner_side",
+    "top": "hardwrought:block/gas_burner_top_lit",
+    "bottom": "hardwrought:block/gas_burner_side"
+  }
+}

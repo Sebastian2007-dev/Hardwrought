@@ -1,0 +1,52 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "north": "false"
+      },
+      "apply": {
+        "model": "hardwrought:block/fluid_tank/face_north"
+      }
+    },
+    {
+      "when": {
+        "south": "false"
+      },
+      "apply": {
+        "model": "hardwrought:block/fluid_tank/face_south"
+      }
+    },
+    {
+      "when": {
+        "west": "false"
+      },
+      "apply": {
+        "model": "hardwrought:block/fluid_tank/face_west"
+      }
+    },
+    {
+      "when": {
+        "east": "false"
+      },
+      "apply": {
+        "model": "hardwrought:block/fluid_tank/face_east"
+      }
+    },
+    {
+      "when": {
+        "down": "false"
+      },
+      "apply": {
+        "model": "hardwrought:block/fluid_tank/face_down"
+      }
+    },
+    {
+      "when": {
+        "up": "false"
+      },
+      "apply": {
+        "model": "hardwrought:block/fluid_tank/face_up"
+      }
+    }
+  ]
+}

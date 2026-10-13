@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "P": "hardwrought:steel_plate",
+    "C": "hardwrought:basic_circuit",
+    "R": "hardwrought:redstone_coil",
+    "A": "hardwrought:arc_furnace",
+    "B": "hardwrought:refractory_brick"
+  },
+  "pattern": [
+    "PCP",
+    "RAR",
+    "PBP"
+  ],
+  "result": {
+    "id": "hardwrought:arc_furnace_controller"
+  }
+}

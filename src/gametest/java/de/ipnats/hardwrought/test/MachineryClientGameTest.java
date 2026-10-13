@@ -116,6 +116,130 @@ public final class MachineryClientGameTest implements FabricClientGameTest {
             context.waitTicks(10);
             context.takeScreenshot("hardwrought-ore-scanner");
             context.runOnClient(client -> client.gui.setScreen(null));
+            // How gasoline is made: one bookmark for the cracker, one for the reformer, each with the machine on it.
+            world.getServer().runOnServer(server -> {
+                var player = server.getPlayerList().getPlayers().getFirst();
+                player.getInventory().add(new net.minecraft.world.item.ItemStack(de.ipnats.hardwrought.refining.RefineryBlocks.CRACKER));
+            });
+            context.waitTicks(10);
+            context.runOnClient(client -> de.ipnats.hardwrought.client.knowledge.CompendiumClient.openRecipes(
+                    de.ipnats.hardwrought.refining.RefineryProduct.GASOLINE.bucket()));
+            context.waitTicks(20);
+            context.takeScreenshot("hardwrought-compendium-gasoline");
+            context.runOnClient(client -> de.ipnats.hardwrought.client.knowledge.CompendiumClient.openRecipes(
+                    de.ipnats.hardwrought.refining.RefineryProduct.DIESEL.bucket()));
+            context.waitTicks(20);
+            context.takeScreenshot("hardwrought-compendium-diesel");
+            context.runOnClient(client -> client.gui.setScreen(null));
+            // The refinery's windows: a column of two trays over magma, half through its crude oil; a cracker; a gas tank.
+            BlockPos[] column = new BlockPos[1];
+            world.getServer().runOnServer(server -> {
+                var player = server.getPlayerList().getPlayers().getFirst();
+                var level = player.level();
+                BlockPos base = player.blockPosition().east(4);
+                column[0] = base;
+                level.setBlockAndUpdate(base.below(), net.minecraft.world.level.block.Blocks.MAGMA_BLOCK.defaultBlockState());
+                level.setBlockAndUpdate(base, de.ipnats.hardwrought.refining.RefineryBlocks.BASE.defaultBlockState());
+                level.setBlockAndUpdate(base.above(), de.ipnats.hardwrought.refining.RefineryBlocks.STAGE.defaultBlockState());
+                level.setBlockAndUpdate(base.above(2), de.ipnats.hardwrought.refining.RefineryBlocks.STAGE.defaultBlockState());
+                var entity = (de.ipnats.hardwrought.refining.RefineryBaseBlock.Entity) level.getBlockEntity(base);
+                try (var transaction = net.fabricmc.fabric.api.transfer.v1.transaction.Transaction.openOuter()) {
+                    entity.crude.insert(net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.of(de.ipnats.hardwrought.oil.ModFluids.CRUDE_OIL),
+                            net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET * 6, transaction);
+                    transaction.commit();
+                }
+                BlockPos cracker = base.south(2);
+                level.setBlockAndUpdate(cracker.below(), net.minecraft.world.level.block.Blocks.MAGMA_BLOCK.defaultBlockState());
+                level.setBlockAndUpdate(cracker, de.ipnats.hardwrought.refining.RefineryBlocks.CRACKER.defaultBlockState());
+                var processor = (de.ipnats.hardwrought.refining.ProcessorBlock.Entity) level.getBlockEntity(cracker);
+                try (var transaction = net.fabricmc.fabric.api.transfer.v1.transaction.Transaction.openOuter()) {
+                    processor.input.insert(net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.of(
+                            de.ipnats.hardwrought.refining.RefineryProduct.HEAVY_OIL.source()),
+                            net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET * 3, transaction);
+                    transaction.commit();
+                }
+                BlockPos gasTank = base.north(2);
+                level.setBlockAndUpdate(gasTank, de.ipnats.hardwrought.gasline.GasLines.TANK.defaultBlockState());
+                ((de.ipnats.hardwrought.gasline.GasTankBlock.Entity) level.getBlockEntity(gasTank)).store
+                        .insert(de.ipnats.hardwrought.gasline.GasKind.LPG, 160);
+                BlockPos flareTank = base.west(2);
+                level.setBlockAndUpdate(flareTank, de.ipnats.hardwrought.fluids.FluidBlocks.TANK.defaultBlockState());
+                try (var transaction = net.fabricmc.fabric.api.transfer.v1.transaction.Transaction.openOuter()) {
+                    de.ipnats.hardwrought.fluids.FluidTankBlock.storage(level, flareTank).insert(
+                            net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.of(de.ipnats.hardwrought.refining.RefineryProduct.NAPHTHA.source()),
+                            net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET * 12, transaction);
+                    transaction.commit();
+                }
+                BlockPos power = base.west(4);
+                level.setBlockAndUpdate(power, de.ipnats.hardwrought.power.PowerBlocks.DIESEL_GENERATOR.defaultBlockState());
+                var generator = (de.ipnats.hardwrought.power.DieselGeneratorBlock.Entity) level.getBlockEntity(power);
+                try (var transaction = net.fabricmc.fabric.api.transfer.v1.transaction.Transaction.openOuter()) {
+                    generator.fuel.insert(net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.of(
+                            de.ipnats.hardwrought.refining.RefineryProduct.DIESEL.source()),
+                            net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET * 3, transaction);
+                    transaction.commit();
+                }
+                level.setBlockAndUpdate(power.north(), de.ipnats.hardwrought.power.PowerBlocks.GASOLINE_ENGINE.defaultBlockState());
+                var engine = (de.ipnats.hardwrought.power.GasolineEngineBlock.Entity) level.getBlockEntity(power.north());
+                engine.setPlugForTesting(de.ipnats.hardwrought.power.GasolineEngineBlock.Entity.PLUG_LIFE * 3 / 4);
+                try (var transaction = net.fabricmc.fabric.api.transfer.v1.transaction.Transaction.openOuter()) {
+                    engine.fuel.insert(net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.of(
+                            de.ipnats.hardwrought.refining.RefineryProduct.GASOLINE.source()),
+                            net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET * 2, transaction);
+                    transaction.commit();
+                }
+                level.setBlockAndUpdate(power.south(), de.ipnats.hardwrought.power.PowerBlocks.GAS_BURNER.defaultBlockState());
+                ((de.ipnats.hardwrought.power.GasBurnerBlock.Entity) level.getBlockEntity(power.south())).intake
+                        .insert(de.ipnats.hardwrought.gasline.GasKind.NATURAL_GAS, 40);
+                level.setBlockAndUpdate(power.south(2), de.ipnats.hardwrought.power.PowerBlocks.PETROLEUM_LAMP.defaultBlockState()
+                        .setValue(de.ipnats.hardwrought.power.PetroleumLampBlock.LIT, true));
+                BlockPos chem = base.west(6);
+                level.setBlockAndUpdate(chem, de.ipnats.hardwrought.materials.MaterialBlocks.block(
+                        de.ipnats.hardwrought.materials.ChemMachine.CHEMICAL_REACTOR).defaultBlockState());
+                var reactor = (de.ipnats.hardwrought.materials.ChemMachineBlockEntity) level.getBlockEntity(chem);
+                try (var transaction = net.fabricmc.fabric.api.transfer.v1.transaction.Transaction.openOuter()) {
+                    reactor.fluid().insert(net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.of(
+                            de.ipnats.hardwrought.refining.RefineryProduct.NAPHTHA.source()),
+                            net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET * 2, transaction);
+                    transaction.commit();
+                }
+                reactor.gasIn.insert(de.ipnats.hardwrought.gasline.GasKind.LPG, 30);
+                reactor.setItem(0, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.RESIN_CLUMP, 6));
+                reactor.setItem(2, new net.minecraft.world.item.ItemStack(de.ipnats.hardwrought.materials.Materials.PLASTIC_PELLETS, 12));
+                level.setBlockAndUpdate(chem.north(), de.ipnats.hardwrought.electricity.ElectricBlocks.BASIC_CRUSHER_MK2.defaultBlockState());
+                level.setBlockAndUpdate(chem.north(2), de.ipnats.hardwrought.electricity.ElectricBlocks.PLATE_PRESS_MK3.defaultBlockState());
+                level.setBlockAndUpdate(chem.south(), de.ipnats.hardwrought.materials.MaterialBlocks.block(
+                        de.ipnats.hardwrought.materials.ChemMachine.ELECTROLYZER).defaultBlockState());
+                level.setBlockAndUpdate(chem.south(2), de.ipnats.hardwrought.materials.MaterialBlocks.block(
+                        de.ipnats.hardwrought.materials.ChemMachine.ARC_FURNACE).defaultBlockState());
+                level.setBlockAndUpdate(flareTank.above(), de.ipnats.hardwrought.refining.RefineryBlocks.FLARE.defaultBlockState()
+                        .setValue(de.ipnats.hardwrought.refining.FlareStackBlock.LIT, true));
+            });
+            context.waitTicks(200);
+            String[] shots = {"hardwrought-refinery-base", "hardwrought-refinery-tray", "hardwrought-cracker", "hardwrought-gas-tank", "hardwrought-burning-stack",
+                    "hardwrought-diesel-generator", "hardwrought-gasoline-engine", "hardwrought-gas-burner",
+                    "hardwrought-chemical-reactor"};
+            for (int shot = 0; shot < shots.length; shot++) {
+                int which = shot;
+                world.getServer().runOnServer(server -> {
+                    var player = server.getPlayerList().getPlayers().getFirst();
+                    BlockPos at = switch (which) {
+                        case 0 -> column[0];
+                        case 1 -> column[0].above(2);
+                        case 2 -> column[0].south(2);
+                        case 4 -> column[0].west(2).above();
+                        case 5 -> column[0].west(4);
+                        case 6 -> column[0].west(4).north();
+                        case 7 -> column[0].west(4).south();
+                        case 8 -> column[0].west(6);
+                        default -> column[0].north(2);
+                    };
+                    player.openMenu((net.minecraft.world.MenuProvider) player.level().getBlockEntity(at));
+                });
+                context.waitTicks(10);
+                context.takeScreenshot(shots[shot]);
+                context.runOnClient(client -> client.player.closeContainer());
+            }
             // The compendium's view of the drill, whole and then its bottom layer on its own.
             var rig = de.ipnats.hardwrought.knowledge.Multiblocks.ORE_DRILL_RIG;
             var viewer = context.computeOnClient(client -> {
@@ -128,6 +252,13 @@ public final class MachineryClientGameTest implements FabricClientGameTest {
             context.runOnClient(client -> viewer.stepLayer(1));
             context.waitTicks(5);
             context.takeScreenshot("hardwrought-multiblock-layer");
+            for (var big : java.util.List.of(de.ipnats.hardwrought.knowledge.Multiblocks.LARGE_ARC_FURNACE,
+                    de.ipnats.hardwrought.knowledge.Multiblocks.LARGE_DIESEL)) {
+                context.runOnClient(client -> client.gui.setScreen(
+                        new de.ipnats.hardwrought.client.knowledge.MultiblockScreen(null, big, big.blocks())));
+                context.waitTicks(10);
+                context.takeScreenshot("hardwrought-multiblock-" + big.id().getPath());
+            }
             var smeltery = de.ipnats.hardwrought.knowledge.Multiblocks.SMELTERY;
             context.runOnClient(client -> client.gui.setScreen(
                     new de.ipnats.hardwrought.client.knowledge.MultiblockScreen(null, smeltery, smeltery.blocks())));

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "side": "hardwrought:block/chemical_reactor_side",
+    "end": "hardwrought:block/chemical_reactor_top"
+  }
+}

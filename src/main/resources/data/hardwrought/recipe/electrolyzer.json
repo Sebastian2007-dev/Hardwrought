@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "C": "hardwrought:copper_plate",
+    "G": "minecraft:glass",
+    "B": "minecraft:bucket",
+    "I": "hardwrought:iron_plate",
+    "R": "hardwrought:redstone_coil"
+  },
+  "pattern": [
+    "CGC",
+    "CBC",
+    "IRI"
+  ],
+  "result": {
+    "id": "hardwrought:electrolyzer"
+  }
+}

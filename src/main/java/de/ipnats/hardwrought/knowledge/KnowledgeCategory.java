@@ -8,7 +8,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Block;
 
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * The shelves of the compendium, from specification section 80.
@@ -56,6 +58,8 @@ public enum KnowledgeCategory {
                 || item == de.ipnats.hardwrought.magic.Magic.RUNE_STONE.asItem()) {
             return MAGIC;
         }
+        KnowledgeCategory listed = listed().get(item);
+        if (listed != null) return listed;
         if (stack.has(DataComponents.POTION_CONTENTS)) return MEDICINE;
         if (stack.has(DataComponents.FOOD)) return AGRICULTURE;
         if (stack.has(DataComponents.TOOL) || stack.is(ItemTags.SWORDS)
@@ -67,6 +71,45 @@ public enum KnowledgeCategory {
         if (isCircuitry(stack)) return ELECTRICITY;
         if (isLiving(item)) return BIOLOGY;
         return MATERIALS;
+    }
+
+    private static Map<Item, KnowledgeCategory> listed;
+
+    /**
+     * The oil age is written down, since nothing about a bucket of naphtha or a circuit says what it is:
+     * oil, gas and what is made of them on the chemistry shelf; engines, parts and the big machines on
+     * engineering; circuits, electronics and the machines on current on electricity.
+     */
+    private static Map<Item, KnowledgeCategory> listed() {
+        if (listed != null) return listed;
+        Map<Item, KnowledgeCategory> map = new java.util.HashMap<>();
+        java.util.function.BiConsumer<KnowledgeCategory, java.util.Collection<? extends ItemLike>> put =
+                (category, items) -> items.forEach(item -> map.put(item.asItem(), category));
+        put.accept(CHEMISTRY, de.ipnats.hardwrought.refining.RefineryFluids.items());
+        put.accept(CHEMISTRY, de.ipnats.hardwrought.refining.RefineryBlocks.items());
+        put.accept(CHEMISTRY, de.ipnats.hardwrought.gasline.GasLines.items());
+        put.accept(CHEMISTRY, de.ipnats.hardwrought.materials.Materials.items());
+        put.accept(CHEMISTRY, de.ipnats.hardwrought.materials.MaterialBlocks.items());
+        put.accept(CHEMISTRY, List.of(de.ipnats.hardwrought.core.registry.ModItems.STILL,
+                de.ipnats.hardwrought.core.registry.ModItems.CRUDE_OIL_BUCKET, de.ipnats.hardwrought.core.registry.ModItems.GAS_CANISTER,
+                de.ipnats.hardwrought.core.registry.ModItems.NATURAL_GAS_CANISTER, de.ipnats.hardwrought.core.registry.ModItems.LIGHT_FRACTION,
+                de.ipnats.hardwrought.core.registry.ModItems.FUEL_FRACTION, de.ipnats.hardwrought.core.registry.ModItems.HEAVY_OIL,
+                de.ipnats.hardwrought.core.registry.ModItems.BITUMEN, de.ipnats.hardwrought.core.registry.ModItems.RAW_SULFUR,
+                de.ipnats.hardwrought.core.registry.ModItems.SULFUR, de.ipnats.hardwrought.core.registry.ModItems.SALT));
+        put.accept(ENGINEERING, de.ipnats.hardwrought.power.PowerBlocks.items());
+        put.accept(ENGINEERING, de.ipnats.hardwrought.fluids.FluidBlocks.items());
+        put.accept(ENGINEERING, de.ipnats.hardwrought.multiblock.BigMachines.items());
+        put.accept(ENGINEERING, List.of(de.ipnats.hardwrought.core.registry.ModItems.DRILLING_RIG));
+        put.accept(ENGINEERING, de.ipnats.hardwrought.parts.Parts.items());
+        put.accept(ELECTRICITY, de.ipnats.hardwrought.electricity.ElectricBlocks.items());
+        put.accept(ELECTRICITY, List.of(de.ipnats.hardwrought.parts.Parts.REDSTONE_COIL, de.ipnats.hardwrought.parts.Parts.ELECTRIC_MOTOR,
+                de.ipnats.hardwrought.parts.Parts.CIRCUIT_BOARD, de.ipnats.hardwrought.parts.Parts.RESISTOR,
+                de.ipnats.hardwrought.parts.Parts.CAPACITOR, de.ipnats.hardwrought.parts.Parts.TRANSISTOR,
+                de.ipnats.hardwrought.parts.Parts.MICROCHIP, de.ipnats.hardwrought.parts.Parts.QUARTZ_OSCILLATOR,
+                de.ipnats.hardwrought.parts.Parts.BASIC_CIRCUIT, de.ipnats.hardwrought.parts.Parts.ADVANCED_CIRCUIT,
+                de.ipnats.hardwrought.parts.Parts.ELITE_CIRCUIT));
+        listed = map;
+        return map;
     }
 
     private static boolean isMetal(ItemStack stack) {

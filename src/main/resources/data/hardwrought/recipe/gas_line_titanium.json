@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:titanium_plate",
+    "C": "minecraft:copper_ingot"
+  },
+  "pattern": [
+    "PCP"
+  ],
+  "result": {
+    "id": "hardwrought:gas_line_titanium",
+    "count": 8
+  }
+}

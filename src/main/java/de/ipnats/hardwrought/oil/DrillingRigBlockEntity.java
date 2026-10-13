@@ -64,6 +64,8 @@ public class DrillingRigBlockEntity extends BlockEntity implements KineticHolder
     private double undrawn;
     /** Test hook: the reservoir to act as if this rig stood over, wherever it really is. */
     private Reservoir testReservoir;
+    /** Whether {@link #testReservoir} was set by the debug command, and so is saved with the rig. */
+    private boolean debugReservoir;
 
     public DrillingRigBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.DRILLING_RIG, pos, state);
@@ -225,6 +227,21 @@ public class DrillingRigBlockEntity extends BlockEntity implements KineticHolder
         setChanged();
     }
 
+    /**
+     * Debug: a reservoir of its own under this rig, whatever the world holds there, kept with the rig
+     * through a restart; null takes it away again. A rig that came up dry starts boring afresh.
+     */
+    public void setDebugReservoir(Reservoir reservoir) {
+        testReservoir = reservoir;
+        debugReservoir = reservoir != null;
+        depth = -1;
+        if (stage == Stage.DRY) {
+            stage = Stage.BORING;
+            bored = 0;
+        }
+        setChanged();
+    }
+
     /** Test hook: as if it had bored this far already. */
     public void setBoredForTesting(double value) {
         bored = value;
@@ -232,9 +249,125 @@ public class DrillingRigBlockEntity extends BlockEntity implements KineticHolder
     }
 
     /** Test hook: as much gas in the store as this. */
+    public void setOilForTesting(double value) {
+        oil = value;
+        setChanged();
+    }
+
     public void setGasForTesting(double value) {
         gas = value;
         setChanged();
+    }
+
+    // ---------------------------------------------------------------- the gas, to a gas line
+
+    /** The pressure the rig's gas store stands at when full: a well head, not a pressure vessel. */
+    public static final double GAS_RATING = 10.0;
+
+    private final de.ipnats.hardwrought.gasline.GasStorage gasOutlet = new de.ipnats.hardwrought.gasline.GasStorage() {
+        @Override
+        public de.ipnats.hardwrought.gasline.GasKind kind() {
+            return gas > 0 ? de.ipnats.hardwrought.gasline.GasKind.NATURAL_GAS : null;
+        }
+
+        @Override
+        public double amount() {
+            return gas;
+        }
+
+        @Override
+        public double capacity() {
+            return GAS_STORE;
+        }
+
+        @Override
+        public double rating() {
+            return GAS_RATING;
+        }
+
+        @Override
+        public boolean accepts(de.ipnats.hardwrought.gasline.GasKind kind) {
+            return false;
+        }
+
+        @Override
+        public double insert(de.ipnats.hardwrought.gasline.GasKind kind, double amount) {
+            return 0;
+        }
+
+        @Override
+        public double extract(double amount) {
+            double taken = Math.min(amount, gas);
+            gas -= taken;
+            if (taken > 0) setChanged();
+            return taken;
+        }
+    };
+
+    /** The rig's gas as a gas line sees it: its natural gas pushes out into the line by its own pressure. */
+    public de.ipnats.hardwrought.gasline.GasStorage gasOutlet() {
+        return gasOutlet;
+    }
+
+    // ---------------------------------------------------------------- the oil, to a pipe
+
+    private final OilOutlet outlet = new OilOutlet();
+
+    /** The rig's oil as a fluid pipe sees it: it can only be drawn off, never filled. */
+    public net.fabricmc.fabric.api.transfer.v1.storage.Storage<net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant> oilOutlet() {
+        return outlet;
+    }
+
+    private final class OilOutlet extends net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant<Double>
+            implements net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage<net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant>,
+            net.fabricmc.fabric.api.transfer.v1.storage.base.ExtractionOnlyStorage<net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant> {
+        private static final long PER_MILLIBUCKET = net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET / 1000;
+
+        @Override
+        public long extract(net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant resource, long maxAmount,
+                            net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext transaction) {
+            if (!resource.isOf(de.ipnats.hardwrought.oil.ModFluids.CRUDE_OIL)) return 0;
+            long taken = Math.min(maxAmount, getAmount());
+            if (taken <= 0) return 0;
+            updateSnapshots(transaction);
+            oil -= (double) taken / PER_MILLIBUCKET;
+            return taken;
+        }
+
+        @Override
+        public boolean isResourceBlank() {
+            return getAmount() <= 0;
+        }
+
+        @Override
+        public net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant getResource() {
+            return net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.of(de.ipnats.hardwrought.oil.ModFluids.CRUDE_OIL);
+        }
+
+        @Override
+        public long getAmount() {
+            return (long) (oil * PER_MILLIBUCKET);
+        }
+
+        @Override
+        public long getCapacity() {
+            return (long) (OIL_TANK * PER_MILLIBUCKET);
+        }
+
+        @Override
+        protected Double createSnapshot() {
+            return oil;
+        }
+
+        @Override
+        protected void readSnapshot(Double snapshot) {
+            oil = snapshot;
+        }
+
+        @Override
+        protected void onFinalCommit() {
+            setChanged();
+        }
     }
 
     // ---------------------------------------------------------------- kinetics and saving
@@ -260,6 +393,13 @@ public class DrillingRigBlockEntity extends BlockEntity implements KineticHolder
         oil = input.getDoubleOr("oil", 0);
         gas = input.getDoubleOr("gas", 0);
         undrawn = input.getDoubleOr("undrawn", 0);
+        input.read("debug_reservoir", net.minecraft.nbt.CompoundTag.CODEC).ifPresent(tag -> {
+            testReservoir = new Reservoir(tag.getIntOr("gas", 0) == 1 ? Reservoir.Kind.GAS : Reservoir.Kind.OIL,
+                    tag.getIntOr("region_x", 0), tag.getIntOr("region_z", 0),
+                    BlockPos.of(tag.getLongOr("centre", worldPosition.asLong())), tag.getIntOr("radius", 30),
+                    tag.getIntOr("height", 8), tag.getDoubleOr("pressure", 1.0));
+            debugReservoir = true;
+        });
     }
 
     @Override
@@ -272,5 +412,16 @@ public class DrillingRigBlockEntity extends BlockEntity implements KineticHolder
         output.putDouble("oil", oil);
         output.putDouble("gas", gas);
         output.putDouble("undrawn", undrawn);
+        if (debugReservoir && testReservoir != null) {
+            net.minecraft.nbt.CompoundTag tag = new net.minecraft.nbt.CompoundTag();
+            tag.putInt("gas", testReservoir.kind() == Reservoir.Kind.GAS ? 1 : 0);
+            tag.putInt("region_x", testReservoir.regionX());
+            tag.putInt("region_z", testReservoir.regionZ());
+            tag.putLong("centre", testReservoir.centre().asLong());
+            tag.putInt("radius", testReservoir.horizontalRadius());
+            tag.putInt("height", testReservoir.verticalRadius());
+            tag.putDouble("pressure", testReservoir.pressure());
+            output.store("debug_reservoir", net.minecraft.nbt.CompoundTag.CODEC, tag);
+        }
     }
 }

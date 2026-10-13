@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "S": "hardwrought:steel_plate",
+    "P": "hardwrought:iron_plate"
+  },
+  "pattern": [
+    "SPS",
+    "P P",
+    "SPS"
+  ],
+  "result": {
+    "id": "hardwrought:engine_casing",
+    "count": 4
+  }
+}

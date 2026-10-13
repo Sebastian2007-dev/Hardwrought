@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "side": "hardwrought:block/refinery_stage_side",
+    "end": "hardwrought:block/refinery_stage_top"
+  }
+}

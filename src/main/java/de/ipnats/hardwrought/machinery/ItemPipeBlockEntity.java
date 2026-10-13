@@ -5,14 +5,13 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.item.base.SingleStackStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.PipeBlock;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -33,9 +32,11 @@ import java.util.Map;
  * pipe in a run holds back the fast ones behind it; a batch that nothing will take waits where it is.
  *
  * <p>The block the batch came in from is never offered it again, so a hopper that fills a pipe does
- * not get its items straight back.
+ * not get its items straight back. Nor is any block the pipes draw from: a side set to draw with a
+ * pipe wrench takes a batch out of the block there whenever the pipe is empty, at the pace of its
+ * metal, and only ever takes.
  */
-public class ItemPipeBlockEntity extends BlockEntity {
+public class ItemPipeBlockEntity extends ConnectedPipeBlockEntity {
     /** How many pipes the search for a taker goes through at most. */
     private static final int SEARCH_LIMIT = 256;
 
@@ -45,6 +46,9 @@ public class ItemPipeBlockEntity extends BlockEntity {
     private int wait;
     private final Map<Direction, Inlet> inlets = new EnumMap<>(Direction.class);
     private final Inlet anySide = new Inlet(null);
+    /** Ticks until the pipe may draw from a block again, and the side it drew from last. */
+    private int drawWait;
+    private int lastDrawn = -1;
 
     public ItemPipeBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.ITEM_PIPE, pos, state);
@@ -65,12 +69,58 @@ public class ItemPipeBlockEntity extends BlockEntity {
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, ItemPipeBlockEntity pipe) {
-        if (pipe.carried.isEmpty()) return;
+        if (pipe.carried.isEmpty()) {
+            pipe.draw(level, state);
+            return;
+        }
         if (pipe.wait > 0) {
             pipe.wait--;
             return;
         }
         pipe.passOn(level);
+    }
+
+    /**
+     * An empty pipe draws a batch out of a block on a side set to draw, taking the sides in turn so no
+     * one of them is drained before the others are touched.
+     */
+    private void draw(Level level, BlockState state) {
+        if (drawWait > 0) {
+            drawWait--;
+            return;
+        }
+        Direction[] sides = Direction.values();
+        for (int step = 1; step <= sides.length; step++) {
+            Direction side = sides[Math.floorMod(lastDrawn + step, sides.length)];
+            if (ConnectedPipeBlock.link(state, side) != PipeLink.EXTRACT) continue;
+            BlockPos from = worldPosition.relative(side);
+            Storage<ItemVariant> source = ItemStorage.SIDED.find(level, from, side.getOpposite());
+            if (source == null) continue;
+            ItemStack taken = takeBatch(source);
+            if (taken.isEmpty()) continue;
+            carried = taken;
+            origin = from;
+            wait = tier().ticksPerBlock();
+            lastDrawn = side.ordinal();
+            setChanged();
+            break;
+        }
+        drawWait = tier().ticksPerBlock();
+    }
+
+    private ItemStack takeBatch(Storage<ItemVariant> source) {
+        try (Transaction transaction = Transaction.openOuter()) {
+            for (StorageView<ItemVariant> view : source.nonEmptyViews()) {
+                ItemVariant variant = view.getResource();
+                int most = Math.min(tier().batch(), variant.toStack().getMaxStackSize());
+                long taken = view.extract(variant, most, transaction);
+                if (taken > 0) {
+                    transaction.commit();
+                    return variant.toStack((int) taken);
+                }
+            }
+        }
+        return ItemStack.EMPTY;
     }
 
     /** Where the batch goes next: straight into a block beside the pipe, or into the next pipe. */
@@ -121,7 +171,8 @@ public class ItemPipeBlockEntity extends BlockEntity {
             BlockState state = level.getBlockState(at);
             if (!(state.getBlock() instanceof ItemPipeBlock)) continue;
             for (Direction side : Direction.values()) {
-                if (!state.getValue(PipeBlock.PROPERTY_BY_DIRECTION.get(side))) continue;
+                PipeLink link = ConnectedPipeBlock.link(state, side);
+                if (!link.joined()) continue;
                 BlockPos next = at.relative(side);
                 if (firstStep.containsKey(next)) continue;
                 if (level.getBlockState(next).getBlock() instanceof ItemPipeBlock) {
@@ -129,7 +180,8 @@ public class ItemPipeBlockEntity extends BlockEntity {
                     queue.add(next);
                     continue;
                 }
-                if (next.equals(origin)) continue;
+                // The pipes only ever take from a block they draw from.
+                if (link == PipeLink.EXTRACT || next.equals(origin)) continue;
                 Storage<ItemVariant> taker = ItemStorage.SIDED.find(level, next, side.getOpposite());
                 if (taker == null || !takes(taker, variant)) continue;
                 if (at.equals(worldPosition)) return new Step(taker, null);

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "F": "hardwrought:fluid_pipe_iron"
+  },
+  "pattern": [
+    "PFP",
+    "P P",
+    "PFP"
+  ],
+  "result": {
+    "id": "hardwrought:refinery_stage",
+    "count": 2
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:chromium_plate",
+    "G": "minecraft:glass_pane"
+  },
+  "pattern": [
+    "PGP"
+  ],
+  "result": {
+    "id": "hardwrought:fluid_pipe_chromium",
+    "count": 8
+  }
+}
