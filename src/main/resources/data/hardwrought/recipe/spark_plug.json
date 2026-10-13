@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": "hardwrought:copper_rod",
+    "F": "hardwrought:fireclay",
+    "S": "hardwrought:steel_plate"
+  },
+  "pattern": [
+    " C ",
+    " F ",
+    " S "
+  ],
+  "result": {
+    "id": "hardwrought:spark_plug",
+    "count": 2
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:lantern",
+          "condition": {
+            "type": "minecraft:match_block",
+            "blocks": "hardwrought:burnt_lantern",
+            "state": {
+              "variant": "lantern"
+            }
+          }
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:soul_lantern",
+          "condition": {
+            "type": "minecraft:match_block",
+            "blocks": "hardwrought:burnt_lantern",
+            "state": {
+              "variant": "soul_lantern"
+            }
+          }
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:copper_lantern",
+          "condition": {
+            "type": "minecraft:match_block",
+            "blocks": "hardwrought:burnt_lantern",
+            "state": {
+              "variant": "copper_lantern"
+            }
+          }
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:exposed_copper_lantern",
+          "condition": {
+            "type": "minecraft:match_block",
+            "blocks": "hardwrought:burnt_lantern",
+            "state": {
+              "variant": "exposed_copper_lantern"
+            }
+          }
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:weathered_copper_lantern",
+          "condition": {
+            "type": "minecraft:match_block",
+            "blocks": "hardwrought:burnt_lantern",
+            "state": {
+              "variant": "weathered_copper_lantern"
+            }
+          }
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:oxidized_copper_lantern",
+          "condition": {
+            "type": "minecraft:match_block",
+            "blocks": "hardwrought:burnt_lantern",
+            "state": {
+              "variant": "oxidized_copper_lantern"
+            }
+          }
+        }
+      ],
+      "condition": {
+        "type": "minecraft:survives_explosion"
+      }
+    }
+  ],
+  "random_sequence": "hardwrought:blocks/burnt_lantern"
+}

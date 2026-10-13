@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "P": "hardwrought:steel_plate",
+    "C": "hardwrought:copper_coil"
+  },
+  "pattern": [
+    " P ",
+    "PCP",
+    " P "
+  ],
+  "result": {
+    "id": "hardwrought:power_port",
+    "count": 2
+  }
+}

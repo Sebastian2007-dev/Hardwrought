@@ -1,0 +1,9 @@
+{
+  "parent": "hardwrought:block/basic_crusher",
+  "textures": {
+    "iron": "hardwrought:block/hardwrought/dynamo_iron_mk2",
+    "front": "hardwrought:block/hardwrought/basic_crusher_front",
+    "jaw": "hardwrought:block/hardwrought/crusher_jaw",
+    "particle": "hardwrought:block/hardwrought/dynamo_iron"
+  }
+}

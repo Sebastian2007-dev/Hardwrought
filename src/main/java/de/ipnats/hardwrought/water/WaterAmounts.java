@@ -30,10 +30,16 @@ public final class WaterAmounts {
     public static final int MAX_CELL = 4 * BLOCK;
 
     /**
-     * How much more than a full block the lower of two stacked cells carries. This small excess is
-     * the weight of the water above it, and it is the whole reason a tall column can push water up a
-     * connected shaft until both stand at the same height. Without it every cell of a column holds
-     * exactly one block, nothing is ever in surplus, and communicating vessels do not communicate.
+     * How much more the lower of two stacked cells carries than the upper one, once the pair holds
+     * more than two full blocks between them. It only describes water that has really been pressed
+     * into a space too small for it: a pump, a bucket emptied into the foot of a sealed shaft.
+     *
+     * <p>It used to apply from the first millibucket over a single block, so that two full cells
+     * wanted to be 1047 and 953 rather than a thousand each. That was meant to be the weight of the
+     * water, and it made every lake unstable in the literal sense: waking any cell of it rearranged
+     * the whole body, gave every cell a stored amount and sank the surface. Standing water now
+     * weighs nothing, and what lets a tall column lift water elsewhere is {@code WaterFlow}'s
+     * pressure rule, which costs nothing while the water is still.
      */
     public static final int COMPRESSION = 50;
 
@@ -45,8 +51,20 @@ public final class WaterAmounts {
      * full eighth of a block that is not really there.
      */
     public static final int SPREAD_THRESHOLD = DISPLAY_STEP;
-    /** A difference smaller than this is left alone, which is what stops water from jittering. */
+    /**
+     * A difference smaller than this is left alone between neighbours, which is what stops water
+     * from jittering. A pair moves half its difference rounded down, so even a difference of one
+     * could not oscillate; ten is simply the point below which the difference is not worth a
+     * block update.
+     */
     public static final int LEVELLING_THRESHOLD = 10;
+    /**
+     * How far apart two surfaces joined only through full water may stand before pressure evens
+     * them out: half a visible step. Coarser than {@link #LEVELLING_THRESHOLD} on purpose. Finding
+     * the other surface means a search, and at ten millibuckets every cell along a shore went
+     * searching again each time a ripple from a bucket reached it.
+     */
+    public static final int PRESSURE_THRESHOLD = DISPLAY_STEP / 2;
 
     /**
      * How much water one transfer may move in a single pass, in millibuckets.
@@ -62,16 +80,37 @@ public final class WaterAmounts {
      * Falling and rising stay quick, because gravity and pressure are quick.
      */
     public static final int MAX_SPREAD_PER_PASS = 60;
+    /**
+     * The same cap between two cells that both already hold water. The slow rate above is there for
+     * the front, which is the part that must not teleport; behind the front it only made a pond
+     * settle like treacle, a block of water needing seventeen passes to move one cell along.
+     *
+     * <p>A quarter of a block a pass, for levelling, falling, rising and for room under a sea being
+     * filled from its surface alike. That is five blocks of water a second through one cell: a
+     * hole one block wide empties a pond of a hundred blocks in twenty seconds, which can be
+     * watched, and four holes do it in five. For a while these were a whole block a pass, and at
+     * that rate a bucket was simply gone the tick it was poured and a waterfall arrived all at once.
+     * What decides how long a sea takes to drain is the size of the hole, not the simulation.
+     */
+    public static final int MAX_LEVEL_PER_PASS = 250;
     public static final int MAX_FALL_PER_PASS = 250;
     public static final int MAX_RISE_PER_PASS = 250;
+    /** What room under a body takes from its surface in one pass: as fast as water falls into it. */
+    public static final int MAX_DRAW_PER_PASS = MAX_FALL_PER_PASS;
 
     private WaterAmounts() { }
 
-    /** The block state that shows this amount. Zero or less means there should be no water at all. */
+    /**
+     * The block state that shows this amount. Zero or less means there should be no water at all.
+     *
+     * <p>The nearest eighth, including the eighth eighth: a cell within half a step of full is drawn
+     * full. Drawing it one step down made a sea look dented for a hundred blocks around every
+     * bucket taken out of it, over a difference of a few millibuckets a cell.
+     */
     public static int displayLevel(int millibuckets) {
         if (millibuckets >= BLOCK) return 0;
         int eighths = Math.max(1, Math.round(millibuckets * 8.0f / BLOCK));
-        return Math.clamp(8 - eighths, 1, 7);
+        return eighths >= 8 ? 0 : 8 - eighths;
     }
 
     /**
@@ -104,16 +143,16 @@ public final class WaterAmounts {
     /**
      * What the lower of two stacked cells settles at when they hold this much between them.
      *
-     * <p>Below a full block there is nothing to stack: it all sits in the lower one. Above it the
-     * lower cell takes a little more than its share, and that little more is the pressure that
-     * travels down a column and up the next one.
+     * <p>Up to two full blocks there is nothing to press: the lower cell fills, and the rest stands
+     * on it. Two full cells are therefore exactly at rest, which is what keeps a lake still. Only
+     * what is over two blocks is squeezed, and the lower cell takes the first {@link #COMPRESSION}
+     * of that alone before the two share the remainder. Continuous at two blocks, so one millibucket
+     * of surplus moves one millibucket and not a jolt.
      */
     public static int stableState(int totalMillibuckets) {
-        if (totalMillibuckets <= BLOCK) return Math.max(0, totalMillibuckets);
-        if (totalMillibuckets < 2 * BLOCK + COMPRESSION) {
-            return (BLOCK * BLOCK + totalMillibuckets * COMPRESSION) / (BLOCK + COMPRESSION);
-        }
-        return (totalMillibuckets + COMPRESSION) / 2;
+        if (totalMillibuckets <= 2 * BLOCK) return Math.max(0, Math.min(BLOCK, totalMillibuckets));
+        int squeezed = totalMillibuckets - 2 * BLOCK;
+        return BLOCK + squeezed / 2 + Math.min(squeezed, COMPRESSION) / 2;
     }
 
     public static int clamp(int millibuckets) {

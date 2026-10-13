@@ -1,0 +1,9 @@
+{
+  "parent": "hardwrought:block/sawmill",
+  "textures": {
+    "iron": "hardwrought:block/hardwrought/dynamo_iron_mk2",
+    "front": "hardwrought:block/hardwrought/sawmill_front",
+    "jaw": "hardwrought:block/hardwrought/sawmill_top",
+    "particle": "hardwrought:block/hardwrought/dynamo_iron"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:steel_plate",
+    "F": "hardwrought:fluid_pipe_iron"
+  },
+  "pattern": [
+    " P ",
+    "PFP",
+    " P "
+  ],
+  "result": {
+    "id": "hardwrought:fluid_port",
+    "count": 2
+  }
+}

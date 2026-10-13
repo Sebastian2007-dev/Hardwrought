@@ -46,14 +46,15 @@ public final class WorldRecipes {
             if (!station.isEmpty() && station.is(item)) return true;
             for (List<ItemStack> slot : inputs) {
                 for (ItemStack option : slot) {
-                    if (option.is(item)) return true;
+                    if (FluidIcons.matches(option, item)) return true;
                 }
             }
             return false;
         }
 
+        /** Whether it makes this item, or the liquid or gas this item carries. */
         public boolean makes(Item item) {
-            return result.is(item);
+            return FluidIcons.matches(result, item);
         }
     }
 
@@ -94,6 +95,8 @@ public final class WorldRecipes {
         register(de.ipnats.hardwrought.metallurgy.Crushing::worldRecipes);
         register(de.ipnats.hardwrought.smithing.Smithing::worldRecipes);
         register(de.ipnats.hardwrought.smeltery.MoltenMetals::worldRecipes);
+        register(de.ipnats.hardwrought.refining.RefiningRecipes::worldRecipes);
+        register(de.ipnats.hardwrought.materials.MaterialRecipes::worldRecipes);
         register(WorldRecipes::fireAndWater);
         register(de.ipnats.hardwrought.storage.StorageBlocks::worldRecipes);
     }

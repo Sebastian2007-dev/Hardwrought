@@ -53,10 +53,39 @@ because each moving light costs a light-engine update. Invisible carriers and sp
 
 `dynamicLight=false` in `config/hardwrought.properties` still turns carried light off.
 
+## Lights burn down
+
+Every fire-lit light in the world burns for a while and then goes out, the ones a player sets and the
+ones a village was built with alike, so a settlement nobody tends goes dark (`LightBurn`).
+
+| Light | Burns | Afterwards |
+|---|---|---|
+| Torch, soul torch, copper torch (standing or on a wall) | 1 day | burnt-out torch: charcoal head, no light, drops a stick |
+| Lantern, soul lantern, copper lanterns (any stage, waxed or not; standing or hanging) | 3 days | dark lantern of the same look, drops the lantern it was |
+| Campfire, soul campfire | 2 days | unlit campfire |
+| Candles, candle cakes | 1.5 days | unlit candle |
+| Jack o'lantern | 2 days | carved pumpkin |
+
+A day is 24 000 game ticks (20 minutes). Redstone torches, glowstone, sea lanterns and the like are no
+flames and never go out.
+
+- **When**: the time a light was lit is kept per position with its chunk (attachment
+  `hardwrought:burning_lights`), in game ticks, so it burns on while nobody is near and goes out the next
+  time anyone comes by. A light the world generated starts burning when it is first found.
+- **Checked** on the random ticks every loaded block may get (`BlockStateBurnMixin` makes lights random-ticking),
+  about once a minute, so a light goes out within a minute or so of its time.
+- **Lit again**: a burnt-out torch or dark lantern is lit by using flint and steel (wears it), a fire charge
+  (uses it up) or a burning torch on it. It comes back as exactly the light it was — a soul torch as a soul
+  torch on the same wall, a waxed exposed copper lantern as that, still hanging — and burns a fresh span.
+  Campfires and candles are lit again the vanilla way. A jack o'lantern has to be made anew.
+- **Adding a light**: one line in `LightBurn.BURNERS`: which states, how long, what it becomes.
+- **Not covered**: a light picked up and set down again starts a fresh span, and carried torches do not
+  burn down.
+
 ## Not yet
 
-- The lamps of the progression: candle, oil lamp (lamp oil from Milestone 11), gas lamp, and
-  electric lamp (Milestone 13). Fuel and burn time belong to them.
+- The lamps of the progression: oil lamp (lamp oil from Milestone 11), gas lamp, and electric lamp
+  (Milestone 13), with fuel rather than a fixed burn time.
 - Carried light for dropped items and burning entities.
 - Darkness as a gameplay input, for example mobs that react to moonless nights.
 

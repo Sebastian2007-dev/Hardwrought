@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "M": "hardwrought:microchip",
+    "O": "hardwrought:quartz_oscillator",
+    "P": "hardwrought:platinum_rod",
+    "A": "hardwrought:advanced_circuit"
+  },
+  "pattern": [
+    "MOM",
+    "PAP"
+  ],
+  "result": {
+    "id": "hardwrought:elite_circuit"
+  }
+}

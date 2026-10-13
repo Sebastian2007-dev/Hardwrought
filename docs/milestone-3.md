@@ -136,7 +136,7 @@ has to be ventilated, not merely enclosed.
 | CO₂ noticeable | 1.0 % | fatigue rises |
 | CO₂ severe | 4.0 % | |
 | CO₂ lethal | 8.0 % | `hardwrought:bad_air` damage |
-| Methane flammable | 5 % – 15 % | ignites at any flame in the room |
+| Methane flammable | from 5 % | ignites at any flame, also a torch or lantern in hand; rich gas too (see refining.md) |
 | Smoke choking | 0.30 | `hardwrought:smoke` damage, the view closes in |
 
 Both hazards have their own datapack damage types tagged `bypasses_armor`, so a death message names

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": "minecraft:iron_bars",
+    "P": "hardwrought:iron_plate",
+    "S": "hardwrought:spark_plug",
+    "G": "hardwrought:gas_line_iron"
+  },
+  "pattern": [
+    "III",
+    "PSP",
+    "PGP"
+  ],
+  "result": {
+    "id": "hardwrought:gas_burner"
+  }
+}

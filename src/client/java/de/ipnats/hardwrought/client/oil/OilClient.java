@@ -11,8 +11,19 @@ public final class OilClient {
     private OilClient() { }
 
     public static void initialize() {
+        net.minecraft.client.gui.screens.MenuScreens.register(de.ipnats.hardwrought.refining.RefineryMenu.TYPE,
+                de.ipnats.hardwrought.client.refining.RefineryScreen::new);
+        net.minecraft.client.gui.screens.MenuScreens.register(de.ipnats.hardwrought.materials.ChemMenu.TYPE,
+                de.ipnats.hardwrought.client.materials.ChemScreen::new);
         FluidRenderingRegistry.register(ModFluids.CRUDE_OIL, ModFluids.FLOWING_CRUDE_OIL, new FluidModel.Unbaked(
                 new Material(Hardwrought.id("block/crude_oil_still")),
                 new Material(Hardwrought.id("block/crude_oil_flow")), null, null));
+        // The liquids of refining, each in its own colour.
+        for (de.ipnats.hardwrought.refining.RefineryProduct product : de.ipnats.hardwrought.refining.RefineryProduct.values()) {
+            String name = product.getSerializedName();
+            FluidRenderingRegistry.register(product.source(), product.flowing(), new FluidModel.Unbaked(
+                    new Material(Hardwrought.id("block/fluid/" + name + "_still")),
+                    new Material(Hardwrought.id("block/fluid/" + name + "_flow")), null, null));
+        }
     }
 }

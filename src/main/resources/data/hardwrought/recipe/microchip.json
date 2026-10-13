@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "G": "minecraft:gold_nugget",
+    "R": "minecraft:redstone",
+    "P": "hardwrought:plastic_sheet",
+    "S": "hardwrought:silicon_wafer"
+  },
+  "pattern": [
+    "GRG",
+    "PSP"
+  ],
+  "result": {
+    "id": "hardwrought:microchip",
+    "count": 2
+  }
+}

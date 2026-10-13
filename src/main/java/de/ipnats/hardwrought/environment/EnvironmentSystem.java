@@ -87,6 +87,11 @@ public final class EnvironmentSystem {
         this.scheduler = scheduler;
         scheduler.register("hardwrought:environment_cells", SimulationTier.MEDIUM, this::tickCells);
         scheduler.register("hardwrought:gas_sources", SimulationTier.SLOW, this::tickGasSources);
+        scheduler.register("hardwrought:season_weather", SimulationTier.SLOW,
+                () -> SeasonWeather.tick(server));
+        // Snow and ice are not registered here: they ride vanilla's per-chunk precipitation tick
+        // instead, so that they cover the loaded world evenly rather than a circle around a player.
+        // See ServerLevelWeatheringMixin and Weathering.
     }
 
     private record Tracked(String key, RoomScan scan, long scannedTick, BlockPos scannedAt) { }
@@ -158,8 +163,10 @@ public final class EnvironmentSystem {
 
     /** Variant for systems that already sampled the shared calendar during their simulation pass. */
     public double outdoorTemperature(ServerLevel level, BlockPos pos, Season season) {
-        double temperature = 14.0 + (level.getBiome(pos).value().getBaseTemperature() - 0.8) * 18.0;
-        temperature += season.temperatureOffset();
+        float base = level.getBiome(pos).value().getBaseTemperature();
+        double temperature = 14.0 + (base - 0.8) * 18.0;
+        // How much the year moves a place depends on what sort of place it is (see Season).
+        temperature += season.temperatureOffset(BiomeClimate.fromBaseTemperature(base));
         // Sections 43 and 47: the air cools going up and the rock warms going down.
         temperature -= Altitude.lapse(pos.getY());
         temperature += Altitude.geothermal(pos.getY());

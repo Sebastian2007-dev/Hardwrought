@@ -9,11 +9,10 @@
           "name": "hardwrought:tube_mill"
         }
       ],
-      "conditions": [
-        {
-          "condition": "minecraft:survives_explosion"
-        }
-      ]
+      "condition": {
+        "type": "minecraft:survives_explosion"
+      }
     }
-  ]
+  ],
+  "random_sequence": "hardwrought:blocks/tube_mill"
 }

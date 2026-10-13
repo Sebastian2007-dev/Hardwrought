@@ -8,9 +8,9 @@
         {
           "type": "minecraft:item",
           "name": "hardwrought:rune_stone",
-          "functions": [
+          "modifier": [
             {
-              "function": "minecraft:copy_state",
+              "type": "minecraft:copy_state",
               "block": "hardwrought:rune_stone",
               "properties": [
                 "glyph"
@@ -19,11 +19,9 @@
           ]
         }
       ],
-      "conditions": [
-        {
-          "condition": "minecraft:survives_explosion"
-        }
-      ]
+      "condition": {
+        "type": "minecraft:survives_explosion"
+      }
     }
   ],
   "random_sequence": "hardwrought:blocks/rune_stone"

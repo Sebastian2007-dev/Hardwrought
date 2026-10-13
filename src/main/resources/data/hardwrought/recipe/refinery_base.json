@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "B": "minecraft:bricks",
+    "S": "hardwrought:still"
+  },
+  "pattern": [
+    "PBP",
+    "PSP",
+    "BBB"
+  ],
+  "result": {
+    "id": "hardwrought:refinery_base"
+  }
+}

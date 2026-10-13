@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "hardwrought:block/large_diesel_controller_on",
+    "side": "hardwrought:block/engine_casing",
+    "top": "hardwrought:block/engine_casing"
+  }
+}

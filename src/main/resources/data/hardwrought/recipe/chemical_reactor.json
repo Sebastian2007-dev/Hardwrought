@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "P": "hardwrought:stainless_steel_plate",
+    "G": "minecraft:glass",
+    "C": "hardwrought:redstone_coil",
+    "B": "minecraft:bucket",
+    "M": "hardwrought:electric_motor"
+  },
+  "pattern": [
+    "PGP",
+    "CBC",
+    "PMP"
+  ],
+  "result": {
+    "id": "hardwrought:chemical_reactor"
+  }
+}

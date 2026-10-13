@@ -5,15 +5,14 @@
     "I": "minecraft:iron_ingot",
     "P": "minecraft:piston",
     "W": "hardwrought:copper_wire",
-    "D": "hardwrought:dynamo"
+    "M": "hardwrought:electric_motor"
   },
   "pattern": [
     "IPI",
-    "WDW",
+    "WMW",
     "IPI"
   ],
   "result": {
-    "id": "hardwrought:plate_press",
-    "count": 1
+    "id": "hardwrought:plate_press"
   }
 }

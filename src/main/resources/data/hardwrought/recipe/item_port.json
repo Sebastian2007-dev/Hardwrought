@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:steel_plate",
+    "I": "hardwrought:item_pipe_iron"
+  },
+  "pattern": [
+    " P ",
+    "PIP",
+    " P "
+  ],
+  "result": {
+    "id": "hardwrought:item_port",
+    "count": 2
+  }
+}

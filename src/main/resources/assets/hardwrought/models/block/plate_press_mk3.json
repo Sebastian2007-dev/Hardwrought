@@ -1,0 +1,9 @@
+{
+  "parent": "hardwrought:block/plate_press",
+  "textures": {
+    "iron": "hardwrought:block/hardwrought/dynamo_iron_mk3",
+    "front": "hardwrought:block/hardwrought/plate_press_front",
+    "jaw": "hardwrought:block/hardwrought/plate_press_top",
+    "particle": "hardwrought:block/hardwrought/dynamo_iron"
+  }
+}

@@ -35,6 +35,11 @@ public final class SketchReader {
     private static final double CORNER = 55;
     /** Straighter than this (chord over length) is a straight line. */
     private static final double STRAIGHT = 0.94;
+    /**
+     * Or a stroke that strays from the line between its ends by less than this share of its length: a
+     * hand wavers on a long line enough to make it longer than its chord, but not to bend it.
+     */
+    private static final double LINE_DEVIATION = 0.075;
 
     private SketchReader() { }
 
@@ -97,6 +102,9 @@ public final class SketchReader {
         /** A rune drawn across the shaft of a gate's arrow: it steadies the way rather than acting. */
         ANCHOR
     }
+
+    /** How far an arrow's head reaches back from its tip, at most, as a share of its shaft. */
+    private static final double BARB_REACH = 0.65;
 
     /** How far from a circle's middle, in radii, an arrow's end still starts from it or ends in it. */
     private static final double GATE = 1.35;
@@ -446,7 +454,7 @@ public final class SketchReader {
      * and the rune, and a straight stem that turns into a rune is an arrow and the rune.
      */
     private static List<Shape> pieces(int index, float[] xs, float[] ys) {
-        Shape whole = shape(index, xs, ys);
+        Shape whole = shape(index, xs, ys, ACTION_OVERSHOOT);
         // A head may yet belong to a shaft drawn in another stroke; that is decided once all are read.
         if (whole.kind == Kind.SPIRAL || whole.kind == Kind.ARROW || whole.kind == Kind.HEAD) return List.of(whole);
         double[][] p = whole.p;
@@ -538,10 +546,57 @@ public final class SketchReader {
     }
 
     private static Shape shape(int index, float[] xs, float[] ys) {
+        return shape(index, xs, ys, OVERSHOOT);
+    }
+
+    /**
+     * A closed figure's pen usually runs on a little past where it began. Past its start, it is cut
+     * back to where it came closest to it; up to this share of the stroke is cut so.
+     */
+    private static final double OVERSHOOT = 0.25;
+    /**
+     * In action casting a loop may run on into a rune, so only a short overrun is cut there: anything
+     * longer is left for {@link #pieces} to read as what follows the loop.
+     */
+    private static final double ACTION_OVERSHOOT = 0.12;
+
+    private static Shape shape(int index, float[] xs, float[] ys, double overshoot) {
         Shape shape = new Shape(index, xs, ys);
         measure(shape);
+        // Also when the stroke counts as closed already: the corner where it closes is only seen once the overrun is gone.
+        {
+            int end = overrun(shape, overshoot);
+            if (end > 0) {
+                float[][] loop = cut(xs, ys, 0, (double) end / (N - 1));
+                Shape trimmed = new Shape(index, loop[0], loop[1]);
+                measure(trimmed);
+                if (trimmed.closed) shape = trimmed;
+            }
+        }
         classify(shape);
         return shape;
+    }
+
+    /**
+     * Where a stroke that came back past its start was closest to it, as a point index; -1 if it never
+     * came back, or ran on too far beyond to be an overrun.
+     */
+    private static int overrun(Shape s, double overshoot) {
+        double[][] p = s.p;
+        int best = -1;
+        double bestGap = Double.MAX_VALUE;
+        for (int i = N / 2; i < N - 1; i++) {
+            double gap = Math.hypot(p[i][0] - p[0][0], p[i][1] - p[0][1]);
+            if (gap < bestGap) {
+                bestGap = gap;
+                best = i;
+            }
+        }
+        if (best < 0) return -1;
+        double tail = 0;
+        for (int i = best + 1; i < N; i++) tail += Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1]);
+        if (tail > overshoot * s.length || tail < 0.02 * s.length || bestGap > 0.08 * (s.length - tail)) return -1;
+        return best;
     }
 
     /** Where a loop at the start of a stroke (or at its end) closes, as a point index, or -1 if it has none. */
@@ -638,15 +693,26 @@ public final class SketchReader {
             return;
         }
         if (s.closed) {
-            if (corners <= 1 || (corners >= 5 && radialSpread(s) < 0.22)) {
+            // Round or not is told by how evenly the figure lies about its middle, a squashed circle
+            // included; which polygon by its corners, counted on it simplified to its straight sides. A
+            // square's corners, smoothed, turn little more than the corner threshold, so counting them
+            // by their turn alone missed one in two.
+            double spread = whitenedSpread(s);
+            List<double[]> outline = drawnSides(s);
+            int sides = corners(outline);
+            // A figure that lies on three or four straight sides is that polygon, even with its corners
+            // rounded off, as a hand rounds them; a circle bows out between any corners found on it.
+            boolean polygon = (sides == 3 || sides == 4) && bow(s, outline) <= ON_SIDES;
+            boolean round = spread < ROUND || (!polygon && spread < ROUNDISH);
+            if (round) {
                 s.kind = Kind.CIRCLE;
                 s.accuracy = clamp(1 - radialSpread(s) * 3 - Math.max(0, closure - 0.06) * 3);
-            } else if (corners <= 3) {
+            } else if (sides == 3 || (sides != 4 && spread >= TRIANGULAR)) {
                 s.kind = Kind.TRIANGLE;
-                s.accuracy = clamp(1 - closure * 2 - (corners == 3 ? 0 : 0.2));
+                s.accuracy = clamp(1 - closure * 2 - (sides == 3 ? 0 : 0.2));
             } else {
                 s.kind = Kind.SQUARE;
-                s.accuracy = clamp(1 - closure * 2 - (corners == 4 ? 0 : 0.2));
+                s.accuracy = clamp(1 - closure * 2 - (sides == 4 ? 0 : 0.2));
             }
             return;
         }
@@ -656,7 +722,7 @@ public final class SketchReader {
             return;
         }
         if (singleArrow(s, 0.85)) return;
-        if (closure >= STRAIGHT || deviation(s.p, 0, N - 1) < 0.05) {
+        if (closure >= STRAIGHT || deviation(s.p, 0, N - 1) < LINE_DEVIATION) {
             s.kind = Kind.LINE;
             s.accuracy = clamp((closure - 0.85) / 0.15);
             return;
@@ -684,9 +750,22 @@ public final class SketchReader {
         double[][] p = s.p;
         double furthest = 0;
         for (int i = 0; i < N; i++) furthest = Math.max(furthest, Math.hypot(p[i][0] - p[0][0], p[i][1] - p[0][1]));
-        // The first time the pen gets there: a head drawn back and forth comes back to the tip again.
-        int tip = 0;
-        while (tip < N - 1 && Math.hypot(p[tip][0] - p[0][0], p[tip][1] - p[0][1]) < 0.98 * furthest) tip++;
+        // The first time the pen gets there and turns back: a head drawn back and forth comes back to the
+        // tip again, often a little past it, and that is no longer the shaft.
+        int tip = -1;
+        for (int i = 1; i < N - 1 && tip < 0; i++) {
+            double here = Math.hypot(p[i][0] - p[0][0], p[i][1] - p[0][1]);
+            if (here < 0.9 * furthest) continue;
+            boolean turns = true;
+            for (int j = i + 1; j <= Math.min(N - 1, i + 3); j++) {
+                if (Math.hypot(p[j][0] - p[0][0], p[j][1] - p[0][1]) > here) turns = false;
+            }
+            if (turns) tip = i;
+        }
+        if (tip < 0) {
+            tip = 0;
+            while (tip < N - 1 && Math.hypot(p[tip][0] - p[0][0], p[tip][1] - p[0][1]) < 0.98 * furthest) tip++;
+        }
         double far = Math.hypot(p[tip][0] - p[0][0], p[tip][1] - p[0][1]);
         // A short arrow drawn with a head back and forth has more stroke in its head than in its shaft.
         if (tip < N / 4 || tip > N - 4) return false;
@@ -695,6 +774,11 @@ public final class SketchReader {
         double head = s.length - shaft;
         double straightness = far / Math.max(1e-6, shaft);
         if (straightness < straight || head < 0.1 * shaft || head > 2.2 * shaft) return false;
+        // The head may go back and forth, but it stays near the tip: a stroke whose second leg reaches as
+        // far as its first is a head drawn on its own, or a rune, not an arrow.
+        for (int i = tip + 1; i < N; i++) {
+            if (Math.hypot(p[i][0] - p[tip][0], p[i][1] - p[tip][1]) > BARB_REACH * far) return false;
+        }
         double ux = (p[tip][0] - p[0][0]) / far, uy = (p[tip][1] - p[0][1]) / far;
         int behind = 0, total = 0;
         for (int i = tip + 2; i < N; i++) {
@@ -1102,6 +1186,133 @@ public final class SketchReader {
 
     private static double roundness(Shape s) {
         return clamp(1 - radialSpread(s) * 3 - Math.max(0, s.chord / Math.max(1e-6, s.length) - 0.06) * 3);
+    }
+
+    /** A closed figure lying more evenly about its middle than this ({@link #whitenedSpread}) is round, whatever else it seems. */
+    private static final double ROUND = 0.045;
+    /** Up to this, a figure that does not lie on three or four straight sides is still round. */
+    private static final double ROUNDISH = 0.15;
+    /** A figure that strays from its sides by no more than this share of its size ({@link #bow}) lies on them. */
+    private static final double ON_SIDES = 0.065;
+    /** One lying less evenly than this, if its corners cannot be counted, is a triangle; else a square. */
+    private static final double TRIANGULAR = 0.17;
+    /** A side shorter than this share of a figure's size is no side, only a slip where two corners meet. */
+    private static final double SHORT_SIDE = 0.2;
+    /** A bend shallower than this, in degrees, is a side drawn crooked, not a corner. */
+    private static final double SIDE_BEND = 50;
+
+    /**
+     * A closed stroke simplified to the straight sides it was drawn with, as the points where they meet,
+     * its two ends included. It is simplified as the open line it is, so the gap where the pen stopped
+     * short of its start is never taken for a side. A tiny side, such as a hook at either end or a corner
+     * a hand has rounded off, is folded into the corner it belongs to, and a bend too shallow to be a
+     * corner is taken out.
+     */
+    static List<double[]> drawnSides(Shape s) {
+        List<double[]> v = new ArrayList<>();
+        simplify(java.util.Arrays.asList(s.raw), 0.06 * Math.max(1e-6, s.size), v);
+        double shortest = SHORT_SIDE * s.size;
+        // Hooks at the ends: a first or last side that is hardly a side.
+        while (v.size() > 3 && Math.hypot(v.get(1)[0] - v.get(0)[0], v.get(1)[1] - v.get(0)[1]) < shortest) v.removeFirst();
+        while (v.size() > 3 && Math.hypot(v.getLast()[0] - v.get(v.size() - 2)[0], v.getLast()[1] - v.get(v.size() - 2)[1]) < shortest) {
+            v.removeLast();
+        }
+        boolean changed = true;
+        while (changed && v.size() > 2) {
+            changed = false;
+            // A triangle's corners turn by 120 degrees, a square's by 90; a side bowed by a hurried hand
+            // bends by far less. The shallowest such bend goes first.
+            int flattest = -1;
+            double flattestTurn = SIDE_BEND;
+            for (int i = 1; i < v.size() - 1; i++) {
+                double turn = turnAt(v.get(i - 1), v.get(i), v.get(i + 1));
+                if (turn < flattestTurn) {
+                    flattestTurn = turn;
+                    flattest = i;
+                }
+            }
+            if (flattest > 0) {
+                v.remove(flattest);
+                changed = true;
+                continue;
+            }
+            for (int i = 1; i < v.size() - 1; i++) {
+                double[] here = v.get(i), next = v.get(i + 1);
+                if (i + 1 < v.size() - 1 && Math.hypot(next[0] - here[0], next[1] - here[1]) < shortest) {
+                    v.set(i, new double[] {(here[0] + next[0]) / 2, (here[1] + next[1]) / 2});
+                    v.remove(i + 1);
+                    changed = true;
+                    break;
+                }
+            }
+        }
+        return v;
+    }
+
+    /** How many corners those sides make: those between them, and the one where the last side turns into the first. */
+    static int corners(List<double[]> v) {
+        int corners = v.size() - 2;
+        if (v.size() >= 3) {
+            double[] a = v.get(v.size() - 2), b = v.getLast(), c = v.get(0), d = v.get(1);
+            double closing = Math.abs(Math.toDegrees(wrap(Math.atan2(d[1] - c[1], d[0] - c[0]) - Math.atan2(b[1] - a[1], b[0] - a[0]))));
+            if (closing >= 45) corners++;
+        }
+        return corners;
+    }
+
+    /**
+     * How far a closed stroke strays from the polygon of its sides, as a share of its size: most of a
+     * drawn square lies on its sides, rounded corners and all, while a circle bows out between them.
+     */
+    static double bow(Shape s, List<double[]> v) {
+        double[] off = new double[s.raw.length];
+        for (int k = 0; k < s.raw.length; k++) {
+            double best = Double.MAX_VALUE;
+            for (int i = 0; i < v.size(); i++) best = Math.min(best, segmentDistance(s.raw[k], v.get(i), v.get((i + 1) % v.size())));
+            off[k] = best;
+        }
+        java.util.Arrays.sort(off);
+        return off[(int) (off.length * 0.75)] / Math.max(1e-6, s.size);
+    }
+
+    /**
+     * How unevenly far a closed stroke lies from its middle once it is stretched along its axes to be
+     * as wide as it is long: an ellipse becomes a circle, 0, while a square stays a square, about 0.1,
+     * and a triangle a triangle, about 0.2. So a circle drawn squashed is still told from a polygon.
+     */
+    static double whitenedSpread(Shape s) {
+        double sxx = 0, syy = 0, sxy = 0;
+        for (double[] q : s.p) {
+            double dx = q[0] - s.cx, dy = q[1] - s.cy;
+            sxx += dx * dx;
+            syy += dy * dy;
+            sxy += dx * dy;
+        }
+        sxx /= N;
+        syy /= N;
+        sxy /= N;
+        double angle = 0.5 * Math.atan2(2 * sxy, sxx - syy);
+        double cos = Math.cos(angle), sin = Math.sin(angle);
+        double major = sxx * cos * cos + 2 * sxy * cos * sin + syy * sin * sin;
+        double minor = sxx * sin * sin - 2 * sxy * cos * sin + syy * cos * cos;
+        double a = Math.sqrt(Math.max(1e-12, major)), b = Math.sqrt(Math.max(1e-12, minor));
+        double[] r = new double[N];
+        double mean = 0;
+        for (int i = 0; i < N; i++) {
+            double dx = s.p[i][0] - s.cx, dy = s.p[i][1] - s.cy;
+            double u = (dx * cos + dy * sin) / a, w = (-dx * sin + dy * cos) / b;
+            r[i] = Math.hypot(u, w);
+            mean += r[i];
+        }
+        mean /= N;
+        double variance = 0;
+        for (double v : r) variance += (v - mean) * (v - mean);
+        return Math.sqrt(variance / N) / Math.max(1e-6, mean);
+    }
+
+    private static double turnAt(double[] prev, double[] here, double[] next) {
+        return Math.abs(Math.toDegrees(wrap(Math.atan2(next[1] - here[1], next[0] - here[0])
+                - Math.atan2(here[1] - prev[1], here[0] - prev[0]))));
     }
 
     /**

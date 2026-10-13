@@ -11,6 +11,12 @@ import java.util.Optional;
  * Armor material behaviour of specification section 36. Resistances are relative reductions applied
  * on top of the vanilla armor points of the same piece, so a material decides which damage type it
  * is good against instead of replacing the vanilla armor scale. Carried mass stays in item_weights.
+ *
+ * <p>{@code insulation} runs from −1 to 1, and the sign is the point of it. Positive is cloth and
+ * leather, which hold a layer of still air against the body. Negative is metal, which does the
+ * opposite — a steel plate is a radiator strapped to a person, and a player who walks into a winter
+ * tundra wearing one is worse off than a player wearing nothing at all. Section 36 asks that there
+ * be no universally perfect armor, and this is where that is paid.
  */
 public record ArmorProfile(List<Identifier> items, double slashResistance, double pierceResistance,
                            double bluntResistance, double staminaDrain, Optional<Double> insulation) {
@@ -21,7 +27,7 @@ public record ArmorProfile(List<Identifier> items, double slashResistance, doubl
             RESISTANCE.optionalFieldOf("pierce_resistance", 0.0).forGetter(ArmorProfile::pierceResistance),
             RESISTANCE.optionalFieldOf("blunt_resistance", 0.0).forGetter(ArmorProfile::bluntResistance),
             Codec.doubleRange(0, 2).optionalFieldOf("stamina_drain", 0.0).forGetter(ArmorProfile::staminaDrain),
-            Codec.doubleRange(0, 1).optionalFieldOf("insulation").forGetter(ArmorProfile::insulation)
+            Codec.doubleRange(-1, 1).optionalFieldOf("insulation").forGetter(ArmorProfile::insulation)
     ).apply(instance, ArmorProfile::new));
 
     public ArmorProfile {
@@ -31,7 +37,7 @@ public record ArmorProfile(List<Identifier> items, double slashResistance, doubl
             throw new IllegalArgumentException("Invalid armor profile values");
         }
         insulation.ifPresent(value -> {
-            if (!Double.isFinite(value) || value < 0 || value > 1) {
+            if (!Double.isFinite(value) || value < -1 || value > 1) {
                 throw new IllegalArgumentException("Invalid armor insulation");
             }
         });

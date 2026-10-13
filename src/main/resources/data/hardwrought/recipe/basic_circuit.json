@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "R": "hardwrought:resistor",
+    "C": "hardwrought:capacitor",
+    "D": "minecraft:redstone",
+    "B": "hardwrought:circuit_board"
+  },
+  "pattern": [
+    "RCR",
+    "DBD"
+  ],
+  "result": {
+    "id": "hardwrought:basic_circuit"
+  }
+}

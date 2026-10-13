@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "C": "minecraft:copper_ingot",
+    "B": "minecraft:bucket"
+  },
+  "pattern": [
+    "PCP",
+    "PBP",
+    "PPP"
+  ],
+  "result": {
+    "id": "hardwrought:cracker"
+  }
+}

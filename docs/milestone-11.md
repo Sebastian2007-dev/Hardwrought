@@ -19,6 +19,16 @@ but how much has been drawn out of each.
   buckets. **It runs out.** What has been drawn is saved in `CoreSaveData` under its region, and its
   pressure falls as it empties — to 5 % of its first pressure just before the end, then nothing.
 
+## Oil lakes
+
+Crude oil also stands in the world, as lava does (`OilLakes`, vanilla's lake feature with oil in it):
+
+- in caves, between Y −48 and 48, in about one chunk in sixteen;
+- in the open, in about one chunk in 160.
+
+Enough to start with, never a field's worth. Crude oil is a real liquid: it creeps a few blocks from where
+it is poured, floats on water, drags at whatever wades into it, and burns.
+
 ## Prospecting
 
 Sneaking with a pickaxe on natural rock (Milestone 6) now also reads for oil in sedimentary rock:
@@ -45,7 +55,13 @@ crank's 16 RPM, more than the crank's 160: a rig needs a water wheel or a windmi
    well's rate).
 
 Using it with an empty hand reads it: depth, what it struck, tank and store. An **empty bucket** draws
-a **bucket of crude oil**, an **empty gas canister** a **natural gas canister** (16 units).
+a **bucket of crude oil**, an **empty gas canister** a **natural gas canister** (16 units). A fluid pipe
+set to draw from it takes its oil along a pumped run (see [pipes.md](pipes.md)).
+
+**Debug**: `/hardwrought oil rig oil|gas [depth]` lays a reservoir under the rig the player looks at, or
+the nearest within eight blocks, its top `depth` blocks under the rig (12 if not given, 0 to strike at
+once); a rig that came up dry bores again. `/hardwrought oil rig clear` takes it away. It is kept with the
+rig through a restart.
 
 ### Gas: section 61's risks
 
@@ -63,7 +79,8 @@ out or drawn off. Natural gas is modelled as methane, which it mostly is.
 
 A copper pot still (`StillBlock`) with a screen. It works only with fire **directly under it** — a lit
 furnace of any kind, a campfire, a burning forge, fire, lava or magma — and a batch takes 20 s. It only
-starts a batch when there is room for everything it can give, so it never spills. Hoppers: charge in
+starts a batch when there is room for everything it can give, so it never spills. Crude oil can also be
+piped in: a bucket of it in the still's own small tank is distilled when the charge slot is empty. Hoppers: charge in
 from the top, bottles from the sides, products and empty containers out of the bottom.
 
 | Charge | Needs | Gives |
@@ -107,10 +124,10 @@ refined sulfur from raw; the reservoir draws surviving a save.
 
 ## Not in this milestone
 
-- **Fluids in the world.** Oil does not flow and is not poured; it moves in buckets. Tanks, pumps,
-  valves and pipes for liquids are section 66's unified fluid system, and later.
+- Valves. Pipes, pumps and tanks are in [pipes.md](pipes.md); the refinery column, cracker, reformer
+  and gas lines by pressure are in [refining.md](refining.md).
 - **Uses for the feedstocks** beyond fuel: lubricant for machines, solvents, asphalt, sulfur's
   chemistry — the processes that will ask for purity.
-- **Blowouts, well fires and flaring** as their own events. The gas risks are the gas system's.
+- **Blowouts and well fires** as their own events (a short column flares; see refining.md). The gas risks are the gas system's.
 - The remaining raw materials of section 64 — limestone, quartz, graphite, phosphates — which vanilla
   partly has already and which nothing asks for yet.

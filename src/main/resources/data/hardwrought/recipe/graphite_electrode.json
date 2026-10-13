@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "K": "hardwrought:coke_block"
+  },
+  "pattern": [
+    "K",
+    "K",
+    "K"
+  ],
+  "result": {
+    "id": "hardwrought:graphite_electrode"
+  }
+}

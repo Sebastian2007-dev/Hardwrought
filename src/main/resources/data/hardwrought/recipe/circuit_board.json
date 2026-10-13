@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    "hardwrought:plastic_sheet",
+    "hardwrought:plastic_sheet",
+    "hardwrought:copper_plate",
+    "hardwrought:caustic_soda"
+  ],
+  "result": {
+    "id": "hardwrought:circuit_board",
+    "count": 2
+  }
+}

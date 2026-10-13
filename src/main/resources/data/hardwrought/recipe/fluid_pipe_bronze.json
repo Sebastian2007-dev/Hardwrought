@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:bronze_plate",
+    "G": "minecraft:glass_pane"
+  },
+  "pattern": [
+    "PGP"
+  ],
+  "result": {
+    "id": "hardwrought:fluid_pipe_bronze",
+    "count": 8
+  }
+}

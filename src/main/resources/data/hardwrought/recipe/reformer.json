@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "G": "minecraft:gold_ingot",
+    "B": "minecraft:bucket"
+  },
+  "pattern": [
+    "PGP",
+    "PBP",
+    "PPP"
+  ],
+  "result": {
+    "id": "hardwrought:reformer"
+  }
+}

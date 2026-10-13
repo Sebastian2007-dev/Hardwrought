@@ -1,0 +1,57 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "hardwrought:block/gas_line_nickel/core"
+      }
+    },
+    {
+      "when": {
+        "north": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_nickel/arm_north"
+      }
+    },
+    {
+      "when": {
+        "south": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_nickel/arm_south"
+      }
+    },
+    {
+      "when": {
+        "west": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_nickel/arm_west"
+      }
+    },
+    {
+      "when": {
+        "east": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_nickel/arm_east"
+      }
+    },
+    {
+      "when": {
+        "up": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_nickel/arm_up"
+      }
+    },
+    {
+      "when": {
+        "down": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_nickel/arm_down"
+      }
+    }
+  ]
+}

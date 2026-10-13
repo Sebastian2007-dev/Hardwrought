@@ -1,0 +1,64 @@
+{
+  "variants": {
+    "facing=north,formed=false,running=false": {
+      "model": "hardwrought:block/arc_furnace_controller"
+    },
+    "facing=north,formed=false,running=true": {
+      "model": "hardwrought:block/arc_furnace_controller_on"
+    },
+    "facing=north,formed=true,running=false": {
+      "model": "hardwrought:block/arc_furnace_controller"
+    },
+    "facing=north,formed=true,running=true": {
+      "model": "hardwrought:block/arc_furnace_controller_on"
+    },
+    "facing=east,formed=false,running=false": {
+      "model": "hardwrought:block/arc_furnace_controller",
+      "y": 90
+    },
+    "facing=east,formed=false,running=true": {
+      "model": "hardwrought:block/arc_furnace_controller_on",
+      "y": 90
+    },
+    "facing=east,formed=true,running=false": {
+      "model": "hardwrought:block/arc_furnace_controller",
+      "y": 90
+    },
+    "facing=east,formed=true,running=true": {
+      "model": "hardwrought:block/arc_furnace_controller_on",
+      "y": 90
+    },
+    "facing=south,formed=false,running=false": {
+      "model": "hardwrought:block/arc_furnace_controller",
+      "y": 180
+    },
+    "facing=south,formed=false,running=true": {
+      "model": "hardwrought:block/arc_furnace_controller_on",
+      "y": 180
+    },
+    "facing=south,formed=true,running=false": {
+      "model": "hardwrought:block/arc_furnace_controller",
+      "y": 180
+    },
+    "facing=south,formed=true,running=true": {
+      "model": "hardwrought:block/arc_furnace_controller_on",
+      "y": 180
+    },
+    "facing=west,formed=false,running=false": {
+      "model": "hardwrought:block/arc_furnace_controller",
+      "y": 270
+    },
+    "facing=west,formed=false,running=true": {
+      "model": "hardwrought:block/arc_furnace_controller_on",
+      "y": 270
+    },
+    "facing=west,formed=true,running=false": {
+      "model": "hardwrought:block/arc_furnace_controller",
+      "y": 270
+    },
+    "facing=west,formed=true,running=true": {
+      "model": "hardwrought:block/arc_furnace_controller_on",
+      "y": 270
+    }
+  }
+}

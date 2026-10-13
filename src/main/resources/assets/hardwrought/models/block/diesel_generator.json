@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "side": "hardwrought:block/diesel_generator_side",
+    "end": "hardwrought:block/diesel_generator_top"
+  }
+}

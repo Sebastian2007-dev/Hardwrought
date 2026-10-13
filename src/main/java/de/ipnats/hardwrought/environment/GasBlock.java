@@ -147,7 +147,7 @@ public class GasBlock extends Block {
             level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
             return;
         }
-        if (GasIgnition.explosive(state) && GasIgnition.flameBeside(level, pos)) {
+        if (GasIgnition.ignitable(state) && GasIgnition.flameBeside(level, pos)) {
             GasIgnition.ignite(level, pos);
             return;
         }
@@ -161,7 +161,7 @@ public class GasBlock extends Block {
             busy |= step(level, pos, gas);
         }
         BlockState now = level.getBlockState(pos);
-        if (Gases.isGas(now) && GasIgnition.explosive(now) && GasIgnition.flameBeside(level, pos)) {
+        if (Gases.isGas(now) && GasIgnition.ignitable(now) && GasIgnition.flameBeside(level, pos)) {
             GasIgnition.ignite(level, pos);
             return;
         }
@@ -286,6 +286,11 @@ public class GasBlock extends Block {
      */
     public static int move(ServerLevel level, BlockPos from, BlockPos to, Gas gas, int amount, boolean mayTrade) {
         if (!level.isInWorldBounds(to) || !level.isLoaded(to)) return 0;
+        // Gas goes through what one walks through, a torch or grass, as if it were not there.
+        if (Gases.permeable(level.getBlockState(to))) {
+            to = Gases.through(level, from, to);
+            if (to == null || !level.isInWorldBounds(to) || !level.isLoaded(to)) return 0;
+        }
         BlockState source = level.getBlockState(from);
         BlockState target = level.getBlockState(to);
         int moved = Math.min(amount, Gases.room(target));
@@ -321,14 +326,14 @@ public class GasBlock extends Block {
             BlockPos next = pos.relative(side);
             if (!level.isLoaded(next)) continue;
             BlockState state = level.getBlockState(next);
-            if (Gases.room(state) == 0) continue;
+            if (Gases.room(state) == 0 && !Gases.permeable(state)) continue;
             seen.add(next.asLong());
             queue.add(new Node(next, side, 1));
         }
         while (!queue.isEmpty()) {
             Node node = queue.poll();
-            BlockPos beyond = node.pos.relative(drift);
-            if (level.isInWorldBounds(beyond) && level.isLoaded(beyond) && accepts(level.getBlockState(beyond), gas)) {
+            BlockPos beyond = Gases.through(level, node.pos, node.pos.relative(drift));
+            if (beyond != null && level.isInWorldBounds(beyond) && level.isLoaded(beyond) && accepts(level.getBlockState(beyond), gas)) {
                 return node.first;
             }
             if (node.distance >= SLOPE_SEARCH) continue;

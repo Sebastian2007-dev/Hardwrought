@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": "hardwrought:refractory_brick",
+    "S": "hardwrought:steel_plate"
+  },
+  "pattern": [
+    "BSB",
+    "S S",
+    "BSB"
+  ],
+  "result": {
+    "id": "hardwrought:refractory_casing",
+    "count": 4
+  }
+}

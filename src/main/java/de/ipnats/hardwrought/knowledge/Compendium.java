@@ -290,6 +290,8 @@ public final class Compendium {
     }
 
     private static CompendiumPagePayload.Known known(ItemStack stack, PlayerKnowledge known) {
+        // A liquid or a gas is no secret: it is drawn as itself, whatever the player has held.
+        if (FluidIcons.of(stack) != null) return new CompendiumPagePayload.Known(stack, KnowledgeLevel.STUDIED.ordinal());
         Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         return new CompendiumPagePayload.Known(stack, known.level(id).ordinal());
     }

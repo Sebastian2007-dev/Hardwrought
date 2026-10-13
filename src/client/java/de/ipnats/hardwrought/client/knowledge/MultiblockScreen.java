@@ -68,6 +68,9 @@ public class MultiblockScreen extends Screen {
     private float yaw = 225.0f;
     private float pitch = 30.0f;
     private float zoom = 1.0f;
+    /** How far the text of the left page is scrolled, and how tall it was when last drawn. */
+    private int scroll;
+    private int textHeight;
     private boolean turning;
 
     public MultiblockScreen(Screen parent, Multiblocks.Multiblock multiblock, Set<Identifier> known) {
@@ -155,7 +158,11 @@ public class MultiblockScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         super.extractRenderState(graphics, mouseX, mouseY, delta);
         int x = leftContentX();
-        int y = top + PAPER_TOP + 5;
+        // The text of the left page stays above the buttons: what does not fit is scrolled to with the wheel.
+        int textTop = top + PAPER_TOP + 5, textBottom = textBottom();
+        scroll = Math.clamp(scroll, 0, Math.max(0, textHeight - (textBottom - textTop)));
+        graphics.enableScissor(x - 2, textTop - 2, x + CONTENT_WIDTH + 2, textBottom);
+        int y = textTop - scroll;
         y = graphics.textWithWordWrap(font, getTitle(), x, y, CONTENT_WIDTH, TEXT_COLOR, false) + 2;
         Component layerLine = layer < 0
                 ? Component.translatable("gui.hardwrought.multiblock.all_layers", multiblock.height())
@@ -182,11 +189,10 @@ public class MultiblockScreen extends Screen {
             y = graphics.textWithWordWrap(font, Component.translatable(note), x, y + 2, CONTENT_WIDTH, TEXT_COLOR, false) + 4;
         }
         Component hint = Component.translatable("gui.hardwrought.multiblock.hint");
-        int hintY = Math.max(y + 4, top + CONTROLS_Y - 30);
-        // Only where it fits above the buttons: a long legend or note comes first.
-        if (hintY + font.split(hint, CONTENT_WIDTH).size() * font.lineHeight <= top + CONTROLS_Y - 2) {
-            graphics.textWithWordWrap(font, hint, x, hintY, CONTENT_WIDTH, FADED_COLOR, false);
-        }
+        y = graphics.textWithWordWrap(font, hint, x, y + 4, CONTENT_WIDTH, FADED_COLOR, false);
+        graphics.disableScissor();
+        textHeight = y + scroll - textTop;
+        if (textHeight > textBottom - textTop) scrollbar(graphics, x + CONTENT_WIDTH + 1, textTop, textBottom);
 
         button(graphics, leftContentX(), top + CONTROLS_Y, 54, Component.translatable("gui.hardwrought.compendium.back"),
                 mouseX, mouseY);
@@ -199,6 +205,21 @@ public class MultiblockScreen extends Screen {
                 top + CONTROLS_Y + 5, FADED_COLOR, false);
 
         drawStructure(graphics);
+    }
+
+    /** Where the text of the left page must end: a little above the buttons. */
+    private int textBottom() {
+        return top + CONTROLS_Y - 3;
+    }
+
+    /** A thin bar beside text that runs on, its thumb where the page is scrolled to. */
+    private void scrollbar(GuiGraphicsExtractor graphics, int x, int from, int to) {
+        int track = to - from;
+        int thumb = Math.max(8, track * track / Math.max(1, textHeight));
+        int room = Math.max(1, textHeight - track);
+        int at = from + (track - thumb) * scroll / room;
+        graphics.fill(x, from, x + 2, to, 0x30000000);
+        graphics.fill(x, at, x + 2, at + thumb, 0xA0000000 | (FADED_COLOR & 0xFFFFFF));
     }
 
     private void drawStructure(GuiGraphicsExtractor graphics) {
@@ -279,6 +300,12 @@ public class MultiblockScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (scrollY == 0) return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        // Over the left page the wheel scrolls its text, where there is more than fits; else it zooms.
+        int room = textBottom() - (top + PAPER_TOP + 5);
+        if (mouseX < left + LEFT_PAPER_X + PAPER_WIDTH && textHeight > room) {
+            scroll = Math.max(0, scroll - (int) Math.signum(scrollY) * font.lineHeight * 2);
+            return true;
+        }
         zoom = Math.clamp(zoom * (scrollY > 0 ? 1.15f : 1 / 1.15f), MIN_ZOOM, MAX_ZOOM);
         return true;
     }

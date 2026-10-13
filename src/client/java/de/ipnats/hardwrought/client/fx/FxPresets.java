@@ -59,6 +59,14 @@ public final class FxPresets {
             case TELEPORT -> teleport(fx, pos, target, color, s);
             case FLAME_SPRAY, WATER_SPRAY, WIND_GUST, EARTH_SPIKES, LIGHT_RAY, DARK_CLOUD -> spray(fx, effect, pos, target, color, s);
             case SIGIL -> sigil(fx, pos, color, s);
+            case VEIL -> FxComboPresets.veil(fx, pos, color, s, follow);
+            case EMBER_SKIN -> FxComboPresets.emberSkin(fx, pos, color, s, follow);
+            case HEAL_RING -> FxComboPresets.healRing(fx, pos, color, s);
+            case SHROUD -> FxComboPresets.shroud(fx, pos, color, s);
+            case MIRE -> FxComboPresets.mire(fx, pos, color, s);
+            case STEAM -> FxComboPresets.steam(fx, pos, color, s);
+            case FIRESTORM -> FxComboPresets.firestorm(fx, pos, color, s);
+            case SHOCKWAVE -> FxComboPresets.shockwave(fx, pos, color, s);
             case SHOWCASE -> showcase(fx, follow != null ? follow : Minecraft.getInstance().player);
             case SHAKE -> FxScreen.shake(0.5f * s);
             case FLASH -> {

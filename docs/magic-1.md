@@ -101,6 +101,52 @@ darkness and a burst of fire, all three cast together.
 Without any auxiliary rune a spell acts just in front of the caster (section 33's small flame, light
 and push).
 
+## Combinations
+
+Most spells compose by themselves: the core acts, and every other element acts beside it at 40 %.
+A **combination** is where a few runes in a certain shape make something of their own. They are
+declared in one place, `Combos`, one line each: the **form** (from the auxiliary runes), the **core**
+(plain or struck through), the **other runes it needs**, and the **effect** (a method in `ComboEffects`).
+
+- The form is `SpellForm`: a square makes a TRAP, a spiral a FIELD, a triangle a BURST (in that order),
+  otherwise SELF (rune across a circle), BOLT (arrow) or STREAM (nothing). Shields and gates take none.
+- Where several combinations fit, the one asking for the most runes wins: Dark on oneself is the veil,
+  Dark and Wind on oneself the shadow step.
+- The runes a combination uses are spent on it. Any others in the spell still act beside it as usual.
+- The cast feedback names the combination once the caster knows every rune in it.
+- To add one: write the effect in `ComboEffects` and add a line to the list in `Combos`. The execution
+  paths (`SpellEffects`, `MagicFields`) already ask `Combos.apply` first in every form.
+
+| Combination | Drawn as | Does |
+|---|---|---|
+| **Veil** | Dark across a circle | True invisibility for 5–10 s (by power and duration): nobody's client draws the body, armour, held items or name; monsters cannot see or target it and lose it at once. Footsteps can still be heard. Striking anyone tears it. |
+| **Shadow step** | Dark + Wind across a circle | The veil, and Speed II for as long. |
+| **Ember skin** | Fire + Earth across a circle | Fire resistance, Resistance I, and whoever strikes the bearer by hand catches fire. |
+| **Cleansing tide** | Water + Light across a circle | Removes every harmful effect and fire, and heals. |
+| **Healing ring** | Light + spiral (across a circle: follows the caster) | Every second, heals everyone on the caster's side in the ring, the caster too, and burns the undead. Monsters are not healed. |
+| **Shroud** | Dark + spiral | Everyone on the caster's side inside is veiled while they stay; anyone else is blinded and in darkness. A place to hide. |
+| **Mire** | Earth + Water + spiral | Foes inside are slowed hard and cannot jump clear. |
+| **Scalding steam** | Fire + Water + spiral | Foes inside are scalded and blinded; fires are put out. |
+| **Firestorm** | Fire + Wind in a triangle | A wider burst (area + 3) that sets everyone alight and flings them outward. |
+| **Shockwave** | Earth + Wind in a triangle | Everyone around is thrown into the air and slowed. |
+| **Flash freeze** | Fire struck through + Water in a triangle | Everyone in it frozen stiff; open water skins over with the mod's own ice, which thaws as weather's does. |
+| **Storm conduit** | Lightning + Water on an arrow | Soaks where it lands; the lightning leaps 5–6 times over 8 blocks, every hit as against the wet. |
+| **Snare** | Earth in a square | Whoever steps on it is held fast for 3 s. |
+| **Stun glyph** | Lightning in a square | Whoever steps on it is stunned and weakened, and the shock leaps on. |
+| **Flare** | Light in a square | Whoever steps on it is dazzled, everyone within 5 blocks glows for 10 s, and every veil there is torn: the answer to someone hiding. |
+
+Dark struck through, cast at anyone, also tears a veil.
+
+**Who counts as a friend** (`Allies`): the caster, their tamed animals, peaceful creatures, and other players
+only when both are in the same team (until there is a party system). Monsters never.
+
+**Status effects** with HUD icons: `hardwrought:veiled` and `hardwrought:ember_skin`. The veil is told to every
+client through a synced attachment (`Veil.VEILED`), and `EntityRenderDispatcherVeilMixin` skips drawing such a body
+for everyone, its own player in third person included.
+
+**Looks**: new FX presets in `FxComboPresets`: VEIL, EMBER_SKIN, HEAL_RING, SHROUD, MIRE, STEAM (fields play
+one each pulse, scaled to their radius), FIRESTORM and SHOCKWAVE.
+
 ## Gates (teleports, section 24)
 
 A circle that an arrow **starts from** is a gate rather than a shield. The arrow's tail must lie
@@ -137,20 +183,59 @@ within 1.35 radii of the circle's middle, and its tip outside that.
 ## Recognition
 
 `RuneRecognizer` is a template matcher in the manner of the $1 recognizer:
-1. The stroke is resampled to 48 evenly spaced points.
-2. It is centred and scaled so its larger side is 1.
-3. It is compared point by point with each template, forwards and backwards.
+1. The little hooks a hand makes as the button goes down or comes up are cut off: a piece of at most
+   10 % of the stroke at either end that turns away from the rest by 60° or more.
+2. The stroke is resampled to 48 evenly spaced points.
+3. It is centred and scaled so its larger side is 1.
+4. It is aligned with each template, forwards and backwards, by dynamic time warping within a band of
+   6 points, so a notch drawn off centre or a wave with one hump wider than the other still lines up.
+   The alignment weighs where the pen is and, at 0.2 of that, which way it heads: position alone
+   mistakes a crescent for an upright line and a wave for a notched level line.
+5. The rune is the template with the lowest cost. Its accuracy is the mean distance along that
+   alignment, scaled so that a careful hand scores about 0.9 and a hurried one about 0.7, as before.
 
 It is deliberately **not** rotation-invariant, because orientation is part of a rune: Fire against
-Light, Wind against Dark.
+Light, Wind against Dark. Lightning may zigzag either way, and Water may run on half a wave longer.
 
 `SketchReader` reads the whole drawing:
-- closed strokes by their corners: circle, triangle, square;
+- closed strokes: a pen that runs on past where it began is cut back to where it came closest to it
+  (up to a quarter of the stroke; in action casting an eighth, so a loop can still run on into a rune).
+  Then:
+  - plainly round (`whitenedSpread`: how unevenly the points lie about the middle once the figure is
+    stretched to be as wide as it is long, so a squashed circle counts as round) → circle;
+  - lying on three or four straight sides (`drawnSides`, `bow`), rounded corners and all → triangle
+    or square. The sides are found on the stroke as the open line it is, so a gap where the pen
+    stopped short is never a side;
+  - anything else round enough → circle, otherwise triangle or square by how unevenly it lies;
 - spirals by their winding;
-- arrows by a straight shaft with a head drawn back;
+- arrows by a straight shaft with a head drawn back. The tip is where the pen first turns back near
+  the far end, since a head drawn back and forth often comes back a little past it; and the head must
+  stay within 0.65 of the shaft's length of the tip, or it is a head drawn on its own;
+- straight lines: chord at least 0.94 of the length, or straying from it by less than 7.5 %;
 - compound strokes, which it splits;
 - which runes lie in or across which circle;
 - which lines strike which runes.
+
+### Measured
+
+A synthetic bench draws every rune and shape 400 times per level, the way a mouse does: turned, stretched,
+wavering, with hooks at the ends, closing past or short of the start, corners rounded off, sampled
+unevenly and on whole pixels. The share read as what was meant, before and after the reworked recognition:
+
+| | careful | | normal | | hurried | |
+|---|---|---|---|---|---|---|
+| | before | after | before | after | before | after |
+| element runes | 99.9 % | 100 % | 90.5 % | 95.6 % | 74.1 % | 80.0 % |
+| circle | 100 % | 100 % | 93.0 % | 94.8 % | 66.3 % | 75.3 % |
+| triangle | 100 % | 100 % | 94.5 % | 96.8 % | 79.5 % | 77.3 % |
+| square | 18.3 % | 100 % | 6.8 % | 90.5 % | 4.5 % | 51.3 % |
+| spiral | 100 % | 100 % | 99.8 % | 99.5 % | 96.3 % | 95.3 % |
+| arrow, one stroke | 87.8 % | 100 % | 68.3 % | 91.3 % | 61.0 % | 77.5 % |
+| arrow, shaft and head | 94.8 % | 99.3 % | 60.0 % | 81.8 % | 24.3 % | 41.5 % |
+
+What was wrong before: a square's corner, once smoothed, turns barely more than the corner threshold,
+so one corner in two was missed and most squares read as triangles, or with rounded corners as
+circles; and a one-stroke arrow whose head came back past its tip was read as a crooked rune.
 
 Recognition runs on the client to label the strokes as they are drawn, but **only the server's
 reading counts**: the client sends the raw strokes (`CastSpellPayload`), never what it thinks they

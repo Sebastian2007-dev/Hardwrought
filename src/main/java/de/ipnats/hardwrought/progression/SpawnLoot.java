@@ -10,7 +10,7 @@ import net.minecraft.world.level.Level;
  */
 public final class SpawnLoot {
     /** Blocks around the world spawn, measured across the ground, in which containers hold nothing. */
-    public static final int RADIUS = 1000;
+    public static final int RADIUS = 10000;
 
     private SpawnLoot() { }
 

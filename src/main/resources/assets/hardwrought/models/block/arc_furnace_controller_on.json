@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "hardwrought:block/arc_furnace_controller_on",
+    "side": "hardwrought:block/refractory_casing",
+    "top": "hardwrought:block/refractory_casing"
+  }
+}

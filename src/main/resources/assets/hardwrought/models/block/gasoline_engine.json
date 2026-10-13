@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "north": "hardwrought:block/gasoline_engine_front",
+    "south": "hardwrought:block/gasoline_engine_back",
+    "east": "hardwrought:block/gasoline_engine_side",
+    "west": "hardwrought:block/gasoline_engine_side",
+    "up": "hardwrought:block/gasoline_engine_top",
+    "down": "hardwrought:block/gasoline_engine_top",
+    "particle": "hardwrought:block/gasoline_engine_side"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "W": "hardwrought:copper_wire",
+    "C": "hardwrought:redstone_coil",
+    "S": "hardwrought:shaft"
+  },
+  "pattern": [
+    "PWP",
+    "CSC",
+    "PWP"
+  ],
+  "result": {
+    "id": "hardwrought:electric_motor"
+  }
+}

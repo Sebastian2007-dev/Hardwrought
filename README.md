@@ -149,10 +149,37 @@ Erweiterungspunkte stehen in [docs/milestone-1.md](docs/milestone-1.md).
 - **Die Saettigung traegt die Ernaehrungsqualitaet.** Wer nur von einer Sache lebt, heilt schlecht,
   egal wie voll er ist.
 - **Traglast:** 85 kg sind frei — drei Stapel Bloecke, vier Werkzeuge und ein Stapel Brot kosten
-  nichts. Darueber wird man langsamer und springt niedriger, aber hoechstens −30 % und −25 %:
-  ueberladen heisst schwer, nicht gelaehmt.
+  nichts. Darueber wird es teuer: pro voller Ueberladung (also bei doppelter Traglast) −45 %
+  Tempo und −40 % Sprunghoehe, dazu Ausdauer, Kalorien und langsamere Erholung. Gedeckelt bei
+  −50 % und −45 % — ueberladen heisst zaeh und muehsam, nicht gelaehmt.
 - **Jedes Item sagt im Tooltip, was es wiegt** (und was der Stapel wiegt).
-- **Das H-Menue zeigt die eigene Last** gegen die Grenze, gruen solange sie frei ist.
+- **Das H-Menue** ist klein und zeigt nur noch Koerpertemperatur und Muedigkeit — neben dem eigenen
+  Kopf in einem Rahmen. **Der Rahmen ist die Traglastanzeige:** weiss solange die Last frei ist, und
+  umso roter, je weiter man darueber liegt.
+
+### Temperatur und Jahreszeiten
+
+Das Jahr hat vier Jahreszeiten zu je zwoelf Tagen, und es verschiebt **nicht jedes Biom gleich
+weit**: ein kaltes Biom schwankt vierzig Grad uebers Jahr, die Wueste kaum. Daraus folgt das
+Wesentliche — **in die Tundra geht man im Sommer, im Winter bringt sie einen um; in der Wueste ist
+es umgekehrt.**
+
+- **Kleidung entscheidet.** Leder isoliert am besten, Metall *schlechter als nichts*: eine
+  Eisenruestung leitet die Waerme vom Koerper weg. In der Hitze ist beides schlecht.
+- **Wasser ist nicht kalte Luft.** Im Sommer in der Wueste kuehlt ein See angenehm ab, im Winter in
+  der Tundra ist dasselbe Wasser toedlich — aus einer Regel, nicht aus zwei.
+- **Offenes Feuer waermt** mit Abstandsabfall, und ein ausgetretenes Lagerfeuer waermt gar nicht.
+  Feuer allein rettet einen Winter nicht, Feuer plus Kleidung schon.
+- **Winter:** Schnee tuermt sich im Freien bis drei Bloecke hoch, unter Baeumen kaum. Wasser friert
+  genau in der Hoehe, in der es stand, und gibt beim Auftauen exakt dieselbe Menge zurueck. In der
+  Wueste regnet es.
+- **Herbst:** mehr Regen, und manche Morgen liegt Nebel. Im dichten Nebel verbrennen Untote nicht in
+  der Sonne und Monster spawnen am Tag.
+- **Pflanzen** wachsen im Fruehling 125 %, im Sommer 145 %, im Winter 50 %.
+- **Die Verzauberung Maessigung** auf Ruestung zieht die Umgebungstemperatur zum Wohlfuehlbereich,
+  gestuft I–III und ueber alle vier Teile gerechnet.
+
+Alle Zahlen und das Warum dahinter: [docs/seasons.md](docs/seasons.md).
 
 ## Milestone 2: Kampf
 

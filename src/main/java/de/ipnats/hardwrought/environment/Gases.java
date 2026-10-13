@@ -18,8 +18,10 @@ import java.util.Set;
  * there is made of for whoever breathes it.
  *
  * <p>A position holds gas only as a {@link GasBlock}, and only where there is nothing else: air can
- * take gas, a gas block can take more until its eight places are full, and every other block is in
- * the way.
+ * take gas, a gas block can take more until its eight places are full. Blocks one walks through — a
+ * torch, grass, a flower, an open door — hold none themselves but are no wall either: gas passes
+ * through them to the other side (see {@link #permeable}), and who stands in one breathes the gas
+ * around it. Every other block is in the way.
  */
 public final class Gases {
     /** How far a puff looks for room when the place it was let out is already full. */
@@ -49,9 +51,36 @@ public final class Gases {
         return 0;
     }
 
-    /** Whether gas can be here at all, full or not: air or a gas block. */
+    /** Whether gas can be here or pass through here: air, a gas block, or a block one walks through. */
     public static boolean passable(BlockState state) {
-        return state.isAir() || isGas(state);
+        return state.isAir() || isGas(state) || permeable(state);
+    }
+
+    /**
+     * A block that is no wall to gas though it holds none: nothing to bump into and no liquid in it,
+     * such as a torch, grass, a flower, a rail or an open door.
+     */
+    public static boolean permeable(BlockState state) {
+        if (state.isAir() || isGas(state) || !state.getFluidState().isEmpty()) return false;
+        if (state.getBlock() instanceof net.minecraft.world.level.block.LiquidBlock) return false;
+        return state.getCollisionShape(net.minecraft.world.level.EmptyBlockGetter.INSTANCE, BlockPos.ZERO).isEmpty();
+    }
+
+    /**
+     * Where gas going from one place toward the next ends up: the next place itself, or, through the
+     * blocks it passes through, the first place beyond them. Null where there is none close by.
+     */
+    public static BlockPos through(LevelReader level, BlockPos from, BlockPos to) {
+        Direction way = null;
+        for (Direction direction : Direction.values()) if (from.relative(direction).equals(to)) way = direction;
+        if (way == null) return to;
+        BlockPos at = to;
+        for (int hop = 0; hop < 3; hop++) {
+            if (!level.hasChunkAt(at)) return null;
+            if (!permeable(level.getBlockState(at))) return at;
+            at = at.relative(way);
+        }
+        return null;
     }
 
     /** This position with one gas changed by the given amount. Air where nothing is left. */
@@ -97,6 +126,22 @@ public final class Gases {
         return left;
     }
 
+    /** The fullest gas beside a block one stands in: what fills the space around it fills it too. */
+    private static BlockState around(LevelReader level, BlockPos pos) {
+        BlockState best = level.getBlockState(pos);
+        int most = 0;
+        for (Direction direction : Direction.values()) {
+            BlockPos next = pos.relative(direction);
+            if (!level.hasChunkAt(next)) continue;
+            BlockState state = level.getBlockState(next);
+            if (total(state) > most) {
+                most = total(state);
+                best = state;
+            }
+        }
+        return best;
+    }
+
     /** The drift direction of a gas first, then sideways, then against its drift. */
     private static Direction[] order(Gas gas) {
         Direction drift = gas.drift();
@@ -111,6 +156,7 @@ public final class Gases {
     public static GasMixture sample(LevelReader level, BlockPos pos) {
         GasMixture outside = Altitude.outsideAir(pos.getY());
         BlockState state = level.getBlockState(pos);
+        if (permeable(state)) state = around(level, pos);
         if (!isGas(state)) return outside;
         double carbonDioxide = units(state, Gas.CARBON_DIOXIDE) * Gas.CARBON_DIOXIDE.fractionPerUnit()
                 + units(state, Gas.DECAYED_CARBON_DIOXIDE) * Gas.DECAYED_CARBON_DIOXIDE.fractionPerUnit();

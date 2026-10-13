@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "side": "hardwrought:block/creaking_heart/jungle_awake",
+    "end": "hardwrought:block/creaking_heart/jungle_top_awake"
+  }
+}

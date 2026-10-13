@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "hardwrought:block/gas_burner"
+    },
+    "lit=true": {
+      "model": "hardwrought:block/gas_burner_lit"
+    }
+  }
+}

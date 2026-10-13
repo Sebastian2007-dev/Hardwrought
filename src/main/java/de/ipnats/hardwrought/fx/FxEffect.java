@@ -40,6 +40,22 @@ public enum FxEffect {
     LIGHT_RAY(Aim.RAY, 0xFFF0B0),
     /** A billow of darkness rolling forward and swelling where it ends. */
     DARK_CLOUD(Aim.RAY, 0x7A4ADC),
+    /** Shadow drawn in around a body as it vanishes: the veil. */
+    VEIL(Aim.SELF, 0x3A1F5C),
+    /** Embers circling a body that has taken on a skin of fire. */
+    EMBER_SKIN(Aim.SELF, 0xFF6A2A),
+    /** One pulse of a healing ring on the ground; the scale is its radius in blocks. */
+    HEAL_RING(Aim.AREA, 0xFFF0B0),
+    /** One pulse of a shroud of darkness; the scale is its radius. */
+    SHROUD(Aim.AREA, 0x7A4ADC),
+    /** One pulse of a sucking mire; the scale is its radius. */
+    MIRE(Aim.AREA, 0x6A5030),
+    /** One pulse of scalding steam; the scale is its radius. */
+    STEAM(Aim.AREA, 0xE8F0F4),
+    /** A burst of fire whirled up by wind. */
+    FIRESTORM(Aim.AREA, 0xFF6A2A),
+    /** A wave through the ground, throwing dust and stones up as it runs outward. */
+    SHOCKWAVE(Aim.AREA, 0x9A7A4A),
     SHOWCASE(Aim.SELF, 0xFFFFFF),
     SHAKE(Aim.SELF, 0xFFFFFF),
     FLASH(Aim.SELF, 0xFFFFFF),

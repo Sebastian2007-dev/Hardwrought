@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "R": "hardwrought:redstone_coil",
+    "P": "hardwrought:mechanical_pump",
+    "M": "hardwrought:electric_motor"
+  },
+  "pattern": [
+    "IRI",
+    "RPR",
+    "IMI"
+  ],
+  "result": {
+    "id": "hardwrought:electric_pump"
+  }
+}

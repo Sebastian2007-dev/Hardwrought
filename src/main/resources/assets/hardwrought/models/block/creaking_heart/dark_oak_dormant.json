@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "side": "hardwrought:block/creaking_heart/dark_oak_dormant",
+    "end": "hardwrought:block/creaking_heart/dark_oak_top_dormant"
+  }
+}

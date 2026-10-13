@@ -234,7 +234,8 @@ public final class KnowledgeSystem {
     private Map<KnowledgeCategory, List<Identifier>> sortShelves() {
         Map<KnowledgeCategory, List<Identifier>> sorted = new EnumMap<>(KnowledgeCategory.class);
         for (Item item : BuiltInRegistries.ITEM) {
-            if (item == net.minecraft.world.item.Items.AIR) continue;
+            // The liquid icon of the book's recipes stands for liquids; it is not a thing of its own to look up.
+            if (item == net.minecraft.world.item.Items.AIR || item == FluidIcons.ICON) continue;
             Identifier id = BuiltInRegistries.ITEM.getKey(item);
             if (id == null) continue;
             sorted.computeIfAbsent(KnowledgeCategory.of(item), key -> new ArrayList<>()).add(id);

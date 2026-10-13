@@ -18,6 +18,15 @@ import java.util.function.Function;
 public final class ModBlocks {
     public static final Block DIRT_SLAB = register("dirt_slab", SlabBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.DIRT));
+
+    /**
+     * Sections 23.1 and 24: ice the shape of the water it froze from. Vanilla ice is a whole block,
+     * which finite water cannot use. Random ticks are on so that ice in a thaw goes without waiting
+     * for a simulation pass to walk past it.
+     */
+    public static final de.ipnats.hardwrought.water.ThinIceBlock THIN_ICE = register("thin_ice",
+            de.ipnats.hardwrought.water.ThinIceBlock::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.ICE).randomTicks().noOcclusion());
     /** Section 71: the first workbench is cut out of a log, not joined out of boards. */
     public static final HewnWorkbenchBlock HEWN_WORKBENCH = register("hewn_workbench",
             HewnWorkbenchBlock::new,
@@ -219,6 +228,28 @@ public final class ModBlocks {
     /** The hand crank's handle, drawn turning by its renderer. Never placed, like the shaft bar. */
     public static final Block HAND_CRANK_HANDLE = register("hand_crank_handle", Block::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_FENCE).noOcclusion());
+
+    /** Mob specification § 39.1: a creaking heart grown into a tree that is not pale oak. */
+    public static final de.ipnats.hardwrought.mobs.TreeHeartBlock TREE_CREAKING_HEART = register("tree_creaking_heart",
+            de.ipnats.hardwrought.mobs.TreeHeartBlock::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.CREAKING_HEART));
+
+    /** Section 20: a torch that has burnt down to charcoal; see {@code LightBurn}. It gives no light and drops a stick. */
+    public static final de.ipnats.hardwrought.environment.BurntTorchBlock BURNT_TORCH = register("burnt_torch",
+            de.ipnats.hardwrought.environment.BurntTorchBlock::new,
+            BlockBehaviour.Properties.of().noCollision().instabreak().sound(net.minecraft.world.level.block.SoundType.WOOD)
+                    .pushReaction(net.minecraft.world.level.material.PushReaction.POPPED));
+    public static final de.ipnats.hardwrought.environment.BurntWallTorchBlock BURNT_WALL_TORCH = register("burnt_wall_torch",
+            de.ipnats.hardwrought.environment.BurntWallTorchBlock::new,
+            BlockBehaviour.Properties.of().overrideLootTable(BURNT_TORCH.getLootTable()).overrideDescription(BURNT_TORCH.getDescriptionId())
+                    .noCollision().instabreak().sound(net.minecraft.world.level.block.SoundType.WOOD)
+                    .pushReaction(net.minecraft.world.level.material.PushReaction.POPPED));
+    /** A lantern gone dark; which lantern it was is its variant. Lit again, it is that lantern once more. */
+    public static final de.ipnats.hardwrought.environment.BurntLanternBlock BURNT_LANTERN = register("burnt_lantern",
+            de.ipnats.hardwrought.environment.BurntLanternBlock::new,
+            BlockBehaviour.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.METAL).forceSolidOn().strength(3.5f)
+                    .sound(net.minecraft.world.level.block.SoundType.LANTERN).noOcclusion()
+                    .pushReaction(net.minecraft.world.level.material.PushReaction.POPPED));
 
     private ModBlocks() { }
 

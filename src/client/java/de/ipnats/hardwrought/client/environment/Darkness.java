@@ -71,6 +71,10 @@ public final class Darkness {
         if (level.dimensionType().hasSkyLight()) {
             MoonPhase phase = camera.attributeProbe().getValue(EnvironmentAttributes.MOON_PHASE, partialTick);
             state.skyFactor *= skyScale(nightFraction(level.getDefaultClockTime()), phase, level.getRainLevel(partialTick));
+            // Section 24: the season colours the daylight, and so everything the daylight falls on.
+            // Dirt, stone and planks carry a fixed texture no biome tint reaches; this is how they
+            // get a winter. It stops at the cave mouth, which is right — a lit cellar has no season.
+            state.skyLightColor = new Vector3f(state.skyLightColor).mul(SeasonColors.skyTint());
         }
         adaptation = adapt(adaptation, lightAtEyes(level, camera.blockPosition(), state));
         if (maxComponent(state.ambientColor) <= DARK_DIMENSION_AMBIENT) {

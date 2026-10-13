@@ -31,10 +31,14 @@ public final class SurvivalHud {
      */
     public static final int PANEL_X = 10;
     public static final int PANEL_Y = 10;
-    public static final int PANEL_WIDTH = 122;
-    public static final int PANEL_HEIGHT = 150;
+    public static final int PANEL_WIDTH = 148;
+    public static final int PANEL_HEIGHT = 33;
     /** The first free pixel under the panel, border included. */
     public static final int PANEL_BOTTOM = PANEL_Y + PANEL_HEIGHT;
+    /** Where the two bars begin: clear of the portrait, with a gutter between. */
+    private static final int BAR_X = PANEL_X + VitalsPortrait.WIDTH + 5;
+    /** What is left for the bars once the figures at the right edge have their room. */
+    private static final int BAR_WIDTH = 52;
 
     private static final int DROP_COUNT = 10;
     private static final int DROP_SPACING = 8;
@@ -174,53 +178,40 @@ public final class SurvivalHud {
         }
     }
 
+    /**
+     * The vitals panel: the player in a framed window, and beside it the two readings the body
+     * itself would not give — how warm it is inside and how far from rested it is.
+     *
+     * <p>Everything else that used to stand here is gone. Strain, altitude habit and the load in
+     * kilogrammes were a column of numbers a player has no way of knowing, which is a HUD telling
+     * them what the game should be making them feel. What is left is what a body does know about
+     * itself. The load is still shown, but as the colour of the frame round the portrait rather
+     * than as a figure (see {@link VitalsPortrait}).
+     *
+     * <p>The two rows carry no written label either. A scale that runs blue to red and ends in °C
+     * is a thermometer whatever is printed over it, and the only other thing here is counted out
+     * of a hundred; two words would have cost a third of the panel to say what it already says.
+     */
     private static void renderDetails(net.minecraft.client.gui.GuiGraphicsExtractor graphics,
                                       SurvivalSnapshotPayload values) {
         Minecraft client = Minecraft.getInstance();
         int x = PANEL_X;
         int y = PANEL_Y;
-        int width = PANEL_WIDTH;
-        graphics.fill(x - 4, y - 4, x + width + 4, y + PANEL_HEIGHT, 0xA6080B0E);
-        graphics.fill(x - 3, y - 3, x + width + 3, y - 2, 0x805D6972);
+        int right = x + PANEL_WIDTH;
+        graphics.fill(x - 3, y - 3, right + 3, y + PANEL_HEIGHT, 0xA6080B0E);
+        graphics.fill(x - 2, y - 2, right + 2, y - 1, 0x805D6972);
 
-        graphics.text(client.font, I18n.get("hud.hardwrought.fatigue"), x, y, 0xFFE8EDF0, true);
-        thinBar(graphics, x, y + 12, width, values.fatigue(), 100,
-                fatigueColor(values.fatigue()));
-        String fatigue = String.format(Locale.ROOT, "%.0f / 100", values.fatigue());
-        graphics.text(client.font, fatigue, x + (width - client.font.width(fatigue)) / 2,
-                y + 20, 0xFFC9D0D4, false);
-
-        graphics.text(client.font, I18n.get("hud.hardwrought.temperature"), x, y + 32,
-                0xFFE8EDF0, true);
-        temperatureBar(graphics, x, y + 44, width, values.bodyTemperature());
-        String temperature = String.format(Locale.ROOT, "%.1f °C", values.bodyTemperature());
-        graphics.text(client.font, temperature, x + (width - client.font.width(temperature)) / 2,
-                y + 52, temperatureTextColor(values.bodyTemperature()), false);
-
-        graphics.text(client.font, I18n.get("hud.hardwrought.stress"), x, y + 64, 0xFFE8EDF0, true);
-        thinBar(graphics, x, y + 76, width, values.stress(), 100, fatigueColor(values.stress()));
-        String stress = String.format(Locale.ROOT, "%.0f / 100", values.stress());
-        graphics.text(client.font, stress, x + (width - client.font.width(stress)) / 2,
-                y + 84, 0xFFC9D0D4, false);
-
-        // How used the body is to the heights and to the deep: what earns a longer stay in either.
-        String habits = I18n.get("hud.hardwrought.habits", Math.round(values.heightHabit() * 100), Math.round(values.depthHabit() * 100));
-        graphics.text(client.font, habits, x + (width - client.font.width(habits)) / 2, y + 128, 0xFFC9D0D4, false);
-
-        // Carry weight is only a fair rule if a player can see where they stand against it.
-        graphics.text(client.font, I18n.get("hud.hardwrought.carried"), x, y + 96, 0xFFE8EDF0, true);
         double capacity = Math.max(0.001, values.capacityKg());
-        double ratio = values.carriedKg() / capacity;
-        thinBar(graphics, x, y + 108, width, Math.min(ratio, 1.0), 1.0, loadColor(ratio));
-        String carried = String.format(Locale.ROOT, "%.1f / %.0f kg", values.carriedKg(), capacity);
-        graphics.text(client.font, carried, x + (width - client.font.width(carried)) / 2,
-                y + 116, ratio > 1.0 ? 0xFFF3A66B : 0xFFC9D0D4, false);
-    }
+        VitalsPortrait.render(graphics, client.font, client.player, x, y, values.carriedKg() / capacity);
 
-    /** Green while the load is free, amber once it starts to tell, red when it is telling loudly. */
-    private static int loadColor(double ratio) {
-        if (ratio <= 1.0) return 0xFF6FBF73;
-        return ratio < 1.6 ? 0xFFD9A441 : 0xFFC4553D;
+        temperatureBar(graphics, BAR_X, y + 5, BAR_WIDTH, values.bodyTemperature());
+        String temperature = String.format(Locale.ROOT, "%.1f °C", values.bodyTemperature());
+        graphics.text(client.font, temperature, right - client.font.width(temperature), y + 4,
+                temperatureTextColor(values.bodyTemperature()), true);
+
+        thinBar(graphics, BAR_X, y + 20, BAR_WIDTH, values.fatigue(), 100, fatigueColor(values.fatigue()));
+        String fatigue = String.format(Locale.ROOT, "%.0f / 100", values.fatigue());
+        graphics.text(client.font, fatigue, right - client.font.width(fatigue), y + 18, 0xFFC9D0D4, true);
     }
 
     private static void thinBar(net.minecraft.client.gui.GuiGraphicsExtractor graphics, int x, int y,

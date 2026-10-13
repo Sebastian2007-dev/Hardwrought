@@ -107,7 +107,30 @@ public final class Multiblocks {
                     'D', List.of(Hardwrought.id("smeltery_drain")), 'G', List.of(Hardwrought.id("smeltery_glass"))),
             Optional.empty());
 
-    public static final List<Multiblock> ALL = List.of(ORE_DRILL_RIG, HOODED_FORGE, SMELTERY);
+    /**
+     * The large arc furnace: refractory casing round a hollow hearth, a graphite electrode in its roof,
+     * the controller in the middle of one side, and an item port and a power port — drawn at one corner,
+     * but they may take the place of any casing block.
+     */
+    public static final Multiblock LARGE_ARC_FURNACE = new Multiblock(Hardwrought.id("large_arc_furnace"),
+            List.of(List.of("RRR", "RRR", "IRP"), List.of("RRR", "R R", "RKR"), List.of("RRR", "RER", "RRR")),
+            legend('R', List.of(Hardwrought.id("refractory_casing")), 'K', List.of(Hardwrought.id("arc_furnace_controller")),
+                    'E', List.of(Hardwrought.id("graphite_electrode")), 'I', List.of(Hardwrought.id("item_port")),
+                    'P', List.of(Hardwrought.id("power_port"))),
+            Optional.empty());
+
+    /**
+     * The large diesel generator: engine casing round an engine core, the controller in the middle of one
+     * side, and a fluid port and a power port, drawn at one corner but free to sit anywhere in the hull.
+     */
+    public static final Multiblock LARGE_DIESEL = new Multiblock(Hardwrought.id("large_diesel_generator"),
+            List.of(List.of("CCC", "CCC", "FCP"), List.of("CCC", "CMC", "CKC"), List.of("CCC", "CCC", "CCC")),
+            legend('C', List.of(Hardwrought.id("engine_casing")), 'K', List.of(Hardwrought.id("large_diesel_controller")),
+                    'M', List.of(Hardwrought.id("engine_core")), 'F', List.of(Hardwrought.id("fluid_port")),
+                    'P', List.of(Hardwrought.id("power_port"))),
+            Optional.empty());
+
+    public static final List<Multiblock> ALL = List.of(ORE_DRILL_RIG, HOODED_FORGE, SMELTERY, LARGE_ARC_FURNACE, LARGE_DIESEL);
 
     private Multiblocks() { }
 

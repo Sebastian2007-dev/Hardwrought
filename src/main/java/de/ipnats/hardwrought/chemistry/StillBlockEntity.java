@@ -63,6 +63,52 @@ public class StillBlockEntity extends BlockEntity implements WorldlyContainer, M
     private int progress;
     private boolean heated;
 
+    /**
+     * Crude oil piped in, up to one bucket: a full bucket of it is distilled as a bucket in the charge
+     * slot would be, when that slot is empty — with no bucket to give back.
+     */
+    private final net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage<net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant> oil =
+            new net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage<>() {
+                @Override
+                protected net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant getBlankVariant() {
+                    return net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.blank();
+                }
+
+                @Override
+                protected long getCapacity(net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant variant) {
+                    return net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET;
+                }
+
+                @Override
+                protected boolean canInsert(net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant variant) {
+                    return variant.isOf(de.ipnats.hardwrought.oil.ModFluids.CRUDE_OIL);
+                }
+
+                @Override
+                protected boolean canExtract(net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant variant) {
+                    return false;
+                }
+
+                @Override
+                protected void onFinalCommit() {
+                    setChanged();
+                }
+            };
+
+    /** Where a fluid pipe puts crude oil in. */
+    public net.fabricmc.fabric.api.transfer.v1.storage.Storage<net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant> oilInlet() {
+        return oil;
+    }
+
+    /** Whether the charge this batch is the bucket of piped-in oil rather than what lies in the charge slot. */
+    private boolean pipedCharge() {
+        return items.get(CHARGE).isEmpty() && oil.amount >= net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET;
+    }
+
+    private ItemStack charge() {
+        return pipedCharge() ? new ItemStack(de.ipnats.hardwrought.core.registry.ModItems.CRUDE_OIL_BUCKET) : items.get(CHARGE);
+    }
+
     private final ContainerData data = new ContainerData() {
         @Override
         public int get(int index) {
@@ -97,6 +143,9 @@ public class StillBlockEntity extends BlockEntity implements WorldlyContainer, M
         if (below.getBlock() instanceof AbstractFurnaceBlock || below.getBlock() instanceof CampfireBlock) {
             return below.getOptionalValue(BlockStateProperties.LIT).orElse(false);
         }
+        if (below.getBlock() instanceof de.ipnats.hardwrought.power.GasBurnerBlock) {
+            return below.getValue(de.ipnats.hardwrought.power.GasBurnerBlock.LIT);
+        }
         return below.getBlock() instanceof ForgeBlock && below.getValue(ForgeBlock.LIT);
     }
 
@@ -120,7 +169,7 @@ public class StillBlockEntity extends BlockEntity implements WorldlyContainer, M
     }
 
     private boolean canStart() {
-        ItemStack charge = items.get(CHARGE);
+        ItemStack charge = charge();
         if (!StillRecipes.accepts(charge)) return false;
         int bottles = StillRecipes.bottlesFor(charge);
         if (bottles > 0 && (!items.get(BOTTLES).is(Items.GLASS_BOTTLE) || items.get(BOTTLES).getCount() < bottles)) {
@@ -128,7 +177,7 @@ public class StillBlockEntity extends BlockEntity implements WorldlyContainer, M
         }
         if (!roomFor(StillRecipes.mostOf(charge))) return false;
         ItemStack returned = items.get(RETURNED);
-        return returned.isEmpty() || (returned.is(Items.BUCKET) && returned.getCount() < returned.getMaxStackSize())
+        return pipedCharge() || returned.isEmpty() || (returned.is(Items.BUCKET) && returned.getCount() < returned.getMaxStackSize())
                 || charge.is(de.ipnats.hardwrought.core.registry.ModItems.RAW_SULFUR);
     }
 
@@ -160,16 +209,22 @@ public class StillBlockEntity extends BlockEntity implements WorldlyContainer, M
     }
 
     private void finish(Level level, BlockPos pos) {
-        ItemStack charge = items.get(CHARGE);
+        boolean piped = pipedCharge();
+        ItemStack charge = charge();
         StillRecipes.Batch batch = StillRecipes.batch(charge, level.getRandom());
         if (batch == null) return;
-        charge.shrink(1);
+        if (piped) {
+            oil.amount -= net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET;
+            if (oil.amount <= 0) oil.variant = net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.blank();
+        } else {
+            charge.shrink(1);
+        }
         if (batch.bottles() > 0) items.get(BOTTLES).shrink(batch.bottles());
         List<ItemStack> outputs = new ArrayList<>();
         for (int i = 0; i < OUTPUTS; i++) outputs.add(items.get(FIRST_OUTPUT + i));
         for (ItemStack product : batch.products()) insert(outputs, product.copy());
         for (int i = 0; i < OUTPUTS; i++) items.set(FIRST_OUTPUT + i, outputs.get(i));
-        if (!batch.returned().isEmpty()) {
+        if (!batch.returned().isEmpty() && !piped) {
             ItemStack returned = items.get(RETURNED);
             if (returned.isEmpty()) items.set(RETURNED, batch.returned().copy());
             else returned.grow(1);
@@ -205,6 +260,9 @@ public class StillBlockEntity extends BlockEntity implements WorldlyContainer, M
         items.clear();
         ContainerHelper.loadAllItems(input, items);
         progress = input.getIntOr("progress", 0);
+        oil.amount = input.getLongOr("oil", 0);
+        oil.variant = oil.amount > 0 ? net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.of(de.ipnats.hardwrought.oil.ModFluids.CRUDE_OIL)
+                : net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.blank();
     }
 
     @Override
@@ -212,6 +270,7 @@ public class StillBlockEntity extends BlockEntity implements WorldlyContainer, M
         super.saveAdditional(output);
         ContainerHelper.saveAllItems(output, items);
         output.putInt("progress", progress);
+        if (oil.amount > 0) output.putLong("oil", oil.amount);
     }
 
     // ---------------------------------------------------------------- container

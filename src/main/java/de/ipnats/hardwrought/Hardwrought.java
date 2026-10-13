@@ -45,14 +45,21 @@ public class Hardwrought implements ModInitializer {
 		WaterStorage.initialize();
 		de.ipnats.hardwrought.water.WaterCurrent.initialize();
 		WaterQualityStorage.initialize();
+		de.ipnats.hardwrought.water.FrozenWater.initialize();
+		de.ipnats.hardwrought.environment.LightBurn.initialize();
+		de.ipnats.hardwrought.environment.GasIgnition.initialize();
+		de.ipnats.hardwrought.water.BucketMachinery.initialize();
 		de.ipnats.hardwrought.oil.ModFluids.initialize();
 		ModBlocks.initialize();
 		net.fabricmc.fabric.api.registry.FlammableBlockRegistry.getDefaultInstance().add(ModBlocks.CRUDE_OIL,
 				de.ipnats.hardwrought.oil.CrudeOilBlock.CATCH_CHANCE, de.ipnats.hardwrought.oil.CrudeOilBlock.BURN_CHANCE);
+		de.ipnats.hardwrought.oil.OilLakes.initialize();
 		de.ipnats.hardwrought.metallurgy.ModMetals.initialize();
 		de.ipnats.hardwrought.metallurgy.OrePowders.initialize();
 		de.ipnats.hardwrought.magic.VoidCrystal.initialize();
 		ModItems.initialize();
+		// After the items: the still's bottles become containers of the refinery's liquids.
+		de.ipnats.hardwrought.refining.RefineryFluids.initialize();
 		de.ipnats.hardwrought.metallurgy.Alloys.initialize();
 		de.ipnats.hardwrought.metallurgy.MetalBlocks.initialize();
 		de.ipnats.hardwrought.smeltery.SmelteryBlocks.initialize();
@@ -65,8 +72,20 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.smithing.NoDiamondGear.initialize();
 		de.ipnats.hardwrought.smithing.MetalStock.initialize();
 		de.ipnats.hardwrought.core.registry.ModBlockEntities.initialize();
+		de.ipnats.hardwrought.fluids.FluidBlocks.initialize();
+		de.ipnats.hardwrought.gasline.GasLines.initialize();
+		de.ipnats.hardwrought.refining.RefineryBlocks.initialize();
+		de.ipnats.hardwrought.refining.RefineryMenu.initialize();
+		de.ipnats.hardwrought.parts.Parts.initialize();
+		de.ipnats.hardwrought.knowledge.FluidIcons.initialize();
+		de.ipnats.hardwrought.power.PowerBlocks.initialize();
+		de.ipnats.hardwrought.materials.Materials.initialize();
+		de.ipnats.hardwrought.materials.MaterialBlocks.initialize();
+		de.ipnats.hardwrought.multiblock.BigMachines.initialize();
 		de.ipnats.hardwrought.building.BuildingPhysics.initialize();
 		de.ipnats.hardwrought.building.SharedCell.initialize();
+		de.ipnats.hardwrought.environment.SeasonState.initialize();
+		de.ipnats.hardwrought.environment.SeasonCommands.initialize();
 		de.ipnats.hardwrought.mobs.MobSystem.initialize();
 		de.ipnats.hardwrought.mobs.SleepDebt.initialize();
 		de.ipnats.hardwrought.smithing.Rust.initialize();

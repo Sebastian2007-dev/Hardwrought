@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "F": "minecraft:flint_and_steel",
+    "C": "hardwrought:fluid_pipe_iron",
+    "R": "minecraft:red_dye"
+  },
+  "pattern": [
+    " F ",
+    "PCR",
+    "PCP"
+  ],
+  "result": {
+    "id": "hardwrought:burning_stack"
+  }
+}

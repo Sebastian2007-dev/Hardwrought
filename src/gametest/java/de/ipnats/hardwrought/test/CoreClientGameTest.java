@@ -35,6 +35,9 @@ public final class CoreClientGameTest implements FabricClientGameTest {
             context.runOnClient(client -> SurvivalHud.setDetailsVisible(true));
             context.waitFor(client -> SurvivalHud.detailsVisible());
             context.takeScreenshot("hardwrought-milestone-1-survival-hud");
+            verifyOverloadedPortrait(context, world);
+            verifySeasonCommands(context, world);
+            verifySeasonTint(context, world);
             verifyNutrition(context, world);
             verifyAcceleratedSleep(context, world);
             verifyDaytimeBedSleep(context, world);
@@ -883,6 +886,224 @@ public final class CoreClientGameTest implements FabricClientGameTest {
     }
 
     /** The diet screen, and what a food brings as the compendium tells it once the food is known. */
+    /**
+     * The load gauge is the frame round the portrait, so the thing worth testing is that the frame
+     * actually changes colour when the pack gets too heavy. A player inside their allowance sees
+     * bone white; one hauling eight stacks of rubble home sees red, and that is the only warning
+     * the panel gives them.
+     */
+    private static void verifyOverloadedPortrait(ClientGameTestContext context,
+                                                 net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
+        int clear = de.ipnats.hardwrought.client.survival.VitalsPortrait.frameColor(1.0);
+        if (clear != de.ipnats.hardwrought.client.survival.VitalsPortrait.frameColor(0.2)) {
+            throw new AssertionError("Inside the allowance the frame must not change at all");
+        }
+        world.getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            for (int stack = 0; stack < 9; stack++) {
+                player.getInventory().add(new net.minecraft.world.item.ItemStack(
+                        net.minecraft.world.item.Items.COBBLESTONE, 64));
+            }
+        });
+        context.waitFor(client -> SurvivalHud.snapshot() != null
+                && SurvivalHud.snapshot().carriedKg() > SurvivalHud.snapshot().capacityKg() * 1.5, 200);
+        context.runOnClient(client -> {
+            var values = SurvivalHud.snapshot();
+            int over = de.ipnats.hardwrought.client.survival.VitalsPortrait.frameColor(
+                    values.carriedKg() / values.capacityKg());
+            if (over == clear) throw new AssertionError("An overloaded player must see the frame change");
+            if ((over >> 16 & 0xFF) <= (over & 0xFF)) {
+                throw new AssertionError("And what it changes to is red");
+            }
+        });
+        context.waitTicks(2);
+        context.takeScreenshot("hardwrought-milestone-1-overloaded-portrait");
+        world.getServer().runOnServer(server -> {
+            var inventory = server.getPlayerList().getPlayers().getFirst().getInventory();
+            for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+                if (inventory.getItem(slot).is(net.minecraft.world.item.Items.COBBLESTONE)) {
+                    inventory.setItem(slot, net.minecraft.world.item.ItemStack.EMPTY);
+                }
+            }
+        });
+        context.waitFor(client -> SurvivalHud.snapshot().carriedKg() < SurvivalHud.snapshot().capacityKg(), 200);
+    }
+
+    /**
+     * The two calendar commands, run the way a player runs them. {@code /day} only tells, so what
+     * is checked of it is that it is registered and goes through at all;
+     * {@code /hardwrought season} changes something, so what is checked of it is that the
+     * change actually arrives — on the server, where the calendar lives, and on the client, which
+     * is told separately and could silently disagree.
+     */
+    private static void verifySeasonCommands(ClientGameTestContext context,
+                                             net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
+        context.runOnClient(client -> client.player.connection.sendCommand("day"));
+        context.waitTicks(2);
+
+        de.ipnats.hardwrought.environment.Season before = world.getServer().computeOnServer(server ->
+                de.ipnats.hardwrought.environment.SeasonCycle.current(
+                        server.getLevel(net.minecraft.world.level.Level.OVERWORLD)));
+        de.ipnats.hardwrought.environment.Season target =
+                before == de.ipnats.hardwrought.environment.Season.WINTER
+                        ? de.ipnats.hardwrought.environment.Season.SUMMER
+                        : de.ipnats.hardwrought.environment.Season.WINTER;
+
+        long hourBefore = world.getServer().computeOnServer(server -> Math.floorMod(
+                server.getLevel(net.minecraft.world.level.Level.OVERWORLD).getOverworldClockTime(),
+                de.ipnats.hardwrought.environment.SeasonCycle.TICKS_PER_DAY));
+        setSeason(context, world, target, 4);
+        // A command typed on the client is a packet: the calendar moves whenever the server gets to
+        // it, and the shared season holder is the first place that shows. In single player both
+        // sides write that same holder, so this is a barrier rather than proof the packet arrived.
+        context.waitFor(client -> de.ipnats.hardwrought.environment.SeasonState.season() == target, 200);
+
+        world.getServer().runOnServer(server -> {
+            var overworld = server.getLevel(net.minecraft.world.level.Level.OVERWORLD);
+            long clock = overworld.getOverworldClockTime();
+            if (de.ipnats.hardwrought.environment.SeasonCycle.at(clock) != target) {
+                throw new AssertionError("The debug command must actually move the calendar");
+            }
+            if (de.ipnats.hardwrought.environment.SeasonCycle.dayInSeason(clock) != 4) {
+                throw new AssertionError("And land on the day it was given");
+            }
+            if (Math.floorMod(clock, de.ipnats.hardwrought.environment.SeasonCycle.TICKS_PER_DAY) != hourBefore) {
+                throw new AssertionError("Without changing the hour of the day it was run at");
+            }
+        });
+
+        // A season nobody can see is not a season. One picture of each, at the same hour and from
+        // the same spot, so the four can be put side by side and judged. The camera is pointed at
+        // the ground first: a picture of the sky says nothing about what a season did to the world.
+        // Noon and clear, or the pictures compare the weather rather than the season.
+        world.getServer().runCommand("time set noon");
+        world.getServer().runCommand("weather clear");
+        world.getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            player.teleportTo(player.level(), player.getX(), player.getY() + 12, player.getZ(),
+                    java.util.Set.of(), 135.0f, 55.0f, true);
+        });
+        context.waitTicks(40);
+        int repaintsBefore = context.computeOnClient(client ->
+                de.ipnats.hardwrought.client.environment.SeasonClient.repaints());
+        for (de.ipnats.hardwrought.environment.Season season
+                : de.ipnats.hardwrought.environment.Season.values()) {
+            setSeason(context, world, season, 6);
+            // A full rebuild of the world's geometry is not instant; the shutter has to wait for it
+            // or the picture shows the season before this one.
+            context.waitTicks(100);
+            context.takeScreenshot("hardwrought-season-" + season.serializedName());
+        }
+        // A colour that never reaches the chunk meshes is a colour nobody sees. This is the check
+        // that would have caught the two repaints that silently did nothing.
+        int repaintsAfter = context.computeOnClient(client ->
+                de.ipnats.hardwrought.client.environment.SeasonClient.repaints());
+        if (repaintsAfter <= repaintsBefore) {
+            throw new AssertionError("A turn of the year has to repaint the world, and did not: "
+                    + repaintsBefore + " then " + repaintsAfter);
+        }
+    }
+
+    /**
+     * The seasonal tint, checked where it actually broke.
+     *
+     * <p>Biome tint colours are ARGB, and the first version of the wash rebuilt the colour from its
+     * three channels and dropped the top byte. Alpha zero is invisible, so every leaf and every
+     * surface of water in the world stopped being drawn — while grass, which is opaque anyway, went
+     * on looking fine and hid it. Hence this: the alpha of what goes in is the alpha of what comes
+     * out, in every season, whatever the rest of the arithmetic does.
+     */
+    private static void verifySeasonTint(ClientGameTestContext context,
+                                         net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
+        context.runOnClient(client -> {
+            int opaqueGreen = 0xFF4C9A2A;
+            for (de.ipnats.hardwrought.environment.Season season
+                    : de.ipnats.hardwrought.environment.Season.values()) {
+                de.ipnats.hardwrought.environment.SeasonState.adopt(season, 0, 1, 0);
+                for (int tinted : new int[]{
+                        de.ipnats.hardwrought.client.environment.SeasonColors.grass(opaqueGreen),
+                        de.ipnats.hardwrought.client.environment.SeasonColors.foliage(opaqueGreen),
+                        de.ipnats.hardwrought.client.environment.SeasonColors.water(opaqueGreen),
+                        de.ipnats.hardwrought.client.environment.SeasonColors.dryFoliage(opaqueGreen)}) {
+                    if ((tinted >>> 24) != 0xFF) {
+                        throw new AssertionError("The season tint must never touch alpha, or leaves and"
+                                + " water stop being drawn: " + season.serializedName()
+                                + " gave alpha " + (tinted >>> 24));
+                    }
+                }
+            }
+
+            // Winter has to actually take the colour out, or none of this was worth doing.
+            de.ipnats.hardwrought.environment.SeasonState.adopt(
+                    de.ipnats.hardwrought.environment.Season.WINTER, 0, 1, 0);
+            int winter = de.ipnats.hardwrought.client.environment.SeasonColors.grass(opaqueGreen);
+            de.ipnats.hardwrought.environment.SeasonState.adopt(
+                    de.ipnats.hardwrought.environment.Season.SPRING, 0, 1, 0);
+            int spring = de.ipnats.hardwrought.client.environment.SeasonColors.grass(opaqueGreen);
+            if (spread(winter) >= spread(spring)) {
+                throw new AssertionError("Winter grass must be less colourful than spring grass");
+            }
+
+            // And the turn between two seasons has to be a ramp rather than a step.
+            de.ipnats.hardwrought.environment.SeasonState.adopt(
+                    de.ipnats.hardwrought.environment.Season.AUTUMN, 0, 1, 0);
+            int beforeTurn = de.ipnats.hardwrought.client.environment.SeasonColors.grass(opaqueGreen);
+            de.ipnats.hardwrought.environment.SeasonState.adopt(
+                    de.ipnats.hardwrought.environment.Season.AUTUMN, 0, 12, 0.5f);
+            int halfTurned = de.ipnats.hardwrought.client.environment.SeasonColors.grass(opaqueGreen);
+            de.ipnats.hardwrought.environment.SeasonState.adopt(
+                    de.ipnats.hardwrought.environment.Season.AUTUMN, 0, 12, 1.0f);
+            int turned = de.ipnats.hardwrought.client.environment.SeasonColors.grass(opaqueGreen);
+            if (halfTurned == beforeTurn || halfTurned == turned) {
+                throw new AssertionError("Half way through the turn the world must look half turned");
+            }
+            if (spread(halfTurned) >= spread(beforeTurn) || spread(halfTurned) <= spread(turned)) {
+                throw new AssertionError("And the colour must drain steadily rather than jump");
+            }
+        });
+
+        // The wash arithmetic being right is worth nothing if it never reaches the world. This is
+        // the hook the chunk builder actually asks for its colours: BlockTintSources calls
+        // BiomeColors.getAverageGrassColor, so if the season does not change the answer here, it
+        // cannot change the ground however often the chunks are rebuilt.
+        context.runOnClient(client -> {
+            net.minecraft.core.BlockPos pos = client.player.blockPosition();
+            de.ipnats.hardwrought.environment.SeasonState.adopt(
+                    de.ipnats.hardwrought.environment.Season.SPRING, 0, 1, 0);
+            int springGrass = net.minecraft.client.renderer.BiomeColors.getAverageGrassColor(client.level, pos);
+            int springLeaves = net.minecraft.client.renderer.BiomeColors.getAverageFoliageColor(client.level, pos);
+            de.ipnats.hardwrought.environment.SeasonState.adopt(
+                    de.ipnats.hardwrought.environment.Season.WINTER, 0, 1, 0);
+            int winterGrass = net.minecraft.client.renderer.BiomeColors.getAverageGrassColor(client.level, pos);
+            int winterLeaves = net.minecraft.client.renderer.BiomeColors.getAverageFoliageColor(client.level, pos);
+            if (springGrass == winterGrass || springLeaves == winterLeaves) {
+                throw new AssertionError("The season must reach the colour the world is built from: grass "
+                        + Integer.toHexString(springGrass) + " vs " + Integer.toHexString(winterGrass)
+                        + ", leaves " + Integer.toHexString(springLeaves) + " vs "
+                        + Integer.toHexString(winterLeaves));
+            }
+            if (spread(winterGrass) >= spread(springGrass)) {
+                throw new AssertionError("And winter must be the duller of the two: "
+                        + Integer.toHexString(springGrass) + " vs " + Integer.toHexString(winterGrass));
+            }
+        });
+    }
+
+    /** How far apart a colour's channels are: a rough stand-in for how colourful it is. */
+    private static int spread(int color) {
+        int red = color >> 16 & 0xFF, green = color >> 8 & 0xFF, blue = color & 0xFF;
+        return Math.max(red, Math.max(green, blue)) - Math.min(red, Math.min(green, blue));
+    }
+
+    /** Sets the calendar and waits until both sides agree it has moved. */
+    private static void setSeason(ClientGameTestContext context,
+                                  net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world,
+                                  de.ipnats.hardwrought.environment.Season season, int day) {
+        context.runOnClient(client -> client.player.connection.sendCommand(
+                "hardwrought season " + season.serializedName() + " " + day));
+        context.waitFor(client -> de.ipnats.hardwrought.environment.SeasonState.season() == season, 200);
+    }
+
     private static void verifyNutrition(ClientGameTestContext context,
                                         net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
         world.getServer().runOnServer(server -> {

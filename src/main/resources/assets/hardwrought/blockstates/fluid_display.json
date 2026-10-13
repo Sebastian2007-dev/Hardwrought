@@ -1,0 +1,37 @@
+{
+  "variants": {
+    "fluid=water": {
+      "model": "hardwrought:block/fluid_display/water"
+    },
+    "fluid=lava": {
+      "model": "hardwrought:block/fluid_display/lava"
+    },
+    "fluid=crude_oil": {
+      "model": "hardwrought:block/fluid_display/crude_oil"
+    },
+    "fluid=bitumen": {
+      "model": "hardwrought:block/fluid_display/bitumen"
+    },
+    "fluid=heavy_oil": {
+      "model": "hardwrought:block/fluid_display/heavy_oil"
+    },
+    "fluid=diesel": {
+      "model": "hardwrought:block/fluid_display/diesel"
+    },
+    "fluid=kerosene": {
+      "model": "hardwrought:block/fluid_display/kerosene"
+    },
+    "fluid=naphtha": {
+      "model": "hardwrought:block/fluid_display/naphtha"
+    },
+    "fluid=gasoline": {
+      "model": "hardwrought:block/fluid_display/gasoline"
+    },
+    "fluid=light_fraction": {
+      "model": "hardwrought:block/fluid_display/light_fraction"
+    },
+    "fluid=fuel_fraction": {
+      "model": "hardwrought:block/fluid_display/fuel_fraction"
+    }
+  }
+}

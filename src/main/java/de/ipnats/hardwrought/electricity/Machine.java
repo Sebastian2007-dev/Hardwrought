@@ -43,6 +43,10 @@ public enum Machine {
     SAWMILL("sawmill", 40.0, 60, SoundEvents.WOOD_HIT, ParticleTypes.CRIT) {
         @Override
         public ItemStack result(ServerLevel level, ItemStack input) {
+            // A silicon blank is sawn into wafers as a log is into boards.
+            if (input.is(de.ipnats.hardwrought.materials.Materials.RAW_SILICON)) {
+                return new ItemStack(de.ipnats.hardwrought.materials.Materials.SILICON_WAFER, 4);
+            }
             if (!input.is(ItemTags.LOGS)) return ItemStack.EMPTY;
             CraftingInput alone = CraftingInput.of(1, 1, List.of(input.copyWithCount(1)));
             ItemStack boards = level.recipeAccess().getRecipeFor(RecipeType.CRAFTING, alone, level)
@@ -56,6 +60,10 @@ public enum Machine {
     PRESS("plate_press", 30.0, 80, SoundEvents.ANVIL_LAND, ParticleTypes.CRIT) {
         @Override
         public ItemStack result(ServerLevel level, ItemStack input) {
+            // Plastic pellets are pressed into sheet as an ingot is rolled into plate.
+            if (input.is(de.ipnats.hardwrought.materials.Materials.PLASTIC_PELLETS)) {
+                return new ItemStack(de.ipnats.hardwrought.materials.Materials.PLASTIC_SHEET);
+            }
             for (MetalStock.StockMetal metal : MetalStock.metals()) {
                 if (input.is(metal.ingot().get())) return new ItemStack(MetalStock.plate(metal.material()));
             }
@@ -76,6 +84,58 @@ public enum Machine {
         public ItemStack result(ServerLevel level, ItemStack input) {
             return input.is(MetalStock.plate("bronze"))
                     ? new ItemStack(de.ipnats.hardwrought.storage.StorageBlocks.TUBE_SECTION) : ItemStack.EMPTY;
+        }
+    },
+
+    // The faster marks of each, built on the one before with circuits and seals: twice as fast and then
+    // four times, taking more current for it; the third crusher gets two powders out of each ore.
+    CRUSHER_MK2("basic_crusher_mk2", 30.0, 20, SoundEvents.GRINDSTONE_USE, ParticleTypes.WHITE_ASH) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return CRUSHER.result(level, input);
+        }
+    },
+    CRUSHER_MK3("basic_crusher_mk3", 20.0, 10, SoundEvents.GRINDSTONE_USE, ParticleTypes.WHITE_ASH) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            ItemStack powder = CRUSHER.result(level, input);
+            return powder.isEmpty() ? powder : powder.copyWithCount(powder.getCount() * 2);
+        }
+    },
+    FURNACE_MK2("electric_furnace_mk2", 22.0, 50, SoundEvents.FURNACE_FIRE_CRACKLE, ParticleTypes.SMOKE) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return FURNACE.result(level, input);
+        }
+    },
+    FURNACE_MK3("electric_furnace_mk3", 15.0, 25, SoundEvents.FURNACE_FIRE_CRACKLE, ParticleTypes.SMOKE) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return FURNACE.result(level, input);
+        }
+    },
+    SAWMILL_MK2("sawmill_mk2", 30.0, 30, SoundEvents.WOOD_HIT, ParticleTypes.CRIT) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return SAWMILL.result(level, input);
+        }
+    },
+    SAWMILL_MK3("sawmill_mk3", 20.0, 15, SoundEvents.WOOD_HIT, ParticleTypes.CRIT) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return SAWMILL.result(level, input);
+        }
+    },
+    PRESS_MK2("plate_press_mk2", 22.0, 40, SoundEvents.ANVIL_LAND, ParticleTypes.CRIT) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return PRESS.result(level, input);
+        }
+    },
+    PRESS_MK3("plate_press_mk3", 15.0, 20, SoundEvents.ANVIL_LAND, ParticleTypes.CRIT) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return PRESS.result(level, input);
         }
     };
 

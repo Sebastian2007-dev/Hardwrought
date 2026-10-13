@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "S": "hardwrought:shaft",
+    "B": "minecraft:piston"
+  },
+  "pattern": [
+    " P ",
+    "SBS",
+    " P "
+  ],
+  "result": {
+    "id": "hardwrought:mechanical_pump"
+  }
+}

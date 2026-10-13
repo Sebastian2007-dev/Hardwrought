@@ -1,0 +1,328 @@
+{
+  "variants": {
+    "axis=x,creaking_heart_state=uprooted,wood=oak": {
+      "model": "hardwrought:block/creaking_heart/oak_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=uprooted,wood=oak": {
+      "model": "hardwrought:block/creaking_heart/oak"
+    },
+    "axis=z,creaking_heart_state=uprooted,wood=oak": {
+      "model": "hardwrought:block/creaking_heart/oak_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=awake,wood=oak": {
+      "model": "hardwrought:block/creaking_heart/oak_awake_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=awake,wood=oak": {
+      "model": "hardwrought:block/creaking_heart/oak_awake"
+    },
+    "axis=z,creaking_heart_state=awake,wood=oak": {
+      "model": "hardwrought:block/creaking_heart/oak_awake_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=dormant,wood=oak": {
+      "model": "hardwrought:block/creaking_heart/oak_dormant_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=dormant,wood=oak": {
+      "model": "hardwrought:block/creaking_heart/oak_dormant"
+    },
+    "axis=z,creaking_heart_state=dormant,wood=oak": {
+      "model": "hardwrought:block/creaking_heart/oak_dormant_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=uprooted,wood=spruce": {
+      "model": "hardwrought:block/creaking_heart/spruce_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=uprooted,wood=spruce": {
+      "model": "hardwrought:block/creaking_heart/spruce"
+    },
+    "axis=z,creaking_heart_state=uprooted,wood=spruce": {
+      "model": "hardwrought:block/creaking_heart/spruce_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=awake,wood=spruce": {
+      "model": "hardwrought:block/creaking_heart/spruce_awake_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=awake,wood=spruce": {
+      "model": "hardwrought:block/creaking_heart/spruce_awake"
+    },
+    "axis=z,creaking_heart_state=awake,wood=spruce": {
+      "model": "hardwrought:block/creaking_heart/spruce_awake_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=dormant,wood=spruce": {
+      "model": "hardwrought:block/creaking_heart/spruce_dormant_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=dormant,wood=spruce": {
+      "model": "hardwrought:block/creaking_heart/spruce_dormant"
+    },
+    "axis=z,creaking_heart_state=dormant,wood=spruce": {
+      "model": "hardwrought:block/creaking_heart/spruce_dormant_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=uprooted,wood=birch": {
+      "model": "hardwrought:block/creaking_heart/birch_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=uprooted,wood=birch": {
+      "model": "hardwrought:block/creaking_heart/birch"
+    },
+    "axis=z,creaking_heart_state=uprooted,wood=birch": {
+      "model": "hardwrought:block/creaking_heart/birch_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=awake,wood=birch": {
+      "model": "hardwrought:block/creaking_heart/birch_awake_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=awake,wood=birch": {
+      "model": "hardwrought:block/creaking_heart/birch_awake"
+    },
+    "axis=z,creaking_heart_state=awake,wood=birch": {
+      "model": "hardwrought:block/creaking_heart/birch_awake_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=dormant,wood=birch": {
+      "model": "hardwrought:block/creaking_heart/birch_dormant_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=dormant,wood=birch": {
+      "model": "hardwrought:block/creaking_heart/birch_dormant"
+    },
+    "axis=z,creaking_heart_state=dormant,wood=birch": {
+      "model": "hardwrought:block/creaking_heart/birch_dormant_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=uprooted,wood=jungle": {
+      "model": "hardwrought:block/creaking_heart/jungle_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=uprooted,wood=jungle": {
+      "model": "hardwrought:block/creaking_heart/jungle"
+    },
+    "axis=z,creaking_heart_state=uprooted,wood=jungle": {
+      "model": "hardwrought:block/creaking_heart/jungle_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=awake,wood=jungle": {
+      "model": "hardwrought:block/creaking_heart/jungle_awake_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=awake,wood=jungle": {
+      "model": "hardwrought:block/creaking_heart/jungle_awake"
+    },
+    "axis=z,creaking_heart_state=awake,wood=jungle": {
+      "model": "hardwrought:block/creaking_heart/jungle_awake_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=dormant,wood=jungle": {
+      "model": "hardwrought:block/creaking_heart/jungle_dormant_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=dormant,wood=jungle": {
+      "model": "hardwrought:block/creaking_heart/jungle_dormant"
+    },
+    "axis=z,creaking_heart_state=dormant,wood=jungle": {
+      "model": "hardwrought:block/creaking_heart/jungle_dormant_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=uprooted,wood=acacia": {
+      "model": "hardwrought:block/creaking_heart/acacia_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=uprooted,wood=acacia": {
+      "model": "hardwrought:block/creaking_heart/acacia"
+    },
+    "axis=z,creaking_heart_state=uprooted,wood=acacia": {
+      "model": "hardwrought:block/creaking_heart/acacia_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=awake,wood=acacia": {
+      "model": "hardwrought:block/creaking_heart/acacia_awake_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=awake,wood=acacia": {
+      "model": "hardwrought:block/creaking_heart/acacia_awake"
+    },
+    "axis=z,creaking_heart_state=awake,wood=acacia": {
+      "model": "hardwrought:block/creaking_heart/acacia_awake_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=dormant,wood=acacia": {
+      "model": "hardwrought:block/creaking_heart/acacia_dormant_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=dormant,wood=acacia": {
+      "model": "hardwrought:block/creaking_heart/acacia_dormant"
+    },
+    "axis=z,creaking_heart_state=dormant,wood=acacia": {
+      "model": "hardwrought:block/creaking_heart/acacia_dormant_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=uprooted,wood=dark_oak": {
+      "model": "hardwrought:block/creaking_heart/dark_oak_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=uprooted,wood=dark_oak": {
+      "model": "hardwrought:block/creaking_heart/dark_oak"
+    },
+    "axis=z,creaking_heart_state=uprooted,wood=dark_oak": {
+      "model": "hardwrought:block/creaking_heart/dark_oak_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=awake,wood=dark_oak": {
+      "model": "hardwrought:block/creaking_heart/dark_oak_awake_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=awake,wood=dark_oak": {
+      "model": "hardwrought:block/creaking_heart/dark_oak_awake"
+    },
+    "axis=z,creaking_heart_state=awake,wood=dark_oak": {
+      "model": "hardwrought:block/creaking_heart/dark_oak_awake_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=dormant,wood=dark_oak": {
+      "model": "hardwrought:block/creaking_heart/dark_oak_dormant_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=dormant,wood=dark_oak": {
+      "model": "hardwrought:block/creaking_heart/dark_oak_dormant"
+    },
+    "axis=z,creaking_heart_state=dormant,wood=dark_oak": {
+      "model": "hardwrought:block/creaking_heart/dark_oak_dormant_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=uprooted,wood=mangrove": {
+      "model": "hardwrought:block/creaking_heart/mangrove_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=uprooted,wood=mangrove": {
+      "model": "hardwrought:block/creaking_heart/mangrove"
+    },
+    "axis=z,creaking_heart_state=uprooted,wood=mangrove": {
+      "model": "hardwrought:block/creaking_heart/mangrove_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=awake,wood=mangrove": {
+      "model": "hardwrought:block/creaking_heart/mangrove_awake_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=awake,wood=mangrove": {
+      "model": "hardwrought:block/creaking_heart/mangrove_awake"
+    },
+    "axis=z,creaking_heart_state=awake,wood=mangrove": {
+      "model": "hardwrought:block/creaking_heart/mangrove_awake_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=dormant,wood=mangrove": {
+      "model": "hardwrought:block/creaking_heart/mangrove_dormant_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=dormant,wood=mangrove": {
+      "model": "hardwrought:block/creaking_heart/mangrove_dormant"
+    },
+    "axis=z,creaking_heart_state=dormant,wood=mangrove": {
+      "model": "hardwrought:block/creaking_heart/mangrove_dormant_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=uprooted,wood=cherry": {
+      "model": "hardwrought:block/creaking_heart/cherry_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=uprooted,wood=cherry": {
+      "model": "hardwrought:block/creaking_heart/cherry"
+    },
+    "axis=z,creaking_heart_state=uprooted,wood=cherry": {
+      "model": "hardwrought:block/creaking_heart/cherry_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=awake,wood=cherry": {
+      "model": "hardwrought:block/creaking_heart/cherry_awake_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=awake,wood=cherry": {
+      "model": "hardwrought:block/creaking_heart/cherry_awake"
+    },
+    "axis=z,creaking_heart_state=awake,wood=cherry": {
+      "model": "hardwrought:block/creaking_heart/cherry_awake_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=dormant,wood=cherry": {
+      "model": "hardwrought:block/creaking_heart/cherry_dormant_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=dormant,wood=cherry": {
+      "model": "hardwrought:block/creaking_heart/cherry_dormant"
+    },
+    "axis=z,creaking_heart_state=dormant,wood=cherry": {
+      "model": "hardwrought:block/creaking_heart/cherry_dormant_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=uprooted,wood=poplar": {
+      "model": "hardwrought:block/creaking_heart/poplar_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=uprooted,wood=poplar": {
+      "model": "hardwrought:block/creaking_heart/poplar"
+    },
+    "axis=z,creaking_heart_state=uprooted,wood=poplar": {
+      "model": "hardwrought:block/creaking_heart/poplar_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=awake,wood=poplar": {
+      "model": "hardwrought:block/creaking_heart/poplar_awake_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=awake,wood=poplar": {
+      "model": "hardwrought:block/creaking_heart/poplar_awake"
+    },
+    "axis=z,creaking_heart_state=awake,wood=poplar": {
+      "model": "hardwrought:block/creaking_heart/poplar_awake_horizontal",
+      "x": 90
+    },
+    "axis=x,creaking_heart_state=dormant,wood=poplar": {
+      "model": "hardwrought:block/creaking_heart/poplar_dormant_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,creaking_heart_state=dormant,wood=poplar": {
+      "model": "hardwrought:block/creaking_heart/poplar_dormant"
+    },
+    "axis=z,creaking_heart_state=dormant,wood=poplar": {
+      "model": "hardwrought:block/creaking_heart/poplar_dormant_horizontal",
+      "x": 90
+    }
+  }
+}

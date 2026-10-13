@@ -1,0 +1,9 @@
+{
+  "parent": "hardwrought:block/item_pipe/arm_up",
+  "textures": {
+    "pipe": "minecraft:block/quartz_block_top",
+    "trim": "minecraft:block/orange_concrete",
+    "end": "minecraft:block/black_concrete",
+    "particle": "minecraft:block/quartz_block_top"
+  }
+}

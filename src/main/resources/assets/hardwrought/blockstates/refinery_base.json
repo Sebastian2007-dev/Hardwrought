@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "running=false": {
+      "model": "hardwrought:block/refinery_base"
+    },
+    "running=true": {
+      "model": "hardwrought:block/refinery_base"
+    }
+  }
+}

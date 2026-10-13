@@ -50,6 +50,30 @@ public final class WaterDraw {
     }
 
     /** Which blocks give how much, or null when the water in reach falls short. */
+    /**
+     * Take as much as there is, up to what was asked for, and say how much that was.
+     *
+     * <p>{@link #draw} is all or nothing, which is right for a thing that must not half happen — a
+     * waterskin that fills halfway is a bug. A bucket is the other case: dipping it in a puddle
+     * should get a puddle's worth rather than refuse because the puddle is not a full bucket.
+     *
+     * @return the millibuckets actually taken, which may be zero
+     */
+    public static int drawUpTo(ServerLevel level, BlockPos origin, int wanted) {
+        if (wanted <= 0) return 0;
+        int taken = 0;
+        for (BlockPos pos : reachable(level, origin)) {
+            int present = WaterStorage.amount(level, pos);
+            int take = Math.min(present, wanted - taken);
+            if (take <= 0) continue;
+            WaterStorage.setAmount(level, pos, present - take);
+            WaterFlow.disturb(level, pos);
+            taken += take;
+            if (taken >= wanted) break;
+        }
+        return taken;
+    }
+
     private static List<Share> plan(ServerLevel level, BlockPos origin, int wanted) {
         List<Share> plan = new ArrayList<>();
         int still = wanted;

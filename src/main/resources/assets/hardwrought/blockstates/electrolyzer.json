@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "running=false": {
+      "model": "hardwrought:block/electrolyzer"
+    },
+    "running=true": {
+      "model": "hardwrought:block/electrolyzer"
+    }
+  }
+}

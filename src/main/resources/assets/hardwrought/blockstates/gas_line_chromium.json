@@ -1,0 +1,57 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "hardwrought:block/gas_line_chromium/core"
+      }
+    },
+    {
+      "when": {
+        "north": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_chromium/arm_north"
+      }
+    },
+    {
+      "when": {
+        "south": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_chromium/arm_south"
+      }
+    },
+    {
+      "when": {
+        "west": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_chromium/arm_west"
+      }
+    },
+    {
+      "when": {
+        "east": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_chromium/arm_east"
+      }
+    },
+    {
+      "when": {
+        "up": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_chromium/arm_up"
+      }
+    },
+    {
+      "when": {
+        "down": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_chromium/arm_down"
+      }
+    }
+  ]
+}
