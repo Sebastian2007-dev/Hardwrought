@@ -38,8 +38,9 @@ PARTS = {
 for _metal in ("steel", "stainless_steel", "titanium", "tungsten_steel"):
     PARTS[_metal] = ["pickaxe_head", "axe_head", "shovel_head", "hoe_head", "sword_blade", "dagger_blade",
                      "greatsword_blade", "halberd_head"]
-# The steel hammer's head (tools/steel_hammer_assets.py).
-PARTS["steel"].append("hammer_head")
+# The steel hammer's head (tools/steel_hammer_assets.py), and those above it (tools/tier_hammer_assets.py).
+for _metal in ("steel", "stainless_steel", "titanium", "tungsten_steel"):
+    PARTS[_metal].append("hammer_head")
 # Forged armor parts (tools/armor_parts_assets.py).
 for _metal in ("iron", "gold", "copper", "steel", "stainless_steel", "titanium", "tungsten_steel"):
     PARTS[_metal] += ["helmet_shell", "cuirass", "greaves", "sabatons"]

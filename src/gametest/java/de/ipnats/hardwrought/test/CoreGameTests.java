@@ -232,6 +232,9 @@ public final class CoreGameTests {
                 {"stamina":-1,"hydration":100,"calories":2000,"protein":70,"carbohydrates":260,
                  "fat":70,"micronutrients":100,"fatigue":15,"body_temperature":37,"wetness":0}
                 """)).error().isPresent(), "Corrupt survival values are rejected during load");
+        helper.assertTrue(CarryWeight.perItem(new ItemStack(Items.WHEAT_SEEDS)) < CarryWeight.perItem(new ItemStack(Items.APPLE))
+                        && CarryWeight.perItem(new ItemStack(Items.TORCH)) < CarryWeight.perItem(new ItemStack(Items.STONE)),
+                "Seeds and a torch are set down as blocks but are not carried as blocks");
         helper.assertTrue(CarryWeight.perItem(new ItemStack(Items.STONE))
                         > CarryWeight.perItem(new ItemStack(Items.APPLE)),
                 "Blocks weigh more than ordinary food items");

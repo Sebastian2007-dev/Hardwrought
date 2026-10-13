@@ -1,0 +1,110 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "pipe": "hardwrought:block/hardwrought/storage_tube",
+    "trim": "hardwrought:block/hardwrought/storage_tube_trim",
+    "particle": "hardwrought:block/hardwrought/storage_tube"
+  },
+  "elements": [
+    {
+      "from": [
+        5,
+        11,
+        5
+      ],
+      "to": [
+        11,
+        16,
+        11
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            5,
+            0,
+            11,
+            5
+          ],
+          "texture": "#pipe"
+        },
+        "south": {
+          "uv": [
+            5,
+            0,
+            11,
+            5
+          ],
+          "texture": "#pipe"
+        },
+        "west": {
+          "uv": [
+            5,
+            0,
+            11,
+            5
+          ],
+          "texture": "#pipe"
+        },
+        "east": {
+          "uv": [
+            5,
+            0,
+            11,
+            5
+          ],
+          "texture": "#pipe"
+        }
+      }
+    },
+    {
+      "from": [
+        4.5,
+        14,
+        4.5
+      ],
+      "to": [
+        11.5,
+        16,
+        11.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4.5,
+            0,
+            11.5,
+            2
+          ],
+          "texture": "#trim"
+        },
+        "south": {
+          "uv": [
+            4.5,
+            0,
+            11.5,
+            2
+          ],
+          "texture": "#trim"
+        },
+        "west": {
+          "uv": [
+            4.5,
+            0,
+            11.5,
+            2
+          ],
+          "texture": "#trim"
+        },
+        "east": {
+          "uv": [
+            4.5,
+            0,
+            11.5,
+            2
+          ],
+          "texture": "#trim"
+        }
+      }
+    }
+  ]
+}

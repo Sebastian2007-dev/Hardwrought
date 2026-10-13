@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "T": "hardwrought:tube_section",
+    "L": "minecraft:leather"
+  },
+  "pattern": [
+    "TTT",
+    "L L",
+    "TTT"
+  ],
+  "result": {
+    "id": "hardwrought:storage_tube",
+    "count": 6
+  }
+}

@@ -64,6 +64,114 @@ public final class KnowledgeGameTests {
     }
 
     @GameTest
+    public void lookingAtAThingTellsOnlyWhatIsKnown(GameTestHelper helper) {
+        KnowledgeSystem knowledge = CoreLifecycle.require(helper.getLevel().getServer()).knowledge();
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        knowledge.forget(player.getUUID());
+        Identifier chicken = BuiltInRegistries.ITEM.getKey(Items.CHICKEN);
+        var item = new de.ipnats.hardwrought.core.networking.LookPayloads.Request(false, chicken);
+        var creature = new de.ipnats.hardwrought.core.networking.LookPayloads.Request(true, chicken);
+
+        helper.assertTrue(knowledge.look(player, item).level() == KnowledgeLevel.UNKNOWN.ordinal()
+                        && knowledge.look(player, creature).level() == KnowledgeLevel.UNKNOWN.ordinal(),
+                "Nothing looked at for the first time has a name");
+        helper.assertTrue(knowledge.meet(player, net.minecraft.world.entity.EntityTypes.CHICKEN)
+                        && !knowledge.meet(player, net.minecraft.world.entity.EntityTypes.CHICKEN),
+                "A fight makes a creature's name real, once");
+        helper.assertTrue(knowledge.look(player, creature).level() == KnowledgeLevel.DISCOVERED.ordinal(),
+                "A creature fought is named and no more");
+        helper.assertTrue(knowledge.look(player, item).level() == KnowledgeLevel.UNKNOWN.ordinal(),
+                "Knowing the bird is not knowing the meat that shares its name");
+        helper.assertTrue(knowledge.slay(player, net.minecraft.world.entity.EntityTypes.CHICKEN),
+                "Killing it is news again");
+        helper.assertTrue(knowledge.look(player, creature).level() == KnowledgeLevel.STUDIED.ordinal(),
+                "A creature killed is studied");
+        knowledge.forget(player.getUUID());
+        helper.succeed();
+    }
+
+    @GameTest
+    public void lookingInsideAChestCountsWhatIsThere(GameTestHelper helper) {
+        KnowledgeSystem knowledge = CoreLifecycle.require(helper.getLevel().getServer()).knowledge();
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        knowledge.forget(player.getUUID());
+        net.minecraft.core.BlockPos pos = helper.absolutePos(new net.minecraft.core.BlockPos(1, 1, 1));
+        helper.getLevel().setBlockAndUpdate(pos, net.minecraft.world.level.block.Blocks.CHEST.defaultBlockState());
+        player.setPos(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5);
+        var chest = (net.minecraft.world.level.block.entity.ChestBlockEntity) helper.getLevel().getBlockEntity(pos);
+        chest.setItem(0, new ItemStack(Items.IRON_INGOT, 40));
+        chest.setItem(5, new ItemStack(Items.IRON_INGOT, 24));
+        chest.setItem(9, new ItemStack(Items.COAL));
+
+        helper.assertTrue(de.ipnats.hardwrought.knowledge.LookInside.of(player, knowledge.knowledge(player), pos)
+                        .stacks().isEmpty(),
+                "A container that is still question marks shows nothing of its insides");
+        knowledge.discover(player, Items.CHEST);
+        knowledge.discover(player, Items.COAL);
+        var inside = de.ipnats.hardwrought.knowledge.LookInside.of(player, knowledge.knowledge(player), pos);
+        helper.assertTrue(inside.stacks().size() == 2 && inside.more() == 0 && inside.progress() < 0,
+                "Two heaps of the same thing are one kind: " + inside.stacks().size());
+        helper.assertTrue(inside.stacks().get(0).count() == 64
+                        && inside.stacks().get(0).level() == KnowledgeLevel.UNKNOWN.ordinal(),
+                "Forty and twenty-four are sixty-four, of something this player has never held");
+        helper.assertTrue(inside.stacks().get(1).count() == 1
+                        && inside.stacks().get(1).level() == KnowledgeLevel.DISCOVERED.ordinal(),
+                "What the player has held is told as itself");
+
+        player.setPos(pos.getX() + 40.5, pos.getY() + 1.0, pos.getZ() + 0.5);
+        helper.assertTrue(de.ipnats.hardwrought.knowledge.LookInside.of(player, knowledge.knowledge(player), pos)
+                        .stacks().isEmpty(),
+                "Nobody reads a chest from forty blocks off");
+        player.setPos(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5);
+
+        chest.setLootTable(net.minecraft.world.level.storage.loot.BuiltInLootTables.SIMPLE_DUNGEON);
+        helper.assertTrue(de.ipnats.hardwrought.knowledge.LookInside.of(player, knowledge.knowledge(player), pos)
+                        .stacks().isEmpty() && chest.getLootTable() != null,
+                "Looking at a chest must not be what rolls its loot");
+        chest.setLootTable(null);
+        chest.clearContent();
+        knowledge.forget(player.getUUID());
+        helper.succeed();
+    }
+
+    @GameTest
+    public void ribbonsAreKeptWithWhatAPlayerKnows(GameTestHelper helper) {
+        KnowledgeSystem knowledge = CoreLifecycle.require(helper.getLevel().getServer()).knowledge();
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        knowledge.forget(player.getUUID());
+        Identifier iron = BuiltInRegistries.ITEM.getKey(Items.IRON_INGOT);
+        Identifier coal = BuiltInRegistries.ITEM.getKey(Items.COAL);
+
+        helper.assertTrue(knowledge.bookmarks(player).entries().isEmpty(), "A new book has no ribbon in it");
+        helper.assertTrue(knowledge.toggleBookmark(player, iron) && knowledge.toggleBookmark(player, coal),
+                "A ribbon is laid at an entry");
+        helper.assertTrue(!knowledge.toggleBookmark(player, Hardwrought.id("no_such_thing")),
+                "but only at something the book has a page for");
+        knowledge.discover(player, Items.COAL);
+        var marks = knowledge.bookmarks(player).entries();
+        helper.assertTrue(marks.size() == 2 && marks.get(0).id().equals(iron)
+                        && marks.get(0).level() == KnowledgeLevel.UNKNOWN.ordinal()
+                        && marks.get(1).level() == KnowledgeLevel.DISCOVERED.ordinal(),
+                "Ribbons keep their order, and each tells what the player knows of its entry");
+
+        var saved = PlayerKnowledge.CODEC.encodeStart(NbtOps.INSTANCE, knowledge.knowledge(player)).getOrThrow();
+        var loaded = PlayerKnowledge.CODEC.parse(NbtOps.INSTANCE, saved).getOrThrow();
+        helper.assertTrue(loaded.bookmarks().equals(List.of(iron, coal)), "They are written down with the rest: " + loaded.bookmarks());
+
+        helper.assertTrue(knowledge.toggleBookmark(player, iron) && knowledge.bookmarks(player).entries().size() == 1,
+                "Laid at the same entry again, the ribbon comes out");
+        for (Item filler : new Item[] {Items.STONE, Items.DIRT, Items.SAND, Items.GRAVEL, Items.CLAY, Items.FLINT,
+                Items.STICK, Items.BONE, Items.APPLE}) {
+            knowledge.toggleBookmark(player, BuiltInRegistries.ITEM.getKey(filler));
+        }
+        helper.assertTrue(knowledge.bookmarks(player).entries().size() == de.ipnats.hardwrought.core.networking.BookmarkPayloads.MAX
+                        && !knowledge.toggleBookmark(player, BuiltInRegistries.ITEM.getKey(Items.FEATHER)),
+                "A book has ten ribbons, and an eleventh is refused rather than an old one lost");
+        knowledge.forget(player.getUUID());
+        helper.succeed();
+    }
+
+    @GameTest
     public void carryingSomethingAroundStudiesItToo(GameTestHelper helper) {
         KnowledgeSystem knowledge = CoreLifecycle.require(helper.getLevel().getServer()).knowledge();
         ServerPlayer player = helper.makeMockServerPlayerInLevel();

@@ -194,10 +194,7 @@ public final class Smithing {
             // Every hammer that will do, the plainest first: a bar needs no more than a wooden
             // mallet, and the book must not send a player off to make a hammer they cannot yet make.
             List<ItemStack> hammers = new ArrayList<>();
-            for (Item hammer : List.of(de.ipnats.hardwrought.core.registry.ModItems.WOODEN_HAMMER,
-                    de.ipnats.hardwrought.core.registry.ModItems.HAMMER,
-                    de.ipnats.hardwrought.core.registry.ModItems.IRON_HAMMER,
-                    de.ipnats.hardwrought.core.registry.ModItems.STEEL_HAMMER)) {
+            for (Item hammer : Hammers.all()) {
                 if (Hammers.reach(new ItemStack(hammer)) >= Hammers.reachNeeded(recipe.result())) {
                     hammers.add(new ItemStack(hammer));
                 }

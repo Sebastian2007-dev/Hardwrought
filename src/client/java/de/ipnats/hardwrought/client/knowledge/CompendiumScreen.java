@@ -122,6 +122,18 @@ public class CompendiumScreen extends Screen {
             new ItemStack(Items.FURNACE), new ItemStack(Items.OAK_LOG)
     };
 
+    /** The ribbons hang out of the book past its right edge, one under the other. */
+    private static final int RIBBON_STEP = 18;
+    private static final int RIBBON_WIDTH = 22;
+    private static final int RIBBON_TOP = PAPER_TOP + 2;
+    /** How far a ribbon is tucked in under the cover. */
+    private static final int RIBBON_TUCK = 5;
+    private static final int RIBBON_COLOR = 0xFF7A2B22;
+    private static final int RIBBON_LIGHT = 0xFFA6453A;
+    private static final int RIBBON_DARK = 0xFF4E1A14;
+    /** An empty ribbon waiting to be laid in: the same cloth, faded. */
+    private static final int RIBBON_SPARE = 0xFF8E6A5C;
+
     private static final int TEXT_COLOR = 0xFF1B120B;
     private static final int FADED_COLOR = 0xFF4A3522;
     /** A tab that is not selected: quieter than the selected one, but still ink on its darker paper. */
@@ -361,8 +373,10 @@ public class CompendiumScreen extends Screen {
         lastMouseY = mouseY;
         hotspots.clear();
         super.extractRenderState(graphics, mouseX, mouseY, delta);
+        drawRibbons(graphics, mouseX, mouseY);
         if (mode == MODE_HOME) {
             drawHome(graphics, mouseX, mouseY);
+            drawTooltip(graphics, mouseX, mouseY);
             return;
         }
         CompendiumPagePayload current = CompendiumClient.page();
@@ -406,6 +420,95 @@ public class CompendiumScreen extends Screen {
                     rightPageX() + PAPER_WIDTH / 2, top + CONTROLS_Y + 5, FADED_COLOR);
         }
         drawTooltip(graphics, mouseX, mouseY);
+    }
+
+    // ---------------------------------------------------------------- ribbons
+
+    private int ribbonX() {
+        return left + PANEL_WIDTH - RIBBON_TUCK;
+    }
+
+    private int ribbonY(int index) {
+        return top + RIBBON_TOP + index * RIBBON_STEP;
+    }
+
+    /** The entry this page is about, where it is about one; null on a shelf, the journal and the front page. */
+    private Identifier pageSubject() {
+        return mode == CompendiumPagePayload.MODE_RECIPES || mode == CompendiumPagePayload.MODE_USAGES ? subject : null;
+    }
+
+    /** Whether one more ribbon may be laid in at the page that is open. */
+    private boolean spareRibbon() {
+        Identifier here = pageSubject();
+        return here != null && !CompendiumClient.bookmarked(here)
+                && CompendiumClient.bookmarks().size() < de.ipnats.hardwrought.core.networking.BookmarkPayloads.MAX;
+    }
+
+    /**
+     * The ribbons a player has laid into the book, hanging out past its edge on every page so that
+     * a marked entry is one click away from anywhere. Each shows what it marks, by the same rule
+     * as the rest of the book: a shadow until the thing has been held. The one lying at the open
+     * page is drawn out further, and under the last hangs a faded spare wherever the open page
+     * could take one.
+     */
+    private void drawRibbons(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+        List<CompendiumPagePayload.Entry> marks = CompendiumClient.bookmarks();
+        Identifier here = pageSubject();
+        Component hint = Component.translatable("gui.hardwrought.compendium.bookmark.hint")
+                .withStyle(ChatFormatting.DARK_GRAY);
+        for (int index = 0; index < marks.size(); index++) {
+            CompendiumPagePayload.Entry mark = marks.get(index);
+            Item item = BuiltInRegistries.ITEM.getValue(mark.id());
+            if (item == null || item == Items.AIR) continue;
+            int out = mark.id().equals(here) ? 4 : 0;
+            int x = ribbonX() + out, y = ribbonY(index);
+            ribbon(graphics, ribbonX(), y, RIBBON_WIDTH + out, RIBBON_COLOR);
+            ItemStack stack = new ItemStack(item);
+            boolean known = mark.level() > 0;
+            int itemX = x + RIBBON_TUCK;
+            ShadowItem.render(graphics, stack, itemX, y, known);
+            List<Component> lines = new ArrayList<>(ShadowItem.tooltip(stack, known));
+            lines.add(hint);
+            hotspots.add(new Hotspot(itemX, y, stack, known, lines, true));
+        }
+        if (spareRibbon()) {
+            int y = ribbonY(marks.size());
+            ribbon(graphics, ribbonX(), y, RIBBON_WIDTH, RIBBON_SPARE);
+            centeredInk(graphics, Component.literal("+"), ribbonX() + RIBBON_TUCK + 8, y + 4, 0xFFF2E6D0);
+            if (inside(mouseX, mouseY, ribbonX() + RIBBON_TUCK, y, 16, 16)) {
+                graphics.setComponentTooltipForNextFrame(font, List.of(Component.translatable(
+                        "gui.hardwrought.compendium.bookmark.add",
+                        CompendiumClient.BOOKMARK.getTranslatedKeyMessage())), mouseX, mouseY);
+            }
+        }
+    }
+
+    /** One length of ribbon: cloth with a lit upper edge, a shadowed lower one and a swallow-tail end. */
+    private static void ribbon(GuiGraphicsExtractor graphics, int x, int y, int width, int color) {
+        graphics.fill(x, y, x + width, y + 16, color);
+        graphics.fill(x, y, x + width, y + 1, RIBBON_LIGHT);
+        graphics.fill(x, y + 15, x + width, y + 16, RIBBON_DARK);
+        graphics.fill(x + width, y + 1, x + width + 2, y + 6, color);
+        graphics.fill(x + width, y + 10, x + width + 2, y + 15, color);
+    }
+
+    /** A click on the ribbons: on the spare lays it in, with shift on a ribbon takes that one out. */
+    private boolean clickRibbons(MouseButtonEvent event) {
+        List<CompendiumPagePayload.Entry> marks = CompendiumClient.bookmarks();
+        int x = ribbonX() + RIBBON_TUCK;
+        if (spareRibbon() && inside(event.x(), event.y(), x, ribbonY(marks.size()), 16, 16)) {
+            CompendiumClient.toggleBookmark(pageSubject());
+            return true;
+        }
+        if (!event.hasShiftDown()) return false;
+        for (int index = 0; index < marks.size(); index++) {
+            // A little wider than the icon, so the ribbon drawn out for the open page is hit as well.
+            if (inside(event.x(), event.y(), x, ribbonY(index), 20, 16)) {
+                CompendiumClient.toggleBookmark(marks.get(index).id());
+                return true;
+            }
+        }
+        return false;
     }
 
     private void drawBookControls(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
@@ -992,7 +1095,15 @@ public class CompendiumScreen extends Screen {
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
         if (super.mouseClicked(event, doubled)) return true;
+        if (clickRibbons(event)) return true;
         if (mode == MODE_HOME) {
+            // From the front page a ribbon leads straight to its entry, as from any other.
+            for (Hotspot hotspot : hotspots) {
+                if (!hotspot.contains(event.x(), event.y())) continue;
+                if (event.button() == InputConstants.MOUSE_BUTTON_RIGHT) CompendiumClient.openUsages(hotspot.stack().getItem());
+                else CompendiumClient.openRecipes(hotspot.stack().getItem());
+                return true;
+            }
             if (overHalf(homeLeft(0), event.x(), event.y())) {
                 CompendiumClient.openShelf(CompendiumClient.shelf(), "");
                 return true;
@@ -1087,6 +1198,14 @@ public class CompendiumScreen extends Screen {
             return true;
         }
         Hotspot hovered = hovered();
+        if (CompendiumClient.BOOKMARK.matches(event)) {
+            // What the pointer is on, or else the page that is open.
+            Identifier marked = hovered != null ? BuiltInRegistries.ITEM.getKey(hovered.stack().getItem()) : pageSubject();
+            if (marked != null) {
+                CompendiumClient.toggleBookmark(marked);
+                return true;
+            }
+        }
         if (hovered != null && CompendiumClient.RECIPES.matches(event)) {
             CompendiumClient.openRecipes(hovered.stack().getItem());
             return true;

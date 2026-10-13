@@ -39,6 +39,8 @@ public final class ElectricBlocks {
     public static final MachineBlock ELECTRIC_FURNACE = machine(Machine.FURNACE);
     public static final MachineBlock SAWMILL = machine(Machine.SAWMILL);
     public static final MachineBlock PLATE_PRESS = machine(Machine.PRESS);
+    public static final MachineBlock LATHE = machine(Machine.LATHE);
+    public static final MachineBlock TUBE_MILL = machine(Machine.TUBE_MILL);
 
     // Never placed: the look of a strung wire, drawn piece by piece along its sag.
     public static final Block WIRE_STRAND = strand("wire_strand", 0);
@@ -73,7 +75,7 @@ public final class ElectricBlocks {
             new BlockEntityType<>(BatteryBlockEntity::new, Set.of(BATTERY)));
     /** One kind of entity for every machine: which machine it is, its block says. */
     public static final BlockEntityType<MachineBlockEntity> MACHINE_ENTITY = entity("basic_crusher",
-            new BlockEntityType<>(MachineBlockEntity::new, Set.of(BASIC_CRUSHER, ELECTRIC_FURNACE, SAWMILL, PLATE_PRESS)));
+            new BlockEntityType<>(MachineBlockEntity::new, Set.of(BASIC_CRUSHER, ELECTRIC_FURNACE, SAWMILL, PLATE_PRESS, LATHE, TUBE_MILL)));
 
     private ElectricBlocks() { }
 

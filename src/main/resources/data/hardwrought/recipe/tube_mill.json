@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "R": "hardwrought:iron_rod",
+    "W": "hardwrought:copper_wire",
+    "D": "hardwrought:dynamo"
+  },
+  "pattern": [
+    "IRI",
+    "WDW",
+    "IRI"
+  ],
+  "result": {
+    "id": "hardwrought:tube_mill",
+    "count": 1
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "hardwrought:block/storage_port"
+    },
+    "facing=east": {
+      "model": "hardwrought:block/storage_port",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "hardwrought:block/storage_port",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "hardwrought:block/storage_port",
+      "y": 270
+    },
+    "facing=up": {
+      "model": "hardwrought:block/storage_port",
+      "x": 270
+    },
+    "facing=down": {
+      "model": "hardwrought:block/storage_port",
+      "x": 90
+    }
+  }
+}

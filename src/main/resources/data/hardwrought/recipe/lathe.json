@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "R": "hardwrought:steel_rod",
+    "W": "hardwrought:copper_wire",
+    "D": "hardwrought:dynamo"
+  },
+  "pattern": [
+    "IRI",
+    "WDW",
+    "III"
+  ],
+  "result": {
+    "id": "hardwrought:lathe",
+    "count": 1
+  }
+}

@@ -25,18 +25,20 @@ MOD_METALS = ["bronze", "tin", "zinc", "lead", "manganese", "magnesium", "alumin
 # Hand-authored value maps derived from the generated source concepts in art_source and the supplied
 # shape references. Encoding the lighting in the sprite rather than inferring it from the outline
 # keeps the tiny bevels and hammer marks readable at native resolution.
-# d/m/l/s/h = dark/mid/light/shine/hammer dent.
+# d/m/l/s/h = dark/mid/light/shine/rivet hole.
 ROD = [
     "................", "............dd..", "...........dsld.", "..........dmsld.",
     ".........dmsld..", "........dmlsd...", ".......dmsld....", "......dmsld.....",
     ".....dmlsd......", "....dmsld.......", "...dmsld........", "..dmlsd.........",
     ".dmsld..........", ".dmsd...........", "..dd............", "................",
 ]
+# A cut sheet lying at a slant: square corners, a shine along the far edge, the thickness of the
+# cut showing along the near one, and a rivet hole in each corner. e = the cut edge.
 PLATE = [
-    "................", "................", ".....dddddd.....", "...ddllssllld...",
-    "..dllssssllmmd..", ".dllslllllmmmmd.", "dlllhllllllmmmmd", "dllllllllllmmmmd",
-    "dlllhllllllmmmmd", ".dllslllllmmmmd.", "..ddlllllmmmmdd.", "....dddddddd....",
-    "................", "................", "................", "................",
+    "................", "................", "................", ".....ddddddddddd",
+    "....dsssssssssld", "....dslllllllmmd", "...dslhlllllhmd.", "...dslllllllmmd.",
+    "..dsllllllllmd..", "..dslhlllllhmd..", ".dlllllllmmmmd..", ".deeeeeeeeeeed..",
+    ".ddddddddddddd..", "................", "................", "................",
 ]
 
 
@@ -48,7 +50,8 @@ def palette(image):
 
 def paint(mask, shades):
     dark, mid, light, shine = shades
-    colours = {"d": dark, "m": mid, "l": light, "s": shine, "h": dark}
+    edge = tuple((a + b) // 2 for a, b in zip(dark, mid))
+    colours = {"d": dark, "m": mid, "l": light, "s": shine, "h": tuple(int(c * 0.8) for c in mid), "e": edge}
     img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
     for y, row in enumerate(mask):
         for x, c in enumerate(row):

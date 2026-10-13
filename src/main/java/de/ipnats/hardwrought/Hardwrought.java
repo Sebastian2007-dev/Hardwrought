@@ -57,6 +57,7 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.metallurgy.MetalBlocks.initialize();
 		de.ipnats.hardwrought.smeltery.SmelteryBlocks.initialize();
 		de.ipnats.hardwrought.electricity.ElectricBlocks.initialize();
+		de.ipnats.hardwrought.storage.StorageBlocks.initialize();
 		de.ipnats.hardwrought.magic.Magic.initialize();
 		de.ipnats.hardwrought.smithing.ToolParts.initialize();
 		de.ipnats.hardwrought.smithing.AlloyEquipment.initialize();

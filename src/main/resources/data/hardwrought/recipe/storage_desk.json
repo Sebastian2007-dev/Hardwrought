@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "S": "hardwrought:steel_plate",
+    "G": "minecraft:glass",
+    "M": "hardwrought:sorting_mechanism",
+    "C": "minecraft:chest",
+    "T": "hardwrought:storage_tube"
+  },
+  "pattern": [
+    "SGS",
+    "MCM",
+    "STS"
+  ],
+  "result": {
+    "id": "hardwrought:storage_desk",
+    "count": 1
+  }
+}

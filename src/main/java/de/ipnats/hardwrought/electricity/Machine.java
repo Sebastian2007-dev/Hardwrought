@@ -61,6 +61,22 @@ public enum Machine {
             }
             return ItemStack.EMPTY;
         }
+    },
+    /** A spindle and a cutter: a steel rod turned into the fine gears a sorting mechanism counts with. */
+    LATHE("lathe", 35.0, 120, SoundEvents.GRINDSTONE_USE, ParticleTypes.CRIT) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return input.is(MetalStock.rod("steel"))
+                    ? new ItemStack(de.ipnats.hardwrought.storage.StorageBlocks.FINE_GEAR) : ItemStack.EMPTY;
+        }
+    },
+    /** Three rollers and a seaming wheel: a bronze plate rolled round into a length of tube. */
+    TUBE_MILL("tube_mill", 35.0, 100, SoundEvents.ANVIL_USE, ParticleTypes.CRIT) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return input.is(MetalStock.plate("bronze"))
+                    ? new ItemStack(de.ipnats.hardwrought.storage.StorageBlocks.TUBE_SECTION) : ItemStack.EMPTY;
+        }
     };
 
     private final String id;

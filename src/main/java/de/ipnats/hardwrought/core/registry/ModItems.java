@@ -77,6 +77,19 @@ public final class ModItems {
     /** The stone hammer with an iron head: three by three squares at the anvil. */
     public static final Item IRON_HAMMER = register("iron_hammer", Item::new, new Item.Properties().durability(320));
     public static final Item STEEL_HAMMER = register("steel_hammer", Item::new, new Item.Properties().durability(1000));
+    /** The hammers above steel, a square wider with every metal: see {@code Hammers}. */
+    public static final Item STAINLESS_STEEL_HAMMER = register("stainless_steel_hammer", Item::new,
+            new Item.Properties().durability(1300));
+    public static final Item TITANIUM_HAMMER = register("titanium_hammer", Item::new, new Item.Properties().durability(1700));
+    public static final Item TUNGSTEN_STEEL_HAMMER = register("tungsten_steel_hammer", Item::new,
+            new Item.Properties().durability(2200));
+    /** Worked up at the smithing table like the rest of their tiers; like them, they do not burn. */
+    public static final Item NETHERITE_HAMMER = register("netherite_hammer", Item::new,
+            new Item.Properties().durability(2800).fireResistant());
+    public static final Item MITHRIL_HAMMER = register("mithril_hammer", Item::new,
+            new Item.Properties().durability(3400).fireResistant());
+    public static final Item ADAMANT_HAMMER = register("adamant_hammer", Item::new,
+            new Item.Properties().durability(4800).fireResistant());
     /** Worn on the strap; without them hot metal cannot be held. */
     public static final Item WOODEN_ANVIL = register("wooden_anvil",
             properties -> new BlockItem(ModBlocks.WOODEN_ANVIL, properties),

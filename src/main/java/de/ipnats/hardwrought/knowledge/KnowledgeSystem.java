@@ -119,6 +119,66 @@ public final class KnowledgeSystem {
         return learned;
     }
 
+    // ---------------------------------------------------------------- creatures
+
+    /**
+     * Where a creature is kept in a player's knowledge. Items and entity types share names — a
+     * chicken is both — so a creature is filed under a name of its own that no item can have.
+     */
+    public static Identifier entityKey(Identifier type) {
+        return Identifier.fromNamespaceAndPath("hardwrought", "entity/" + type.getNamespace() + "/" + type.getPath());
+    }
+
+    /**
+     * Trading blows with a creature is how its name becomes real. Silent: the toast is drawn around
+     * an item, and a fight is not the moment for one anyway. Returns true where that was news.
+     */
+    public boolean meet(ServerPlayer player, net.minecraft.world.entity.EntityType<?> type) {
+        PlayerKnowledge knowledge = knowledge(player);
+        if (!knowledge.discover(entityKey(net.minecraft.world.entity.EntityType.getKey(type)))) return false;
+        save.setKnowledge(player.getUUID(), knowledge);
+        return true;
+    }
+
+    /** Killing a creature is what studies it. Returns true where that was news. */
+    public boolean slay(ServerPlayer player, net.minecraft.world.entity.EntityType<?> type) {
+        PlayerKnowledge knowledge = knowledge(player);
+        if (!knowledge.study(entityKey(net.minecraft.world.entity.EntityType.getKey(type)))) return false;
+        save.setKnowledge(player.getUUID(), knowledge);
+        return true;
+    }
+
+    /** Answers the overlay that names what a player is looking at. */
+    public de.ipnats.hardwrought.core.networking.LookPayloads.Answer look(
+            ServerPlayer player, de.ipnats.hardwrought.core.networking.LookPayloads.Request request) {
+        Identifier key = request.entity() ? entityKey(request.subject()) : request.subject();
+        return new de.ipnats.hardwrought.core.networking.LookPayloads.Answer(request.entity(),
+                request.subject(), knowledge(player).level(key).ordinal());
+    }
+
+    // ---------------------------------------------------------------- ribbons
+
+    /** Lays a ribbon at an entry of the book, or takes it out again. Returns true where that changed anything. */
+    public boolean toggleBookmark(ServerPlayer player, Identifier entry) {
+        // Only at something the book has a page for.
+        if (entry == null || BuiltInRegistries.ITEM.getValue(entry) == net.minecraft.world.item.Items.AIR) return false;
+        PlayerKnowledge knowledge = knowledge(player);
+        if (!knowledge.toggleBookmark(entry, de.ipnats.hardwrought.core.networking.BookmarkPayloads.MAX)) return false;
+        save.setKnowledge(player.getUUID(), knowledge);
+        return true;
+    }
+
+    /** The ribbons in a player's book, each with what the player knows of the entry it lies at. */
+    public de.ipnats.hardwrought.core.networking.BookmarkPayloads.Marks bookmarks(ServerPlayer player) {
+        PlayerKnowledge knowledge = knowledge(player);
+        List<de.ipnats.hardwrought.core.networking.CompendiumPagePayload.Entry> marks = new ArrayList<>();
+        for (Identifier entry : knowledge.bookmarks()) {
+            marks.add(new de.ipnats.hardwrought.core.networking.CompendiumPagePayload.Entry(entry,
+                    knowledge.level(entry).ordinal()));
+        }
+        return new de.ipnats.hardwrought.core.networking.BookmarkPayloads.Marks(marks);
+    }
+
     /** Operator and test entry point; ordinary play fills this in through holding and working. */
     public void forget(UUID player) {
         save.setKnowledge(player, PlayerKnowledge.empty());

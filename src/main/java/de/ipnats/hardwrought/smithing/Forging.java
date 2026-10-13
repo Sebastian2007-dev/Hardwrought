@@ -94,8 +94,10 @@ public final class Forging {
         Mask target = Mask.of(payload.target());
         if (source.count() == 0 || target.count() == 0 || source.mismatch(target) < MIN_JOB) return false;
         if (Hammers.reach(player.getMainHandItem()) < Hammers.reachNeeded(resultItem)) {
+            // The forging screen says so itself and never asks; this is for a client that asks anyway.
             player.sendSystemMessage(Component.translatable("message.hardwrought.forging_needs_heavier_hammer",
-                    new ItemStack(resultItem).getHoverName()), true);
+                    new ItemStack(resultItem).getHoverName(),
+                    new ItemStack(Hammers.least(resultItem)).getHoverName()), true);
             return false;
         }
         if (!Smithing.isIngot(recipe.input()) && tooCold(player, held)) return false;

@@ -1,0 +1,247 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "pipe": "hardwrought:block/hardwrought/storage_tube",
+    "trim": "hardwrought:block/hardwrought/storage_tube_trim",
+    "particle": "hardwrought:block/hardwrought/storage_tube"
+  },
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.625,
+        0.625,
+        0.625
+      ]
+    }
+  },
+  "elements": [
+    {
+      "from": [
+        5,
+        5,
+        0
+      ],
+      "to": [
+        11,
+        11,
+        16
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            5,
+            5,
+            11,
+            11
+          ],
+          "texture": "#trim"
+        },
+        "south": {
+          "uv": [
+            5,
+            5,
+            11,
+            11
+          ],
+          "texture": "#trim"
+        },
+        "west": {
+          "uv": [
+            0,
+            5,
+            16,
+            11
+          ],
+          "texture": "#pipe"
+        },
+        "east": {
+          "uv": [
+            0,
+            5,
+            16,
+            11
+          ],
+          "texture": "#pipe"
+        },
+        "up": {
+          "uv": [
+            5,
+            0,
+            11,
+            16
+          ],
+          "texture": "#pipe"
+        },
+        "down": {
+          "uv": [
+            5,
+            0,
+            11,
+            16
+          ],
+          "texture": "#pipe"
+        }
+      }
+    },
+    {
+      "from": [
+        4.5,
+        4.5,
+        0
+      ],
+      "to": [
+        11.5,
+        11.5,
+        2
+      ],
+      "faces": {
+        "west": {
+          "uv": [
+            0,
+            4.5,
+            2,
+            11.5
+          ],
+          "texture": "#trim"
+        },
+        "east": {
+          "uv": [
+            14,
+            4.5,
+            16,
+            11.5
+          ],
+          "texture": "#trim"
+        },
+        "up": {
+          "uv": [
+            4.5,
+            0,
+            11.5,
+            2
+          ],
+          "texture": "#trim"
+        },
+        "down": {
+          "uv": [
+            4.5,
+            14,
+            11.5,
+            16
+          ],
+          "texture": "#trim"
+        }
+      }
+    },
+    {
+      "from": [
+        4.5,
+        4.5,
+        6
+      ],
+      "to": [
+        11.5,
+        11.5,
+        10
+      ],
+      "faces": {
+        "west": {
+          "uv": [
+            6,
+            4.5,
+            10,
+            11.5
+          ],
+          "texture": "#trim"
+        },
+        "east": {
+          "uv": [
+            6,
+            4.5,
+            10,
+            11.5
+          ],
+          "texture": "#trim"
+        },
+        "up": {
+          "uv": [
+            4.5,
+            6,
+            11.5,
+            10
+          ],
+          "texture": "#trim"
+        },
+        "down": {
+          "uv": [
+            4.5,
+            6,
+            11.5,
+            10
+          ],
+          "texture": "#trim"
+        }
+      }
+    },
+    {
+      "from": [
+        4.5,
+        4.5,
+        14
+      ],
+      "to": [
+        11.5,
+        11.5,
+        16
+      ],
+      "faces": {
+        "west": {
+          "uv": [
+            14,
+            4.5,
+            16,
+            11.5
+          ],
+          "texture": "#trim"
+        },
+        "east": {
+          "uv": [
+            0,
+            4.5,
+            2,
+            11.5
+          ],
+          "texture": "#trim"
+        },
+        "up": {
+          "uv": [
+            4.5,
+            14,
+            11.5,
+            16
+          ],
+          "texture": "#trim"
+        },
+        "down": {
+          "uv": [
+            4.5,
+            0,
+            11.5,
+            2
+          ],
+          "texture": "#trim"
+        }
+      }
+    }
+  ]
+}

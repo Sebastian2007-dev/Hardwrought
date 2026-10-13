@@ -46,6 +46,37 @@ public final class CoreNetworking {
             }
         });
         PayloadTypeRegistry.serverboundPlay().register(CompendiumRequestPayload.TYPE, CompendiumRequestPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(LookPayloads.Request.TYPE, LookPayloads.Request.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(LookPayloads.Answer.TYPE, LookPayloads.Answer.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(LookPayloads.Request.TYPE, (payload, context) ->
+                ServerPlayNetworking.send(context.player(),
+                        CoreLifecycle.require(context.server()).knowledge().look(context.player(), payload)));
+        PayloadTypeRegistry.serverboundPlay().register(LookPayloads.Inside.TYPE, LookPayloads.Inside.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(LookPayloads.Contents.TYPE, LookPayloads.Contents.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(LookPayloads.Inside.TYPE, (payload, context) ->
+                ServerPlayNetworking.send(context.player(), de.ipnats.hardwrought.knowledge.LookInside.of(
+                        context.player(),
+                        CoreLifecycle.require(context.server()).knowledge().knowledge(context.player()),
+                        payload.pos())));
+        PayloadTypeRegistry.clientboundPlay().register(StoragePayloads.Contents.TYPE, StoragePayloads.Contents.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(StoragePayloads.Click.TYPE, StoragePayloads.Click.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(StoragePayloads.Click.TYPE, (payload, context) -> {
+            if (context.player().containerMenu instanceof de.ipnats.hardwrought.storage.StorageDeskMenu desk
+                    && desk.containerId == payload.containerId()) {
+                desk.click(payload.clicked(), payload.action());
+            }
+        });
+        PayloadTypeRegistry.serverboundPlay().register(BookmarkPayloads.Toggle.TYPE, BookmarkPayloads.Toggle.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(BookmarkPayloads.Ask.TYPE, BookmarkPayloads.Ask.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(BookmarkPayloads.Marks.TYPE, BookmarkPayloads.Marks.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(BookmarkPayloads.Toggle.TYPE, (payload, context) -> {
+            var knowledge = CoreLifecycle.require(context.server()).knowledge();
+            knowledge.toggleBookmark(context.player(), payload.subject());
+            ServerPlayNetworking.send(context.player(), knowledge.bookmarks(context.player()));
+        });
+        ServerPlayNetworking.registerGlobalReceiver(BookmarkPayloads.Ask.TYPE, (payload, context) ->
+                ServerPlayNetworking.send(context.player(),
+                        CoreLifecycle.require(context.server()).knowledge().bookmarks(context.player())));
         PayloadTypeRegistry.serverboundPlay().register(GasPushPayload.TYPE, GasPushPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(GasPushPayload.TYPE, (payload, context) ->
                 de.ipnats.hardwrought.environment.GasPush.push(context.player(), payload.pos(), payload.direction()));
@@ -64,6 +95,8 @@ public final class CoreNetworking {
             var knowledge = CoreLifecycle.require(context.server()).knowledge();
             ServerPlayNetworking.send(context.player(),
                     knowledge.compendium().answer(context.player(), knowledge, payload));
+            // The ribbons go with every page: what was a shadow on one may have been held since.
+            ServerPlayNetworking.send(context.player(), knowledge.bookmarks(context.player()));
         });
     }
 }

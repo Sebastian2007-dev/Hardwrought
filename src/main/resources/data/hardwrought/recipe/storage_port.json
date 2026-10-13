@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "T": "hardwrought:tube_section",
+    "M": "hardwrought:sorting_mechanism",
+    "C": "minecraft:chest"
+  },
+  "pattern": [
+    "PTP",
+    "TMT",
+    "PCP"
+  ],
+  "result": {
+    "id": "hardwrought:storage_port",
+    "count": 1
+  }
+}

@@ -42,9 +42,20 @@ public final class CarryWeight {
         if (stack.has(DataComponents.TOOL) || stack.has(DataComponents.WEAPON)) return 1.8;
         // A stack of blocks is 22 kg rather than 48: one stack used to be over the old limit by
         // itself, which made every player permanently overloaded without ever being told why.
-        if (stack.getItem() instanceof BlockItem) return 0.35;
+        if (stack.getItem() instanceof BlockItem placed) return solid(placed) ? 0.35 : 0.05;
         if (stack.has(DataComponents.FOOD)) return 0.25;
         return 0.10;
+    }
+
+    /**
+     * Whether what this item sets down is a block in the sense the weight means: something with a
+     * body. Seeds, a sapling, a torch and a length of rail are placed as blocks too, but nobody
+     * carries a block of them — a stack of wheat seeds weighed as much as a stack of stone.
+     */
+    private static boolean solid(BlockItem item) {
+        return !item.getBlock().defaultBlockState()
+                .getCollisionShape(net.minecraft.world.level.EmptyBlockGetter.INSTANCE, net.minecraft.core.BlockPos.ZERO)
+                .isEmpty();
     }
 
     public static double perItem(ItemStack stack) { return perItem(stack, Map.of()); }

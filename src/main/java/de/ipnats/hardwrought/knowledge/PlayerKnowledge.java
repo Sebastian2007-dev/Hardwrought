@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.Identifier;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -15,24 +16,34 @@ import java.util.Set;
  * in the second, and anything in neither is unknown. That keeps the save small, makes the common
  * question (do I know this?) a set lookup, and cannot drift into a state the compendium would have
  * to guess about.
+ *
+ * <p>The ribbons a player has laid into their compendium are kept here as well. They are not
+ * knowledge, but they belong to the same book and to the same player in the same world.
  */
-public record PlayerKnowledge(Set<Identifier> discovered, Set<Identifier> studied) {
+public record PlayerKnowledge(Set<Identifier> discovered, Set<Identifier> studied, List<Identifier> bookmarks) {
     public static final Codec<PlayerKnowledge> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Identifier.CODEC.listOf().optionalFieldOf("discovered", List.of())
                     .forGetter(knowledge -> List.copyOf(knowledge.discovered())),
             Identifier.CODEC.listOf().optionalFieldOf("studied", List.of())
-                    .forGetter(knowledge -> List.copyOf(knowledge.studied()))
-    ).apply(instance, (discovered, studied) ->
-            new PlayerKnowledge(new LinkedHashSet<>(discovered), new LinkedHashSet<>(studied))));
+                    .forGetter(knowledge -> List.copyOf(knowledge.studied())),
+            Identifier.CODEC.listOf().optionalFieldOf("bookmarks", List.of())
+                    .forGetter(knowledge -> List.copyOf(knowledge.bookmarks()))
+    ).apply(instance, (discovered, studied, bookmarks) ->
+            new PlayerKnowledge(new LinkedHashSet<>(discovered), new LinkedHashSet<>(studied),
+                    new ArrayList<>(bookmarks))));
 
     public PlayerKnowledge {
-        if (discovered == null || studied == null) {
+        if (discovered == null || studied == null || bookmarks == null) {
             throw new IllegalArgumentException("Knowledge needs both of its sets");
         }
     }
 
+    public PlayerKnowledge(Set<Identifier> discovered, Set<Identifier> studied) {
+        this(discovered, studied, new ArrayList<>());
+    }
+
     public static PlayerKnowledge empty() {
-        return new PlayerKnowledge(new LinkedHashSet<>(), new LinkedHashSet<>());
+        return new PlayerKnowledge(new LinkedHashSet<>(), new LinkedHashSet<>(), new ArrayList<>());
     }
 
     /** What this player knows about one thing. */
@@ -57,6 +68,18 @@ public record PlayerKnowledge(Set<Identifier> discovered, Set<Identifier> studie
         boolean news = studied.add(entry);
         news |= discovered.add(entry);
         return news;
+    }
+
+    /**
+     * Lays a ribbon at this entry, or takes out the one that is there. A book has only so many
+     * ribbons; with all of them in use a new one is refused rather than an old one lost. Returns
+     * true where the ribbons changed.
+     */
+    public boolean toggleBookmark(Identifier entry, int most) {
+        if (entry == null) return false;
+        if (bookmarks.remove(entry)) return true;
+        if (bookmarks.size() >= most) return false;
+        return bookmarks.add(entry);
     }
 
     public int count() {

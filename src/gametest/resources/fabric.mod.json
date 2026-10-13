@@ -35,7 +35,8 @@
       "de.ipnats.hardwrought.test.UpgradeGameTests",
       "de.ipnats.hardwrought.test.AtlasGameTests",
       "de.ipnats.hardwrought.test.WorldgenGameTests",
-      "de.ipnats.hardwrought.test.ElectricityGameTests"
+      "de.ipnats.hardwrought.test.ElectricityGameTests",
+      "de.ipnats.hardwrought.test.StorageGameTests"
     ],
     "fabric-client-gametest": [
       "de.ipnats.hardwrought.test.FxClientGameTest",
@@ -47,7 +48,10 @@
       "de.ipnats.hardwrought.test.SmelteryClientGameTest",
       "de.ipnats.hardwrought.test.EnchantingClientGameTest",
       "de.ipnats.hardwrought.test.AtlasClientGameTest",
-      "de.ipnats.hardwrought.test.ElectricityClientGameTest"
+      "de.ipnats.hardwrought.test.ElectricityClientGameTest",
+      "de.ipnats.hardwrought.test.StorageClientGameTest",
+      "de.ipnats.hardwrought.test.BookmarkClientGameTest",
+      "de.ipnats.hardwrought.test.HammerWarningClientGameTest"
     ]
   }
 }

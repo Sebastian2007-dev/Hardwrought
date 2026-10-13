@@ -1037,4 +1037,36 @@ public final class SmithingGameTests {
                 "Mercury is liquid: there is no rod of it");
         helper.succeed();
     }
+
+    @GameTest
+    public void everyMetalUpToAdamantHasAHammer(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var hammers = Hammers.all();
+        helper.assertTrue(hammers.size() == 10, "Ten hammers, wood to adamant: " + hammers.size());
+        for (int index = 0; index < hammers.size(); index++) {
+            ItemStack hammer = new ItemStack(hammers.get(index));
+            helper.assertTrue(Hammers.reach(hammer) == index + 1, "Each is a square wider than the one below: " + hammer);
+            helper.assertTrue(index == 0 || hammer.getMaxDamage() > new ItemStack(hammers.get(index - 1)).getMaxDamage(),
+                    "and lasts longer: " + hammer);
+        }
+        helper.assertTrue(Hammers.reach(new ItemStack(de.ipnats.hardwrought.core.registry.ModItems.ADAMANT_HAMMER)) == 10
+                        && Hammers.reach(new ItemStack(net.minecraft.world.item.Items.STICK)) == 0,
+                "Adamant covers ten by ten, and a stick is no hammer");
+
+        // The forged heads: each wants the hammer below the one it is for.
+        var forged = new ToolParts.SmithMetal[] {ToolParts.SmithMetal.STAINLESS_STEEL, ToolParts.SmithMetal.TITANIUM,
+                ToolParts.SmithMetal.TUNGSTEN_STEEL};
+        for (int index = 0; index < forged.length; index++) {
+            var head = ToolParts.part(forged[index], ToolParts.Part.HAMMER_HEAD);
+            helper.assertTrue(Hammers.reachNeeded(head) == 4 + index,
+                    "The head of the " + forged[index].material() + " hammer wants the hammer below: " + Hammers.reachNeeded(head));
+        }
+        for (String recipe : new String[] {"stainless_steel_hammer", "titanium_hammer", "tungsten_steel_hammer",
+                "netherite_hammer_smithing", "mithril_hammer_smithing", "adamant_hammer_smithing"}) {
+            var key = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.RECIPE,
+                    de.ipnats.hardwrought.Hardwrought.id(recipe));
+            helper.assertTrue(level.recipeAccess().byKey(key).isPresent(), "There is a recipe: " + recipe);
+        }
+        helper.succeed();
+    }
 }

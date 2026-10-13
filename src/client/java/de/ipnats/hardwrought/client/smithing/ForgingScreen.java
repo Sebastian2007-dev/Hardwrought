@@ -67,6 +67,8 @@ public class ForgingScreen extends Screen {
     private net.minecraft.client.gui.components.Button cancel;
     /** The first row of choices shown. */
     private int scrollRow;
+    /** The piece last asked for with too light a hammer in hand; what the warning on the board is about. */
+    private Item refused;
 
     public ForgingScreen(BlockPos anvil, List<Identifier> results) {
         super(Component.translatable("gui.hardwrought.forging"));
@@ -139,11 +141,41 @@ public class ForgingScreen extends Screen {
         }
         Identifier result = state != null ? state.result() : results.getFirst();
         drawWork(graphics, piece, state, result, mouseX, mouseY);
+        drawHammerWarning(graphics, BuiltInRegistries.ITEM.getValue(result));
+    }
+
+    // ---------------------------------------------------------------- the hammer in hand
+
+    /**
+     * The hammer this piece wants, where the one in hand is too light for it; null where the one in
+     * hand will do. Asked here, on the board, so that the smith is told before a blow is wasted
+     * and where they are looking — not in a line over the hotbar behind the screen.
+     */
+    private Item hammerNeeded(Item result) {
+        Minecraft client = Minecraft.getInstance();
+        if (client.player == null || result == null) return null;
+        int held = de.ipnats.hardwrought.smithing.Hammers.reach(client.player.getMainHandItem());
+        return held >= de.ipnats.hardwrought.smithing.Hammers.reachNeeded(result) ? null
+                : de.ipnats.hardwrought.smithing.Hammers.least(result);
+    }
+
+    /** The warning for one piece, across the head of the board beside the title. */
+    private void drawHammerWarning(GuiGraphicsExtractor graphics, Item result) {
+        Item needed = hammerNeeded(result);
+        if (needed == null) return;
+        Component warning = Component.translatable("gui.hardwrought.forging.needs_hammer",
+                new ItemStack(needed).getHoverName());
+        int x = left + PANEL_WIDTH - 10 - font.width(warning) - 18;
+        graphics.fill(x - 3, top + 4, left + PANEL_WIDTH - 6, top + 22, 0xFFE9C9C0);
+        graphics.outline(x - 3, top + 4, left + PANEL_WIDTH - 6 - (x - 3), 18, WARN);
+        graphics.text(font, warning, x, top + 9, WARN, false);
+        graphics.item(new ItemStack(needed), left + PANEL_WIDTH - 24, top + 5);
     }
 
     // ---------------------------------------------------------------- choosing what to make
 
     private void drawChoice(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+        Item pointedAt = null;
         graphics.text(font, Component.translatable("gui.hardwrought.forging.choose"), left + 10, top + 24, FADED, false);
         for (int index = firstShown(); index < lastShown(); index++) {
             int x = choiceX(index);
@@ -151,6 +183,8 @@ public class ForgingScreen extends Screen {
             boolean hovered = mouseX >= x && mouseX < x + 136 && mouseY >= y && mouseY < y + 20;
             drawRecess(graphics, x, y, 136, 20, hovered ? 0xFFE0E0E0 : PANEL);
             Item item = BuiltInRegistries.ITEM.getValue(results.get(index));
+            boolean tooLight = hammerNeeded(item) != null;
+            if (hovered) pointedAt = item;
             graphics.item(new ItemStack(item), x + 2, y + 2);
             int cost = costOf(item);
             graphics.text(font, Component.translatable("gui.hardwrought.forging.cost", cost), x + 20, y + 6, FADED, false);
@@ -161,8 +195,12 @@ public class ForgingScreen extends Screen {
                 if (hovered) graphics.setComponentTooltipForNextFrame(font, List.of(name), mouseX, mouseY);
                 name = Component.literal(font.plainSubstrByWidth(name.getString(), room - font.width("…")) + "…");
             }
-            graphics.text(font, name, x + 40, y + 6, TEXT, false);
+            graphics.text(font, name, x + 40, y + 6, tooLight ? WARN : TEXT, false);
+            // What the hammer in hand cannot make is still shown, greyed: it is something to work towards.
+            if (tooLight) graphics.fill(x + 1, y + 1, x + 135, y + 19, 0x70C6C6C6);
         }
+        // The tile pointed at, or else the one last clicked in vain.
+        drawHammerWarning(graphics, pointedAt != null ? pointedAt : refused);
         int rows = rows();
         if (rows > CHOICE_ROWS) {
             // Where in the list the reader is, down the right edge.
@@ -393,7 +431,10 @@ public class ForgingScreen extends Screen {
                 int x = choiceX(index);
                 int y = choiceY(index);
                 if (event.x() >= x && event.x() < x + 136 && event.y() >= y && event.y() < y + 20) {
-                    begin(results.get(index));
+                    Item wanted = BuiltInRegistries.ITEM.getValue(results.get(index));
+                    // Too light a hammer: nothing is begun, and the board goes on saying why.
+                    if (hammerNeeded(wanted) != null) refused = wanted;
+                    else begin(results.get(index));
                     return true;
                 }
             }
@@ -404,7 +445,10 @@ public class ForgingScreen extends Screen {
         if (cx < 0 || cy < 0 || cx >= Mask.SIZE || cy >= Mask.SIZE) return false;
         long time = System.currentTimeMillis();
         if (time - lastBlow < BLOW_INTERVAL) return true;
-        if (state == null) begin(results.getFirst());
+        if (state == null) {
+            if (hammerNeeded(BuiltInRegistries.ITEM.getValue(results.getFirst())) != null) return true;
+            begin(results.getFirst());
+        }
         lastBlow = time;
         ClientPlayNetworking.send(new ForgingPayloads.Strike(anvil, cx, cy));
         return true;

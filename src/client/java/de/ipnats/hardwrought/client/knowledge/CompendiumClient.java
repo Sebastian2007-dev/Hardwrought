@@ -2,6 +2,7 @@ package de.ipnats.hardwrought.client.knowledge;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.ipnats.hardwrought.client.HardwroughtKeys;
+import de.ipnats.hardwrought.core.networking.BookmarkPayloads;
 import de.ipnats.hardwrought.core.networking.CompendiumPagePayload;
 import de.ipnats.hardwrought.core.networking.CompendiumRequestPayload;
 import de.ipnats.hardwrought.core.networking.KnowledgeNotePayload;
@@ -38,11 +39,18 @@ public final class CompendiumClient {
             "key.hardwrought.compendium_usages", InputConstants.Type.KEYBOARD, InputConstants.KEY_U,
             HardwroughtKeys.CATEGORY));
 
+    /** Over an entry or on its page: lay a ribbon there, or take it out. */
+    public static final KeyMapping BOOKMARK = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+            "key.hardwrought.compendium_bookmark", InputConstants.Type.KEYBOARD, InputConstants.KEY_K,
+            HardwroughtKeys.CATEGORY));
+
     /** The front page and the journal belong to no shelf and no item, so they answer to this. */
     public static final Identifier BOOK = Identifier.fromNamespaceAndPath("hardwrought", "book");
 
     private static CompendiumPagePayload page;
     private static KnowledgeCategory shelf = KnowledgeCategory.MATERIALS;
+    /** The ribbons in the book, as the server last listed them. */
+    private static java.util.List<CompendiumPagePayload.Entry> bookmarks = java.util.List.of();
 
     private CompendiumClient() { }
 
@@ -56,6 +64,8 @@ public final class CompendiumClient {
                         KnowledgeToast.addOrUpdate(toasts, note);
                     }
                 }));
+        ClientPlayNetworking.registerGlobalReceiver(BookmarkPayloads.Marks.TYPE, (payload, context) ->
+                context.client().execute(() -> bookmarks = payload.entries()));
         de.ipnats.hardwrought.knowledge.CompendiumItem.opener = CompendiumClient::openHome;
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> reset());
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> reset());
@@ -71,6 +81,24 @@ public final class CompendiumClient {
     private static void reset() {
         page = null;
         shelf = KnowledgeCategory.MATERIALS;
+        bookmarks = java.util.List.of();
+    }
+
+    /** The ribbons in the book, oldest first. */
+    public static java.util.List<CompendiumPagePayload.Entry> bookmarks() {
+        return bookmarks;
+    }
+
+    public static boolean bookmarked(Identifier entry) {
+        for (CompendiumPagePayload.Entry mark : bookmarks) if (mark.id().equals(entry)) return true;
+        return false;
+    }
+
+    /** Lays a ribbon at an entry, or takes out the one that is there. The server keeps them. */
+    public static void toggleBookmark(Identifier entry) {
+        if (entry != null && ClientPlayNetworking.canSend(BookmarkPayloads.Toggle.TYPE)) {
+            ClientPlayNetworking.send(new BookmarkPayloads.Toggle(entry));
+        }
     }
 
     /** The page the server last sent, or null while one is still on its way. */
@@ -96,6 +124,8 @@ public final class CompendiumClient {
      * and a round trip before the book even appears would be felt on a laggy connection.
      */
     public static void openHome() {
+        // The front page asks the server for nothing else, so the ribbons are asked for by name.
+        if (ClientPlayNetworking.canSend(BookmarkPayloads.Ask.TYPE)) ClientPlayNetworking.send(new BookmarkPayloads.Ask());
         Minecraft client = Minecraft.getInstance();
         if (client.gui.screen() instanceof CompendiumScreen screen) screen.showHome();
         else client.gui.setScreen(new CompendiumScreen(CompendiumScreen.MODE_HOME, BOOK));

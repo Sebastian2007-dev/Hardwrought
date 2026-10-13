@@ -42,6 +42,12 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.HAMMER);
                         output.accept(ModItems.IRON_HAMMER);
                         output.accept(ModItems.STEEL_HAMMER);
+                        output.accept(ModItems.STAINLESS_STEEL_HAMMER);
+                        output.accept(ModItems.TITANIUM_HAMMER);
+                        output.accept(ModItems.TUNGSTEN_STEEL_HAMMER);
+                        output.accept(ModItems.NETHERITE_HAMMER);
+                        output.accept(ModItems.MITHRIL_HAMMER);
+                        output.accept(ModItems.ADAMANT_HAMMER);
                         output.accept(ModItems.SMITHING_GLOVES);
                         output.accept(ModItems.WOODEN_ANVIL);
                         output.accept(ModItems.FORGE);
@@ -63,6 +69,7 @@ public final class ModCreativeTabs {
                         output.accept(de.ipnats.hardwrought.metallurgy.Alloys.TUNGSTEN_STEEL_INGOT);
                         de.ipnats.hardwrought.smeltery.SmelteryBlocks.items().forEach(output::accept);
                         de.ipnats.hardwrought.electricity.ElectricBlocks.items().forEach(output::accept);
+                        de.ipnats.hardwrought.storage.StorageBlocks.items().forEach(output::accept);
                         de.ipnats.hardwrought.magic.Magic.items().forEach(output::accept);
                         de.ipnats.hardwrought.magic.VoidCrystal.items().forEach(output::accept);
                         de.ipnats.hardwrought.smithing.AlloyEquipment.all().forEach(output::accept);

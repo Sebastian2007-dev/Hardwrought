@@ -117,6 +117,35 @@ public final class BuildingGameTests {
         });
     }
 
+    @GameTest(maxTicks = 200)
+    public void aChestAndAHopperAreFirmGround(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockState stone = Blocks.STONE_BRICKS.defaultBlockState();
+        // Each stands in the air on a single built post, with a block set on top of it.
+        BlockPos onChest = helper.absolutePos(new BlockPos(1, 3, 1));
+        BlockPos onHopper = helper.absolutePos(new BlockPos(3, 3, 1));
+        level.setBlockAndUpdate(helper.absolutePos(new BlockPos(1, 0, 1)), Blocks.STONE.defaultBlockState());
+        level.setBlockAndUpdate(helper.absolutePos(new BlockPos(3, 0, 1)), Blocks.STONE.defaultBlockState());
+        build(level, helper.absolutePos(new BlockPos(1, 1, 1)), stone);
+        build(level, helper.absolutePos(new BlockPos(3, 1, 1)), stone);
+        build(level, onChest.below(), Blocks.CHEST.defaultBlockState());
+        build(level, onHopper.below(), Blocks.HOPPER.defaultBlockState());
+        build(level, onChest, stone);
+        build(level, onHopper, stone);
+        helper.assertFalse(BuiltBlocks.isBuilt(level, onChest.below()) || BuiltBlocks.isBuilt(level, onHopper.below()),
+                "Neither is a built block that could crack and fall");
+        helper.runAfterDelay(100, () -> {
+            helper.assertTrue(level.getBlockState(onChest).is(Blocks.STONE_BRICKS),
+                    "What stands on a chest stays standing");
+            helper.assertTrue(level.getBlockState(onHopper).is(Blocks.STONE_BRICKS),
+                    "What stands on a hopper stays standing");
+            helper.assertTrue(level.getBlockState(onChest.below()).is(Blocks.CHEST)
+                            && level.getBlockState(onHopper.below()).is(Blocks.HOPPER),
+                    "and the chest and the hopper stay under it");
+            helper.succeed();
+        });
+    }
+
     @GameTest
     public void onlyWhatHasTensileStrengthCanHang(GameTestHelper helper) {
         // A post with a beam out along x and a second beam out along z; below the ends, nothing beside.

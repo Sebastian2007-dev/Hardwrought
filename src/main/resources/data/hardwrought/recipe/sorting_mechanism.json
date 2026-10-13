@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "G": "hardwrought:fine_gear",
+    "P": "hardwrought:steel_plate",
+    "W": "hardwrought:copper_wire",
+    "H": "minecraft:hopper"
+  },
+  "pattern": [
+    "GPG",
+    "WHW",
+    "GPG"
+  ],
+  "result": {
+    "id": "hardwrought:sorting_mechanism",
+    "count": 1
+  }
+}

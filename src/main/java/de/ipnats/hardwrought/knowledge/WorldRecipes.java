@@ -95,6 +95,7 @@ public final class WorldRecipes {
         register(de.ipnats.hardwrought.smithing.Smithing::worldRecipes);
         register(de.ipnats.hardwrought.smeltery.MoltenMetals::worldRecipes);
         register(WorldRecipes::fireAndWater);
+        register(de.ipnats.hardwrought.storage.StorageBlocks::worldRecipes);
     }
 
     /** The two uses of a fire that are acts rather than cooking. */

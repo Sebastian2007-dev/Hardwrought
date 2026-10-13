@@ -35,7 +35,7 @@ public final class ToolParts {
         DAGGER_BLADE(1),
         GREATSWORD_BLADE(4),
         HALBERD_HEAD(3),
-        /** The head of the iron or steel hammer: iron wants a hammer of stone or better, steel an iron one. */
+        /** The head of a forged hammer. Each wants the hammer below it to be forged with: see {@code Hammers}. */
         HAMMER_HEAD(2),
         // Armor, forged in sheets and put together with leather at the bench. Each takes as many bars as
         // vanilla's piece took, and a hammer of stone or better: a mallet does not raise a helmet.
@@ -64,6 +64,10 @@ public final class ToolParts {
             Part.SWORD_BLADE, Part.DAGGER_BLADE, Part.GREATSWORD_BLADE, Part.HALBERD_HEAD,
             Part.HELMET_SHELL, Part.CUIRASS, Part.GREAVES, Part.SABATONS};
 
+    /** The same with a hammer's head: the forged metals above steel each make a hammer of their own. */
+    private static final Part[] EQUIPMENT_AND_HAMMER = java.util.stream.Stream.concat(
+            java.util.Arrays.stream(EQUIPMENT), java.util.stream.Stream.of(Part.HAMMER_HEAD)).toArray(Part[]::new);
+
     /** The armor parts. */
     public static final java.util.Set<Part> ARMOR = java.util.EnumSet.of(Part.HELMET_SHELL, Part.CUIRASS, Part.GREAVES,
             Part.SABATONS);
@@ -76,14 +80,14 @@ public final class ToolParts {
         COPPER("copper", () -> Items.COPPER_INGOT, Part.PICKAXE_HEAD, Part.AXE_HEAD, Part.SHOVEL_HEAD,
                 Part.HOE_HEAD, Part.SWORD_BLADE, Part.HELMET_SHELL, Part.CUIRASS, Part.GREAVES, Part.SABATONS),
         BRONZE("bronze", () -> ModItems.BRONZE_INGOT, Part.PICKAXE_HEAD, Part.AXE_HEAD),
-        // The metals above iron (see AlloyEquipment): every part but the hammer's head — which steel has too.
+        // The metals above iron (see AlloyEquipment): every part, and the head of a hammer.
         STEEL("steel", () -> de.ipnats.hardwrought.metallurgy.Alloys.STEEL_INGOT, Part.PICKAXE_HEAD, Part.AXE_HEAD,
                 Part.SHOVEL_HEAD, Part.HOE_HEAD, Part.SWORD_BLADE, Part.DAGGER_BLADE, Part.GREATSWORD_BLADE,
                 Part.HALBERD_HEAD, Part.HAMMER_HEAD, Part.HELMET_SHELL, Part.CUIRASS, Part.GREAVES, Part.SABATONS),
-        STAINLESS_STEEL("stainless_steel", () -> de.ipnats.hardwrought.metallurgy.Alloys.STAINLESS_STEEL_INGOT, EQUIPMENT),
+        STAINLESS_STEEL("stainless_steel", () -> de.ipnats.hardwrought.metallurgy.Alloys.STAINLESS_STEEL_INGOT, EQUIPMENT_AND_HAMMER),
         TITANIUM("titanium", () -> de.ipnats.hardwrought.metallurgy.ModMetals.ingot(
-                de.ipnats.hardwrought.metallurgy.Metal.TITANIUM), EQUIPMENT),
-        TUNGSTEN_STEEL("tungsten_steel", () -> de.ipnats.hardwrought.metallurgy.Alloys.TUNGSTEN_STEEL_INGOT, EQUIPMENT);
+                de.ipnats.hardwrought.metallurgy.Metal.TITANIUM), EQUIPMENT_AND_HAMMER),
+        TUNGSTEN_STEEL("tungsten_steel", () -> de.ipnats.hardwrought.metallurgy.Alloys.TUNGSTEN_STEEL_INGOT, EQUIPMENT_AND_HAMMER);
 
         private final String material;
         private final Supplier<Item> ingot;

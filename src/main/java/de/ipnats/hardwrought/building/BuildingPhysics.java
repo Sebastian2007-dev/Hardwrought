@@ -100,6 +100,8 @@ public final class BuildingPhysics {
 
     /** A block was placed from an item: a player's hand or a dispenser. */
     public static void placed(ServerLevel level, BlockPos pos, BlockState state) {
+        // Firm ground is never a built block; what it now props up is judged through changed().
+        if (storage(state)) return;
         if (StructuralMaterials.of(level.getServer(), state).isEmpty()) return;
         BuiltBlocks.markBuilt(level, pos);
         LevelState levelState = state(level);
@@ -416,6 +418,7 @@ public final class BuildingPhysics {
         // Past the loaded world nothing is known; assuming it holds never drops a building at a border.
         if (BuiltBlocks.loadedChunk(level, pos) == null) return Statics.ANCHOR;
         BlockState state = structural(level, pos);
+        if (storage(state)) return Statics.ANCHOR;
         if (BuiltBlocks.isBuilt(level, pos)) {
             Optional<Statics.Member> member = StructuralMaterials.of(level.getServer(), state);
             if (member.isPresent() && BuiltBlocks.isAnchored(level, pos)) return member.get().withAnchor();
@@ -431,6 +434,16 @@ public final class BuildingPhysics {
             return Statics.EMPTY;
         }
         return Statics.ANCHOR;
+    }
+
+    /**
+     * A chest or a hopper is furniture, not masonry. It is firm ground to whatever is set on it or
+     * against it, wherever it stands and whoever put it there, and it is never judged itself: a
+     * store room should not come down, and spill, because of what was built over it.
+     */
+    static boolean storage(BlockState state) {
+        return state.getBlock() instanceof net.minecraft.world.level.block.AbstractChestBlock<?>
+                || state.getBlock() instanceof net.minecraft.world.level.block.HopperBlock;
     }
 
     // ---------------------------------------------------------------- diagnostics

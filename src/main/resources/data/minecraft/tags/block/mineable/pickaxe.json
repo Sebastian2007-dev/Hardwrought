@@ -190,6 +190,11 @@
     "hardwrought:electric_furnace",
     "hardwrought:sawmill",
     "hardwrought:plate_press",
+    "hardwrought:lathe",
+    "hardwrought:tube_mill",
+    "hardwrought:storage_tube",
+    "hardwrought:storage_port",
+    "hardwrought:storage_desk",
     "hardwrought:copper_coil"
   ]
 }
