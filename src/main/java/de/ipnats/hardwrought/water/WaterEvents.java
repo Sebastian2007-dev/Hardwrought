@@ -58,8 +58,7 @@ public final class WaterEvents {
             var runtime = CoreLifecycle.find(serverLevel.getServer());
             WaterQuality quality = runtime == null
                     ? WaterQuality.FRESH : runtime.water().qualityAt(serverLevel, pos);
-            ItemStack bottle = PotionContents.createItemStack(Items.POTION, Potions.WATER);
-            bottle.set(ModDataComponents.WATER_QUALITY, quality);
+            ItemStack bottle = CauldronWater.bottle(quality);
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.BOTTLE_FILL, SoundSource.NEUTRAL, 1.0f, 1.0f);
             serverPlayer.awardStat(Stats.ITEM_USED.get(Items.GLASS_BOTTLE));
@@ -71,7 +70,9 @@ public final class WaterEvents {
             }
             return InteractionResult.SUCCESS;
         });
+        UseItemCallback.EVENT.register(WaterEvents::dipBowl);
         UseItemCallback.EVENT.register(WaterEvents::useBucket);
+        CauldronWater.initialize();
         UseBlockCallback.EVENT.register(WaterEvents::drinkByHand);
     }
 
@@ -283,6 +284,29 @@ public final class WaterEvents {
         if (!(hit instanceof BlockHitResult blockHit) || hit.getType() != HitResult.Type.BLOCK) return null;
         BlockPos pos = blockHit.getBlockPos();
         return WaterStorage.containsWater(level.getBlockState(pos)) ? pos : null;
+    }
+
+    /** An empty bowl dipped into water takes a bowlful of it, of whatever kind it is there. */
+    private static InteractionResult dipBowl(Player player, Level level, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (!stack.is(Items.BOWL)) return InteractionResult.PASS;
+        BlockPos pos = lookedAtWater(level, player);
+        if (pos == null) return InteractionResult.PASS;
+        if (!(level instanceof ServerLevel serverLevel) || !(player instanceof ServerPlayer serverPlayer)) {
+            return InteractionResult.SUCCESS;
+        }
+        int available = WaterStorage.amount(serverLevel, pos);
+        if (available < WaterBowlItem.MILLIBUCKETS) return InteractionResult.PASS;
+        var runtime = CoreLifecycle.find(serverLevel.getServer());
+        WaterQuality quality = runtime == null ? WaterQuality.FRESH : runtime.water().qualityAt(serverLevel, pos);
+        WaterStorage.setAmount(serverLevel, pos, available - WaterBowlItem.MILLIBUCKETS);
+        WaterFlow.disturb(serverLevel, pos);
+        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.BOTTLE_FILL, SoundSource.NEUTRAL, 1.0f, 0.8f);
+        ItemStack bowl = WaterBowlItem.of(de.ipnats.hardwrought.core.registry.ModItems.WATER_BOWL, quality);
+        stack.shrink(1);
+        if (!serverPlayer.getInventory().add(bowl)) serverPlayer.spawnAtLocation(serverLevel, bowl);
+        return InteractionResult.SUCCESS;
     }
 
     /** What a drink from this container is worth; anything unmarked counts as clean. */

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:leaf_string",
+    "hardwrought:leaf_string",
+    "hardwrought:leaf_string"
+  ],
+  "result": {
+    "id": "hardwrought:bandage",
+    "count": 2
+  }
+}

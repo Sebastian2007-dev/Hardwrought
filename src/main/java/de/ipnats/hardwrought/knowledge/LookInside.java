@@ -74,7 +74,69 @@ public final class LookInside {
             more = kinds.size() - LookPayloads.Contents.MAX_STACKS;
             kinds = kinds.subList(0, LookPayloads.Contents.MAX_STACKS);
         }
-        return new LookPayloads.Contents(pos, kinds, more, progress(entity));
+        return new LookPayloads.Contents(pos, kinds, more, progress(entity), tanks(level, pos));
+    }
+
+    /**
+     * The liquids and gases in it: everything a pipe or a gas line would find there, from any side.
+     * Liquids are put together by kind — a group of tanks is one tank — and where one liquid fills
+     * part of a group, the empty rest of it counts as its room. Each gas store is its own line.
+     */
+    private static List<LookPayloads.Contents.Tank> tanks(Level level, BlockPos pos) {
+        List<LookPayloads.Contents.Tank> tanks = new ArrayList<>();
+        java.util.Set<Object> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        java.util.Map<net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant, long[]> liquids = new java.util.LinkedHashMap<>();
+        long emptyRoom = 0;
+        java.util.List<net.minecraft.core.Direction> sides = new ArrayList<>(List.of(net.minecraft.core.Direction.values()));
+        for (net.minecraft.core.Direction side : sides) {
+            var storage = net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage.SIDED.find(level, pos, side);
+            if (storage == null || !seen.add(storage)) continue;
+            for (var view : storage) {
+                if (!seen.add(view)) continue;
+                long capacity = view.getCapacity() * 1000 / net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET;
+                if (view.isResourceBlank() || view.getAmount() <= 0) {
+                    emptyRoom += capacity;
+                    continue;
+                }
+                long[] sum = liquids.computeIfAbsent(view.getResource(), ignored -> new long[2]);
+                sum[0] += view.getAmount() * 1000 / net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET;
+                sum[1] += capacity;
+            }
+        }
+        if (liquids.size() == 1) liquids.values().iterator().next()[1] += emptyRoom;
+        for (var entry : liquids.entrySet()) {
+            var variant = entry.getKey();
+            ItemStack icon = FluidIcons.liquid(variant.getFluid(), (int) Math.min(Integer.MAX_VALUE, entry.getValue()[0]));
+            tanks.add(new LookPayloads.Contents.Tank(liquidName(variant, icon), icon, entry.getValue()[0], entry.getValue()[1], false));
+        }
+        if (liquids.isEmpty() && emptyRoom > 0) {
+            tanks.add(new LookPayloads.Contents.Tank(net.minecraft.network.chat.Component.translatable("hud.hardwrought.look.empty"),
+                    ItemStack.EMPTY, 0, emptyRoom, false));
+        }
+        for (net.minecraft.core.Direction side : sides) {
+            var gas = de.ipnats.hardwrought.gasline.GasStorage.SIDED.find(level, pos, side);
+            if (gas == null || gas.capacity() <= 0 || !seen.add(gas)) continue;
+            var kind = gas.kind();
+            long amount = Math.round(gas.amount());
+            tanks.add(kind == null || amount <= 0
+                    ? new LookPayloads.Contents.Tank(net.minecraft.network.chat.Component.translatable("hud.hardwrought.look.no_gas"),
+                            ItemStack.EMPTY, 0, Math.round(gas.capacity()), true)
+                    : new LookPayloads.Contents.Tank(net.minecraft.network.chat.Component.translatable(kind.translationKey()),
+                            FluidIcons.gas(kind, amount), amount, Math.round(gas.capacity()), true));
+        }
+        return tanks;
+    }
+
+    /** A liquid's name; water says what kind of water it is. */
+    private static net.minecraft.network.chat.Component liquidName(
+            net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant variant, ItemStack icon) {
+        var quality = de.ipnats.hardwrought.chemistry.SaltPan.quality(variant);
+        if (quality != null && quality != de.ipnats.hardwrought.water.WaterQuality.FRESH) {
+            return net.minecraft.network.chat.Component.translatable("water_quality.hardwrought." + quality.serializedName());
+        }
+        FluidIcons.Ingredient ingredient = FluidIcons.of(icon);
+        return ingredient != null ? ingredient.name()
+                : net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes.getName(variant);
     }
 
     private static List<ItemStack> stacks(Level level, BlockPos pos, BlockState state, BlockEntity entity) {

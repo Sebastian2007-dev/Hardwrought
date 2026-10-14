@@ -70,6 +70,31 @@ final class TankGroup implements Storage<FluidVariant> {
         return total;
     }
 
+    /**
+     * The height the liquid in the group stands at: the y of the layer it reaches, and how far up that
+     * layer it comes. NaN while the group is empty.
+     */
+    double surface() {
+        long left = amount();
+        if (left <= 0 || lowestFirst.isEmpty()) return Double.NaN;
+        int index = 0;
+        while (index < lowestFirst.size()) {
+            int y = lowestFirst.get(index).getBlockPos().getY();
+            int end = index;
+            while (end < lowestFirst.size() && lowestFirst.get(end).getBlockPos().getY() == y) end++;
+            long layer = (long) (end - index) * FluidTankBlock.Entity.CAPACITY;
+            if (left <= layer) return y + (double) left / layer;
+            left -= layer;
+            index = end;
+        }
+        return lowestFirst.getLast().getBlockPos().getY() + 1;
+    }
+
+    boolean contains(BlockPos pos) {
+        for (FluidTankBlock.Entity tank : lowestFirst) if (tank.getBlockPos().equals(pos)) return true;
+        return false;
+    }
+
     long capacity() {
         return (long) lowestFirst.size() * FluidTankBlock.Entity.CAPACITY;
     }

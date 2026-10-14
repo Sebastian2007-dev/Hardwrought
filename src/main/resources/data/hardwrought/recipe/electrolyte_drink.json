@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:water_bowl",
+    "hardwrought:salt",
+    "minecraft:sugar"
+  ],
+  "result": {
+    "id": "hardwrought:electrolyte_drink"
+  }
+}

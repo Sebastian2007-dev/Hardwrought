@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "I": "hardwrought:iron_plate",
+    "C": "hardwrought:ceramic_filter",
+    "P": "hardwrought:electric_pump",
+    "B": "hardwrought:circuit_board"
+  },
+  "pattern": [
+    "IBI",
+    "ICI",
+    "IPI"
+  ],
+  "result": {
+    "id": "hardwrought:water_purifier"
+  }
+}

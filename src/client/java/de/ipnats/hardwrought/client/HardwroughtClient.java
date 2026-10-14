@@ -30,6 +30,9 @@ public class HardwroughtClient implements ClientModInitializer {
 				de.ipnats.hardwrought.core.registry.ModBlockEntities.SHARED_CELL,
 				de.ipnats.hardwrought.client.environment.SharedCellRenderer::new);
 		de.ipnats.hardwrought.client.environment.CarrierWater.initialize();
+		de.ipnats.hardwrought.client.environment.WaterTint.initialize();
+		de.ipnats.hardwrought.client.fun.FakeDeathScreen.initialize();
+		de.ipnats.hardwrought.client.survival.BodyMarks.initialize();
 		de.ipnats.hardwrought.client.environment.LeafOverlay.initialize();
 		net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
 				de.ipnats.hardwrought.core.registry.ModBlockEntities.DRYING_RACK,

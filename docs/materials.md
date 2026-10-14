@@ -9,6 +9,7 @@ the first two multiblocks.
 | Material | Made in | From |
 | --- | --- | --- |
 | Caustic soda | electrolyser | salt and 250 mB of water; also gives 4 units of chlorine |
+| Salt | salt pan | seawater dried in the sun or over a fire: 2 salt a bucket (`SaltPan`); seawater by the bucket, or by pipe from a pump set in the sea |
 | Plastic pellets (4) | chemical reactor | 250 mB of naphtha and 2 units of LPG |
 | Plastic sheet | plate press | plastic pellets |
 | Rubber (2) | chemical reactor | 2 resin and sulfur |

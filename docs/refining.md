@@ -118,7 +118,7 @@ its gas line intake. Recipe: flint and steel over iron plates, two iron fluid pi
 ## Gas lines
 
 Gas lines look like the other pipes, with a yellow trim, and come in the same five metals. They need
-no pump. Every store on a line is a gas tank, a rig, a column's top or a cracker. Each store stands at
+no pump to even out; a gas pump (below) is what moves gas against the pressure. Every store on a line is a gas tank, a rig, a column's top or a cracker. Each store stands at
 a pressure: how full it is times the pressure it is built for. Each tick, gas goes from the highest
 pressure to the lowest store that takes that gas, until the pressures meet. A line carries only one
 kind of gas at a time, natural gas or LPG.
@@ -134,6 +134,20 @@ kind of gas at a time, natural gas or LPG.
 If a store on the line stands above what its weakest pipe holds, the line bursts there, on about one
 second in four. The pipe is gone and 16 units of the gas come out as **methane** into the world. A full
 gas tank stands at 20 bar and a rig at 10, so bronze is only for low pressure.
+
+**Gas pumps** (`GasCompressor`) move gas the way pressure will not: in at the back, out at the front, and
+never the other way. Placed facing the way the player looks; lines join only the back (inlet) and the front
+(outlet). Running, a pump draws from the line behind it as fast as it pumps and presses into the line in
+front 1 bar above the highest pressure standing there, so a tank fuller than the well still fills — and a
+line pressed past what its weakest pipe holds still bursts. Standing, it is a check valve: nothing goes
+through either way.
+
+| Pump | Driven by | Pumps | Recipe |
+| --- | --- | --- | --- |
+| Gas pump | a shaft, gear or crank on one of its four other sides (a hand crank will do) | 4 units/s at 16 RPM, in proportion to speed | iron gas lines, iron plates, two shafts, a piston |
+| Electric gas pump | current, through a coil set against it; 40 Ω | 16 units/s at rated voltage, less as it drops | gas pump, redstone coils, electric motor, iron |
+
+An empty hand reads what a gas pump pumps a second and what gas it holds.
 
 The **gas tank** holds 256 units at 20 bar. An empty gas canister held to it draws 16 units into a
 canister of the gas it holds, natural gas or LPG, and a full canister empties back into it.
@@ -170,6 +184,7 @@ it.
 `RefineryGameTests`:
 
 - two tanks even out over a gas line;
+- a gas pump lets nothing through standing, fills the far tank past level turned, and lets nothing back stopped;
 - an over-pressured bronze line bursts;
 - a two-tray column catches heavy oil and diesel and leaves bitumen;
 - a five-tray column sends LPG out of the top;

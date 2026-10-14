@@ -42,6 +42,14 @@ public final class GasLines {
             BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(3.0f, 8.0f).requiresCorrectToolForDrops()
                     .sound(SoundType.METAL));
 
+    /** Gas pumps: gas in at the back, out at the front, never back (see {@link GasCompressor}). */
+    public static final GasPumpBlock PUMP = block("gas_pump", GasPumpBlock::new,
+            BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(3.0f, 6.0f).requiresCorrectToolForDrops()
+                    .sound(SoundType.COPPER));
+    public static final ElectricGasPumpBlock ELECTRIC_PUMP = block("electric_gas_pump", ElectricGasPumpBlock::new,
+            BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(3.0f, 6.0f).requiresCorrectToolForDrops()
+                    .sound(SoundType.METAL));
+
     /** Liquefied gas off a refinery: burns in a furnace like natural gas, and gives its canister back. */
     public static final Item LPG_CANISTER;
 
@@ -56,12 +64,18 @@ public final class GasLines {
             new BlockEntityType<>(GasLineBlock.Entity::new, Set.copyOf(LINES.values())));
     public static final BlockEntityType<GasTankBlock.Entity> TANK_ENTITY = entity("gas_tank",
             new BlockEntityType<>(GasTankBlock.Entity::new, Set.of(TANK)));
+    public static final BlockEntityType<GasPumpBlock.Entity> PUMP_ENTITY = entity("gas_pump",
+            new BlockEntityType<>(GasPumpBlock.Entity::new, Set.of(PUMP)));
+    public static final BlockEntityType<ElectricGasPumpBlock.Entity> ELECTRIC_PUMP_ENTITY = entity("electric_gas_pump",
+            new BlockEntityType<>(ElectricGasPumpBlock.Entity::new, Set.of(ELECTRIC_PUMP)));
 
     private GasLines() { }
 
     /** Touching the class registers everything; then the blocks that hold gas are offered to the lines. */
     public static void initialize() {
         GasStorage.SIDED.registerForBlockEntity((tank, side) -> tank.store, TANK_ENTITY);
+        GasStorage.SIDED.registerForBlockEntity((pump, side) -> pump.storage(side), PUMP_ENTITY);
+        GasStorage.SIDED.registerForBlockEntity((pump, side) -> pump.storage(side), ELECTRIC_PUMP_ENTITY);
         GasStorage.SIDED.registerForBlockEntity((rig, side) -> rig.gasOutlet(), ModBlockEntities.DRILLING_RIG);
     }
 
@@ -85,6 +99,8 @@ public final class GasLines {
         List<Item> items = new ArrayList<>();
         for (GasLineBlock line : LINES.values()) items.add(line.asItem());
         items.add(TANK.asItem());
+        items.add(PUMP.asItem());
+        items.add(ELECTRIC_PUMP.asItem());
         items.add(LPG_CANISTER);
         return items;
     }

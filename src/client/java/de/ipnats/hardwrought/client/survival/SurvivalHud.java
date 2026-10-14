@@ -101,6 +101,7 @@ public final class SurvivalHud {
             if (!client.player.isUnderWater()) {
                 renderDrops(graphics, center + 11, dropY, snapshot.hydration(), waterColor(client.player));
             }
+            renderStuffed(graphics, center, graphics.guiHeight() - 39, client.player);
         }
 
         if (detailsVisible) renderDetails(graphics, snapshot);
@@ -109,6 +110,28 @@ public final class SurvivalHud {
                     I18n.get("hud.hardwrought.sleep_quality"), snapshot.sleepQuality() * 100);
             int textX = center - client.font.width(sleep) / 2;
             graphics.text(client.font, sleep, textX, graphics.guiHeight() - 72, 0xFFDCCFFF, true);
+        }
+    }
+
+    private static final net.minecraft.resources.Identifier FOOD_FULL = net.minecraft.resources.Identifier.withDefaultNamespace("hud/food_full");
+    private static final net.minecraft.resources.Identifier FOOD_HALF = net.minecraft.resources.Identifier.withDefaultNamespace("hud/food_half");
+    /** The gold of a belly fuller than full. */
+    private static final int STUFFED_COLOR = 0xFFF0B838;
+
+    /**
+     * What has been eaten past full, as a second bar of food drawn in gold over the first: each gold
+     * shank is two points more than the bar holds, and the bar does not fall until they are gone.
+     */
+    private static void renderStuffed(net.minecraft.client.gui.GuiGraphicsExtractor graphics, int center, int y,
+                                      net.minecraft.world.entity.player.Player player) {
+        double stuffed = de.ipnats.hardwrought.survival.Overeating.stuffed(player);
+        if (stuffed < 1) return;
+        for (int icon = 0; icon < 10; icon++) {
+            double here = stuffed - icon * 2;
+            if (here < 1) break;
+            int x = center + 91 - icon * 8 - 9;
+            graphics.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, here >= 2 ? FOOD_FULL : FOOD_HALF,
+                    x, y, 9, 9, STUFFED_COLOR);
         }
     }
 
@@ -198,7 +221,8 @@ public final class SurvivalHud {
         int x = PANEL_X;
         int y = PANEL_Y;
         int right = x + PANEL_WIDTH;
-        graphics.fill(x - 3, y - 3, right + 3, y + PANEL_HEIGHT, 0xA6080B0E);
+        java.util.List<net.minecraft.network.chat.Component> ills = diseaseLines(client.player);
+        graphics.fill(x - 3, y - 3, right + 3, y + PANEL_HEIGHT + ills.size() * DISEASE_LINE, 0xA6080B0E);
         graphics.fill(x - 2, y - 2, right + 2, y - 1, 0x805D6972);
 
         double capacity = Math.max(0.001, values.capacityKg());
@@ -212,6 +236,34 @@ public final class SurvivalHud {
         thinBar(graphics, BAR_X, y + 20, BAR_WIDTH, values.fatigue(), 100, fatigueColor(values.fatigue()));
         String fatigue = String.format(Locale.ROOT, "%.0f / 100", values.fatigue());
         graphics.text(client.font, fatigue, right - client.font.width(fatigue), y + 18, 0xFFC9D0D4, true);
+        for (int line = 0; line < ills.size(); line++) {
+            graphics.text(client.font, ills.get(line), x, y + PANEL_HEIGHT + line * DISEASE_LINE - 1, DISEASE_COLOR, true);
+        }
+    }
+
+    private static final int DISEASE_LINE = 10;
+    private static final int DISEASE_COLOR = 0xFFB4D07A;
+
+    /**
+     * One line for each disease the player feels: its name once they have been through it before, and
+     * otherwise only what it does to them; and how it stands.
+     */
+    private static java.util.List<net.minecraft.network.chat.Component> diseaseLines(
+            net.minecraft.client.player.LocalPlayer player) {
+        java.util.List<net.minecraft.network.chat.Component> lines = new java.util.ArrayList<>();
+        if (player == null) return lines;
+        var health = de.ipnats.hardwrought.health.Diseases.health(player);
+        for (var infection : health.infections()) {
+            if (!infection.felt()) continue;
+            var disease = infection.disease();
+            var stage = infection.stage();
+            net.minecraft.network.chat.Component name = health.known().contains(disease)
+                    ? net.minecraft.network.chat.Component.translatable(disease.translationKey(stage))
+                    : net.minecraft.network.chat.Component.translatable("disease.hardwrought.symptoms." + disease.serializedName());
+            lines.add(net.minecraft.network.chat.Component.translatable("gui.hardwrought.survival.disease", name,
+                    net.minecraft.network.chat.Component.translatable(stage.translationKey())));
+        }
+        return lines;
     }
 
     private static void thinBar(net.minecraft.client.gui.GuiGraphicsExtractor graphics, int x, int y,

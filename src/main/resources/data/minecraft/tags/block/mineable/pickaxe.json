@@ -239,6 +239,11 @@
     "hardwrought:large_diesel_controller",
     "hardwrought:fluid_port",
     "hardwrought:item_port",
-    "hardwrought:power_port"
+    "hardwrought:power_port",
+    "hardwrought:salt_pan",
+    "hardwrought:ceramic_filter",
+    "hardwrought:water_purifier",
+    "hardwrought:gas_pump",
+    "hardwrought:electric_gas_pump"
   ]
 }

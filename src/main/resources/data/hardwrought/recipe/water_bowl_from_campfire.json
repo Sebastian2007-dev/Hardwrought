@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:campfire_cooking",
+  "category": "misc",
+  "cookingtime": 400,
+  "experience": 0.0,
+  "ingredient": "hardwrought:water_bowl",
+  "result": {
+    "id": "hardwrought:water_bowl",
+    "components": {
+      "minecraft:damage": 30,
+      "hardwrought:water_quality": "purified"
+    }
+  }
+}

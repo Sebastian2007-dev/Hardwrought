@@ -1,0 +1,27 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "hardwrought:block/electric_gas_pump"
+    },
+    "facing=south": {
+      "model": "hardwrought:block/electric_gas_pump",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "hardwrought:block/electric_gas_pump",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "hardwrought:block/electric_gas_pump",
+      "y": 270
+    },
+    "facing=up": {
+      "model": "hardwrought:block/electric_gas_pump",
+      "x": 270
+    },
+    "facing=down": {
+      "model": "hardwrought:block/electric_gas_pump",
+      "x": 90
+    }
+  }
+}

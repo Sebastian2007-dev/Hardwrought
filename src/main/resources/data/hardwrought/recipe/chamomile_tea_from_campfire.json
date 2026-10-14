@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:campfire_cooking",
+  "category": "misc",
+  "cookingtime": 400,
+  "experience": 0.1,
+  "ingredient": "hardwrought:chamomile_infusion",
+  "result": {
+    "id": "hardwrought:chamomile_tea",
+    "components": {
+      "minecraft:damage": 30
+    }
+  }
+}

@@ -37,6 +37,66 @@ public class SmelteryScreen extends AbstractContainerScreen<SmelteryMenu> {
         inventoryLabelY = imageHeight - 94;
     }
 
+    /** The letters typed into the screen so far, while they still spell the start of a secret word. */
+    private String typed = "";
+
+    /**
+     * A secret word typed into the smeltery's screen calls up one of its makers
+     * ({@link de.ipnats.hardwrought.fun.StampiEasterEgg}). From the first letter of one, every letter
+     * that still fits is kept from doing anything else — the E in SCHMELZ would close the screen — and
+     * the first that does not fit does what it always does.
+     *
+     * <p>The letter is the key's keycode, which follows the keyboard's layout; its {@code key()} is the
+     * physical position, which on a German keyboard calls the key marked Z a Y.
+     */
+    @Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        int code = Character.toUpperCase(event.keycode());
+        if (code >= 'A' && code <= 'Z') {
+            char letter = (char) code;
+            String next = typed + letter;
+            if (!startsAWord(next)) next = startsAWord(String.valueOf(letter)) ? String.valueOf(letter) : "";
+            boolean fits = next.equals(typed + letter);
+            typed = next;
+            if (de.ipnats.hardwrought.fun.StampiEasterEgg.WORDS.contains(typed) && !startsALongerWord(typed)) {
+                typed = "";
+                net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                        new de.ipnats.hardwrought.fun.StampiEasterEgg.Summon());
+                return true;
+            }
+            if (fits) return true;
+        }
+        return super.keyPressed(event);
+    }
+
+    @Override
+    public void containerTick() {
+        super.containerTick();
+        // SCHMELZERI is also the start of SCHMELZERIE: give the longer word a moment, then take the shorter.
+        if (de.ipnats.hardwrought.fun.StampiEasterEgg.WORDS.contains(typed) && ++typedWait > 30) {
+            typed = "";
+            typedWait = 0;
+            net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                    new de.ipnats.hardwrought.fun.StampiEasterEgg.Summon());
+        } else if (!de.ipnats.hardwrought.fun.StampiEasterEgg.WORDS.contains(typed)) {
+            typedWait = 0;
+        }
+    }
+
+    private int typedWait;
+
+    private static boolean startsAWord(String text) {
+        for (String word : de.ipnats.hardwrought.fun.StampiEasterEgg.WORDS) if (word.startsWith(text)) return true;
+        return false;
+    }
+
+    private static boolean startsALongerWord(String text) {
+        for (String word : de.ipnats.hardwrought.fun.StampiEasterEgg.WORDS) {
+            if (word.length() > text.length() && word.startsWith(text)) return true;
+        }
+        return false;
+    }
+
     /**
      * What the tank holds, asked of the smeltery itself. The menu cannot say: it sends its numbers as
      * shorts, and a tank of more than 28 blocks holds more millibuckets than a short does.

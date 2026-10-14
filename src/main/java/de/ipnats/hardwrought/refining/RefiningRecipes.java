@@ -47,6 +47,12 @@ public final class RefiningRecipes {
             recipes.add(new WorldRecipe(Hardwrought.id("still/" + BuiltInRegistries.ITEM.getKey(product.getItem()).getPath()),
                     charge, product, still));
         }
+        // Its other charge: raw sulfur melted clean. Salt is the salt pan's (SaltPan).
+        recipes.add(new WorldRecipe(Hardwrought.id("still/spirit"),
+                WorldRecipes.one(new ItemStack(ModItems.MASH), new ItemStack(Items.GLASS_BOTTLE)),
+                new ItemStack(ModItems.SPIRIT), still));
+        recipes.add(new WorldRecipe(Hardwrought.id("still/sulfur"), WorldRecipes.one(new ItemStack(ModItems.RAW_SULFUR)),
+                new ItemStack(ModItems.SULFUR), still));
 
         // The column: each batch of crude oil, and what every tray catches of it.
         ItemStack base = new ItemStack(RefineryBlocks.BASE);

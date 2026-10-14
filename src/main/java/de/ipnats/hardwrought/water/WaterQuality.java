@@ -7,21 +7,27 @@ import java.util.Locale;
 
 /**
  * The water categories of specification section 23.2. The order is the order of usefulness, so a
- * purification step can only ever move water toward {@link #FRESH}.
+ * purification step can only ever move water toward {@link #PURIFIED}.
+ *
+ * <p>Only purified water is wholly safe. Water out of the world — even a spring or the rain — carries
+ * a little risk, and the better it is cleaned, the less: boiled in a bowl over a fire early on,
+ * through filters and machines later.
  *
  * @param hydration    what one drink of this water is worth, as a share of clean water. Salt water
  *                     is negative: drinking it costs the body more water than it supplies.
  * @param illnessRisk  chance per drink of falling ill from it, 0 for water that is safe
  */
 public enum WaterQuality {
-    /** Spring, rain and meltwater, or anything that has been boiled. */
-    FRESH(1.00, 0.00),
+    /** Boiled, filtered or distilled: clean, and a little more refreshing than anything raw. Rarely a spring. */
+    PURIFIED(1.10, 0.00, 0x6FD6F7, 0x5CCBF2, 0.70f),
+    /** Spring, rain and meltwater: clear, but not quite safe until it has been cleaned. */
+    FRESH(1.00, 0.04, 0x3F76E4, 0, 0.0f),
     /** Running water: carries less than a lake, but keeps itself moving. */
-    RIVER(0.90, 0.12),
+    RIVER(0.90, 0.12, 0x3D8BC0, 0x3D8BA8, 0.20f),
     /** Standing, warm, organic water. Drinkable only in the sense that it is wet. */
-    SWAMP(0.65, 0.45),
+    SWAMP(0.65, 0.45, 0x6B6A33, 0x5E5B2C, 0.60f),
     /** Section 23.2: seawater takes more water out of the body than it puts in. */
-    SALT(-0.60, 0.05);
+    SALT(-0.60, 0.05, 0x4F8C8A, 0x3C6E70, 0.35f);
 
     public static final Codec<WaterQuality> CODEC = Codec.STRING.comapFlatMap(name -> {
         WaterQuality value = byName(name);
@@ -30,10 +36,30 @@ public enum WaterQuality {
 
     private final double hydration;
     private final double illnessRisk;
+    private final int color;
+    private final int worldTint;
+    private final float worldBlend;
 
-    WaterQuality(double hydration, double illnessRisk) {
+    WaterQuality(double hydration, double illnessRisk, int color, int worldTint, float worldBlend) {
         this.hydration = hydration;
         this.illnessRisk = illnessRisk;
+        this.color = color;
+        this.worldTint = worldTint;
+        this.worldBlend = worldBlend;
+    }
+
+    /** The water as a bucket, a bottle, a bowl or a bar shows it, as RGB. */
+    public int color() {
+        return color;
+    }
+
+    /** The colour water of this kind is pulled towards in the world, as RGB, and how far (0 to 1). */
+    public int worldTint() {
+        return worldTint;
+    }
+
+    public float worldBlend() {
+        return worldBlend;
     }
 
     public double hydrationFactor() {
@@ -53,12 +79,12 @@ public enum WaterQuality {
     }
 
     /**
-     * Section 23.2: boiling makes water drinkable. It kills what lives in the water, so it clears
-     * swamp and river water — but boiling seawater only concentrates the salt, which is why
-     * distillation is listed separately there and belongs to the later purification chain.
+     * Section 23.2: boiling makes water drinkable. It kills what lives in the water, so it purifies
+     * swamp, river and spring water alike — but boiling seawater only concentrates the salt, which is
+     * why distillation is listed separately there and belongs to the later purification chain.
      */
     public WaterQuality boiled() {
-        return this == SALT ? SALT : FRESH;
+        return this == SALT ? SALT : PURIFIED;
     }
 
     /**

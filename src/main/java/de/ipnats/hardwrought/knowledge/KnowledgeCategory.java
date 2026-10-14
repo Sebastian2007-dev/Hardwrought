@@ -90,6 +90,9 @@ public enum KnowledgeCategory {
         put.accept(CHEMISTRY, de.ipnats.hardwrought.gasline.GasLines.items());
         put.accept(CHEMISTRY, de.ipnats.hardwrought.materials.Materials.items());
         put.accept(CHEMISTRY, de.ipnats.hardwrought.materials.MaterialBlocks.items());
+        put.accept(CHEMISTRY, de.ipnats.hardwrought.chemistry.SaltPan.items());
+        put.accept(MEDICINE, de.ipnats.hardwrought.health.Herbs.items());
+        put.accept(CHEMISTRY, de.ipnats.hardwrought.water.WaterTreatmentBlocks.items());
         put.accept(CHEMISTRY, List.of(de.ipnats.hardwrought.core.registry.ModItems.STILL,
                 de.ipnats.hardwrought.core.registry.ModItems.CRUDE_OIL_BUCKET, de.ipnats.hardwrought.core.registry.ModItems.GAS_CANISTER,
                 de.ipnats.hardwrought.core.registry.ModItems.NATURAL_GAS_CANISTER, de.ipnats.hardwrought.core.registry.ModItems.LIGHT_FRACTION,
@@ -101,6 +104,7 @@ public enum KnowledgeCategory {
         put.accept(ENGINEERING, de.ipnats.hardwrought.multiblock.BigMachines.items());
         put.accept(ENGINEERING, List.of(de.ipnats.hardwrought.core.registry.ModItems.DRILLING_RIG));
         put.accept(ENGINEERING, de.ipnats.hardwrought.parts.Parts.items());
+        put.accept(ENGINEERING, de.ipnats.hardwrought.storage.StorageBlocks.parts());
         put.accept(ELECTRICITY, de.ipnats.hardwrought.electricity.ElectricBlocks.items());
         put.accept(ELECTRICITY, List.of(de.ipnats.hardwrought.parts.Parts.REDSTONE_COIL, de.ipnats.hardwrought.parts.Parts.ELECTRIC_MOTOR,
                 de.ipnats.hardwrought.parts.Parts.CIRCUIT_BOARD, de.ipnats.hardwrought.parts.Parts.RESISTOR,

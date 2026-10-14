@@ -44,6 +44,8 @@ public abstract class BiomeColorsMixin {
     @Inject(method = "getAverageWaterColor", at = @At("RETURN"), cancellable = true)
     private static void hardwrought$seasonalWater(BlockAndTintGetter level, BlockPos pos,
                                                   CallbackInfoReturnable<Integer> callback) {
-        callback.setReturnValue(SeasonColors.water(callback.getReturnValue()));
+        // The season first, then what is in the water: a frozen marsh is still a marsh.
+        callback.setReturnValue(de.ipnats.hardwrought.client.environment.WaterTint.tint(
+                SeasonColors.water(callback.getReturnValue()), pos));
     }
 }

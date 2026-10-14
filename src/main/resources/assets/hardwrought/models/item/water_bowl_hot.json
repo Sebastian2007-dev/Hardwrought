@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "minecraft:item/bowl",
+    "layer1": "hardwrought:item/bowl_water",
+    "layer2": "hardwrought:item/bowl_steam"
+  }
+}

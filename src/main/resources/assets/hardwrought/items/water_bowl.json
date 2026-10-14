@@ -1,0 +1,210 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:damage",
+    "normalize": false,
+    "entries": [
+      {
+        "threshold": 1,
+        "model": {
+          "type": "minecraft:select",
+          "property": "minecraft:component",
+          "component": "hardwrought:water_quality",
+          "cases": [
+            {
+              "when": "purified",
+              "model": {
+                "type": "minecraft:model",
+                "model": "hardwrought:item/water_bowl_hot",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -9447689
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  }
+                ]
+              }
+            },
+            {
+              "when": "river",
+              "model": {
+                "type": "minecraft:model",
+                "model": "hardwrought:item/water_bowl_hot",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -12743744
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  }
+                ]
+              }
+            },
+            {
+              "when": "swamp",
+              "model": {
+                "type": "minecraft:model",
+                "model": "hardwrought:item/water_bowl_hot",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -9737677
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  }
+                ]
+              }
+            },
+            {
+              "when": "salt",
+              "model": {
+                "type": "minecraft:model",
+                "model": "hardwrought:item/water_bowl_hot",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -11563894
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  }
+                ]
+              }
+            }
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "hardwrought:item/water_bowl_hot",
+            "tints": [
+              {
+                "type": "minecraft:constant",
+                "value": -1
+              },
+              {
+                "type": "minecraft:constant",
+                "value": -12618012
+              },
+              {
+                "type": "minecraft:constant",
+                "value": -1
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:select",
+      "property": "minecraft:component",
+      "component": "hardwrought:water_quality",
+      "cases": [
+        {
+          "when": "purified",
+          "model": {
+            "type": "minecraft:model",
+            "model": "hardwrought:item/water_bowl",
+            "tints": [
+              {
+                "type": "minecraft:constant",
+                "value": -1
+              },
+              {
+                "type": "minecraft:constant",
+                "value": -9447689
+              }
+            ]
+          }
+        },
+        {
+          "when": "river",
+          "model": {
+            "type": "minecraft:model",
+            "model": "hardwrought:item/water_bowl",
+            "tints": [
+              {
+                "type": "minecraft:constant",
+                "value": -1
+              },
+              {
+                "type": "minecraft:constant",
+                "value": -12743744
+              }
+            ]
+          }
+        },
+        {
+          "when": "swamp",
+          "model": {
+            "type": "minecraft:model",
+            "model": "hardwrought:item/water_bowl",
+            "tints": [
+              {
+                "type": "minecraft:constant",
+                "value": -1
+              },
+              {
+                "type": "minecraft:constant",
+                "value": -9737677
+              }
+            ]
+          }
+        },
+        {
+          "when": "salt",
+          "model": {
+            "type": "minecraft:model",
+            "model": "hardwrought:item/water_bowl",
+            "tints": [
+              {
+                "type": "minecraft:constant",
+                "value": -1
+              },
+              {
+                "type": "minecraft:constant",
+                "value": -11563894
+              }
+            ]
+          }
+        }
+      ],
+      "fallback": {
+        "type": "minecraft:model",
+        "model": "hardwrought:item/water_bowl",
+        "tints": [
+          {
+            "type": "minecraft:constant",
+            "value": -1
+          },
+          {
+            "type": "minecraft:constant",
+            "value": -12618012
+          }
+        ]
+      }
+    }
+  }
+}

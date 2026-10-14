@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "north": "hardwrought:block/electric_gas_pump_front",
+    "south": "hardwrought:block/electric_gas_pump_back",
+    "east": "hardwrought:block/electric_gas_pump_side",
+    "west": "hardwrought:block/electric_gas_pump_side",
+    "up": "hardwrought:block/electric_gas_pump_side",
+    "down": "hardwrought:block/electric_gas_pump_side",
+    "particle": "hardwrought:block/electric_gas_pump_side"
+  }
+}

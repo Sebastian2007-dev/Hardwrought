@@ -56,10 +56,15 @@ public final class StorageBlocks {
         StorageDeskMenu.initialize();
     }
 
-    /** Everything a player can hold, for the creative tab. */
+    /** The machines and blocks, for the machinery tab. */
     public static List<Item> items() {
-        return List.of(ElectricBlocks.LATHE.asItem(), ElectricBlocks.TUBE_MILL.asItem(), FINE_GEAR, TUBE_SECTION,
-                SORTING_MECHANISM, TUBE.asItem(), PORT.asItem(), DESK.asItem());
+        return List.of(ElectricBlocks.LATHE.asItem(), ElectricBlocks.TUBE_MILL.asItem(),
+                TUBE.asItem(), PORT.asItem(), DESK.asItem());
+    }
+
+    /** The small parts the store room is built of, for the parts tab. */
+    public static List<Item> parts() {
+        return List.of(FINE_GEAR, TUBE_SECTION, SORTING_MECHANISM);
     }
 
     /** What the two machines make, as the compendium shows it. */

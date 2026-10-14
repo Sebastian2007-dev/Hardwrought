@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "contents=empty": {
+      "model": "hardwrought:block/salt_pan"
+    },
+    "contents=brine": {
+      "model": "hardwrought:block/salt_pan_brine"
+    },
+    "contents=salt": {
+      "model": "hardwrought:block/salt_pan_salt"
+    }
+  }
+}

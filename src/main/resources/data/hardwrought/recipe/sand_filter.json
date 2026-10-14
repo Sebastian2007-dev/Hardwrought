@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "#minecraft:planks",
+    "S": "minecraft:sand",
+    "C": "minecraft:charcoal",
+    "G": "minecraft:gravel"
+  },
+  "pattern": [
+    "PSP",
+    "PCP",
+    "PGP"
+  ],
+  "result": {
+    "id": "hardwrought:sand_filter"
+  }
+}

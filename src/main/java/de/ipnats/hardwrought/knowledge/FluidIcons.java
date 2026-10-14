@@ -29,7 +29,8 @@ import net.minecraft.world.level.material.Fluids;
  *
  * <p>The book's recipes are made of item stacks, so a liquid travels as a stack of an item that is never
  * held, carrying what it stands for and how much. The book draws it as the liquid, and a click on it
- * opens the page of its bucket or canister, where the liquid's own recipes are.
+ * opens the page of its bucket or canister, where the liquid's own recipes are. One that is never
+ * carried in anything, as chlorine is not, gets a page of its own instead.
  */
 public final class FluidIcons {
     /** A liquid by its fluid id in millibuckets, or a gas by its name in units. */
@@ -105,6 +106,13 @@ public final class FluidIcons {
         return stack;
     }
 
+    /** A liquid or gas as the book draws it. */
+    public static ItemStack stack(Ingredient ingredient) {
+        ItemStack stack = new ItemStack(ICON);
+        stack.set(INGREDIENT, ingredient);
+        return stack;
+    }
+
     /** What a stack stands for, where it is a liquid or a gas; null for a plain item. */
     public static Ingredient of(ItemStack stack) {
         return stack.is(ICON) ? stack.get(INGREDIENT) : null;
@@ -125,6 +133,37 @@ public final class FluidIcons {
             if (product.source() == fluid) return product.bucket();
         }
         return null;
+    }
+
+    /**
+     * The page the book opens for a liquid or gas: its bucket's or canister's, or else one of its own,
+     * named {@code hardwrought:gas/<gas>} or {@code hardwrought:fluid/<namespace>/<path>}.
+     */
+    public static Identifier subject(Ingredient ingredient) {
+        Item container = container(ingredient);
+        if (container != null) return BuiltInRegistries.ITEM.getKey(container);
+        if (ingredient.gas()) return Hardwrought.id("gas/" + ingredient.id());
+        Identifier fluid = Identifier.tryParse(ingredient.id());
+        return fluid == null ? null : Hardwrought.id("fluid/" + fluid.getNamespace() + "/" + fluid.getPath());
+    }
+
+    /** The liquid or gas a page of its own is about, in no particular amount; null for an item's page. */
+    public static Ingredient ofSubject(Identifier subject) {
+        if (subject == null || !subject.getNamespace().equals(Hardwrought.MOD_ID)) return null;
+        String path = subject.getPath();
+        if (path.startsWith("gas/")) return new Ingredient(true, path.substring("gas/".length()), 0);
+        if (path.startsWith("fluid/")) {
+            String rest = path.substring("fluid/".length());
+            int slash = rest.indexOf('/');
+            return slash < 0 ? null : new Ingredient(false, rest.substring(0, slash) + ":" + rest.substring(slash + 1), 0);
+        }
+        return null;
+    }
+
+    /** Whether a recipe's stack is this liquid or gas, in whatever amount. */
+    public static boolean matches(ItemStack option, Ingredient ingredient) {
+        Ingredient own = of(option);
+        return own != null && own.gas() == ingredient.gas() && own.id().equals(ingredient.id());
     }
 
     /**

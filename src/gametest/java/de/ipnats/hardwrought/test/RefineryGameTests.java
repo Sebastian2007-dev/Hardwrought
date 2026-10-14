@@ -49,6 +49,51 @@ public final class RefineryGameTests {
         });
     }
 
+    @GameTest
+    public void anEmptiedGasStoreForgetsWhatItHeld(GameTestHelper helper) {
+        var store = new de.ipnats.hardwrought.gasline.GasStore(64, 2, true, () -> { });
+        store.insert(GasKind.LPG, 2);
+        // What a line or a machine takes out can fall short of all of it by a rounding error.
+        store.extract(2 - 1e-7);
+        helper.assertTrue(store.amount() == 0 && store.kind() == null, "Emptied to a rounding error, it is empty");
+        helper.assertTrue(store.insert(GasKind.CHLORINE, 4) == 4, "and takes another gas");
+        helper.succeed();
+    }
+
+    @GameTest(maxTicks = 300)
+    public void aGasPumpFillsPastLevelAndLetsNothingBack(GameTestHelper helper) {
+        // tank — line — pump (out to the east) — line — tank, both tanks equally full.
+        BlockPos left = new BlockPos(1, 1, 1), pump = new BlockPos(3, 1, 1), right = new BlockPos(5, 1, 1);
+        helper.setBlock(left, GasLines.TANK);
+        helper.setBlock(right, GasLines.TANK);
+        helper.setBlock(pump, GasLines.PUMP.defaultBlockState()
+                .setValue(de.ipnats.hardwrought.gasline.GasPumpBlock.FACING, net.minecraft.core.Direction.EAST));
+        helper.setBlock(new BlockPos(2, 1, 1), GasLines.LINES.get(GasLineTier.TITANIUM));
+        helper.setBlock(new BlockPos(4, 1, 1), GasLines.LINES.get(GasLineTier.TITANIUM));
+        helper.getBlockEntity(left, GasTankBlock.Entity.class).store.insert(GasKind.NATURAL_GAS, 100);
+        helper.getBlockEntity(right, GasTankBlock.Entity.class).store.insert(GasKind.NATURAL_GAS, 100);
+        var driven = helper.getBlockEntity(pump, de.ipnats.hardwrought.gasline.GasPumpBlock.Entity.class);
+        helper.runAfterDelay(20, () -> {
+            helper.assertTrue(helper.getBlockEntity(right, GasTankBlock.Entity.class).store.amount() == 100,
+                    "Standing, the pump lets nothing through");
+            driven.setKineticSpeed(16);
+            helper.runAfterDelay(100, () -> {
+                double a = helper.getBlockEntity(left, GasTankBlock.Entity.class).store.amount();
+                double b = helper.getBlockEntity(right, GasTankBlock.Entity.class).store.amount();
+                helper.assertTrue(b - a >= 20, "Turned, it fills the far tank past level: " + a + " and " + b);
+                driven.setKineticSpeed(0);
+                helper.runAfterDelay(60, () -> {
+                    double a2 = helper.getBlockEntity(left, GasTankBlock.Entity.class).store.amount();
+                    double b2 = helper.getBlockEntity(right, GasTankBlock.Entity.class).store.amount();
+                    helper.assertTrue(b2 >= b - 0.01 && a2 <= a + 0.01,
+                            "and stopped, nothing runs back: " + a2 + " and " + b2);
+                    helper.assertTrue(Math.abs(a2 + b2 + driven.compressor.held() - 200) < 0.01, "No gas is lost");
+                    helper.succeed();
+                });
+            });
+        });
+    }
+
     @GameTest(maxTicks = 400)
     public void anOverpressuredLineBursts(GameTestHelper helper) {
         BlockPos tank = new BlockPos(1, 1, 1), empty = new BlockPos(5, 1, 1);

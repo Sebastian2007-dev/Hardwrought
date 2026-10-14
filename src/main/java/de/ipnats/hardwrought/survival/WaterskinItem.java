@@ -65,48 +65,91 @@ public final class WaterskinItem extends Item {
     }
 
     /**
-     * Section 23.2: boiling makes water drinkable. Using the skin on a lit fire boils what is in it.
+     * Section 23.2: boiling makes water drinkable. Held over a lit fire for a while, the skin boils
+     * what is in it; looking away from the fire stops it.
      */
     @Override
     public InteractionResult useOn(UseOnContext context) {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
-        if (!isLitFire(level.getBlockState(pos))) return InteractionResult.PASS;
+        Player player = context.getPlayer();
+        if (player == null || !isLitFire(level.getBlockState(pos))) return InteractionResult.PASS;
         ItemStack stack = context.getItemInHand();
         if (drinksRemaining(stack) == 0) return InteractionResult.PASS;
-        if (level.isClientSide()) return InteractionResult.SUCCESS;
-
         WaterQuality before = quality(stack);
-        WaterQuality after = before.boiled();
-        Player player = context.getPlayer();
-        if (after == before) {
-            if (player != null) {
+        // Water already clean has nothing left in it to boil out.
+        if (before == WaterQuality.PURIFIED) return InteractionResult.PASS;
+        if (before.boiled() == before) {
+            if (!level.isClientSide()) {
                 player.sendSystemMessage(Component.translatable("message.hardwrought.waterskin_boil_useless")
                         .withStyle(ChatFormatting.GOLD));
             }
             return InteractionResult.CONSUME;
         }
-        stack.set(ModDataComponents.WATER_QUALITY, after);
-        level.playSound(null, pos, SoundEvents.BREWING_STAND_BREW, SoundSource.BLOCKS, 0.7f, 1.0f);
-        if (player != null) {
-            player.sendSystemMessage(Component.translatable("message.hardwrought.waterskin_boiled"));
-        }
-        return InteractionResult.SUCCESS;
+        de.ipnats.hardwrought.water.Boiling.start(player);
+        player.startUsingItem(context.getHand());
+        return InteractionResult.CONSUME;
+    }
+
+    /** The bar is the water left in the skin, in the colour of the water it holds. */
+    @Override
+    public int getBarColor(ItemStack stack) {
+        return quality(stack).color();
     }
 
     @Override
     public InteractionResult use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (player.isSecondaryUseActive()) return refillFromWorld(level, player, stack);
-        if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
-            if (!takeDrink(stack)) {
-                player.sendSystemMessage(Component.translatable("message.hardwrought.waterskin_empty"));
-                return InteractionResult.FAIL;
-            }
-            var runtime = CoreLifecycle.find(serverPlayer.level().getServer());
-            if (runtime != null) runtime.survival().drink(serverPlayer, DRINK_HYDRATION, quality(stack));
+        if (drinksRemaining(stack) == 0) {
+            if (!level.isClientSide()) player.sendSystemMessage(Component.translatable("message.hardwrought.waterskin_empty"));
+            return InteractionResult.FAIL;
         }
-        return InteractionResult.SUCCESS;
+        de.ipnats.hardwrought.water.Boiling.stop(player);
+        player.startUsingItem(hand);
+        return InteractionResult.CONSUME;
+    }
+
+    @Override
+    public int getUseDuration(ItemStack stack, net.minecraft.world.entity.LivingEntity entity) {
+        return de.ipnats.hardwrought.water.Boiling.boiling(entity)
+                ? de.ipnats.hardwrought.water.Boiling.BOIL_TICKS : de.ipnats.hardwrought.water.Boiling.DRINK_TICKS;
+    }
+
+    @Override
+    public net.minecraft.world.item.ItemUseAnimation getUseAnimation(ItemStack stack) {
+        return de.ipnats.hardwrought.water.Boiling.boiling(stack)
+                ? net.minecraft.world.item.ItemUseAnimation.BRUSH : net.minecraft.world.item.ItemUseAnimation.DRINK;
+    }
+
+    @Override
+    public void onUseTick(Level level, net.minecraft.world.entity.LivingEntity entity, ItemStack stack, int remaining) {
+        if (de.ipnats.hardwrought.water.Boiling.boiling(entity)) de.ipnats.hardwrought.water.Boiling.tick(level, entity, remaining);
+    }
+
+    @Override
+    public boolean releaseUsing(ItemStack stack, Level level, net.minecraft.world.entity.LivingEntity entity, int remaining) {
+        de.ipnats.hardwrought.water.Boiling.stop(entity);
+        return false;
+    }
+
+    /** At the end of the boil the water is clean; at the end of a drink, one draught is gone. */
+    @Override
+    public ItemStack finishUsingItem(ItemStack stack, Level level, net.minecraft.world.entity.LivingEntity entity) {
+        boolean boiling = de.ipnats.hardwrought.water.Boiling.boiling(entity);
+        de.ipnats.hardwrought.water.Boiling.stop(entity);
+        if (!(entity instanceof ServerPlayer player)) return stack;
+        if (boiling) {
+            stack.set(ModDataComponents.WATER_QUALITY, quality(stack).boiled());
+            level.playSound(null, player.blockPosition(), SoundEvents.BREWING_STAND_BREW, SoundSource.BLOCKS, 0.7f, 1.0f);
+            player.sendSystemMessage(Component.translatable("message.hardwrought.waterskin_boiled"));
+            return stack;
+        }
+        WaterQuality quality = quality(stack);
+        if (!takeDrink(stack)) return stack;
+        var runtime = CoreLifecycle.find(player.level().getServer());
+        if (runtime != null) runtime.survival().drink(player, DRINK_HYDRATION, quality);
+        return stack;
     }
 
     /**
@@ -142,7 +185,7 @@ public final class WaterskinItem extends Item {
         return InteractionResult.SUCCESS;
     }
 
-    private static boolean isLitFire(BlockState state) {
+    public static boolean isLitFire(BlockState state) {
         if (state.is(Blocks.FIRE) || state.is(Blocks.SOUL_FIRE) || state.is(Blocks.LAVA)) return true;
         if (state.getBlock() instanceof CampfireBlock || state.is(Blocks.FURNACE)
                 || state.is(Blocks.BLAST_FURNACE) || state.is(Blocks.SMOKER)) {

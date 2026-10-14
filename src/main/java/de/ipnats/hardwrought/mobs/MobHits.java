@@ -79,6 +79,8 @@ public final class MobHits {
             runtime.survival().afflict(player, 0, -STRAY_CHILL, 0);
             player.addEffect(new MobEffectInstance(ModEffects.WINDED, WINDED_TICKS));
         }
+        // A heavy blow from a monster, or a bite, leaves a wound open to dirt.
+        de.ipnats.hardwrought.health.Wounds.hurt(player, attacker, taken);
         if (attacker instanceof Drowned && player.isInWater()) {
             Vec3 motion = player.getDeltaMovement();
             player.setDeltaMovement(motion.x, Math.min(motion.y, -DROWNED_PULL), motion.z);

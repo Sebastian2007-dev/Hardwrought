@@ -32,6 +32,7 @@ public final class VitalsPortrait {
 
     private static final int FRAME_CLEAR = 0xFFE4EAEE;
     private static final int FRAME_OVER = 0xFFD2402F;
+    private static final int FRAME_SICK = 0xFF8FB04A;
     /** How far past the allowance the frame takes to go the whole way to red. */
     private static final double FULL_RED_AT = 0.80;
     /** From here on the window also says the load in figures: the point where it starts to cost. */
@@ -45,7 +46,8 @@ public final class VitalsPortrait {
 
     public static void render(GuiGraphicsExtractor graphics, net.minecraft.client.gui.Font font,
                               AbstractClientPlayer player, int x, int y, double ratio) {
-        int frame = frameColor(ratio);
+        // A sick body shows it: a sickly green frame, unless the load has turned it red already.
+        int frame = ratio <= 1.0 && de.ipnats.hardwrought.health.Diseases.sick(player) ? FRAME_SICK : frameColor(ratio);
         graphics.fill(x, y, x + WIDTH, y + HEIGHT, frame);
         // A thin dark line inside the frame so a white frame still reads as a frame against the sky.
         graphics.fill(x + BORDER - 1, y + BORDER - 1, x + WIDTH - BORDER + 1, y + HEIGHT - BORDER + 1, 0xFF070A0C);

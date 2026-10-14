@@ -48,6 +48,16 @@ public final class CompendiumClient {
     public static final Identifier BOOK = Identifier.fromNamespaceAndPath("hardwrought", "book");
 
     private static CompendiumPagePayload page;
+    /** The crafting tree the server last sent, or null while one is on its way. */
+    private static CompendiumPagePayload tree;
+    /**
+     * Which recipe the player chose for a thing in a crafting tree, by its index among the thing's
+     * recipes, or -1 to treat it as found rather than made. Kept for the session, the way a recipe
+     * viewer remembers it, so every tree that reaches the same thing follows the same choice.
+     */
+    private static final java.util.Map<Identifier, Integer> treeChoices = new java.util.HashMap<>();
+    /** Whether a crafting tree counts what the player already carries. */
+    private static boolean treeUsesInventory = true;
     private static KnowledgeCategory shelf = KnowledgeCategory.MATERIALS;
     /** The ribbons in the book, as the server last listed them. */
     private static java.util.List<CompendiumPagePayload.Entry> bookmarks = java.util.List.of();
@@ -55,7 +65,11 @@ public final class CompendiumClient {
     private CompendiumClient() { }
 
     public static void initialize() {
-        ClientPlayNetworking.registerGlobalReceiver(CompendiumPagePayload.TYPE, (payload, context) -> page = payload);
+        ClientPlayNetworking.registerGlobalReceiver(CompendiumPagePayload.TYPE, (payload, context) -> {
+            // A tree is drawn over the page it was opened from, which must still be there to go back to.
+            if (payload.mode() == CompendiumPagePayload.MODE_TREE) tree = payload;
+            else page = payload;
+        });
         ClientPlayNetworking.registerGlobalReceiver(KnowledgeNotePayload.TYPE, (payload, context) ->
                 // The toast is read by the renderer, so it is only ever written from the same thread.
                 context.client().execute(() -> {
@@ -80,6 +94,8 @@ public final class CompendiumClient {
 
     private static void reset() {
         page = null;
+        tree = null;
+        treeChoices.clear();
         shelf = KnowledgeCategory.MATERIALS;
         bookmarks = java.util.List.of();
     }
@@ -99,6 +115,35 @@ public final class CompendiumClient {
         if (entry != null && ClientPlayNetworking.canSend(BookmarkPayloads.Toggle.TYPE)) {
             ClientPlayNetworking.send(new BookmarkPayloads.Toggle(entry));
         }
+    }
+
+    /** The crafting tree the server last sent, or null while one is still on its way. */
+    public static CompendiumPagePayload tree() {
+        return tree;
+    }
+
+    /** Asks for everything that goes into one thing; the answer arrives in {@link #tree()}. */
+    public static void requestTree(Identifier subject) {
+        if (subject == null || !ClientPlayNetworking.canSend(CompendiumRequestPayload.TYPE)) return;
+        tree = null;
+        ClientPlayNetworking.send(new CompendiumRequestPayload(CompendiumPagePayload.MODE_TREE, subject, ""));
+    }
+
+    /** The recipe chosen for a thing in a crafting tree, or null where the player has not chosen. */
+    public static Integer treeChoice(Identifier thing) {
+        return treeChoices.get(thing);
+    }
+
+    public static void chooseInTree(Identifier thing, int choice) {
+        treeChoices.put(thing, choice);
+    }
+
+    public static boolean treeUsesInventory() {
+        return treeUsesInventory;
+    }
+
+    public static void setTreeUsesInventory(boolean uses) {
+        treeUsesInventory = uses;
     }
 
     /** The page the server last sent, or null while one is still on its way. */
@@ -145,13 +190,21 @@ public final class CompendiumClient {
 
     /** Opens the browser on how one item is made. */
     public static void openRecipes(Item item) {
-        Identifier id = BuiltInRegistries.ITEM.getKey(item);
+        openRecipes(BuiltInRegistries.ITEM.getKey(item));
+    }
+
+    /** Opens the browser on how one thing is made: an item, or a liquid or gas with a page of its own. */
+    public static void openRecipes(Identifier id) {
         if (id != null) open(CompendiumPagePayload.MODE_RECIPES, id, "");
     }
 
     /** Opens the browser on what one item is used in. */
     public static void openUsages(Item item) {
-        Identifier id = BuiltInRegistries.ITEM.getKey(item);
+        openUsages(BuiltInRegistries.ITEM.getKey(item));
+    }
+
+    /** Opens the browser on what one thing is used in: an item, or a liquid or gas with a page of its own. */
+    public static void openUsages(Identifier id) {
         if (id != null) open(CompendiumPagePayload.MODE_USAGES, id, "");
     }
 
@@ -164,7 +217,7 @@ public final class CompendiumClient {
         page = null;
         ClientPlayNetworking.send(new CompendiumRequestPayload(mode, subject, search));
         Minecraft client = Minecraft.getInstance();
-        if (client.gui.screen() instanceof CompendiumScreen screen) screen.showing(mode, subject);
+        if (client.gui.screen() instanceof CompendiumScreen screen) screen.showing(mode, subject, search);
         else client.gui.setScreen(new CompendiumScreen(mode, subject));
     }
 

@@ -33,6 +33,9 @@ public final class ModCreativeTabs {
                 output.accept(de.ipnats.hardwrought.atlas.Atlas.ITEM);
                 output.accept(ModItems.LIGHTING_STICKS);
                 output.accept(ModItems.FILLED_WATERSKIN);
+                output.accept(ModItems.WATER_BOWL);
+                de.ipnats.hardwrought.health.Herbs.items().forEach(output::accept);
+                de.ipnats.hardwrought.water.WaterTreatmentBlocks.items().forEach(output::accept);
                 output.accept(ModItems.SAFETY_LAMP);
                 output.accept(ModItems.STRUCTURAL_ANCHOR);
                 output.accept(ModItems.FLINT_DAGGER);
@@ -155,6 +158,7 @@ public final class ModCreativeTabs {
                 output.accept(ModItems.RAW_SULFUR);
                 output.accept(ModItems.SULFUR);
                 output.accept(ModItems.SALT);
+                de.ipnats.hardwrought.chemistry.SaltPan.items().forEach(output::accept);
                 de.ipnats.hardwrought.refining.RefineryFluids.items().forEach(output::accept);
                 de.ipnats.hardwrought.gasline.GasLines.items().forEach(output::accept);
                 de.ipnats.hardwrought.refining.RefineryBlocks.items().forEach(output::accept);
@@ -165,7 +169,10 @@ public final class ModCreativeTabs {
     /** The small parts machines are built of, and the circuits. */
     public static final CreativeModeTab PARTS = tab(key("parts"), "itemGroup.hardwrought.parts",
             () -> new ItemStack(de.ipnats.hardwrought.parts.Parts.BASIC_CIRCUIT),
-            output -> de.ipnats.hardwrought.parts.Parts.items().forEach(output::accept));
+            output -> {
+                de.ipnats.hardwrought.parts.Parts.items().forEach(output::accept);
+                de.ipnats.hardwrought.storage.StorageBlocks.parts().forEach(output::accept);
+            });
 
     /** Runes, sigils and the void. */
     public static final CreativeModeTab MAGIC = tab(key("magic"), "itemGroup.hardwrought.magic",

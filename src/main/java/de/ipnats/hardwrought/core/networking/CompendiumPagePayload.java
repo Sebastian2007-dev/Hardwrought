@@ -42,6 +42,12 @@ public record CompendiumPagePayload(int mode, Identifier subject, List<Entry> en
     public static final int MODE_USAGES = 2;
     /** The written half of the book: what the player has worked out that they might try next. */
     public static final int MODE_JOURNAL = 3;
+    /**
+     * Everything that goes into the subject, all the way down: every recipe for it, every recipe for
+     * what those take, and so on. The browser works out the tree, the amounts and which recipe to
+     * follow itself, so changing its mind costs no round trip.
+     */
+    public static final int MODE_TREE = 4;
 
     /** Manufacturing-method bookmarks shown across the top edge of a lookup page. */
     public static final int METHOD_CRAFTING = 0;
@@ -54,6 +60,8 @@ public record CompendiumPagePayload(int mode, Identifier subject, List<Entry> en
     /** Never send more than this in one page, so a browser cannot be used to flood a connection. */
     public static final int MAX_ENTRIES = 1024;
     public static final int MAX_RECIPES = 64;
+    /** A whole tree is many pages' worth of recipes, but still bounded. */
+    public static final int MAX_TREE_RECIPES = 768;
     /** A crafting grid slot, a furnace slot: nothing the browser draws needs more than this. */
     public static final int MAX_SLOTS = 16;
     /** Iron turns up in a great many chests; the browser shows the first of them, not all. */
@@ -153,7 +161,7 @@ public record CompendiumPagePayload(int mode, Identifier subject, List<Entry> en
             for (int index = 0; index < entryCount; index++) {
                 entries.add(new Entry(buffer.readIdentifier(), buffer.readVarInt()));
             }
-            int recipeCount = Math.min(buffer.readVarInt(), MAX_RECIPES);
+            int recipeCount = Math.min(buffer.readVarInt(), mode == MODE_TREE ? MAX_TREE_RECIPES : MAX_RECIPES);
             List<Recipe> recipes = new ArrayList<>(recipeCount);
             for (int index = 0; index < recipeCount; index++) {
                 Identifier id = buffer.readIdentifier();

@@ -28,6 +28,14 @@ public class ElectricPumpBlock extends ElectricNodeBlock implements FluidPumpBlo
         return new Entity(pos, state);
     }
 
+    /** Set in water, it draws the water into its run (see {@link WaterIntake}). */
+    @Override
+    public <T extends net.minecraft.world.level.block.entity.BlockEntity> net.minecraft.world.level.block.entity.BlockEntityTicker<T> getTicker(
+            net.minecraft.world.level.Level level, BlockState state, net.minecraft.world.level.block.entity.BlockEntityType<T> type) {
+        return level.isClientSide() ? null
+                : (tickLevel, pos, tickState, entity) -> WaterIntake.tick((net.minecraft.server.level.ServerLevel) tickLevel, pos, entity);
+    }
+
     public static class Entity extends ElectricBlockEntity implements FluidPump {
         /** Millibuckets a second at the rated voltage. */
         public static final int RATED = 1000;

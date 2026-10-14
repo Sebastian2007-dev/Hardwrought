@@ -8,6 +8,13 @@ import net.minecraft.world.level.storage.ValueOutput;
  * or only drawn from. Tells its owner when it changed.
  */
 public class GasStore implements GasStorage {
+    /**
+     * Less than this is empty. Gas moves in fractions, and what a line or a machine takes out of a store
+     * can leave a rounding error behind; a store that kept its kind for that would show 0 and still turn
+     * away every other gas.
+     */
+    public static final double EMPTY = 0.01;
+
     private final double capacity;
     private final double rating;
     private final boolean takesIn;
@@ -35,6 +42,14 @@ public class GasStore implements GasStorage {
     @Override
     public GasKind kind() {
         return amount > 0 ? kind : null;
+    }
+
+    /** Empties it of a rounding error, so it forgets what it held. */
+    private void settle() {
+        if (amount < EMPTY) {
+            amount = 0;
+            kind = null;
+        }
     }
 
     @Override
@@ -82,6 +97,12 @@ public class GasStore implements GasStorage {
         double taken = Math.min(most, amount);
         if (taken <= 0) return 0;
         amount -= taken;
+        // What a rounding error would leave behind goes with it.
+        if (amount < EMPTY) {
+            taken += amount;
+            amount = 0;
+        }
+        settle();
         changed.run();
         return taken;
     }
@@ -98,5 +119,6 @@ public class GasStore implements GasStorage {
         kind = null;
         for (GasKind gas : GasKind.values()) if (gas.getSerializedName().equals(name)) kind = gas;
         amount = kind == null ? 0 : input.getDoubleOr(key + "_amount", 0);
+        settle();
     }
 }

@@ -1,0 +1,10 @@
+{
+  "biomes": [
+    "minecraft:meadow",
+    "minecraft:cherry_grove",
+    "minecraft:grove"
+  ],
+  "richness": 0.6,
+  "table_offset": -8,
+  "quality": "purified"
+}

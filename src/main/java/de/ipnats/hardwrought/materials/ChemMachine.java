@@ -73,7 +73,19 @@ public enum ChemMachine {
                                 null, 0, null, 0, List.of(new ItemStack(Materials.RUBBER, 2)), null, 0, 80),
                         new Recipe("chemical_reactor/silicone", List.of(new ItemStack(Materials.RAW_SILICON)),
                                 RefineryProduct.NAPHTHA.source(), 100, GasKind.CHLORINE, 4,
-                                List.of(new ItemStack(Materials.SILICONE, 2)), null, 0, 120));
+                                List.of(new ItemStack(Materials.SILICONE, 2)), null, 0, 120),
+                        // Medicine. Chlorine through caustic soda is bleach: antiseptic, bottled.
+                        new Recipe("chemical_reactor/antiseptic", List.of(new ItemStack(Materials.CAUSTIC_SODA),
+                                new ItemStack(Items.GLASS_BOTTLE)), null, 0, GasKind.CHLORINE, 2,
+                                List.of(new ItemStack(ModItems.ANTISEPTIC)), null, 0, 80),
+                        // The fever-lowering part of willow bark, drawn out with naphtha and pressed into pills.
+                        new Recipe("chemical_reactor/fever_pills", List.of(new ItemStack(ModItems.WILLOW_BARK, 2)),
+                                RefineryProduct.NAPHTHA.source(), 50, null, 0,
+                                List.of(new ItemStack(ModItems.FEVER_PILLS, 4)), null, 0, 100),
+                        // A mould grown on sugar, its medicine drawn out with naphtha.
+                        new Recipe("chemical_reactor/antibiotics", List.of(new ItemStack(Items.BROWN_MUSHROOM),
+                                new ItemStack(Items.SUGAR)), RefineryProduct.NAPHTHA.source(), 50, null, 0,
+                                List.of(new ItemStack(ModItems.ANTIBIOTICS, 2)), null, 0, 160));
                 case ARC_FURNACE -> List.of(new Recipe("arc_furnace/silicon",
                         List.of(new ItemStack(Items.QUARTZ, 2), new ItemStack(de.ipnats.hardwrought.smeltery.SmelteryBlocks.COKE)),
                         null, 0, null, 0, List.of(new ItemStack(Materials.RAW_SILICON)), null, 0, 160));

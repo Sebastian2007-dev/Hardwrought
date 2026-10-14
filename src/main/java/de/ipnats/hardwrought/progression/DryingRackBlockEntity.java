@@ -35,7 +35,8 @@ public class DryingRackBlockEntity extends BlockEntity {
     private static final int STEP = 20;
 
     /** What each thing hung up becomes once it is dry. */
-    private static final Map<Item, Item> DRIES_INTO = Map.of(ModItems.GREEN_FIBRE, ModItems.LEAF_STRING);
+    private static final Map<Item, Item> DRIES_INTO = Map.of(ModItems.GREEN_FIBRE, ModItems.LEAF_STRING,
+            net.minecraft.world.item.Items.OXEYE_DAISY, ModItems.DRIED_CHAMOMILE);
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
     private final int[] progress = new int[SLOTS];

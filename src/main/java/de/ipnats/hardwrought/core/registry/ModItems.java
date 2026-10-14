@@ -121,6 +121,44 @@ public final class ModItems {
             new Item.Properties().useBlockDescriptionPrefix());
     public static final Item FILLED_WATERSKIN = register("filled_waterskin", WaterskinItem::new,
             new Item.Properties().durability(9).stacksTo(1));
+    /** A wooden bowl of water; boiled over a fire it purifies, and its wear is the heat going out of it. */
+    public static final Item WATER_BOWL = register("water_bowl", de.ipnats.hardwrought.water.WaterBowlItem::new,
+            new Item.Properties().durability(de.ipnats.hardwrought.water.WaterBowlItem.COOL_SECONDS).stacksTo(1));
+    // The first medicines: herbs, steeped in a bowl of water and boiled on a campfire into tea.
+    /** Oxeye daisy dried on a rack: chamomile, for the stomach. */
+    public static final Item DRIED_CHAMOMILE = register("dried_chamomile", Item::new, new Item.Properties());
+    /** Peeled off a birch log with an axe: bark for a fever. */
+    public static final Item WILLOW_BARK = register("willow_bark", Item::new, new Item.Properties());
+    public static final Item CHAMOMILE_INFUSION = register("chamomile_infusion", Item::new, new Item.Properties().stacksTo(1));
+    public static final Item WILLOW_INFUSION = register("willow_infusion", Item::new, new Item.Properties().stacksTo(1));
+    public static final Item CHAMOMILE_TEA = register("chamomile_tea",
+            properties -> new de.ipnats.hardwrought.health.TeaItem(ModEffects.CHAMOMILE, properties),
+            new Item.Properties().durability(de.ipnats.hardwrought.water.WaterBowlItem.COOL_SECONDS).stacksTo(1));
+    public static final Item WILLOW_TEA = register("willow_tea",
+            properties -> new de.ipnats.hardwrought.health.TeaItem(ModEffects.WILLOW_BARK, properties),
+            new Item.Properties().durability(de.ipnats.hardwrought.water.WaterBowlItem.COOL_SECONDS).stacksTo(1));
+    /** Salt and sugar in a bowl of water: what a body losing water to a stomach bug most needs. */
+    public static final Item ELECTROLYTE_DRINK = register("electrolyte_drink",
+            properties -> new de.ipnats.hardwrought.health.TeaItem(ModEffects.HYDRATION_REGENERATION, properties),
+            new Item.Properties().durability(de.ipnats.hardwrought.water.WaterBowlItem.COOL_SECONDS).stacksTo(1));
+    // Wounds, and later medicine.
+    public static final Item BANDAGE = register("bandage", properties -> new de.ipnats.hardwrought.health.MedicineItem(
+            de.ipnats.hardwrought.health.MedicineItem.Kind.BANDAGE, properties), new Item.Properties().stacksTo(16));
+    public static final Item DISINFECTED_BANDAGE = register("disinfected_bandage", properties -> new de.ipnats.hardwrought.health.MedicineItem(
+            de.ipnats.hardwrought.health.MedicineItem.Kind.DISINFECTED_BANDAGE, properties), new Item.Properties().stacksTo(16));
+    /** Wheat, sugar and water, to be distilled into spirit. */
+    public static final Item MASH = register("mash", Item::new, new Item.Properties().stacksTo(16));
+    /** Distilled from mash: cleans a wound, and soaks a bandage. */
+    public static final Item SPIRIT = register("spirit", properties -> new de.ipnats.hardwrought.health.MedicineItem(
+            de.ipnats.hardwrought.health.MedicineItem.Kind.SPIRIT, properties),
+            new Item.Properties().stacksTo(16).craftRemainder(net.minecraft.world.item.Items.GLASS_BOTTLE));
+    public static final Item ANTISEPTIC = register("antiseptic", properties -> new de.ipnats.hardwrought.health.MedicineItem(
+            de.ipnats.hardwrought.health.MedicineItem.Kind.ANTISEPTIC, properties),
+            new Item.Properties().stacksTo(16).craftRemainder(net.minecraft.world.item.Items.GLASS_BOTTLE));
+    public static final Item FEVER_PILLS = register("fever_pills", properties -> new de.ipnats.hardwrought.health.MedicineItem(
+            de.ipnats.hardwrought.health.MedicineItem.Kind.FEVER_PILLS, properties), new Item.Properties().stacksTo(16));
+    public static final Item ANTIBIOTICS = register("antibiotics", properties -> new de.ipnats.hardwrought.health.MedicineItem(
+            de.ipnats.hardwrought.health.MedicineItem.Kind.ANTIBIOTICS, properties), new Item.Properties().stacksTo(16));
     // Milestone 2 weapon classes that vanilla has no item for. Values follow the class profiles in
     // data/hardwrought/hardwrought/weapon_profiles; vanilla still supplies the base attack damage.
     public static final Item FLINT_DAGGER = register("flint_dagger", Item::new,

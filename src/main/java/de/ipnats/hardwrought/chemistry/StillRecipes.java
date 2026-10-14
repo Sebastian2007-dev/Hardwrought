@@ -20,6 +20,7 @@ import java.util.List;
  *       comes out with the residue now and then, as a crude crust.</li>
  *   <li><b>Seawater</b> is boiled down to its salt.</li>
  *   <li><b>Raw sulfur</b> is melted and cleaned: it comes out refined.</li>
+ *   <li><b>Mash</b> gives up its spirit into a bottle, for cleaning wounds.</li>
  * </ul>
  */
 public final class StillRecipes {
@@ -38,7 +39,7 @@ public final class StillRecipes {
 
     /** Whether the still takes this as its charge at all. */
     public static boolean accepts(ItemStack stack) {
-        return stack.is(ModItems.CRUDE_OIL_BUCKET) || stack.is(ModItems.RAW_SULFUR) || saltWater(stack);
+        return stack.is(ModItems.CRUDE_OIL_BUCKET) || stack.is(ModItems.RAW_SULFUR) || stack.is(ModItems.MASH) || saltWater(stack);
     }
 
     private static boolean saltWater(ItemStack stack) {
@@ -47,7 +48,7 @@ public final class StillRecipes {
 
     /** How many glass bottles distilling this takes, before anything is rolled. */
     public static int bottlesFor(ItemStack stack) {
-        return stack.is(ModItems.CRUDE_OIL_BUCKET) ? 3 : 0;
+        return stack.is(ModItems.CRUDE_OIL_BUCKET) ? 3 : stack.is(ModItems.MASH) ? 1 : 0;
     }
 
     /** The batch this charge makes, or null where it makes none. The chances are rolled here. */
@@ -66,6 +67,10 @@ public final class StillRecipes {
             return new Batch(0, List.of(Purity.with(new ItemStack(ModItems.SALT),
                     Purity.rounded(0.85 + random.nextDouble() * 0.10))), new ItemStack(Items.BUCKET));
         }
+        if (charge.is(ModItems.MASH)) {
+            // Mash distilled: the spirit comes over into a bottle, and what is left is thrown away.
+            return new Batch(1, List.of(new ItemStack(ModItems.SPIRIT)), ItemStack.EMPTY);
+        }
         if (charge.is(ModItems.RAW_SULFUR)) {
             return new Batch(0, List.of(Purity.with(new ItemStack(ModItems.SULFUR),
                     Purity.rounded(Purity.refined(Purity.of(charge))))), ItemStack.EMPTY);
@@ -82,6 +87,7 @@ public final class StillRecipes {
         }
         if (saltWater(charge)) return List.of(new ItemStack(ModItems.SALT));
         if (charge.is(ModItems.RAW_SULFUR)) return List.of(new ItemStack(ModItems.SULFUR));
+        if (charge.is(ModItems.MASH)) return List.of(new ItemStack(ModItems.SPIRIT));
         return List.of();
     }
 }

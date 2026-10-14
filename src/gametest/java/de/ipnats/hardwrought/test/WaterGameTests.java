@@ -30,7 +30,12 @@ public final class WaterGameTests {
 
     @GameTest
     public void waterQualityOrdersBySafety(GameTestHelper helper) {
-        helper.assertTrue(WaterQuality.FRESH.safeToDrink(), "Fresh water is safe");
+        helper.assertTrue(WaterQuality.PURIFIED.safeToDrink(), "Purified water is safe");
+        helper.assertFalse(WaterQuality.FRESH.safeToDrink(), "Even a spring is not quite safe raw");
+        helper.assertTrue(WaterQuality.FRESH.illnessRisk() < WaterQuality.RIVER.illnessRisk(),
+                "though far safer than a river");
+        helper.assertTrue(WaterQuality.PURIFIED.hydrationFactor() > WaterQuality.FRESH.hydrationFactor(),
+                "and cleaned water refreshes a little more");
         helper.assertFalse(WaterQuality.RIVER.safeToDrink() || WaterQuality.SWAMP.safeToDrink(),
                 "Surface water is not safe raw");
         helper.assertTrue(WaterQuality.SWAMP.illnessRisk() > WaterQuality.RIVER.illnessRisk(),
@@ -39,9 +44,10 @@ public final class WaterGameTests {
                 "Section 23.2: seawater takes more water out of the body than it puts in");
         helper.assertTrue(WaterQuality.FRESH.hydrationFactor() == 1.0, "Clean water is the measure");
 
-        helper.assertTrue(WaterQuality.SWAMP.boiled() == WaterQuality.FRESH
-                        && WaterQuality.RIVER.boiled() == WaterQuality.FRESH,
-                "Boiling makes surface water drinkable");
+        helper.assertTrue(WaterQuality.SWAMP.boiled() == WaterQuality.PURIFIED
+                        && WaterQuality.RIVER.boiled() == WaterQuality.PURIFIED
+                        && WaterQuality.FRESH.boiled() == WaterQuality.PURIFIED,
+                "Boiling purifies surface water");
         helper.assertTrue(WaterQuality.SALT.boiled() == WaterQuality.SALT,
                 "but boiling seawater only concentrates the salt");
 
@@ -182,8 +188,8 @@ public final class WaterGameTests {
 
         WaterskinItem.refill(stack, WaterQuality.SWAMP);
         stack.set(ModDataComponents.WATER_QUALITY, WaterskinItem.quality(stack).boiled());
-        helper.assertTrue(WaterskinItem.quality(stack) == WaterQuality.FRESH,
-                "Boiling swamp water in the skin makes it drinkable");
+        helper.assertTrue(WaterskinItem.quality(stack) == WaterQuality.PURIFIED,
+                "Boiling swamp water in the skin purifies it");
 
         helper.assertTrue(WaterEvents.qualityOf(new ItemStack(net.minecraft.world.item.Items.POTION))
                         == WaterQuality.FRESH,
@@ -382,8 +388,8 @@ public final class WaterGameTests {
                 "And it has to be survivable: one bad drink is not half the reserve");
 
         // Only water that can make somebody ill does, and salt water is the worst of it.
-        helper.assertTrue(de.ipnats.hardwrought.water.WaterQuality.FRESH.illnessRisk() == 0.0,
-                "Clean water never does this");
+        helper.assertTrue(de.ipnats.hardwrought.water.WaterQuality.PURIFIED.illnessRisk() == 0.0,
+                "Purified water never does this");
         helper.assertTrue(de.ipnats.hardwrought.water.WaterQuality.SALT.illnessRisk() > 0.0,
                 "Sea water does");
         helper.succeed();
@@ -460,6 +466,215 @@ public final class WaterGameTests {
             level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
             level.setBlockAndUpdate(pos.below(), Blocks.AIR.defaultBlockState());
         }
+        helper.succeed();
+    }
+
+    /** Uses what the player holds on a block, the way a right click does. */
+    private static net.minecraft.world.InteractionResult useOn(GameTestHelper helper,
+                                                              net.minecraft.server.level.ServerPlayer player, BlockPos relative) {
+        BlockPos pos = helper.absolutePos(relative);
+        return net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.invoker().interact(player, helper.getLevel(),
+                net.minecraft.world.InteractionHand.MAIN_HAND,
+                new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(pos),
+                        net.minecraft.core.Direction.UP, pos, false));
+    }
+
+    @GameTest
+    public void aCauldronKeepsWhatIsPouredIntoIt(GameTestHelper helper) {
+        BlockPos cauldron = new BlockPos(1, 1, 1);
+        helper.setBlock(cauldron, Blocks.CAULDRON);
+        @SuppressWarnings("removal") net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+        ItemStack seawater = de.ipnats.hardwrought.water.BucketWater.with(new ItemStack(Items.BUCKET),
+                de.ipnats.hardwrought.water.BucketWater.CAPACITY, WaterQuality.SALT);
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, seawater);
+        useOn(helper, player, cauldron);
+        helper.assertBlockPresent(Blocks.WATER_CAULDRON, cauldron);
+        helper.assertTrue(player.getMainHandItem().is(Items.BUCKET), "The bucket is emptied into the cauldron");
+
+        useOn(helper, player, cauldron);
+        helper.assertBlockPresent(Blocks.CAULDRON, cauldron);
+        helper.assertTrue(WaterEvents.qualityOf(player.getMainHandItem()) == WaterQuality.SALT,
+                "and what comes back out of it is seawater still, not clean water: " + player.getMainHandItem());
+        helper.succeed();
+    }
+
+    // World water, beside the water-flow tests that sum the whole world's flow: a batch of its own.
+    @GameTest(environment = "hardwrought-test:standing_water")
+    public void seawaterDoesNotWaterAField(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos field = new BlockPos(1, 1, 1), water = field.east(2);
+        helper.setBlock(field, Blocks.FARMLAND.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.FarmlandBlock.MOISTURE, 7));
+        helper.setBlock(water, Blocks.WATER);
+        BlockPos at = helper.absolutePos(water);
+        de.ipnats.hardwrought.water.WaterQualityStorage.mark(level, at, WaterQuality.SALT);
+        helper.assertTrue(de.ipnats.hardwrought.water.WaterQualityStorage.salty(level, at), "The water is marked seawater");
+        if (level.isRainingAt(helper.absolutePos(field).above())) {
+            helper.succeed();
+            return;
+        }
+        for (int tick = 0; tick < 7; tick++) {
+            BlockPos pos = helper.absolutePos(field);
+            level.getBlockState(pos).randomTick(level, pos, level.getRandom());
+        }
+        helper.assertTrue(helper.getBlockState(field).getValue(net.minecraft.world.level.block.FarmlandBlock.MOISTURE) < 7,
+                "Beside seawater the field dries out");
+
+        de.ipnats.hardwrought.water.WaterQualityStorage.mark(level, at, WaterQuality.PURIFIED);
+        helper.setBlock(field, Blocks.FARMLAND.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.FarmlandBlock.MOISTURE, 7));
+        for (int tick = 0; tick < 7; tick++) {
+            BlockPos pos = helper.absolutePos(field);
+            level.getBlockState(pos).randomTick(level, pos, level.getRandom());
+        }
+        helper.assertTrue(helper.getBlockState(field).getValue(net.minecraft.world.level.block.FarmlandBlock.MOISTURE) == 7,
+                "and beside clean water it stays wet");
+        de.ipnats.hardwrought.water.WaterQualityStorage.clear(level, at);
+        helper.succeed();
+    }
+
+    @GameTest(maxTicks = 1400)
+    public void aBowlOfWaterBoiledOnACampfireIsPurified(GameTestHelper helper) {
+        BlockPos fire = new BlockPos(1, 1, 1);
+        helper.setBlock(fire, Blocks.CAMPFIRE);
+        @SuppressWarnings("removal") net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+        var campfire = helper.getBlockEntity(fire, net.minecraft.world.level.block.entity.CampfireBlockEntity.class);
+        helper.assertFalse(campfire.placeFood(helper.getLevel(), player,
+                        de.ipnats.hardwrought.water.WaterBowlItem.of(ModItems.WATER_BOWL, WaterQuality.SALT)),
+                "A campfire does not take seawater: boiling only makes it saltier");
+        helper.assertFalse(campfire.placeFood(helper.getLevel(), player,
+                        de.ipnats.hardwrought.water.WaterBowlItem.of(ModItems.WATER_BOWL, WaterQuality.PURIFIED)),
+                "nor water already purified");
+        helper.assertTrue(campfire.placeFood(helper.getLevel(), player,
+                        de.ipnats.hardwrought.water.WaterBowlItem.of(ModItems.WATER_BOWL, WaterQuality.SWAMP)),
+                "A bowl of swamp water goes on like food");
+
+        helper.succeedWhen(() -> {
+            var dropped = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+                    new net.minecraft.world.phys.AABB(helper.absolutePos(fire)).inflate(2));
+            helper.assertTrue(!dropped.isEmpty(), "Boiled through, it comes off the fire");
+            ItemStack bowl = dropped.getFirst().getItem();
+            helper.assertTrue(WaterEvents.qualityOf(bowl) == WaterQuality.PURIFIED
+                            && de.ipnats.hardwrought.water.WaterBowlItem.hot(bowl),
+                    "purified, and hot: " + bowl.getComponentsPatch());
+            // Drunk straight off the fire, it scalds.
+            ItemStack scalding = bowl.copy();
+            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, scalding);
+            scalding.getItem().use(helper.getLevel(), player, net.minecraft.world.InteractionHand.MAIN_HAND);
+            helper.assertTrue(scalding.getItem().getUseDuration(scalding, player) == de.ipnats.hardwrought.water.Boiling.DRINK_TICKS,
+                    "Drinking takes a moment");
+            ItemStack left = scalding.getItem().finishUsingItem(scalding, helper.getLevel(), player);
+            player.stopUsingItem();
+            helper.assertTrue(left.is(Items.BOWL), "Drunk, the empty bowl is left");
+            // The hurt itself is not checked: a player just come into the world cannot be hurt for a moment.
+            helper.assertTrue(player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.SCALDED), "Boiling water scalds");
+            // Carried, it cools.
+            for (int second = 0; second < de.ipnats.hardwrought.water.WaterBowlItem.COOL_SECONDS; second++) {
+                bowl.setDamageValue(Math.max(0, bowl.getDamageValue() - 1));
+            }
+            helper.assertTrue(!de.ipnats.hardwrought.water.WaterBowlItem.hot(bowl), "and cools in its time");
+        });
+    }
+
+    private static void pour(de.ipnats.hardwrought.water.WaterTreatment treatment, WaterQuality quality, long millibuckets) {
+        try (var transaction = net.fabricmc.fabric.api.transfer.v1.transaction.Transaction.openOuter()) {
+            treatment.both.insert(de.ipnats.hardwrought.chemistry.SaltPan.water(quality),
+                    millibuckets * (net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET / 1000), transaction);
+            transaction.commit();
+        }
+    }
+
+    @GameTest
+    public void eachStageOfCleaningDoesWhatItCan(GameTestHelper helper) {
+        var sand = new de.ipnats.hardwrought.water.WaterTreatment(de.ipnats.hardwrought.water.WaterTreatment.Stage.SAND, () -> { });
+        pour(sand, WaterQuality.SWAMP, 1000);
+        for (int tick = 0; tick < 40; tick++) sand.work(1.0);
+        helper.assertTrue(sand.outputMillibuckets() == 0, "A sand filter with no charcoal in its bed lets nothing through");
+        helper.assertTrue(sand.addCharcoal(), "Charcoal goes into the bed");
+        for (int tick = 0; tick < 20; tick++) sand.work(1.0);
+        helper.assertTrue(sand.outputMillibuckets() == 50 && sand.outputQuality() == WaterQuality.FRESH,
+                "Fifty millibuckets a second of swamp water come out fresh: " + sand.outputMillibuckets() + " " + sand.outputQuality());
+        helper.assertTrue(sand.inputMillibuckets() + sand.outputMillibuckets() == 1000, "and none is lost");
+        helper.assertTrue(sand.mediumMillibuckets() == 4000 - 50, "while the charcoal wears down as much");
+
+        var salty = new de.ipnats.hardwrought.water.WaterTreatment(de.ipnats.hardwrought.water.WaterTreatment.Stage.CERAMIC, () -> { });
+        salty.addCharcoal();
+        pour(salty, WaterQuality.SALT, 1000);
+        for (int tick = 0; tick < 40; tick++) salty.work(1.0);
+        helper.assertTrue(salty.outputMillibuckets() == 0, "No filter takes the salt out of seawater");
+
+        var ceramic = new de.ipnats.hardwrought.water.WaterTreatment(de.ipnats.hardwrought.water.WaterTreatment.Stage.CERAMIC, () -> { });
+        ceramic.addCharcoal();
+        pour(ceramic, WaterQuality.RIVER, 1000);
+        for (int tick = 0; tick < 20; tick++) ceramic.work(1.0);
+        helper.assertTrue(ceramic.outputMillibuckets() == 150 && ceramic.outputQuality() == WaterQuality.PURIFIED,
+                "A ceramic filter purifies, three times as fast: " + ceramic.outputMillibuckets());
+
+        var machine = new de.ipnats.hardwrought.water.WaterTreatment(de.ipnats.hardwrought.water.WaterTreatment.Stage.ELECTRIC, () -> { });
+        pour(machine, WaterQuality.SALT, 1000);
+        for (int tick = 0; tick < 20; tick++) machine.work(1.0);
+        helper.assertTrue(machine.outputMillibuckets() == 250 && machine.outputQuality() == WaterQuality.PURIFIED,
+                "The purifier desalts seawater, at a quarter of its pace: " + machine.outputMillibuckets());
+        for (int tick = 0; tick < 20; tick++) machine.work(0.0);
+        helper.assertTrue(machine.outputMillibuckets() == 250, "and does nothing without current");
+        helper.succeed();
+    }
+
+    @GameTest(maxTicks = 400, environment = "hardwrought-test:standing_water")
+    public void waterPouredOnAFilterComesOutCleanUnderneath(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos filter = new BlockPos(2, 2, 2), above = filter.above(), below = filter.below();
+        // A stone cup on top of the filter and one under it, so neither water runs off.
+        for (int x = 1; x <= 3; x++) {
+            for (int z = 1; z <= 3; z++) {
+                helper.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
+                if (x != 2 || z != 2) {
+                    helper.setBlock(new BlockPos(x, 1, z), Blocks.STONE);
+                    helper.setBlock(new BlockPos(x, 3, z), Blocks.STONE);
+                }
+            }
+        }
+        helper.setBlock(filter, de.ipnats.hardwrought.water.WaterTreatmentBlocks.CERAMIC_FILTER);
+        var entity = helper.getBlockEntity(filter, de.ipnats.hardwrought.water.WaterTreatmentBlocks.FilterEntity.class);
+        entity.treatment.addCharcoal();
+        helper.setBlock(above, Blocks.WATER);
+        de.ipnats.hardwrought.water.WaterQualityStorage.mark(level, helper.absolutePos(above), WaterQuality.SWAMP);
+        helper.succeedWhen(() -> {
+            BlockPos out = helper.absolutePos(below);
+            int under = de.ipnats.hardwrought.water.WaterStorage.amount(level, out);
+            helper.assertTrue(under >= 500, "Water poured on top comes out underneath: " + under + " mB");
+            helper.assertTrue(de.ipnats.hardwrought.water.WaterQualityStorage.stored(level, out) == WaterQuality.PURIFIED,
+                    "and comes out purified");
+            de.ipnats.hardwrought.water.WaterStorage.setAmount(level, out, 0);
+            de.ipnats.hardwrought.water.WaterStorage.setAmount(level, helper.absolutePos(above), 0);
+        });
+    }
+
+    // World water, beside the water-flow tests that sum the whole world's flow: a batch of its own.
+    @GameTest(environment = "hardwrought-test:standing_water")
+    public void theClientIsToldWhatIsInTheWater(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos water = new BlockPos(1, 1, 1);
+        helper.setBlock(water, Blocks.WATER);
+        BlockPos at = helper.absolutePos(water);
+        de.ipnats.hardwrought.water.WaterQualityStorage.mark(level, at, WaterQuality.PURIFIED);
+        de.ipnats.hardwrought.water.WaterQualityStorage.flush();
+        var shown = level.getChunkAt(at).getAttached(de.ipnats.hardwrought.water.WaterQualityStorage.SHOWN);
+        helper.assertTrue(shown != null && shown.at(at.asLong()) == WaterQuality.PURIFIED,
+                "A purified cell is sent to be drawn as such");
+        // Swamp water poured into a small pond is swamp water by the server's own fallback too, but the
+        // client would draw it plain, so it is sent all the same.
+        de.ipnats.hardwrought.water.WaterQualityStorage.mark(level, at, WaterQuality.SWAMP);
+        de.ipnats.hardwrought.water.WaterQualityStorage.flush();
+        shown = level.getChunkAt(at).getAttached(de.ipnats.hardwrought.water.WaterQualityStorage.SHOWN);
+        helper.assertTrue(shown != null && shown.at(at.asLong()) == WaterQuality.SWAMP,
+                "Poured swamp water is drawn as swamp water wherever it is poured");
+        de.ipnats.hardwrought.water.WaterQualityStorage.clear(level, at);
+        de.ipnats.hardwrought.water.WaterQualityStorage.flush();
+        shown = level.getChunkAt(at).getAttached(de.ipnats.hardwrought.water.WaterQualityStorage.SHOWN);
+        helper.assertTrue(shown == null || shown.at(at.asLong()) == null, "and forgotten again once it is plain water");
         helper.succeed();
     }
 }

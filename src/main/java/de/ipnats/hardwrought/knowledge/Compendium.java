@@ -59,6 +59,7 @@ public final class Compendium {
             case CompendiumPagePayload.MODE_RECIPES -> lookup(player, knowledge, request.subject(), true);
             case CompendiumPagePayload.MODE_USAGES -> lookup(player, knowledge, request.subject(), false);
             case CompendiumPagePayload.MODE_JOURNAL -> journal(player, knowledge, request.subject());
+            case CompendiumPagePayload.MODE_TREE -> tree(player, knowledge, request.subject());
             default -> shelf(player, knowledge, request);
         };
     }
@@ -101,6 +102,18 @@ public final class Compendium {
         // request for something that does not exist looks like.
         Item item = BuiltInRegistries.ITEM.getValue(subject);
         MinecraftServer server = player.level().getServer();
+        // A liquid or gas carried in nothing has a page of its own, and only work done by machines
+        // makes or takes it. It is no secret, the same as in a recipe.
+        FluidIcons.Ingredient fluid = FluidIcons.ofSubject(subject);
+        if (fluid != null) {
+            List<CompendiumPagePayload.Recipe> recipes = inWorldRecipes(recipe -> asResult
+                    ? FluidIcons.matches(recipe.result(), fluid)
+                    : recipe.inputs().stream().flatMap(List::stream).anyMatch(option -> FluidIcons.matches(option, fluid)),
+                    knowledge.knowledge(player));
+            return new CompendiumPagePayload(mode, subject,
+                    List.of(new CompendiumPagePayload.Entry(subject, KnowledgeLevel.STUDIED.ordinal())),
+                    recipes, List.of(), List.of());
+        }
         if (item == null || item == Items.AIR || server == null) {
             return new CompendiumPagePayload(mode, subject, List.of(), List.of(), List.of(), List.of());
         }
@@ -132,7 +145,8 @@ public final class Compendium {
                 if (view != null) recipes.add(view);
             }
         }
-        for (CompendiumPagePayload.Recipe inWorld : inWorldRecipes(item, asResult, known)) {
+        for (CompendiumPagePayload.Recipe inWorld : inWorldRecipes(
+                recipe -> asResult ? recipe.makes(item) : recipe.uses(item), known)) {
             if (recipes.size() >= CompendiumPagePayload.MAX_RECIPES) break;
             recipes.add(inWorld);
         }
@@ -141,6 +155,93 @@ public final class Compendium {
         List<CompendiumPagePayload.Source> sources = asResult
                 ? loot.of(server, item, known) : List.of();
         return new CompendiumPagePayload(mode, subject, heading, recipes, sources, List.of());
+    }
+
+    // ---------------------------------------------------------------- the crafting tree
+
+    /** Things one tree may reach down to; past this the rest are treated as found, not made. */
+    private static final int MAX_TREE_NODES = 160;
+    /** Recipes offered for one thing in a tree: enough to choose between, not a whole catalogue. */
+    private static final int MAX_TREE_CHOICES = 8;
+
+    /**
+     * Every recipe for the subject, and for each ingredient of those, and so on down to the things
+     * nobody makes. Each ingredient is followed through the option the browser will show for it — the
+     * first the player knows, else the first — so the tree here and the tree drawn are the same tree.
+     * The things in it are listed as entries, the subject first, with what the player knows of each;
+     * the recipes travel flat and the browser sorts them under what they make.
+     */
+    private CompendiumPagePayload tree(ServerPlayer player, KnowledgeSystem knowledge, Identifier subject) {
+        MinecraftServer server = player.level().getServer();
+        int mode = CompendiumPagePayload.MODE_TREE;
+        if (server == null) return new CompendiumPagePayload(mode, subject, List.of(), List.of(), List.of(), List.of());
+        ContextMap context = SlotDisplayContext.fromLevel(player.level());
+        var runtime = de.ipnats.hardwrought.core.events.CoreLifecycle.find(server);
+        Map<Identifier, de.ipnats.hardwrought.core.registry.MaterialDefinition> materials =
+                runtime == null ? Map.of() : runtime.materials();
+        index(server.getRecipeManager(), context);
+        PlayerKnowledge known = knowledge.knowledge(player);
+        List<CompendiumPagePayload.Entry> entries = new ArrayList<>();
+        List<CompendiumPagePayload.Recipe> recipes = new ArrayList<>();
+        Set<Identifier> seen = new java.util.HashSet<>();
+        java.util.ArrayDeque<Identifier> queue = new java.util.ArrayDeque<>();
+        seen.add(subject);
+        queue.add(subject);
+        while (!queue.isEmpty() && entries.size() < MAX_TREE_NODES) {
+            Identifier id = queue.poll();
+            FluidIcons.Ingredient fluid = FluidIcons.ofSubject(id);
+            entries.add(new CompendiumPagePayload.Entry(id, fluid != null
+                    ? KnowledgeLevel.STUDIED.ordinal() : known.level(id).ordinal()));
+            for (CompendiumPagePayload.Recipe recipe : makers(id, fluid, context, known, materials)) {
+                if (recipes.size() >= CompendiumPagePayload.MAX_TREE_RECIPES) break;
+                recipes.add(recipe);
+                for (CompendiumPagePayload.Slot slot : recipe.inputs()) {
+                    if (slot.isEmpty()) continue;
+                    Identifier next = treeKey(shownOption(slot).stack());
+                    if (next != null && seen.add(next)) queue.add(next);
+                }
+            }
+        }
+        return new CompendiumPagePayload(mode, subject, entries, recipes, List.of(), List.of());
+    }
+
+    /** The recipes that make one thing of a tree, a furnace's fuel left out: it is burnt, not built in. */
+    private List<CompendiumPagePayload.Recipe> makers(Identifier id, FluidIcons.Ingredient fluid, ContextMap context,
+                                                      PlayerKnowledge known,
+                                                      Map<Identifier, de.ipnats.hardwrought.core.registry.MaterialDefinition> materials) {
+        List<CompendiumPagePayload.Recipe> found = new ArrayList<>();
+        if (fluid != null) {
+            found.addAll(inWorldRecipes(recipe -> FluidIcons.matches(recipe.result(), fluid), known));
+        } else {
+            Item item = BuiltInRegistries.ITEM.getValue(id);
+            if (item == null || item == Items.AIR) return List.of();
+            for (RecipeHolder<?> holder : byResult.getOrDefault(item, Set.of())) {
+                for (RecipeDisplay display : holder.value().display()) {
+                    if (found.size() >= MAX_TREE_CHOICES) break;
+                    CompendiumPagePayload.Recipe view = view(holder, display, context, known, materials);
+                    if (view == null) continue;
+                    if (display instanceof FurnaceRecipeDisplay && view.inputs().size() > 1) {
+                        view = new CompendiumPagePayload.Recipe(view.id(), view.inputs().subList(0, 1), view.width(),
+                                view.height(), view.result(), view.station(), view.method());
+                    }
+                    found.add(view);
+                }
+            }
+            found.addAll(inWorldRecipes(recipe -> recipe.makes(item), known));
+        }
+        return found.size() > MAX_TREE_CHOICES ? found.subList(0, MAX_TREE_CHOICES) : found;
+    }
+
+    /** The option of a slot the browser shows: the first the player knows, else the first of all. */
+    public static CompendiumPagePayload.Known shownOption(CompendiumPagePayload.Slot slot) {
+        for (CompendiumPagePayload.Known option : slot.options()) if (option.level() > 0) return option;
+        return slot.options().getFirst();
+    }
+
+    /** What a stack is in a tree: its item, or for a liquid or gas the page the book keeps for it. */
+    public static Identifier treeKey(ItemStack stack) {
+        FluidIcons.Ingredient ingredient = FluidIcons.of(stack);
+        return ingredient != null ? FluidIcons.subject(ingredient) : BuiltInRegistries.ITEM.getKey(stack.getItem());
     }
 
     /**
@@ -260,12 +361,12 @@ public final class Compendium {
      * single one of them, so a new machine or a new row in a machine's table needs no change to the
      * book. Asking for how the machine itself is used lists what it works on.
      */
-    private static List<CompendiumPagePayload.Recipe> inWorldRecipes(Item subject, boolean asResult,
-                                                                     PlayerKnowledge known) {
+    private static List<CompendiumPagePayload.Recipe> inWorldRecipes(
+            java.util.function.Predicate<WorldRecipes.WorldRecipe> wanted, PlayerKnowledge known) {
         List<CompendiumPagePayload.Recipe> recipes = new ArrayList<>();
         for (WorldRecipes.WorldRecipe recipe : WorldRecipes.all()) {
             if (recipes.size() >= CompendiumPagePayload.MAX_RECIPES) break;
-            if (asResult ? !recipe.makes(subject) : !recipe.uses(subject)) continue;
+            if (!wanted.test(recipe)) continue;
             List<CompendiumPagePayload.Slot> inputs = new ArrayList<>();
             for (List<ItemStack> options : recipe.inputs()) {
                 if (inputs.size() >= CompendiumPagePayload.MAX_SLOTS) break;

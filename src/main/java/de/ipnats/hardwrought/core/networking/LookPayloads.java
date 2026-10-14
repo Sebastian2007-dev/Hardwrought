@@ -5,6 +5,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
@@ -86,10 +87,24 @@ public final class LookPayloads {
      * @param stacks   what is in it, each with how well the asking player knows it
      * @param more     how many further kinds of thing did not fit on the panel
      * @param progress how far along the work in it is from 0 to 1, negative where it does none
+     * @param tanks    the liquids and gases in it, each with how much of how much
      */
-    public record Contents(BlockPos pos, List<Held> stacks, int more, float progress)
+    public record Contents(BlockPos pos, List<Held> stacks, int more, float progress, List<Tank> tanks)
             implements CustomPacketPayload {
-        public static final Type<Contents> TYPE = new Type<>(Hardwrought.id("look_contents_v1"));
+        public static final Type<Contents> TYPE = new Type<>(Hardwrought.id("look_contents_v2"));
+        /** Liquids and gases shown at most: a machine's inlet and outlet, a gas in and a gas out. */
+        public static final int MAX_TANKS = 4;
+
+        /**
+         * One liquid or gas in it.
+         *
+         * @param name     what it is, or that the tank is empty
+         * @param icon     the liquid or gas as the book draws it, empty for an empty tank
+         * @param amount   how much, in millibuckets or units of gas
+         * @param capacity how much fits
+         * @param gas      whether it is counted in units of gas rather than millibuckets
+         */
+        public record Tank(Component name, ItemStack icon, long amount, long capacity, boolean gas) { }
         /** Three rows of nine: a single chest with nothing alike in it. */
         public static final int MAX_STACKS = 27;
 
@@ -111,7 +126,16 @@ public final class LookPayloads {
                 for (int index = 0; index < size; index++) {
                     stacks.add(new Held(ItemStack.STREAM_CODEC.decode(buffer), buffer.readVarInt(), buffer.readVarInt()));
                 }
-                return new Contents(pos, stacks, buffer.readVarInt(), buffer.readFloat());
+                int more = buffer.readVarInt();
+                float progress = buffer.readFloat();
+                int tankCount = Math.min(buffer.readVarInt(), MAX_TANKS);
+                List<Tank> tanks = new ArrayList<>(tankCount);
+                for (int index = 0; index < tankCount; index++) {
+                    tanks.add(new Tank(net.minecraft.network.chat.ComponentSerialization.STREAM_CODEC.decode(buffer),
+                            ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer), buffer.readVarLong(), buffer.readVarLong(),
+                            buffer.readBoolean()));
+                }
+                return new Contents(pos, stacks, more, progress, tanks);
             }
 
             @Override
@@ -125,6 +149,14 @@ public final class LookPayloads {
                 }
                 buffer.writeVarInt(contents.more);
                 buffer.writeFloat(contents.progress);
+                buffer.writeVarInt(contents.tanks.size());
+                for (Tank tank : contents.tanks) {
+                    net.minecraft.network.chat.ComponentSerialization.STREAM_CODEC.encode(buffer, tank.name());
+                    ItemStack.OPTIONAL_STREAM_CODEC.encode(buffer, tank.icon());
+                    buffer.writeVarLong(tank.amount());
+                    buffer.writeVarLong(tank.capacity());
+                    buffer.writeBoolean(tank.gas());
+                }
             }
         };
 
@@ -132,11 +164,12 @@ public final class LookPayloads {
             if (pos == null) throw new IllegalArgumentException("Contents need a place");
             stacks = List.copyOf(stacks);
             if (stacks.size() > MAX_STACKS) stacks = stacks.subList(0, MAX_STACKS);
+            tanks = List.copyOf(tanks.size() > MAX_TANKS ? tanks.subList(0, MAX_TANKS) : tanks);
         }
 
         /** The answer for a block that holds nothing, or nothing this player may be told about. */
         public static Contents none(BlockPos pos) {
-            return new Contents(pos, List.of(), 0, -1.0F);
+            return new Contents(pos, List.of(), 0, -1.0F, List.of());
         }
 
         @Override

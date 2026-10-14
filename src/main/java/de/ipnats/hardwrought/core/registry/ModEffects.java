@@ -21,6 +21,33 @@ public final class ModEffects {
     public static final Holder<MobEffect> THIRST = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
             Hardwrought.id("thirst"), new de.ipnats.hardwrought.survival.ThirstEffect(MobEffectCategory.HARMFUL, 0x3A6B7C));
 
+    /** Water drunk too hot: a burnt mouth and throat, which may become an inflamed wound (see {@link de.ipnats.hardwrought.survival.Injuries}). */
+    public static final Holder<MobEffect> SCALDED = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("scalded"), new de.ipnats.hardwrought.survival.Injuries.Scald(MobEffectCategory.HARMFUL, 0xE0704A));
+
+    /**
+     * A wound left open: dirt can get into it while it lasts, and a bandage keeps it out (see
+     * {@link de.ipnats.hardwrought.health.Wounds}). A bite is a dirtier wound than a blow.
+     */
+    public static final Holder<MobEffect> OPEN_WOUND = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("open_wound"), new de.ipnats.hardwrought.health.Wounds.OpenWound(MobEffectCategory.HARMFUL, 0xA8322D));
+
+    /** A wound bound up: nothing gets into it while the bandage holds. */
+    public static final Holder<MobEffect> BANDAGED = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("bandaged"), new de.ipnats.hardwrought.survival.ThirstEffect(MobEffectCategory.BENEFICIAL, 0xE8E2D0));
+
+    /** Antibiotics: an infection fought four times as well, a stomach bug twice. */
+    public static final Holder<MobEffect> ANTIBIOTIC = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("antibiotic"), new de.ipnats.hardwrought.survival.ThirstEffect(MobEffectCategory.BENEFICIAL, 0xD8494A));
+
+    /** Chamomile tea: a settled stomach. A stomach bug is thrown off three times as fast while it lasts. */
+    public static final Holder<MobEffect> CHAMOMILE = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("chamomile"), new de.ipnats.hardwrought.survival.ThirstEffect(MobEffectCategory.BENEFICIAL, 0xE8D27A));
+
+    /** Willow bark tea: a fever brought down, and a cold or an inflamed wound fought twice as well. */
+    public static final Holder<MobEffect> WILLOW_BARK = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("willow_bark"), new de.ipnats.hardwrought.survival.ThirstEffect(MobEffectCategory.BENEFICIAL, 0x9C6B3E));
+
     /**
      * Mob specification §§ 6 and 9: the breath knocked out of a player by a husk or a stray. Like
      * {@link #THIRST} a marker: the survival metabolism reads it and recovers stamina slower.

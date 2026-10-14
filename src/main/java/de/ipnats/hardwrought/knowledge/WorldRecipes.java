@@ -95,13 +95,15 @@ public final class WorldRecipes {
         register(de.ipnats.hardwrought.metallurgy.Crushing::worldRecipes);
         register(de.ipnats.hardwrought.smithing.Smithing::worldRecipes);
         register(de.ipnats.hardwrought.smeltery.MoltenMetals::worldRecipes);
+        register(de.ipnats.hardwrought.chemistry.SaltPan::worldRecipes);
+        register(de.ipnats.hardwrought.water.WaterTreatmentBlocks::worldRecipes);
         register(de.ipnats.hardwrought.refining.RefiningRecipes::worldRecipes);
         register(de.ipnats.hardwrought.materials.MaterialRecipes::worldRecipes);
         register(WorldRecipes::fireAndWater);
         register(de.ipnats.hardwrought.storage.StorageBlocks::worldRecipes);
     }
 
-    /** The two uses of a fire that are acts rather than cooking. */
+    /** The uses of a fire and of water that are acts rather than cooking: boiling a skin or a bowl clean. */
     private static List<WorldRecipe> fireAndWater() {
         var sticks = new ItemStack(de.ipnats.hardwrought.core.registry.ModItems.LIGHTING_STICKS);
         var campfire = new ItemStack(net.minecraft.world.item.Items.CAMPFIRE);
@@ -110,6 +112,12 @@ public final class WorldRecipes {
                 new WorldRecipe(de.ipnats.hardwrought.Hardwrought.id("light_campfire_in_world"),
                         one(sticks, campfire), campfire, ItemStack.EMPTY),
                 new WorldRecipe(de.ipnats.hardwrought.Hardwrought.id("boil_waterskin_in_world"),
-                        one(skin, campfire), skin, ItemStack.EMPTY));
+                        one(skin, campfire), skin, ItemStack.EMPTY),
+                new WorldRecipe(de.ipnats.hardwrought.Hardwrought.id("water_bowl_dip"),
+                        one(new ItemStack(net.minecraft.world.item.Items.BOWL),
+                                FluidIcons.liquid(net.minecraft.world.level.material.Fluids.WATER,
+                                        de.ipnats.hardwrought.water.WaterBowlItem.MILLIBUCKETS)),
+                        new ItemStack(de.ipnats.hardwrought.core.registry.ModItems.WATER_BOWL), ItemStack.EMPTY));
+
     }
 }

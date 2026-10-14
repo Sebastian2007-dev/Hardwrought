@@ -73,6 +73,12 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.smithing.MetalStock.initialize();
 		de.ipnats.hardwrought.core.registry.ModBlockEntities.initialize();
 		de.ipnats.hardwrought.fluids.FluidBlocks.initialize();
+		de.ipnats.hardwrought.chemistry.SaltPan.initialize();
+		de.ipnats.hardwrought.health.Diseases.initialize();
+		de.ipnats.hardwrought.survival.Overeating.initialize();
+		de.ipnats.hardwrought.health.Herbs.initialize();
+		de.ipnats.hardwrought.fun.StampiEasterEgg.initialize();
+		de.ipnats.hardwrought.water.WaterTreatmentBlocks.initialize();
 		de.ipnats.hardwrought.gasline.GasLines.initialize();
 		de.ipnats.hardwrought.refining.RefineryBlocks.initialize();
 		de.ipnats.hardwrought.refining.RefineryMenu.initialize();

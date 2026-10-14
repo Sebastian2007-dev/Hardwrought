@@ -189,7 +189,7 @@ public final class LookHud {
         sinceInside++;
         Target looked = target;
         if (looked == null || looked.pos() == null || client.level == null || !level(looked).named()
-                || !holdsItems(client.level.getBlockEntity(looked.pos()))) {
+                || !holdsItems(client.level.getBlockEntity(looked.pos())) && !holdsFluids(client.level, looked.pos())) {
             askedInside = null;
             return;
         }
@@ -198,6 +198,16 @@ public final class LookHud {
         ClientPlayNetworking.send(new LookPayloads.Inside(looked.pos()));
         askedInside = looked.pos();
         sinceInside = 0;
+    }
+
+    /** Whether a pipe or a gas line would find a liquid or a gas store there, from any side. */
+    private static boolean holdsFluids(net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos) {
+        if (level.getBlockEntity(pos) == null) return false;
+        for (net.minecraft.core.Direction side : net.minecraft.core.Direction.values()) {
+            if (net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage.SIDED.find(level, pos, side) != null) return true;
+            if (de.ipnats.hardwrought.gasline.GasStorage.SIDED.find(level, pos, side) != null) return true;
+        }
+        return false;
     }
 
     private static boolean holdsItems(net.minecraft.world.level.block.entity.BlockEntity entity) {
@@ -242,10 +252,19 @@ public final class LookHud {
         boolean working = inside != null && inside.progress() >= 0;
         Component more = inside == null || inside.more() <= 0 ? null
                 : Component.literal("+" + inside.more()).withStyle(ChatFormatting.DARK_GRAY);
+        List<LookPayloads.Contents.Tank> tanks = inside == null ? List.of() : inside.tanks();
+        List<String> tankTexts = new java.util.ArrayList<>();
+        int tankWidth = 0;
+        for (LookPayloads.Contents.Tank tank : tanks) {
+            String text = tank.name().getString() + "  " + amount(tank);
+            tankTexts.add(text);
+            tankWidth = Math.max(tankWidth, TANK_ICON + client.font.width(text));
+        }
         int insideHeight = (rows > 0 ? PADDING + rows * SLOT : 0) + (more != null ? LINE_HEIGHT : 0)
+                + (tanks.isEmpty() ? 0 : PADDING + tanks.size() * TANK_ROW)
                 + (working ? PADDING + 3 : 0);
 
-        int width = Math.max(textX + textWidth, Math.min(kinds, SLOTS_PER_ROW) * SLOT);
+        int width = Math.max(Math.max(textX + textWidth, Math.min(kinds, SLOTS_PER_ROW) * SLOT), tankWidth);
         if (working) width = Math.max(width, 4 * SLOT);
         int height = head + insideHeight;
         int x = (graphics.guiWidth() - width) / 2;
@@ -271,6 +290,13 @@ public final class LookHud {
             if (more != null) {
                 graphics.text(client.font, more, x, below + 1, 0xFFE8EDF0, true);
                 below += LINE_HEIGHT;
+            }
+            if (!tanks.isEmpty()) {
+                below += PADDING;
+                for (int index = 0; index < tanks.size(); index++) {
+                    tank(graphics, client, tanks.get(index), tankTexts.get(index), x, below, width);
+                    below += TANK_ROW;
+                }
             }
             if (working) {
                 below += PADDING;
@@ -302,6 +328,27 @@ public final class LookHud {
         if (count != null) {
             graphics.text(client.font, count, x + 18 - client.font.width(count), y + 10, 0xFFFFFFFF, true);
         }
+    }
+
+    /** One row per liquid or gas: what it is drawn as itself, how much of how much, and a bar of it. */
+    private static final int TANK_ROW = 20;
+    private static final int TANK_ICON = 20;
+
+    private static void tank(GuiGraphicsExtractor graphics, Minecraft client, LookPayloads.Contents.Tank tank,
+                             String text, int x, int y, int width) {
+        var ingredient = de.ipnats.hardwrought.knowledge.FluidIcons.of(tank.icon());
+        if (ingredient != null) FluidIconRenderer.render(graphics, ingredient, x, y);
+        graphics.text(client.font, text, x + TANK_ICON, y + 1, 0xFFE8EDF0, true);
+        int barX = x + TANK_ICON, barWidth = width - TANK_ICON;
+        double ratio = tank.capacity() <= 0 ? 0 : Math.clamp(tank.amount() / (double) tank.capacity(), 0.0, 1.0);
+        graphics.fill(barX, y + 11, barX + barWidth, y + 14, 0xFF30383D);
+        graphics.fill(barX, y + 11, barX + (int) Math.round(barWidth * ratio), y + 14, tank.gas() ? 0xFFD8C35A : 0xFF4A90D8);
+    }
+
+    /** How much of how much: millibuckets for a liquid, units for a gas. */
+    private static String amount(LookPayloads.Contents.Tank tank) {
+        return Component.translatable(tank.gas() ? "hud.hardwrought.look.gas_amount" : "hud.hardwrought.look.fluid_amount",
+                String.format(Locale.ROOT, "%,d", tank.amount()), String.format(Locale.ROOT, "%,d", tank.capacity())).getString();
     }
 
     /** A number that still fits in the corner of a slot once a chest is full of one thing. */

@@ -31,7 +31,8 @@ public final class DebugCommands {
                         .then(literal("status").executes(context -> status(context.getSource())))
                         .then(literal("materials").executes(context -> materials(context.getSource())))
                         .then(literal("combat").executes(context -> combat(context.getSource())))
-                        .then(literal("water").executes(context -> water(context.getSource())))
+                        .then(literal("water").executes(context -> water(context.getSource()))
+                                .then(waterGive()))
                         .then(literal("nutrition").then(literal("satisfy")
                                 .executes(context -> satisfyNutrition(context.getSource()))))
                         .then(literal("air").executes(context -> air(context.getSource()))
@@ -58,6 +59,52 @@ public final class DebugCommands {
                         .then(literal("debug")
                                 .then(literal("on").executes(context -> toggle(context.getSource(), true)))
                                 .then(literal("off").executes(context -> toggle(context.getSource(), false))))));
+    }
+
+    /** The containers {@code water give} can fill. */
+    private static final java.util.List<String> WATER_CONTAINERS = java.util.List.of("bucket", "bottle", "bowl", "skin");
+
+    /**
+     * {@code water give <kind> [bucket|bottle|bowl|skin]}: water of one kind, in one container or in
+     * each of them — a full bucket, a bottle, a cool bowl and a full waterskin.
+     */
+    private static LiteralArgumentBuilder<CommandSourceStack> waterGive() {
+        LiteralArgumentBuilder<CommandSourceStack> give = literal("give");
+        for (de.ipnats.hardwrought.water.WaterQuality quality : de.ipnats.hardwrought.water.WaterQuality.values()) {
+            var kind = literal(quality.serializedName())
+                    .executes(context -> giveWater(context.getSource(), quality, WATER_CONTAINERS));
+            for (String container : WATER_CONTAINERS) {
+                kind = kind.then(literal(container)
+                        .executes(context -> giveWater(context.getSource(), quality, java.util.List.of(container))));
+            }
+            give = give.then(kind);
+        }
+        return give;
+    }
+
+    private static int giveWater(CommandSourceStack source, de.ipnats.hardwrought.water.WaterQuality quality,
+                                 java.util.List<String> containers) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        net.minecraft.server.level.ServerPlayer player = source.getPlayerOrException();
+        for (String container : containers) {
+            net.minecraft.world.item.ItemStack stack = switch (container) {
+                case "bucket" -> de.ipnats.hardwrought.water.BucketWater.with(
+                        new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BUCKET),
+                        de.ipnats.hardwrought.water.BucketWater.CAPACITY, quality);
+                case "bottle" -> de.ipnats.hardwrought.water.CauldronWater.bottle(quality);
+                case "bowl" -> de.ipnats.hardwrought.water.WaterBowlItem.of(
+                        de.ipnats.hardwrought.core.registry.ModItems.WATER_BOWL, quality);
+                default -> {
+                    var skin = new net.minecraft.world.item.ItemStack(de.ipnats.hardwrought.core.registry.ModItems.FILLED_WATERSKIN);
+                    de.ipnats.hardwrought.survival.WaterskinItem.refill(skin, quality);
+                    yield skin;
+                }
+            };
+            if (!player.getInventory().add(stack)) player.spawnAtLocation(player.level(), stack);
+        }
+        source.sendSuccess(() -> Component.literal("Hardwrought: ")
+                .append(Component.translatable("water_quality.hardwrought." + quality.serializedName()))
+                .append(Component.literal(" (" + String.join(", ", containers) + ")")), false);
+        return containers.size();
     }
 
     /**

@@ -21,6 +21,13 @@ public final class BucketTooltip {
 
     public static void initialize() {
         ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
+            // What kind of water is in a bucket, a bottle or a skin: seawater looks like any other.
+            var quality = stack.get(de.ipnats.hardwrought.core.registry.ModDataComponents.WATER_QUALITY);
+            if (quality != null) {
+                lines.add(Component.translatable("tooltip.hardwrought.water_quality",
+                        Component.translatable("water_quality.hardwrought." + quality.serializedName()))
+                        .withStyle(ChatFormatting.DARK_AQUA));
+            }
             if (!BucketWater.isBucket(stack)) return;
             int held = BucketWater.held(stack);
             if (held <= 0 || held >= BucketWater.CAPACITY) return;

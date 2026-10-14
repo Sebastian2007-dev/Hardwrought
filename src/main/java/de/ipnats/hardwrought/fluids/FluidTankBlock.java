@@ -98,7 +98,11 @@ public class FluidTankBlock extends Block implements EntityBlock {
         FluidVariant liquid = group.liquid();
         long capacity = group.capacity() * 1000 / FluidConstants.BUCKET;
         if (liquid.isBlank()) return Component.translatable("message.hardwrought.tank.empty_of", capacity);
-        return Component.translatable("message.hardwrought.tank.holds", FluidVariantAttributes.getName(liquid),
+        de.ipnats.hardwrought.water.WaterQuality quality = de.ipnats.hardwrought.chemistry.SaltPan.quality(liquid);
+        Component name = quality != null && quality != de.ipnats.hardwrought.water.WaterQuality.FRESH
+                ? Component.translatable("water_quality.hardwrought." + quality.serializedName())
+                : FluidVariantAttributes.getName(liquid);
+        return Component.translatable("message.hardwrought.tank.holds", name,
                 group.amount() * 1000 / FluidConstants.BUCKET, capacity);
     }
 

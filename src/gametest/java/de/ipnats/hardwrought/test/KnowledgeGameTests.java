@@ -7,6 +7,7 @@ import de.ipnats.hardwrought.core.networking.CompendiumRequestPayload;
 import de.ipnats.hardwrought.core.networking.KnowledgeNotePayload;
 import de.ipnats.hardwrought.core.registry.ModItems;
 import de.ipnats.hardwrought.core.registry.ModBlocks;
+import de.ipnats.hardwrought.knowledge.CraftingTree;
 import de.ipnats.hardwrought.knowledge.Journal;
 import de.ipnats.hardwrought.knowledge.JournalEntry;
 import de.ipnats.hardwrought.knowledge.KnowledgeCategory;
@@ -86,6 +87,39 @@ public final class KnowledgeGameTests {
                 "Killing it is news again");
         helper.assertTrue(knowledge.look(player, creature).level() == KnowledgeLevel.STUDIED.ordinal(),
                 "A creature killed is studied");
+        knowledge.forget(player.getUUID());
+        helper.succeed();
+    }
+
+    @GameTest
+    public void lookingAtATankTellsTheLiquidAndAtAGasTankTheGas(GameTestHelper helper) {
+        KnowledgeSystem knowledge = CoreLifecycle.require(helper.getLevel().getServer()).knowledge();
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        knowledge.forget(player.getUUID());
+        net.minecraft.core.BlockPos lower = new net.minecraft.core.BlockPos(1, 1, 1), gas = new net.minecraft.core.BlockPos(3, 1, 1);
+        helper.setBlock(lower, de.ipnats.hardwrought.fluids.FluidBlocks.TANK);
+        helper.setBlock(lower.above(), de.ipnats.hardwrought.fluids.FluidBlocks.TANK);
+        helper.setBlock(gas, de.ipnats.hardwrought.gasline.GasLines.TANK);
+        var tank = helper.getBlockEntity(lower, de.ipnats.hardwrought.fluids.FluidTankBlock.Entity.class);
+        try (var transaction = net.fabricmc.fabric.api.transfer.v1.transaction.Transaction.openOuter()) {
+            tank.storage.insert(net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.of(de.ipnats.hardwrought.oil.ModFluids.CRUDE_OIL),
+                    4000 * (net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET / 1000), transaction);
+            transaction.commit();
+        }
+        helper.getBlockEntity(gas, de.ipnats.hardwrought.gasline.GasTankBlock.Entity.class).store
+                .insert(de.ipnats.hardwrought.gasline.GasKind.LPG, 40);
+        knowledge.discover(player, de.ipnats.hardwrought.fluids.FluidBlocks.TANK.asItem());
+        knowledge.discover(player, de.ipnats.hardwrought.gasline.GasLines.TANK.asItem());
+        net.minecraft.core.BlockPos at = helper.absolutePos(lower);
+        player.setPos(at.getX() + 0.5, at.getY() + 1.0, at.getZ() + 0.5);
+
+        var liquid = de.ipnats.hardwrought.knowledge.LookInside.of(player, knowledge.knowledge(player), at).tanks();
+        helper.assertTrue(liquid.size() == 1 && !liquid.getFirst().gas() && liquid.getFirst().amount() == 4000
+                        && liquid.getFirst().capacity() == 32000,
+                "Two tanks are one tank, with what is in it and how much fits: " + liquid);
+        var held = de.ipnats.hardwrought.knowledge.LookInside.of(player, knowledge.knowledge(player), helper.absolutePos(gas)).tanks();
+        helper.assertTrue(held.size() == 1 && held.getFirst().gas() && held.getFirst().amount() == 40,
+                "A gas tank tells its gas: " + held);
         knowledge.forget(player.getUUID());
         helper.succeed();
     }
@@ -408,6 +442,50 @@ public final class KnowledgeGameTests {
                     "The page for " + piece.getKey() + " shows its part and " + piece.getValue() + " of what goes with it: "
                             + page.recipes().stream().map(view -> view.inputs().size()).toList());
         }
+        knowledge.forget(player.getUUID());
+        helper.succeed();
+    }
+
+    @GameTest
+    public void aCraftingTreeAddsUpEverythingThatGoesIn(GameTestHelper helper) {
+        KnowledgeSystem knowledge = CoreLifecycle.require(helper.getLevel().getServer()).knowledge();
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        knowledge.forget(player.getUUID());
+
+        CompendiumPagePayload page = knowledge.compendium().answer(player, knowledge,
+                new CompendiumRequestPayload(CompendiumPagePayload.MODE_TREE, COMPENDIUM, ""));
+        helper.assertTrue(page.mode() == CompendiumPagePayload.MODE_TREE, "The answer is a tree");
+        helper.assertTrue(page.entries().getFirst().id().equals(COMPENDIUM), "The tree starts at what was asked about");
+        helper.assertTrue(page.entries().stream().anyMatch(entry -> entry.id().equals(LEAF_STRING)),
+                "It reaches down into what goes in");
+
+        CraftingTree tree = new CraftingTree(page, 0, thing -> null, null);
+        helper.assertTrue(!tree.root.children.isEmpty(), "The book is made of something");
+        helper.assertTrue(!tree.raw().isEmpty(), "Everything comes down to something gathered");
+        helper.assertTrue(tree.raw().stream().allMatch(line -> line.amount() > 0), "Every total is something");
+
+        // With a pocketful of everything it takes, nothing is left to gather.
+        java.util.Map<Identifier, Long> carried = new java.util.HashMap<>();
+        for (CraftingTree.Node child : tree.root.children) carried.put(child.key, 1000L);
+        CraftingTree covered = new CraftingTree(page, 0, thing -> null, carried);
+        helper.assertTrue(covered.raw().isEmpty(), "What is carried is taken before anything is made: " + covered.raw());
+        helper.assertTrue(covered.root.children.stream().allMatch(child -> child.missing() == 0 && child.children.isEmpty()),
+                "A part already carried is not opened up further");
+
+        // Chosen to be found rather than made, the book is the only thing left in its tree.
+        CraftingTree found = new CraftingTree(page, 0, thing -> thing.equals(COMPENDIUM) ? -1 : null, null);
+        helper.assertTrue(found.root.children.isEmpty() && found.raw().size() == 1, "A choice of no recipe is followed");
+
+        // A block of iron is made of ingots, and the ingots are not knocked back out of a block.
+        CompendiumPagePayload block = knowledge.compendium().answer(player, knowledge, new CompendiumRequestPayload(
+                CompendiumPagePayload.MODE_TREE, BuiltInRegistries.ITEM.getKey(Items.IRON_BLOCK), ""));
+        CraftingTree iron = new CraftingTree(block, 1, thing -> null, null);
+        CraftingTree.Node ingots = iron.root.children.stream()
+                .filter(child -> child.key.equals(BuiltInRegistries.ITEM.getKey(Items.IRON_INGOT))).findFirst().orElse(null);
+        helper.assertTrue(ingots != null && ingots.needed == 9, "Nine ingots go into a block");
+        helper.assertTrue(ingots.recipe == null || ingots.children.stream().noneMatch(child ->
+                        child.key.equals(BuiltInRegistries.ITEM.getKey(Items.IRON_BLOCK))),
+                "An ingot is not made from the block it is going into");
         knowledge.forget(player.getUUID());
         helper.succeed();
     }

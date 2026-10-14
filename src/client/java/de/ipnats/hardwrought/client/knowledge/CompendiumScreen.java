@@ -65,6 +65,9 @@ public class CompendiumScreen extends Screen {
     private static final int CONTROLS_Y = PAPER_BOTTOM - 4 - BUTTON_HEIGHT;
     /** Where the button into a structure's view starts, beside the back button. */
     private static final int STRUCTURE_BUTTON_OFFSET = 58;
+    /** The button into the crafting tree, with a sapling on it. */
+    private static final int TREE_BUTTON_WIDTH = 22;
+    private static final ItemStack TREE_ICON = new ItemStack(Items.OAK_SAPLING);
     /** Nothing on a page is drawn below this, so it can never run into the controls. */
     private static final int CONTENT_BOTTOM = CONTROLS_Y - 4;
 
@@ -201,8 +204,8 @@ public class CompendiumScreen extends Screen {
         }
     }
 
-    /** Called when something else has already sent the request for a new page. */
-    public void showing(int mode, Identifier subject) {
+    /** Called when something else has already sent the request for a new page, asked with {@code search}. */
+    public void showing(int mode, Identifier subject, String search) {
         remember();
         this.mode = mode;
         this.subject = subject;
@@ -214,7 +217,7 @@ public class CompendiumScreen extends Screen {
             methodChosen = false;
         }
         this.journalOpened = false;
-        setSearchQuietly("");
+        setSearchQuietly(search);
         rebuildWidgets();
     }
 
@@ -476,7 +479,16 @@ public class CompendiumScreen extends Screen {
 
     /** The entry this page is about, where it is about one; null on a shelf, the journal and the front page. */
     private Identifier pageSubject() {
+        // A ribbon shows what it marks as an item, so a liquid's own page takes none.
+        if (de.ipnats.hardwrought.knowledge.FluidIcons.ofSubject(subject) != null) return null;
         return mode == CompendiumPagePayload.MODE_RECIPES || mode == CompendiumPagePayload.MODE_USAGES ? subject : null;
+    }
+
+    /** The page a stack in the book leads to: the item's, or for a liquid or gas its container's or its own. */
+    private static Identifier subjectOf(ItemStack stack) {
+        var ingredient = de.ipnats.hardwrought.knowledge.FluidIcons.of(stack);
+        return ingredient != null ? de.ipnats.hardwrought.knowledge.FluidIcons.subject(ingredient)
+                : BuiltInRegistries.ITEM.getKey(stack.getItem());
     }
 
     /** Whether one more ribbon may be laid in at the page that is open. */
@@ -561,12 +573,38 @@ public class CompendiumScreen extends Screen {
                     CONTENT_WIDTH - STRUCTURE_BUTTON_OFFSET, 18,
                     Component.translatable("gui.hardwrought.multiblock.open"), mouseX, mouseY);
         }
+        if (treeSubject() != null) {
+            int x = treeButtonX(), y = treeButtonY();
+            boolean hovered = inside(mouseX, mouseY, x, y, TREE_BUTTON_WIDTH, BUTTON_HEIGHT);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, hovered ? BUTTON_HOVERED_SPRITE : BUTTON_SPRITE,
+                    x, y, TREE_BUTTON_WIDTH, BUTTON_HEIGHT);
+            graphics.item(TREE_ICON, x + (TREE_BUTTON_WIDTH - 16) / 2, y + 1);
+            if (hovered) {
+                graphics.setComponentTooltipForNextFrame(font, List.of(Component.translatable("gui.hardwrought.tree")),
+                        mouseX, mouseY);
+            }
+        }
         if (pageCount() > 1) {
             drawBookButton(graphics, rightContentX(), top + CONTROLS_Y, 22, 18,
                     Component.literal("‹"), mouseX, mouseY);
             drawBookButton(graphics, rightContentX() + CONTENT_WIDTH - 22,
                     top + CONTROLS_Y, 22, 18, Component.literal("›"), mouseX, mouseY);
         }
+    }
+
+    /** What a crafting tree opened from this page is about: the page's subject, on a page about one. */
+    private Identifier treeSubject() {
+        boolean lookup = mode == CompendiumPagePayload.MODE_RECIPES || mode == CompendiumPagePayload.MODE_USAGES;
+        return lookup && CompendiumClient.page() != null ? subject : null;
+    }
+
+    /** The button into the tree sits at the foot of the left page, above the back button's row. */
+    private int treeButtonX() {
+        return leftContentX() + CONTENT_WIDTH - TREE_BUTTON_WIDTH;
+    }
+
+    private int treeButtonY() {
+        return top + CONTROLS_Y - BUTTON_HEIGHT - 3;
     }
 
     private void drawBookButton(GuiGraphicsExtractor graphics, int x, int y, int width, int height,
@@ -842,7 +880,10 @@ public class CompendiumScreen extends Screen {
         }
         CompendiumPagePayload current = CompendiumClient.page();
         Component name = ShadowItem.UNKNOWN_NAME;
-        if (current != null && !current.entries().isEmpty() && current.entries().getFirst().level() > 0) {
+        var fluid = de.ipnats.hardwrought.knowledge.FluidIcons.ofSubject(subject);
+        if (fluid != null) {
+            name = fluid.name();
+        } else if (current != null && !current.entries().isEmpty() && current.entries().getFirst().level() > 0) {
             Item item = BuiltInRegistries.ITEM.getValue(subject);
             if (item != null) name = new ItemStack(item).getHoverName();
         }
@@ -1151,12 +1192,13 @@ public class CompendiumScreen extends Screen {
         drawSlotBackground(graphics, x, y);
         var ingredient = de.ipnats.hardwrought.knowledge.FluidIcons.of(stack);
         if (ingredient != null) {
-            // A liquid or a gas as itself, with how much in the tooltip; a click opens its bucket or canister.
+            // A liquid or a gas as itself, with how much in the tooltip; a click opens its bucket or
+            // canister, or its own page where it is carried in nothing.
             FluidIconRenderer.render(graphics, ingredient, x, y);
             var container = de.ipnats.hardwrought.knowledge.FluidIcons.container(ingredient);
             hotspots.add(new Hotspot(x, y, container == null ? stack : new ItemStack(container), true,
                     List.of(ingredient.name(), ingredient.quantity().copy().withStyle(net.minecraft.ChatFormatting.GRAY)),
-                    container != null));
+                    true));
             return;
         }
         ShadowItem.render(graphics, stack, x, y, known);
@@ -1207,8 +1249,8 @@ public class CompendiumScreen extends Screen {
             // From the front page a ribbon leads straight to its entry, as from any other.
             for (Hotspot hotspot : hotspots) {
                 if (!hotspot.contains(event.x(), event.y())) continue;
-                if (event.button() == InputConstants.MOUSE_BUTTON_RIGHT) CompendiumClient.openUsages(hotspot.stack().getItem());
-                else CompendiumClient.openRecipes(hotspot.stack().getItem());
+                if (event.button() == InputConstants.MOUSE_BUTTON_RIGHT) CompendiumClient.openUsages(subjectOf(hotspot.stack()));
+                else CompendiumClient.openRecipes(subjectOf(hotspot.stack()));
                 return true;
             }
             if (overHalf(homeLeft(0), event.x(), event.y())) {
@@ -1227,6 +1269,11 @@ public class CompendiumScreen extends Screen {
         }
         if (inside(event.x(), event.y(), leftContentX() + STRUCTURE_BUTTON_OFFSET, top + CONTROLS_Y,
                 CONTENT_WIDTH - STRUCTURE_BUTTON_OFFSET, 18) && openStructure()) {
+            return true;
+        }
+        if (treeSubject() != null && inside(event.x(), event.y(), treeButtonX(), treeButtonY(),
+                TREE_BUTTON_WIDTH, BUTTON_HEIGHT)) {
+            minecraft.gui.setScreen(new CraftingTreeScreen(this, treeSubject()));
             return true;
         }
         if (pageCount() > 1) {
@@ -1262,7 +1309,8 @@ public class CompendiumScreen extends Screen {
             for (KnowledgeCategory category : KnowledgeCategory.values()) {
                 if (event.x() >= leftContentX() && event.x() < leftContentX() + TAB_WIDTH
                         && event.y() >= y && event.y() < y + TAB_HEIGHT) {
-                    CompendiumClient.openShelf(category, "");
+                    // Another shelf is asked the same question: what was being looked for stays in the field.
+                    CompendiumClient.openShelf(category, searchText);
                     return true;
                 }
                 y += TAB_HEIGHT;
@@ -1273,9 +1321,9 @@ public class CompendiumScreen extends Screen {
             // Left for how it is made, right for what it is used in: the two questions a browser
             // exists to answer, and they work on a shadow too.
             if (event.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
-                CompendiumClient.openUsages(hotspot.stack().getItem());
+                CompendiumClient.openUsages(subjectOf(hotspot.stack()));
             } else {
-                CompendiumClient.openRecipes(hotspot.stack().getItem());
+                CompendiumClient.openRecipes(subjectOf(hotspot.stack()));
             }
             return true;
         }
@@ -1322,18 +1370,21 @@ public class CompendiumScreen extends Screen {
         Hotspot hovered = hovered();
         if (CompendiumClient.BOOKMARK.matches(event)) {
             // What the pointer is on, or else the page that is open.
-            Identifier marked = hovered != null ? BuiltInRegistries.ITEM.getKey(hovered.stack().getItem()) : pageSubject();
+            // A liquid carried in nothing has no item for a ribbon to show.
+            Identifier marked = hovered == null ? pageSubject()
+                    : de.ipnats.hardwrought.knowledge.FluidIcons.of(hovered.stack()) != null ? null
+                    : BuiltInRegistries.ITEM.getKey(hovered.stack().getItem());
             if (marked != null) {
                 CompendiumClient.toggleBookmark(marked);
                 return true;
             }
         }
         if (hovered != null && CompendiumClient.RECIPES.matches(event)) {
-            CompendiumClient.openRecipes(hovered.stack().getItem());
+            CompendiumClient.openRecipes(subjectOf(hovered.stack()));
             return true;
         }
         if (hovered != null && CompendiumClient.USAGES.matches(event)) {
-            CompendiumClient.openUsages(hovered.stack().getItem());
+            CompendiumClient.openUsages(subjectOf(hovered.stack()));
             return true;
         }
         if (CompendiumClient.OPEN.matches(event)) {

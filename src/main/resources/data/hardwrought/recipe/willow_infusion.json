@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:water_bowl",
+    "hardwrought:willow_bark"
+  ],
+  "result": {
+    "id": "hardwrought:willow_infusion"
+  }
+}

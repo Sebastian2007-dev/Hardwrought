@@ -255,6 +255,7 @@ public final class SurvivalSystem {
             player.setSprinting(false);
             return false;
         }
+        amount *= Overeating.staminaFactor(player);
         save.setVitals(player.getUUID(), current.withStamina(current.stamina() - amount));
         recordWork(player, amount * ENERGY_PER_STAMINA, amount * 0.008);
         return true;
@@ -263,6 +264,8 @@ public final class SurvivalSystem {
     public void consumeFood(ServerPlayer player, ItemStack stack) {
         if (exempt(player)) return;
         FoodProperties food = stack.get(DataComponents.FOOD);
+        // Before the bar is filled: what will not fit in it is kept, eaten past full.
+        if (food != null) Overeating.ate(player, food.nutrition());
         Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         FoodNutritionDefinition profile = server.getOrThrow(FoodNutritionDefinitions.KEY).get(id);
         if (profile == null && food != null) profile = FoodNutritionDefinition.guess(id, food.nutrition());
@@ -272,6 +275,8 @@ public final class SurvivalSystem {
             double absorbed = current.nutrition().high(Nutrient.FIBER) ? FIBER_EXCESS_ABSORPTION : 1.0;
             save.setVitals(player.getUUID(), current.eat(profile.nutrients(), profile.hydration(), absorbed));
         }
+        // Raw meat and spoiled food can upset the stomach.
+        de.ipnats.hardwrought.health.Diseases.ate(player, stack);
         PotionContents potion = stack.get(DataComponents.POTION_CONTENTS);
         if (potion != null && potion.is(Potions.WATER)) {
             drink(player, 22.0, de.ipnats.hardwrought.water.WaterEvents.qualityOf(stack));
@@ -297,19 +302,16 @@ public final class SurvivalSystem {
 
     /**
      * Section 23.2: what a drink is worth depends on what was in it. Salt water is worse than
-     * nothing, and anything unboiled off the surface can make the drinker ill. Illness is a vanilla
-     * effect for now; the disease system of section 12 replaces it when it exists.
+     * nothing, and anything not purified can make the drinker ill: a stomach bug, which takes hold
+     * unnoticed and is felt a minute later ({@link de.ipnats.hardwrought.health.Diseases}).
      */
     public void drink(ServerPlayer player, double amount, WaterQuality quality) {
         if (exempt(player)) return;
         save.setVitals(player.getUUID(), vitals(player).drink(amount * quality.hydrationFactor()));
         if (quality.illnessRisk() > 0 && player.level().getRandom().nextDouble() < quality.illnessRisk()) {
-            // Not poison. Drinking from a stagnant pond is not being envenomed, it is spending the
-            // next while thirstier than the drink was worth.
-            player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                    de.ipnats.hardwrought.core.registry.ModEffects.THIRST, THIRST_DURATION_TICKS, 0));
-            player.sendSystemMessage(Component.translatable("message.hardwrought.water_made_you_ill")
-                    .withStyle(net.minecraft.ChatFormatting.DARK_AQUA));
+            // Not poison. Drinking from a stagnant pond is not being envenomed: it is a stomach bug,
+            // which costs water for as long as it lasts.
+            de.ipnats.hardwrought.health.Diseases.drankBad(player, BAD_WATER_LOAD);
         }
         sync(player, carriedWeight(player), ambientTemperature(player), quality(player));
     }
@@ -320,6 +322,8 @@ public final class SurvivalSystem {
      * enough to bother.
      */
     public static final double HAND_DRINK_HYDRATION = 10.0;
+    /** How much a bad drink adds to a stomach bug. */
+    public static final double BAD_WATER_LOAD = 8.0;
     /** How long bad water stays with the drinker. */
     public static final int THIRST_DURATION_TICKS = 600;
     /**
@@ -484,6 +488,8 @@ public final class SurvivalSystem {
             double load = CarryWeight.load(carried, capacity(player));
             if (active && load > 0) delta -= CarryWeight.OVERLOAD_STAMINA_PER_LOAD * load;
             if (active) delta -= ARMOR_STAMINA_PER_TICK * armorStaminaDrain(player);
+            // Every effort is harder on a full belly.
+            delta *= Overeating.staminaFactor(player);
             // Stamina regeneration refills the reserve whatever the player is doing, stronger per level.
             var staminaRegeneration = player.getEffect(de.ipnats.hardwrought.core.registry.ModEffects.STAMINA_REGENERATION);
             if (staminaRegeneration != null) {
@@ -491,7 +497,8 @@ public final class SurvivalSystem {
             }
             if (!active && !player.isSleeping()) {
                 double recovery = IDLE_RECOVERY_PER_TICK
-                        * recoveryFactor(player, value, load, environment.reading(player).gases());
+                        * recoveryFactor(player, value, load, environment.reading(player).gases())
+                        * de.ipnats.hardwrought.health.Diseases.recoveryFactor(player);
                 delta += recovery;
             }
             if (player.isSleeping()) {
@@ -499,8 +506,9 @@ public final class SurvivalSystem {
                 boolean rested = value.fatigue() <= 0.05;
                 double newFatigue = rested ? 0 : value.fatigue() - 0.006 * quality;
                 // Sleeping on past the point of being rested is what turns into stress. Nobody is
-                // woken up for it: the player is told once and can decide to stay in bed.
-                double newStress = rested
+                // woken up for it: the player is told once and can decide to stay in bed. A sick body
+                // needs the rest, and lying in does not make it restless.
+                double newStress = rested && de.ipnats.hardwrought.health.Diseases.restless(player)
                         ? value.stress() + OVERSLEEP_STRESS_PER_TICK : value.stress();
                 value = new PlayerVitals(value.stamina() + SLEEP_RECOVERY_PER_TICK * quality,
                         value.hydration(), value.nutrition(),
@@ -510,7 +518,8 @@ public final class SurvivalSystem {
                 if (quality > Ultra.HEALING_SLEEP && Ultra.active(server) && player.getHealth() < player.getMaxHealth()) {
                     player.heal(Ultra.SLEEP_HEAL_PER_TICK);
                 }
-                if (rested && restedNotice.add(player.getUUID())) {
+                // A sick player needs the rest, and is not told that lying in makes them restless.
+                if (rested && de.ipnats.hardwrought.health.Diseases.restless(player) && restedNotice.add(player.getUUID())) {
                     player.sendSystemMessage(Component.translatable("message.hardwrought.sleep_rested"));
                 }
             } else {
@@ -549,6 +558,9 @@ public final class SurvivalSystem {
                 continue;
             }
             PlayerVitals v = vitals(player);
+            de.ipnats.hardwrought.health.Diseases.tick(player, v,
+                    player.getDeltaMovement().horizontalDistance() <= 0.02, metabolismPasses);
+            Overeating.tick(player);
             double carried = carriedWeight(player);
             EnvironmentReading air = environment.reading(player);
             GasMixture gases = air.gases();
@@ -571,7 +583,9 @@ public final class SurvivalSystem {
                     ArmorCoverage.of(player, server.getOrThrow(ArmorProfiles.KEY)).insulation(), wetness);
             double targetBody = Thermal.targetBody(feltAmbient, immersed, insulation, armorMass,
                     air.wind(), wetness, v.nutrition().low(Nutrient.FAT),
-                    player.isSprinting() || player.isSwimming());
+                    player.isSprinting() || player.isSwimming())
+                    // A fever drives the body hotter whatever the weather.
+                    + de.ipnats.hardwrought.health.Diseases.fever(player);
             double body = v.bodyTemperature() + (targetBody - v.bodyTemperature()) * 0.020;
             ActivityLoad work = activity.remove(player.getUUID());
             double workEnergy = work == null ? 0 : work.energy;
@@ -590,10 +604,11 @@ public final class SurvivalSystem {
             energyUse += oxygenStress * 0.55;
             Nutrition diet = v.nutrition();
             double hungerFactor = (diet.high(Nutrient.PROTEIN) ? DIET_HUNGER_FACTOR : 1.0)
-                    * (diet.low(Nutrient.FIBER) ? DIET_HUNGER_FACTOR : 1.0);
+                    * (diet.low(Nutrient.FIBER) ? DIET_HUNGER_FACTOR : 1.0)
+                    * de.ipnats.hardwrought.health.Diseases.hungerFactor(player);
             player.causeFoodExhaustion((float) (energyUse * EXHAUSTION_PER_ENERGY * hungerFactor));
-            double fatigueFactor = diet.high(Nutrient.CARBOHYDRATES) ? CARB_EXCESS_FATIGUE
-                    : diet.balanced() ? BALANCED_FATIGUE : 1.0;
+            double fatigueFactor = (diet.high(Nutrient.CARBOHYDRATES) ? CARB_EXCESS_FATIGUE
+                    : diet.balanced() ? BALANCED_FATIGUE : 1.0) * de.ipnats.hardwrought.health.Diseases.fatigueFactor(player);
             // Section 18.2: carbon dioxide is felt as fatigue long before it becomes lethal.
             double fatigue = v.fatigue() + (player.isSleeping() ? 0
                     : (FATIGUE_PER_SECOND_AWAKE + workEnergy * 0.002) * fatigueFactor
@@ -750,6 +765,7 @@ public final class SurvivalSystem {
     }
 
     private static void clearPenalties(ServerPlayer player) {
+        Overeating.clear(player);
         updateModifier(player.getAttribute(Attributes.MOVEMENT_SPEED), MOVEMENT_MODIFIER, 0);
         updateModifier(player.getAttribute(Attributes.JUMP_STRENGTH), JUMP_MODIFIER, 0);
         updateModifier(player.getAttribute(Attributes.BLOCK_BREAK_SPEED), MINING_MODIFIER, 0);

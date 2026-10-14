@@ -53,6 +53,7 @@ public final class CoreClientGameTest implements FabricClientGameTest {
             verifyTurningShaft(context, world);
             verifySharedCells(context, world);
             verifySmeltery(context, world);
+            verifyBodyMarks(context, world);
             // The weight table has to reach the client, or every tooltip would guess.
             context.waitFor(client -> !de.ipnats.hardwrought.client.survival.WeightTooltip.weights().isEmpty());
             context.runOnClient(client -> {
@@ -607,8 +608,9 @@ public final class CoreClientGameTest implements FabricClientGameTest {
     }
 
     /**
-     * Section 23.2: bad water leaves a real player thirsty, and never poisoned. This needs the real
-     * client player because a mock one is always in creative, and a creative player never drinks.
+     * Section 23.2: bad water gives a real player a stomach bug, which leaves them thirsty, and never
+     * poisons them. This needs the real client player because a mock one is always in creative, and a
+     * creative player never drinks.
      *
      * <p>The illness is a roll per drink, so the check is a great many drinks of nothing: the drink
      * is worth zero hydration, so nothing moves except the roll. Four hundred rolls at one in twenty
@@ -621,12 +623,19 @@ public final class CoreClientGameTest implements FabricClientGameTest {
             var runtime = CoreLifecycle.require(server);
             var player = server.getPlayerList().getPlayers().getFirst();
             player.removeAllEffects();
-            // Stop at the first hit: every drink that lands also writes a line of chat, and four
-            // hundred of them would bury every screenshot this test takes afterwards.
+            de.ipnats.hardwrought.health.Diseases.set(player, de.ipnats.hardwrought.health.Health.NONE);
+            var gastro = de.ipnats.hardwrought.health.Disease.GASTRO;
+            // Stop at the first hit: a bad drink now gives a stomach bug, which is what leaves one thirsty.
             for (int roll = 0; roll < 400
-                    && !player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.THIRST); roll++) {
+                    && de.ipnats.hardwrought.health.Diseases.health(player).infection(gastro) == null; roll++) {
                 runtime.survival().drink(player, 0.0, de.ipnats.hardwrought.water.WaterQuality.SALT);
             }
+            var caught = de.ipnats.hardwrought.health.Diseases.health(player).infection(gastro);
+            if (caught == null) throw new AssertionError("Sea water has to give the drinker a stomach bug");
+            // Past taking hold, the bug is felt, and what it costs is thirst.
+            de.ipnats.hardwrought.health.Diseases.set(player, de.ipnats.hardwrought.health.Diseases.health(player).with(gastro,
+                    new de.ipnats.hardwrought.health.Health.Infection(gastro, gastro.incubation(), caught.load(), caught.load())));
+            de.ipnats.hardwrought.health.Diseases.tick(player, runtime.survival().vitals(player), true, 1);
             if (!player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.THIRST)) {
                 throw new AssertionError("Sea water has to leave the drinker thirsty");
             }
@@ -638,8 +647,43 @@ public final class CoreClientGameTest implements FabricClientGameTest {
                     != de.ipnats.hardwrought.survival.SurvivalSystem.THIRST_PER_SECOND) {
                 throw new AssertionError("The thirst a player carries has to cost them something");
             }
+            de.ipnats.hardwrought.health.Diseases.set(player, de.ipnats.hardwrought.health.Health.NONE);
             player.removeAllEffects();
         });
+    }
+
+    /**
+     * What shows of a player's body, seen from the front: first a wound, a sick face and a belly as full as
+     * a body gets, then the wound bound up. Only screenshots: what matters here is how it looks.
+     */
+    private static void verifyBodyMarks(ClientGameTestContext context,
+                                        net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext world) {
+        world.getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    de.ipnats.hardwrought.core.registry.ModEffects.OPEN_WOUND, 2400, 0));
+            var gastro = de.ipnats.hardwrought.health.Disease.GASTRO;
+            de.ipnats.hardwrought.health.Diseases.set(player, de.ipnats.hardwrought.health.Health.NONE.with(gastro,
+                    new de.ipnats.hardwrought.health.Health.Infection(gastro, gastro.incubation() + 1, 20, 20)));
+            player.setAttached(de.ipnats.hardwrought.survival.Overeating.STUFFED, de.ipnats.hardwrought.survival.Overeating.MOST);
+        });
+        context.runOnClient(client -> client.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT));
+        context.waitTicks(40);
+        context.takeScreenshot("hardwrought-body-wound-sick-stuffed");
+        world.getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    de.ipnats.hardwrought.core.registry.ModEffects.BANDAGED, 2400, 0));
+            de.ipnats.hardwrought.health.Diseases.set(player, de.ipnats.hardwrought.health.Health.NONE);
+            player.removeAttached(de.ipnats.hardwrought.survival.Overeating.STUFFED);
+        });
+        context.waitTicks(40);
+        context.takeScreenshot("hardwrought-body-bandaged");
+        world.getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            player.removeAllEffects();
+        });
+        context.runOnClient(client -> client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON));
     }
 
     /**

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:bandage",
+    "hardwrought:antiseptic"
+  ],
+  "result": {
+    "id": "hardwrought:disinfected_bandage"
+  }
+}

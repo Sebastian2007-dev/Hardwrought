@@ -1,0 +1,9 @@
+{
+  "biomes": [
+    "minecraft:meadow",
+    "minecraft:cherry_grove",
+    "minecraft:grove"
+  ],
+  "standing": "purified",
+  "flowing": "purified"
+}

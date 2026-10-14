@@ -1,34 +1,341 @@
 {
   "model": {
-    "type": "minecraft:range_dispatch",
-    "property": "minecraft:custom_model_data",
-    "index": 0,
-    "fallback": {
-      "type": "minecraft:model",
-      "model": "minecraft:item/water_bucket"
-    },
-    "entries": [
+    "type": "minecraft:select",
+    "property": "minecraft:component",
+    "component": "hardwrought:water_quality",
+    "cases": [
       {
-        "threshold": 1,
+        "when": "purified",
         "model": {
-          "type": "minecraft:model",
-          "model": "hardwrought:item/water_bucket_1"
+          "type": "minecraft:range_dispatch",
+          "property": "minecraft:custom_model_data",
+          "index": 0,
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "hardwrought:item/water_bucket_tinted_3",
+            "tints": [
+              {
+                "type": "minecraft:constant",
+                "value": -1
+              },
+              {
+                "type": "minecraft:constant",
+                "value": -9447689
+              }
+            ]
+          },
+          "entries": [
+            {
+              "threshold": 1,
+              "model": {
+                "type": "minecraft:model",
+                "model": "hardwrought:item/water_bucket_tinted_1",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -9447689
+                  }
+                ]
+              }
+            },
+            {
+              "threshold": 2,
+              "model": {
+                "type": "minecraft:model",
+                "model": "hardwrought:item/water_bucket_tinted_2",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -9447689
+                  }
+                ]
+              }
+            },
+            {
+              "threshold": 3,
+              "model": {
+                "type": "minecraft:model",
+                "model": "hardwrought:item/water_bucket_tinted_3",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -9447689
+                  }
+                ]
+              }
+            }
+          ]
         }
       },
       {
-        "threshold": 2,
+        "when": "river",
         "model": {
-          "type": "minecraft:model",
-          "model": "hardwrought:item/water_bucket_2"
+          "type": "minecraft:range_dispatch",
+          "property": "minecraft:custom_model_data",
+          "index": 0,
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "hardwrought:item/water_bucket_tinted_3",
+            "tints": [
+              {
+                "type": "minecraft:constant",
+                "value": -1
+              },
+              {
+                "type": "minecraft:constant",
+                "value": -12743744
+              }
+            ]
+          },
+          "entries": [
+            {
+              "threshold": 1,
+              "model": {
+                "type": "minecraft:model",
+                "model": "hardwrought:item/water_bucket_tinted_1",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -12743744
+                  }
+                ]
+              }
+            },
+            {
+              "threshold": 2,
+              "model": {
+                "type": "minecraft:model",
+                "model": "hardwrought:item/water_bucket_tinted_2",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -12743744
+                  }
+                ]
+              }
+            },
+            {
+              "threshold": 3,
+              "model": {
+                "type": "minecraft:model",
+                "model": "hardwrought:item/water_bucket_tinted_3",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -12743744
+                  }
+                ]
+              }
+            }
+          ]
         }
       },
       {
-        "threshold": 3,
+        "when": "swamp",
         "model": {
-          "type": "minecraft:model",
-          "model": "minecraft:item/water_bucket"
+          "type": "minecraft:range_dispatch",
+          "property": "minecraft:custom_model_data",
+          "index": 0,
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "hardwrought:item/water_bucket_tinted_3",
+            "tints": [
+              {
+                "type": "minecraft:constant",
+                "value": -1
+              },
+              {
+                "type": "minecraft:constant",
+                "value": -9737677
+              }
+            ]
+          },
+          "entries": [
+            {
+              "threshold": 1,
+              "model": {
+                "type": "minecraft:model",
+                "model": "hardwrought:item/water_bucket_tinted_1",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -9737677
+                  }
+                ]
+              }
+            },
+            {
+              "threshold": 2,
+              "model": {
+                "type": "minecraft:model",
+                "model": "hardwrought:item/water_bucket_tinted_2",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -9737677
+                  }
+                ]
+              }
+            },
+            {
+              "threshold": 3,
+              "model": {
+                "type": "minecraft:model",
+                "model": "hardwrought:item/water_bucket_tinted_3",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -9737677
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "when": "salt",
+        "model": {
+          "type": "minecraft:range_dispatch",
+          "property": "minecraft:custom_model_data",
+          "index": 0,
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "hardwrought:item/water_bucket_tinted_3",
+            "tints": [
+              {
+                "type": "minecraft:constant",
+                "value": -1
+              },
+              {
+                "type": "minecraft:constant",
+                "value": -11563894
+              }
+            ]
+          },
+          "entries": [
+            {
+              "threshold": 1,
+              "model": {
+                "type": "minecraft:model",
+                "model": "hardwrought:item/water_bucket_tinted_1",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -11563894
+                  }
+                ]
+              }
+            },
+            {
+              "threshold": 2,
+              "model": {
+                "type": "minecraft:model",
+                "model": "hardwrought:item/water_bucket_tinted_2",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -11563894
+                  }
+                ]
+              }
+            },
+            {
+              "threshold": 3,
+              "model": {
+                "type": "minecraft:model",
+                "model": "hardwrought:item/water_bucket_tinted_3",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:constant",
+                    "value": -11563894
+                  }
+                ]
+              }
+            }
+          ]
         }
       }
-    ]
+    ],
+    "fallback": {
+      "type": "minecraft:range_dispatch",
+      "property": "minecraft:custom_model_data",
+      "index": 0,
+      "fallback": {
+        "type": "minecraft:model",
+        "model": "minecraft:item/water_bucket"
+      },
+      "entries": [
+        {
+          "threshold": 1,
+          "model": {
+            "type": "minecraft:model",
+            "model": "hardwrought:item/water_bucket_1"
+          }
+        },
+        {
+          "threshold": 2,
+          "model": {
+            "type": "minecraft:model",
+            "model": "hardwrought:item/water_bucket_2"
+          }
+        },
+        {
+          "threshold": 3,
+          "model": {
+            "type": "minecraft:model",
+            "model": "minecraft:item/water_bucket"
+          }
+        }
+      ]
+    }
   }
 }
