@@ -412,6 +412,36 @@ public final class ElectricityGameTests {
     }
 
     @GameTest
+    public void aPortalStabiliserRunsOnCurrentThroughACoil(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos base = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE);
+        List<BlockPos> used = new ArrayList<>();
+        try {
+            BlockState coil = ElectricBlocks.COPPER_COIL.defaultBlockState();
+            BlockPos dynamo = dynamoOnACrankBox(level, used, base);
+            BlockPos stabilizer = dynamo.east(4);
+            place(level, used, stabilizer, de.ipnats.hardwrought.nether.PortalStabilizers.ELECTRIC.defaultBlockState());
+            helper.assertTrue(Electricity.refusal(level, dynamo.above(), stabilizer, Gauge.WIRE) != null,
+                    "No wire goes to a stabiliser directly: like a machine it wants a coil");
+            BlockPos onDynamo = dynamo.above(), onStabilizer = stabilizer.above();
+            place(level, used, onDynamo, coil);
+            place(level, used, onStabilizer, coil);
+            Electricity.connect(level, onDynamo, onStabilizer, Gauge.WIRE);
+            Electricity.solve(level, stabilizer);
+            helper.assertTrue(level.getBlockState(stabilizer).getValue(de.ipnats.hardwrought.nether.PortalStabilizers.ACTIVE),
+                    "Fed through its coil from a turning dynamo, it runs: "
+                            + ((ElectricBlockEntity) level.getBlockEntity(stabilizer)).volts() + " V");
+            Electricity.disconnect(level, onDynamo, onStabilizer);
+            Electricity.update(level, stabilizer);
+            helper.assertFalse(level.getBlockState(stabilizer).getValue(de.ipnats.hardwrought.nether.PortalStabilizers.ACTIVE),
+                    "and cut off, it stops");
+        } finally {
+            clear(level, used);
+        }
+        helper.succeed();
+    }
+
+    @GameTest
     public void coilsJoinALineToTheBlocksTheySitOn(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos base = helper.absolutePos(BlockPos.ZERO).above(WORKSPACE);

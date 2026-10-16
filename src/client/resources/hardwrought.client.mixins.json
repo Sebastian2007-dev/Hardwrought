@@ -8,6 +8,7 @@
 		"PlayerModelBellyMixin",
 		"BiomeColorsMixin",
 		"CameraMixin",
+		"CompassAngleStateMixin",
 		"CreakingRendererMixin",
 		"CreakingRenderStateMixin",
 		"CreateWorldGameTabMixin",
@@ -20,8 +21,11 @@
 		"InventoryScreenMixin",
 		"LightmapRenderStateExtractorMixin",
 		"MinecraftGasPushMixin",
+		"MinecraftProjectionClickMixin",
 		"MouseHandlerMixin",
-		"RecipeBookScreenAccessor"
+		"RecipeBookScreenAccessor",
+		"SoundChannelMixin",
+		"SoundLibraryMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

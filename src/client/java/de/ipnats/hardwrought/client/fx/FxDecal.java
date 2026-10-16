@@ -11,6 +11,16 @@ public final class FxDecal {
         RING, RUNE, SHIELD, GLOW,
         /** A true sphere, built of quads all round, so it is seen from inside as well as out. */
         SPHERE,
+        /** The Witch King's sigil: a crown of thorns, a seven-pointed star, eyes. Flat, spins, is drawn in. */
+        HEX_SIGIL,
+        /** His shockwave's front, flat on the ground; param unused, its life drives it. */
+        HEX_WAVE,
+        /** His ward, a cell-shelled sphere facing the camera; param is how cracked it is. */
+        HEX_WARD,
+        /** A rift standing upright, turned to face the camera; it opens and closes over its life. */
+        HEX_RIFT,
+        /** A spectral sword along {@link FxDecal#axis}, turned about it to face the camera; param is its strength. */
+        HEX_BLADE,
         /** Bends the view instead of shining: a shockwave's ring of refraction. */
         WARP_RING,
         /** Shimmering heat. */
@@ -26,6 +36,8 @@ public final class FxDecal {
     }
 
     final Kind kind;
+    /** HEX_BLADE: the direction the sword points. */
+    Vec3 axis;
     Vec3 center;
     /** Where the centre was last tick, so a moving decal is drawn gliding rather than jumping. */
     Vec3 prevCenter;
@@ -127,6 +139,22 @@ public final class FxDecal {
         this.center = center;
         this.prevCenter = center;
         return this;
+    }
+
+    /** HEX_BLADE: the direction the sword points. */
+    public FxDecal axis(Vec3 axis) {
+        this.axis = axis.normalize();
+        return this;
+    }
+
+    /** Keeps it alive for at least this many more ticks: for a decal that follows something for as long as it lasts. */
+    public FxDecal keep(int ticks) {
+        this.life = Math.max(this.life, this.age + ticks);
+        return this;
+    }
+
+    public boolean alive() {
+        return age < life;
     }
 
     /** Let it disappear after this tick. */

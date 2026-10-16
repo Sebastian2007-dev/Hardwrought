@@ -46,7 +46,8 @@ public final class DebugCommands {
                             context.getSource().sendSuccess(() -> Component.literal("Hardwrought: Profiling zurueckgesetzt."), false);
                             return 1;
                         })))
-                        .then(literal("locate").then(literal("mountain")
+                        .then(literal("locate").then(literal("citadel").executes(context -> locateCitadel(context.getSource())))
+                                .then(literal("mountain")
                                 .executes(context -> locateMountain(context.getSource(), 900))
                                 .then(net.minecraft.commands.Commands.argument("height",
                                                 com.mojang.brigadier.arguments.IntegerArgumentType.integer(100, 1000))
@@ -520,5 +521,27 @@ public final class DebugCommands {
                 source.sendSuccess(() -> Component.literal(entry.getKey() + " = " + entry.getValue()), false));
         source.sendSuccess(() -> Component.literal(definitions.size() + " Materialien (max. 50 angezeigt). Reload: /reload"), false);
         return definitions.size();
+    }
+
+    /** The nearest Witch King's citadel in the Underworld, from where the player stands, with a link to go there. */
+    private static int locateCitadel(CommandSourceStack source) {
+        var underworld = source.getServer().getLevel(de.ipnats.hardwrought.underworld.Underworld.LEVEL);
+        if (underworld == null) {
+            source.sendFailure(Component.literal("Hardwrought: diese Welt hat keine Unterwelt."));
+            return 0;
+        }
+        var from = net.minecraft.core.BlockPos.containing(source.getPosition());
+        var hall = de.ipnats.hardwrought.witchking.Citadel.nearest(underworld, from, 24);
+        if (hall == null) {
+            source.sendFailure(Component.literal("Hardwrought: keine Zitadelle im Umkreis von 6000 Bloecken."));
+            return 0;
+        }
+        String tp = "/execute in hardwrought:underworld run tp @s " + hall.getX() + " " + hall.getY() + " " + (hall.getZ() + 12);
+        int distance = (int) Math.sqrt(Math.pow(hall.getX() - from.getX(), 2) + Math.pow(hall.getZ() - from.getZ(), 2));
+        source.sendSuccess(() -> Component.literal("Hardwrought: Zitadelle des Hexerkoenigs bei " + hall.getX() + " " + hall.getY() + " "
+                + hall.getZ() + " (" + distance + " Bloecke) ").append(Component.literal("[Hinreisen]").withStyle(style -> style
+                .withColor(net.minecraft.ChatFormatting.LIGHT_PURPLE).withUnderlined(true)
+                .withClickEvent(new net.minecraft.network.chat.ClickEvent.SuggestCommand(tp)))), false);
+        return 1;
     }
 }

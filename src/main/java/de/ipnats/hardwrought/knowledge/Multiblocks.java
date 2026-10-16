@@ -130,7 +130,21 @@ public final class Multiblocks {
                     'P', List.of(Hardwrought.id("power_port"))),
             Optional.empty());
 
-    public static final List<Multiblock> ALL = List.of(ORE_DRILL_RIG, HOODED_FORGE, SMELTERY, LARGE_ARC_FURNACE, LARGE_DIESEL);
+    /**
+     * The seal in the abyss: the seal stone between four pillars of worked deepslate, two blocks out at
+     * the corners, each with a soul lantern on it. A nether star on the stone opens the way down.
+     */
+    public static final Multiblock UNDERWORLD_SEAL = new Multiblock(Hardwrought.id("underworld_seal"),
+            List.of(List.of("P   P", "     ", "  S  ", "     ", "P   P"), List.of("L   L", "     ", "     ", "     ", "L   L")),
+            legend('S', List.of(Hardwrought.id("seal_stone")),
+                    'P', List.of(Identifier.withDefaultNamespace("polished_deepslate"), Identifier.withDefaultNamespace("chiseled_deepslate"),
+                            Identifier.withDefaultNamespace("deepslate_bricks"), Identifier.withDefaultNamespace("deepslate_tiles"),
+                            Identifier.withDefaultNamespace("cracked_deepslate_bricks"), Identifier.withDefaultNamespace("cracked_deepslate_tiles")),
+                    'L', List.of(Identifier.withDefaultNamespace("soul_lantern"))),
+            Optional.empty());
+
+    public static final List<Multiblock> ALL = List.of(ORE_DRILL_RIG, HOODED_FORGE, SMELTERY, LARGE_ARC_FURNACE, LARGE_DIESEL,
+            UNDERWORLD_SEAL);
 
     private Multiblocks() { }
 

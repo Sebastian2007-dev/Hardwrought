@@ -77,6 +77,10 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.health.Diseases.initialize();
 		de.ipnats.hardwrought.survival.Overeating.initialize();
 		de.ipnats.hardwrought.health.Herbs.initialize();
+		de.ipnats.hardwrought.health.Ailments.initialize();
+		de.ipnats.hardwrought.survival.GoldenApples.initialize();
+		de.ipnats.hardwrought.survival.Adrenaline.initialize();
+		de.ipnats.hardwrought.knowledge.MultiblockKnowledge.initialize();
 		de.ipnats.hardwrought.fun.StampiEasterEgg.initialize();
 		de.ipnats.hardwrought.nether.NetherCrossing.initialize();
 		de.ipnats.hardwrought.nether.Ashcork.initialize();
@@ -85,6 +89,15 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.nether.NetherOres.initialize();
 		de.ipnats.hardwrought.nether.NetherLoot.initialize();
 		de.ipnats.hardwrought.nether.PortalStabilizers.initialize();
+		de.ipnats.hardwrought.wither.SoulSkulls.initialize();
+		de.ipnats.hardwrought.wither.WitherPowers.initialize();
+		de.ipnats.hardwrought.underworld.Underworld.initialize();
+		de.ipnats.hardwrought.underworld.UnderworldGate.initialize();
+		de.ipnats.hardwrought.underworld.UnderworldAtmosphere.initialize();
+		de.ipnats.hardwrought.underworld.UnderworldRuins.initialize();
+		de.ipnats.hardwrought.underworld.GraveUndead.initialize();
+		de.ipnats.hardwrought.underworld.Graveyard.initialize();
+		de.ipnats.hardwrought.witchking.WitchKingContent.initialize();
 		de.ipnats.hardwrought.water.WaterTreatmentBlocks.initialize();
 		de.ipnats.hardwrought.gasline.GasLines.initialize();
 		de.ipnats.hardwrought.refining.RefineryBlocks.initialize();

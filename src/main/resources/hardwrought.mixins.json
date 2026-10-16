@@ -16,6 +16,8 @@
 		"MannequinAccessor",
 		"NetherPortalBlockMixin",
 		"LiquidBlockCastObsidianMixin",
+		"WitherSkullBlockMixin",
+		"WitherBossMixin",
 		"CampfireWaterBowlMixin",
 		"BiomePrecipitationMixin",
 		"BlockBehaviourLeavesMixin",

@@ -119,6 +119,13 @@ public final class Ashcork {
     /** Everything of the Nether start over — ores, ground, ashcork — for the creative tab. */
     public static List<Item> items() {
         List<Item> items = new java.util.ArrayList<>(PortalStabilizers.items());
+        items.add(de.ipnats.hardwrought.wither.WitherPowers.ESSENCE);
+        items.addAll(de.ipnats.hardwrought.underworld.UnderworldGate.items());
+        items.add(de.ipnats.hardwrought.underworld.UnderworldRuins.STALE_BREAD);
+        items.addAll(de.ipnats.hardwrought.underworld.GraveUndead.items());
+        items.addAll(de.ipnats.hardwrought.witchking.WitchKingContent.items());
+        items.add(de.ipnats.hardwrought.underworld.Underworld.PALE_SHARD);
+        items.add(de.ipnats.hardwrought.underworld.Underworld.PALE_SHARD_CLUSTER.asItem());
         items.addAll(NetherOres.items());
         items.addAll(List.of(CastObsidian.ITEM, AshGrove.NETHER_GRASS.asItem(), LOG.asItem(), STRIPPED_LOG.asItem(), PLANKS.asItem(), LEAVES.asItem(), SAPLING.asItem(), BARK,
                 ARMOR.get(ArmorType.HELMET), ARMOR.get(ArmorType.CHESTPLATE), ARMOR.get(ArmorType.LEGGINGS),

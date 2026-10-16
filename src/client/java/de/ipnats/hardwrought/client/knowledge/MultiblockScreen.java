@@ -43,6 +43,8 @@ public class MultiblockScreen extends Screen {
     private static final int BUTTON_HEIGHT = 18;
     private static final int CONTROLS_Y = PAPER_BOTTOM - 4 - BUTTON_HEIGHT;
     private static final int ARROW_WIDTH = 22;
+    /** Where the button that lays it out in the world starts, beside the back button. */
+    private static final int SHOW_X = 58;
     private static final int LEGEND_ROW = 20;
     private static final long CYCLE_MILLIS = 1000L;
     private static final float MIN_ZOOM = 0.5f;
@@ -196,6 +198,8 @@ public class MultiblockScreen extends Screen {
 
         button(graphics, leftContentX(), top + CONTROLS_Y, 54, Component.translatable("gui.hardwrought.compendium.back"),
                 mouseX, mouseY);
+        button(graphics, leftContentX() + SHOW_X, top + CONTROLS_Y, CONTENT_WIDTH - SHOW_X,
+                Component.translatable("gui.hardwrought.multiblock.show_in_world"), mouseX, mouseY);
         button(graphics, rightContentX(), top + CONTROLS_Y, ARROW_WIDTH, Component.literal("▼"), mouseX, mouseY);
         button(graphics, rightContentX() + CONTENT_WIDTH - ARROW_WIDTH, top + CONTROLS_Y, ARROW_WIDTH,
                 Component.literal("▲"), mouseX, mouseY);
@@ -268,6 +272,12 @@ public class MultiblockScreen extends Screen {
         if (super.mouseClicked(event, doubled)) return true;
         if (inside(event.x(), event.y(), leftContentX(), top + CONTROLS_Y, 54, BUTTON_HEIGHT)) {
             onClose();
+            return true;
+        }
+        // Laid out in the world as ghost blocks, to build along: the book closes so it can be seen.
+        if (inside(event.x(), event.y(), leftContentX() + SHOW_X, top + CONTROLS_Y, CONTENT_WIDTH - SHOW_X, BUTTON_HEIGHT)) {
+            MultiblockProjection.start(multiblock, known);
+            minecraft.gui.setScreen(null);
             return true;
         }
         if (inside(event.x(), event.y(), rightContentX(), top + CONTROLS_Y, ARROW_WIDTH, BUTTON_HEIGHT)) {

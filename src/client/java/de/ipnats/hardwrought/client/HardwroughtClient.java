@@ -35,12 +35,17 @@ public class HardwroughtClient implements ClientModInitializer {
 		de.ipnats.hardwrought.client.fun.StampiSkins.initialize();
 		de.ipnats.hardwrought.client.fun.AshGroveSteam.initialize();
 		de.ipnats.hardwrought.client.fun.CastObsidianTooltip.initialize();
+		de.ipnats.hardwrought.client.fun.SoulSkullTooltip.initialize();
+		de.ipnats.hardwrought.client.survival.AdrenalineHud.initialize();
+		de.ipnats.hardwrought.client.survival.TirednessHud.initialize();
 		de.ipnats.hardwrought.client.survival.BodyMarks.initialize();
 		de.ipnats.hardwrought.client.environment.LeafOverlay.initialize();
 		net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
 				de.ipnats.hardwrought.core.registry.ModBlockEntities.DRYING_RACK,
 				de.ipnats.hardwrought.client.environment.DryingRackRenderer::new);
 		de.ipnats.hardwrought.client.knowledge.CompendiumClient.initialize();
+		de.ipnats.hardwrought.client.knowledge.MultiblockSection.initialize();
+		de.ipnats.hardwrought.client.knowledge.MultiblockProjection.initialize();
 		net.fabricmc.fabric.api.client.rendering.v1.PictureInPictureRendererRegistry.register(
 				context -> new de.ipnats.hardwrought.client.knowledge.MultiblockViewRenderer());
 		de.ipnats.hardwrought.client.knowledge.LookHud.initialize();
@@ -48,5 +53,10 @@ public class HardwroughtClient implements ClientModInitializer {
 		de.ipnats.hardwrought.client.electricity.ElectricityClient.initialize();
 		de.ipnats.hardwrought.client.storage.StorageClient.initialize();
 		de.ipnats.hardwrought.client.fx.FxClient.initialize();
+		de.ipnats.hardwrought.client.underworld.UnderworldClient.initialize();
+		de.ipnats.hardwrought.client.witchking.WitchKingClient.initialize();
+		net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
+				de.ipnats.hardwrought.underworld.UnderworldGate.SHAFT_ENTITY,
+				context -> new de.ipnats.hardwrought.client.underworld.ShaftRenderer());
 	}
 }

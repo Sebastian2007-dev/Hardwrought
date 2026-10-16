@@ -50,11 +50,31 @@ willow bark cuts it to 40 %, fever pills to 20 %.
 ## Wounds (`health/Wounds`)
 
 - A **bite** (zombie and its kin, wolf, spider, silverfish, endermite, polar bear; 1 damage or more) or a
-  **heavy blow** from a monster (4 or more) leaves an **open wound** for two minutes. A bite is dirtier:
-  twice the chance.
-- While it is open and not bandaged, every two seconds 0.8 % (bite 1.6 %) that dirt gets in: a wound
-  infection. Over the two minutes about four in ten for a blow.
+  **heavy blow** from a monster (4 or more) leaves an **open wound**. Only what cuts or bites does:
+  fire, frost, drowning and magic leave an ailment of their own instead (below).
+- Three levels by how hard the blow was; a bite is a level worse than a blow as hard:
+
+  | Level | Blow | Open for | Dirt gets in, if left (per 2 s) | Over the whole time |
+  |---|---|---|---|---|
+  | I superficial | 4 – 6 | 1 min | 0.17 % | about 1 in 20 |
+  | II deep | 7 – 11 | 2 min | 0.48 % | about 1 in 4 |
+  | III severe | 12 + | 3 min | 1.2 % | about 2 in 3 |
+
+  A new wound on an open one keeps the worse level.
 - A **bandage** closes it for five minutes; a new bite or blow tears it off.
+
+## Ailments (`health/Ailments`)
+
+What harm leaves when it is not a cut or a bite. Every hit adds to how long it lasts (at most three
+minutes), and how long is how bad: level II from 45 seconds left, level III from 100. It drops a level
+as it runs down.
+
+| Harm | Ailment | What it does |
+|---|---|---|
+| fire, lava, fireballs | **Burn** | smokes; may become an inflamed wound unless bandaged (about 1 in 40 / 1 in 8 / 1 in 3 over its course); cools ten times as fast in water |
+| powder snow, frost | **Frostbite** | 6 % slower on foot and 12 % slower with a pick per level; thaws three times as fast in the Nether or by a fire |
+| drowning | **Water in the lungs** | a cough now and then that costs breath; from level II it may turn into a cold |
+| magic someone sends, the wither | **Drain** | breath back 20 % slower and 25 % hungrier per level; the sting of spirit and a potion drunk do not count |
 
 ## Medicine
 

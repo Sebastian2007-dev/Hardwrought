@@ -10,6 +10,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.SectionPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
@@ -277,8 +278,17 @@ public final class NetherCrossing {
     }
 
     private static BlockPos surface(ServerLevel level, int x, int z) {
-        BlockPos pos = new BlockPos(x, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
+        BlockPos pos = new BlockPos(x, height(level, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
         return standable(level, pos) ? pos : null;
+    }
+
+    /**
+     * The surface height of a column, its chunk generated first: a chunk nobody has been to yet has an
+     * empty heightmap, and would answer the bottom of the world — a traveller set down on bedrock.
+     */
+    private static int height(ServerLevel level, Heightmap.Types type, int x, int z) {
+        level.getChunk(SectionPos.blockToSectionCoord(x), SectionPos.blockToSectionCoord(z));
+        return level.getHeight(type, x, z);
     }
 
     /** Room for a player in this block and the one above, on safe solid ground. */
@@ -300,7 +310,7 @@ public final class NetherCrossing {
     private static BlockPos makeGround(ServerLevel level, BlockPos around) {
         int y = level.dimensionType().hasCeiling()
                 ? Math.clamp(around.getY(), 40, CEILING_MAX_Y - 10)
-                : level.getHeight(Heightmap.Types.MOTION_BLOCKING, around.getX(), around.getZ()) + 1;
+                : height(level, Heightmap.Types.MOTION_BLOCKING, around.getX(), around.getZ());
         BlockPos feet = new BlockPos(around.getX(), y, around.getZ());
         BlockState floor = level.dimension() == Level.NETHER ? Blocks.NETHERRACK.defaultBlockState()
                 : Blocks.COBBLESTONE.defaultBlockState();

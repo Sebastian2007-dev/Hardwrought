@@ -263,6 +263,19 @@ public final class NetherGameTests {
     }
 
     @GameTest
+    public void anUnstableCrossingHomeLandsOnTheSurfaceNotOnBedrock(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        // Far out, where no chunk has been generated yet: its heightmap would answer the bottom of the world.
+        BlockPos far = new BlockPos(helper.absolutePos(BlockPos.ZERO).getX() + 4096, 64, helper.absolutePos(BlockPos.ZERO).getZ() + 4096);
+        BlockPos ground = NetherCrossing.findGround(level, far, 4);
+        helper.assertTrue(ground != null, "Somewhere to stand is found out there");
+        helper.assertFalse(level.getBlockState(ground.below()).is(Blocks.BEDROCK),
+                "and it is the surface, not the bedrock under it: " + ground + " on " + level.getBlockState(ground.below()));
+        helper.assertTrue(level.canSeeSky(ground), "under the open sky");
+        helper.succeed();
+    }
+
+    @GameTest
     public void anUnstableCrossingKeepsEverythingUntilItsOwnerComesBack(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos portal = helper.absolutePos(new BlockPos(1, 2, 1));

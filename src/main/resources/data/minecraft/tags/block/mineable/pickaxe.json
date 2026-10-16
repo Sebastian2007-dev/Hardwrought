@@ -252,6 +252,7 @@
     "hardwrought:nether_tin_ore",
     "hardwrought:nether_iron_ore",
     "hardwrought:provisional_portal_stabilizer",
-    "hardwrought:portal_stabilizer"
+    "hardwrought:portal_stabilizer",
+    "hardwrought:seal_stone"
   ]
 }

@@ -135,7 +135,7 @@ public final class HealthGameTests {
         ServerPlayer player = patient(helper);
         var zombie = net.minecraft.world.entity.EntityTypes.ZOMBIE.create(helper.getLevel(),
                 net.minecraft.world.entity.EntitySpawnReason.EVENT);
-        de.ipnats.hardwrought.health.Wounds.hurt(player, zombie, 2.0f);
+        de.ipnats.hardwrought.health.Wounds.hurt(player, helper.getLevel().damageSources().mobAttack(zombie), 2.0f);
         var open = player.getEffect(ModEffects.OPEN_WOUND);
         helper.assertTrue(open != null && open.getAmplifier() == 1, "A bite leaves a dirty wound open");
 
@@ -146,16 +146,139 @@ public final class HealthGameTests {
         helper.assertTrue(Diseases.health(player).infection(Disease.WOUND) != null, "Left open, it becomes infected");
 
         ServerPlayer bound = patient(helper);
-        de.ipnats.hardwrought.health.Wounds.hurt(bound, zombie, 2.0f);
+        de.ipnats.hardwrought.health.Wounds.hurt(bound, helper.getLevel().damageSources().mobAttack(zombie), 2.0f);
         ((de.ipnats.hardwrought.health.MedicineItem) ModItems.BANDAGE).apply(helper.getLevel(), bound);
         helper.assertTrue(!bound.hasEffect(ModEffects.OPEN_WOUND) && bound.hasEffect(ModEffects.BANDAGED),
                 "A bandage closes it");
         for (int check = 0; check < 2000; check++) effect.applyEffectTick(helper.getLevel(), bound, 1);
         helper.assertTrue(Diseases.health(bound).infection(Disease.WOUND) == null, "and nothing gets into a bound wound");
-        de.ipnats.hardwrought.health.Wounds.hurt(bound, zombie, 2.0f);
+        de.ipnats.hardwrought.health.Wounds.hurt(bound, helper.getLevel().damageSources().mobAttack(zombie), 2.0f);
         helper.assertTrue(!bound.hasEffect(ModEffects.BANDAGED) && bound.hasEffect(ModEffects.OPEN_WOUND),
                 "A new bite tears the bandage off");
         if (zombie != null) zombie.discard();
+        helper.succeed();
+    }
+
+    @GameTest
+    public void woundsComeInThreeLevelsAndFireLeavesNone(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var skeleton = net.minecraft.world.entity.EntityTypes.SKELETON.create(level, net.minecraft.world.entity.EntitySpawnReason.EVENT);
+        var blaze = net.minecraft.world.entity.EntityTypes.BLAZE.create(level, net.minecraft.world.entity.EntitySpawnReason.EVENT);
+        ServerPlayer burnt = patient(helper);
+        de.ipnats.hardwrought.health.Wounds.hurt(burnt, level.damageSources().fireball(
+                net.minecraft.world.entity.EntityTypes.SMALL_FIREBALL.create(level, net.minecraft.world.entity.EntitySpawnReason.EVENT), blaze), 6.0f);
+        helper.assertFalse(burnt.hasEffect(ModEffects.OPEN_WOUND), "Set on fire by a blaze, a player is burnt, not wounded");
+
+        int[] levels = {
+                de.ipnats.hardwrought.health.Wounds.level(5.0f, false),
+                de.ipnats.hardwrought.health.Wounds.level(8.0f, false),
+                de.ipnats.hardwrought.health.Wounds.level(13.0f, false),
+                de.ipnats.hardwrought.health.Wounds.level(2.0f, true)};
+        helper.assertTrue(levels[0] == 0 && levels[1] == 1 && levels[2] == 2, "Harder blows, worse wounds: " + java.util.Arrays.toString(levels));
+        helper.assertTrue(levels[3] == 1, "and a bite is a level worse than a blow as hard");
+        ServerPlayer grazed = patient(helper);
+        de.ipnats.hardwrought.health.Wounds.hurt(grazed, level.damageSources().mobAttack(skeleton), 5.0f);
+        helper.assertTrue(grazed.getEffect(ModEffects.OPEN_WOUND).getAmplifier() == 0, "A blow of five is a graze");
+
+        double graze = de.ipnats.hardwrought.health.Wounds.infectionOdds(0);
+        double deep = de.ipnats.hardwrought.health.Wounds.infectionOdds(1);
+        double severe = de.ipnats.hardwrought.health.Wounds.infectionOdds(2);
+        helper.assertTrue(graze < 0.08 && deep > 0.15 && deep < 0.4 && severe > 0.5 && severe < 0.8,
+                "Left alone, a graze is rarely infected, a deep wound sometimes, a severe one mostly: "
+                        + graze + " / " + deep + " / " + severe);
+        if (skeleton != null) skeleton.discard();
+        if (blaze != null) blaze.discard();
+        helper.succeed();
+    }
+
+    @GameTest
+    public void eachKindOfHarmLeavesItsOwnAilment(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var sources = level.damageSources();
+        ServerPlayer player = patient(helper);
+        de.ipnats.hardwrought.health.Ailments.harmed(player, sources.onFire(), 1.0f);
+        var burn = player.getEffect(ModEffects.BURN);
+        helper.assertTrue(burn != null && burn.getAmplifier() == 0 && !player.hasEffect(ModEffects.OPEN_WOUND),
+                "A moment on fire is a first-degree burn, and no wound");
+        for (int i = 0; i < 20; i++) de.ipnats.hardwrought.health.Ailments.harmed(player, sources.onFire(), 1.0f);
+        helper.assertTrue(player.getEffect(ModEffects.BURN).getAmplifier() == 2, "a long while on fire a third-degree one");
+        de.ipnats.hardwrought.health.Ailments.harmed(player, sources.freeze(), 2.0f);
+        helper.assertTrue(player.hasEffect(ModEffects.FROSTBITE), "Frost leaves frostbite");
+        de.ipnats.hardwrought.health.Ailments.harmed(player, sources.drown(), 2.0f);
+        helper.assertTrue(player.hasEffect(ModEffects.WATER_IN_LUNGS), "Drowning leaves water in the lungs");
+        de.ipnats.hardwrought.health.Ailments.harmed(player, sources.magic(), 1.0f);
+        helper.assertFalse(player.hasEffect(ModEffects.DRAIN), "The sting of spirit on a wound drains nothing");
+        de.ipnats.hardwrought.health.Ailments.harmed(player, sources.wither(), 1.0f);
+        helper.assertTrue(player.hasEffect(ModEffects.DRAIN), "but the wither does");
+        helper.assertTrue(de.ipnats.hardwrought.health.Ailments.recoveryFactor(player) < 1.0
+                        && de.ipnats.hardwrought.health.Ailments.hungerFactor(player) > 1.0,
+                "and the drain slows breath and quickens hunger");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void adrenalineHoldsBackWhatAFightCostsUntilItIsOver(GameTestHelper helper) {
+        ServerPlayer player = patient(helper);
+        player.setHealth(20.0f);
+        // Three blows taken in a fight: it runs high, and part of each comes straight back.
+        for (int blow = 0; blow < 3; blow++) {
+            player.setHealth(player.getHealth() - 4.0f);
+            de.ipnats.hardwrought.survival.Adrenaline.taken(player, 4.0f);
+        }
+        float felt = player.getHealth();
+        helper.assertTrue(felt > 20.0f - 12.0f, "In the fight, less of the twelve damage is felt: " + felt);
+        helper.assertTrue(de.ipnats.hardwrought.survival.Adrenaline.fighting(player), "and the player is fighting");
+        double cost = de.ipnats.hardwrought.survival.Adrenaline.maskStamina(player, 10.0);
+        helper.assertTrue(cost < 10.0, "Stamina spent in it is felt less too: " + cost);
+        de.ipnats.hardwrought.survival.Adrenaline.settleForTesting(player);
+        helper.assertTrue(player.hasEffect(ModEffects.ADRENALINE), "It shows, while it runs");
+        Diseases.infect(player, Disease.WOUND, 20);
+        helper.assertTrue(Diseases.health(player).infection(Disease.WOUND) == null, "and nothing takes hold in the fight");
+        // The fight over: the account is paid, down to half a heart and no further.
+        de.ipnats.hardwrought.survival.Adrenaline.endFightForTesting(player);
+        for (int second = 0; second < 30; second++) de.ipnats.hardwrought.survival.Adrenaline.settleForTesting(player);
+        helper.assertTrue(player.getHealth() <= 20.0f - 12.0f + 0.01f && player.getHealth() >= 1.0f,
+                "Afterwards it is all felt: " + player.getHealth());
+        helper.assertFalse(player.hasEffect(ModEffects.ADRENALINE), "and the rush is gone");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void fatigueRunHighIsFeltInStages(GameTestHelper helper) {
+        helper.assertTrue(de.ipnats.hardwrought.survival.Tiredness.stage(40) == -1
+                        && de.ipnats.hardwrought.survival.Tiredness.stage(55) == 0
+                        && de.ipnats.hardwrought.survival.Tiredness.stage(75) == 1
+                        && de.ipnats.hardwrought.survival.Tiredness.stage(90) == 2,
+                "Tired from 50, exhausted from 70, overtired from 85");
+        ServerPlayer player = patient(helper);
+        double rested = player.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
+        de.ipnats.hardwrought.survival.Tiredness.apply(player, 90);
+        var tired = player.getEffect(ModEffects.TIRED);
+        helper.assertTrue(tired != null && tired.getAmplifier() == 2, "Overtired, it shows at its third level");
+        helper.assertTrue(player.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED) < rested,
+                "and the player is slower for it");
+        de.ipnats.hardwrought.survival.Tiredness.apply(player, 10);
+        helper.assertFalse(player.hasEffect(ModEffects.TIRED), "Rested, it is gone");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void goldenApplesAreNoFoodButGiveStamina(GameTestHelper helper) {
+        for (var apple : java.util.List.of(Items.GOLDEN_APPLE, Items.ENCHANTED_GOLDEN_APPLE)) {
+            ItemStack stack = new ItemStack(apple);
+            var food = stack.get(net.minecraft.core.component.DataComponents.FOOD);
+            helper.assertTrue(food != null && food.nutrition() == 0 && food.saturation() == 0, apple + " fills no stomach");
+            int expected = apple == Items.GOLDEN_APPLE ? 0 : 2;
+            boolean stamina = stack.get(net.minecraft.core.component.DataComponents.CONSUMABLE).onConsumeEffects().stream()
+                    .filter(effect -> effect instanceof net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect)
+                    .flatMap(effect -> ((net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect) effect).effects().stream())
+                    .anyMatch(effect -> effect.getEffect().equals(ModEffects.STAMINA_REGENERATION) && effect.getAmplifier() == expected);
+            helper.assertTrue(stamina, apple + " gives stamina regeneration " + (expected + 1));
+        }
+        helper.assertTrue(new ItemStack(Items.ENCHANTED_GOLDEN_APPLE).getMaxStackSize() == 8, "The enchanted apple stacks to eight");
+        var recipes = helper.getLevel().getServer().getRecipeManager();
+        helper.assertTrue(recipes.byKey(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.RECIPE,
+                de.ipnats.hardwrought.Hardwrought.id("enchanted_golden_apple"))).isPresent(), "and is made again from blocks of gold");
         helper.succeed();
     }
 

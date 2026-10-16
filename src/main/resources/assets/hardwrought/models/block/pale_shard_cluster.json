@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "hardwrought:block/pale_shard_cluster"
+  }
+}

@@ -62,7 +62,8 @@ public final class FxRenderer {
     static {
         // Smoke first, so the light of the same effect is drawn over it rather than behind it.
         for (RenderType type : List.of(FxRenderTypes.SMOKE, FxRenderTypes.RUNE, FxRenderTypes.RING,
-                FxRenderTypes.SHIELD, FxRenderTypes.SPHERE, FxRenderTypes.BEAM, FxRenderTypes.GLOW)) {
+                FxRenderTypes.SHIELD, FxRenderTypes.SPHERE, FxRenderTypes.HEX_SIGIL, FxRenderTypes.HEX_WAVE, FxRenderTypes.HEX_WARD,
+                FxRenderTypes.HEX_RIFT, FxRenderTypes.HEX_BLADE, FxRenderTypes.BEAM, FxRenderTypes.GLOW)) {
             QUADS.put(type, new Quads());
         }
     }
@@ -269,6 +270,60 @@ public final class FxRenderer {
                 z + radius * c * (float) Math.sin(lon), color, lon, lat, p1, p2);
     }
 
+    /** The Witch King's kinds, each with its own shader and its own way of standing in the world. */
+    private static boolean hex(FxDecal decal, float x, float y, float z, float radius, int color, float t, float partial) {
+        switch (decal.kind) {
+            case HEX_SIGIL -> {
+                float drawn = decal.reveal <= 0 ? 0.999f : Math.min(0.999f, (decal.age + partial) / decal.reveal);
+                flat(QUADS.get(FxRenderTypes.HEX_SIGIL), decal.normal, x, y, z, radius, radius, color, decal.spin * (decal.age + partial),
+                        decal.seed + drawn);
+            }
+            case HEX_WAVE -> flat(QUADS.get(FxRenderTypes.HEX_WAVE), decal.normal, x, y, z, radius, radius, color, t, decal.seed);
+            case HEX_WARD -> billboard(QUADS.get(FxRenderTypes.HEX_WARD), x, y, z, radius, color, decal.param, decal.seed);
+            case HEX_RIFT -> {
+                // Upright, turned about the vertical to face the camera; opens, holds, closes.
+                float open = (float) Math.sin(Math.PI * Mth.clamp(t, 0, 1));
+                open = Math.min(1, open * 1.6f);
+                Vec3 toCamera = new Vec3(-x, 0, -z);
+                Vec3 across = toCamera.lengthSqr() < 1e-4 ? new Vec3(1, 0, 0) : new Vec3(-toCamera.z, 0, toCamera.x).normalize();
+                axes(QUADS.get(FxRenderTypes.HEX_RIFT), x, y, z, across.scale(radius * 0.5), new Vec3(0, radius, 0), color, open, decal.seed);
+            }
+            case HEX_BLADE -> {
+                Vec3 along = decal.axis == null ? new Vec3(0, 1, 0) : decal.axis;
+                Vec3 toCamera = new Vec3(-x, -y, -z);
+                Vec3 across = along.cross(toCamera);
+                if (across.lengthSqr() < 1e-6) across = along.cross(new Vec3(0, 1, 0.01));
+                axes(QUADS.get(FxRenderTypes.HEX_BLADE), x, y, z, along.scale(radius), across.normalize().scale(radius * 0.2), color,
+                        decal.param, decal.seed);
+            }
+            default -> {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** A quad lying in the plane of a normal (or facing the camera without one), a and b as half sizes. */
+    private static void flat(Quads quads, Vec3 normal, float x, float y, float z, float ra, float rb, int color, float p1, float p2) {
+        if (normal == null) {
+            billboard(quads, x, y, z, ra, color, p1, p2);
+            return;
+        }
+        Vec3 helper = Math.abs(normal.y) < 0.9 ? new Vec3(0, 1, 0) : new Vec3(1, 0, 0);
+        Vec3 a = normal.cross(helper).normalize().scale(ra);
+        Vec3 b = normal.cross(a).normalize().scale(rb);
+        axes(quads, x, y, z, a, b, color, p1, p2);
+    }
+
+    /** A quad spanned by two half axes: a runs along local x, b along local y. */
+    private static void axes(Quads quads, float x, float y, float z, Vec3 a, Vec3 b, int color, float p1, float p2) {
+        float ax = (float) a.x, ay = (float) a.y, az = (float) a.z, bx = (float) b.x, by = (float) b.y, bz = (float) b.z;
+        quads.vertex(x - ax - bx, y - ay - by, z - az - bz, color, -1, -1, p1, p2);
+        quads.vertex(x - ax + bx, y - ay + by, z - az + bz, color, -1, 1, p1, p2);
+        quads.vertex(x + ax + bx, y + ay + by, z + az + bz, color, 1, 1, p1, p2);
+        quads.vertex(x + ax - bx, y + ay - by, z + az - bz, color, 1, -1, p1, p2);
+    }
+
     private static void decal(FxDecal decal, float partial) {
         float t = Mth.clamp((decal.age + partial) / decal.life, 0, 1);
         float g = decal.grow > 0 ? Mth.clamp((decal.age + partial) / decal.grow, 0, 1) : t;
@@ -291,6 +346,7 @@ public final class FxRenderer {
 
         float p1 = decal.param, p2 = decal.seed;
         RenderType type = null;
+        if (hex(decal, x, y, z, radius, color, t, partial)) return;
         switch (decal.kind) {
             case WARP_RING -> p2 = 0;
             case WARP_HEAT -> p2 = 1;

@@ -86,6 +86,9 @@ public final class Diseases {
             Identifier.withDefaultNamespace("spider_eye"), 0.20,
             Identifier.withDefaultNamespace("poisonous_potato"), 0.30);
 
+    /** Bread found in an Underworld ruin: hard, a little mouldy. */
+    private static final Double STALE_BREAD = 0.25;
+
     private Diseases() { }
 
     /** Touching the class registers the attachments. */
@@ -118,6 +121,9 @@ public final class Diseases {
      * a spectator — is for the caller, which already knows.
      */
     public static void infect(ServerPlayer player, Disease disease, double load) {
+        // In a fight the blood is up: nothing takes hold while adrenaline runs (see Adrenaline). A wound
+        // still open afterwards can still turn.
+        if (player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.ADRENALINE)) return;
         Health health = health(player);
         if (health.immune(disease)) return;
         Health.Infection present = health.infection(disease);
@@ -129,7 +135,8 @@ public final class Diseases {
 
     /** Something eaten: raw meat and spoiled food can upset the stomach. */
     public static void ate(ServerPlayer player, ItemStack stack) {
-        Double chance = BAD_FOOD.get(BuiltInRegistries.ITEM.getKey(stack.getItem()));
+        Double chance = stack.is(de.ipnats.hardwrought.underworld.UnderworldRuins.STALE_BREAD) ? STALE_BREAD
+                : BAD_FOOD.get(BuiltInRegistries.ITEM.getKey(stack.getItem()));
         if (chance != null && player.getRandom().nextDouble() < chance) infect(player, Disease.GASTRO, 10);
     }
 

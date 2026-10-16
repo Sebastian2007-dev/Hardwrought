@@ -1,0 +1,38 @@
+{
+  "attributes": {
+    "minecraft:gameplay/natural_mob_spawns": {
+      "argument": {
+        "spawn_costs": {},
+        "spawns_by_category": {}
+      },
+      "modifier": "overlay"
+    },
+    "minecraft:visual/fog_color": "#000000"
+  },
+  "carvers": [],
+  "downfall": 0.4,
+  "effects": {
+    "water_color": "#3a5a7a"
+  },
+  "features": [
+    [],
+    [],
+    [
+      "hardwrought:echo_chasm"
+    ],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "hardwrought:pale_shards",
+      "hardwrought:ascent_ruin",
+      "hardwrought:underworld_watchtower"
+    ],
+    []
+  ],
+  "has_precipitation": false,
+  "temperature": 0.35
+}

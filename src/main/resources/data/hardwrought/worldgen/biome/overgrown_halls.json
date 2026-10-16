@@ -1,0 +1,43 @@
+{
+  "attributes": {
+    "minecraft:gameplay/natural_mob_spawns": {
+      "argument": {
+        "spawn_costs": {},
+        "spawns_by_category": {}
+      },
+      "modifier": "overlay"
+    },
+    "minecraft:visual/fog_color": "#000000"
+  },
+  "carvers": [],
+  "downfall": 0.4,
+  "effects": {
+    "water_color": "#3a5a7a"
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:glow_lichen",
+      "minecraft:lush_caves_ceiling_vegetation",
+      "minecraft:cave_vines",
+      "minecraft:lush_caves_vegetation",
+      "minecraft:rooted_azalea_tree",
+      "minecraft:spore_blossom",
+      "minecraft:classic_vines_cave_feature",
+      "hardwrought:ascent_ruin",
+      "hardwrought:underworld_ruin",
+      "hardwrought:underworld_camp"
+    ],
+    []
+  ],
+  "has_precipitation": false,
+  "temperature": 0.35
+}

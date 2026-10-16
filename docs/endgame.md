@@ -108,7 +108,7 @@ A portal is stable with **two running stabilisers** against its frame — in the
 block out from it, or on either face. The **provisional** one (4 blackstone pieces, 2 quartz, 2 gold
 nuggets, a magma block; hewn bench) runs in the Nether, or wherever lava or magma touches it: its magma
 heart glows and throws embers. The **stabiliser** (a provisional one, 4 quartz, 2 gold ingots, 2 blaze
-rods) runs on current from 48 V, strung to it like a lamp, anywhere: it glows, sparks and hums. A running
+rods) runs on current from 48 V, fed like a machine through a copper coil set against it, anywhere: it glows, sparks and hums. A running
 one draws a wisp into the portal it holds; a stable portal stops crackling, and crossing it shows
 *Stable Portal — everything came through*.
 
@@ -119,6 +119,19 @@ skulls the next goal needs. Fortresses are already guarded by bow wither skeleto
 
 **Already there** ([Bosses.java](../src/main/java/de/ipnats/hardwrought/mobs/Bosses.java)): adds at
 half and a quarter of its health, and structural collapse when it breaks a load-bearing block.
+
+*Built:* [SoulSkulls](../src/main/java/de/ipnats/hardwrought/wither/SoulSkulls.java),
+[WitherPowers](../src/main/java/de/ipnats/hardwrought/wither/WitherPowers.java).
+
+- **Soul-charged skulls.** A wither skeleton skull is empty until it has lain half a minute in soul fire,
+  which does not burn it; souls are seen going into it, and it comes out shimmering. Only three charged
+  skulls raise the Wither — empty ones smoke and say so.
+- **It teleports**, now and then to come at its target from elsewhere, and at once when walled in by what
+  it cannot break. Souls and smoke where it leaves and where it arrives.
+- **Soul storm** below a quarter of its health: everyone within 16 blocks is drained, worse the longer
+  they stay.
+- **Its death:** a last great blast, then its souls come back out of the air from all around and gather
+  over four seconds into the nether star, which hangs where it died. 3 to 5 **Wither essence** fall with it.
 
 **Gives.** The **nether star** — the key to the Underworld.
 

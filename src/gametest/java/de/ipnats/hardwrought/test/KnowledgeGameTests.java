@@ -836,4 +836,20 @@ public final class KnowledgeGameTests {
         return knowledge.compendium().answer(player, knowledge, new CompendiumRequestPayload(
                 CompendiumPagePayload.MODE_JOURNAL, Hardwrought.id("book"), "")).journal();
     }
+
+    @GameTest
+    public void theMultiblockSectionIsToldOnlyWhatIsStudied(GameTestHelper helper) {
+        var player = helper.makeMockServerPlayerInLevel();
+        var runtime = de.ipnats.hardwrought.core.events.CoreLifecycle.require(helper.getLevel().getServer());
+        var bricks = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(de.ipnats.hardwrought.Hardwrought.id("smeltery_bricks"));
+        helper.assertFalse(de.ipnats.hardwrought.knowledge.MultiblockKnowledge.studied(player)
+                        .contains(de.ipnats.hardwrought.Hardwrought.id("smeltery_bricks")),
+                "Nothing of a structure is known before it is studied");
+        runtime.knowledge().discover(player, bricks);
+        runtime.knowledge().study(player, bricks);
+        helper.assertTrue(de.ipnats.hardwrought.knowledge.MultiblockKnowledge.studied(player)
+                        .contains(de.ipnats.hardwrought.Hardwrought.id("smeltery_bricks")),
+                "and once studied, the section is told of it");
+        helper.succeed();
+    }
 }

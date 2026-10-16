@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "E": "minecraft:echo_shard",
+    "G": "minecraft:gold_ingot",
+    "C": "minecraft:chiseled_deepslate"
+  },
+  "pattern": [
+    "EGE",
+    "GCG",
+    "EGE"
+  ],
+  "result": {
+    "id": "hardwrought:seal_stone"
+  }
+}

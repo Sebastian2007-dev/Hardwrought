@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "hardwrought:block/ascent_shaft"
+    },
+    "lit=true": {
+      "model": "hardwrought:block/ascent_shaft_lit"
+    }
+  }
+}

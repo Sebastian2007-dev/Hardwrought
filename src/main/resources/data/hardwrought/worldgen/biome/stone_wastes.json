@@ -1,0 +1,60 @@
+{
+  "attributes": {
+    "minecraft:gameplay/natural_mob_spawns": {
+      "argument": {
+        "spawn_costs": {},
+        "spawns_by_category": {}
+      },
+      "modifier": "overlay"
+    },
+    "minecraft:visual/fog_color": "#000000"
+  },
+  "carvers": [],
+  "downfall": 0.4,
+  "effects": {
+    "water_color": "#3a5a7a"
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "hardwrought:underworld/ore_coal",
+      "hardwrought:underworld/ore_iron",
+      "hardwrought:underworld/ore_copper",
+      "hardwrought:underworld/ore_gold",
+      "hardwrought:underworld/ore_redstone",
+      "hardwrought:underworld/ore_lapis",
+      "hardwrought:underworld/ore_tin",
+      "hardwrought:underworld/ore_zinc",
+      "hardwrought:underworld/ore_lead",
+      "hardwrought:underworld/ore_manganese",
+      "hardwrought:underworld/ore_magnesium",
+      "hardwrought:underworld/ore_aluminum",
+      "hardwrought:underworld/ore_nickel",
+      "hardwrought:underworld/ore_cobalt",
+      "hardwrought:underworld/ore_chromium",
+      "hardwrought:underworld/ore_platinum",
+      "hardwrought:underworld/ore_titanium",
+      "hardwrought:underworld/ore_tungsten",
+      "hardwrought:underworld/ore_mercury",
+      "hardwrought:underworld/ore_silver",
+      "hardwrought:underworld/ore_uranium",
+      "hardwrought:underworld/ore_thorium"
+    ],
+    [],
+    [],
+    [
+      "hardwrought:pale_shards_rare",
+      "hardwrought:ascent_ruin",
+      "hardwrought:underworld_ruin",
+      "hardwrought:underworld_camp"
+    ],
+    []
+  ],
+  "has_precipitation": false,
+  "temperature": 0.35
+}

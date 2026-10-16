@@ -1,0 +1,120 @@
+{
+  "type": "hardwrought:underworld",
+  "generator": {
+    "type": "minecraft:noise",
+    "settings": "hardwrought:underworld",
+    "biome_source": {
+      "type": "minecraft:multi_noise",
+      "biomes": [
+        {
+          "biome": "hardwrought:stone_wastes",
+          "parameters": {
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "continentalness": 0.0,
+            "erosion": 0.0,
+            "depth": 0.0,
+            "weirdness": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "hardwrought:overgrown_halls",
+          "parameters": {
+            "temperature": 0.45,
+            "humidity": 0.3,
+            "continentalness": 0.0,
+            "erosion": 0.0,
+            "depth": 0.0,
+            "weirdness": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "hardwrought:dripstone_depths",
+          "parameters": {
+            "temperature": -0.45,
+            "humidity": 0.25,
+            "continentalness": 0.0,
+            "erosion": 0.0,
+            "depth": 0.0,
+            "weirdness": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "hardwrought:mossy_grove",
+          "parameters": {
+            "temperature": 0.4,
+            "humidity": -0.4,
+            "continentalness": 0.0,
+            "erosion": 0.0,
+            "depth": 0.0,
+            "weirdness": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "hardwrought:graveyard",
+          "parameters": {
+            "temperature": -0.3,
+            "humidity": -0.45,
+            "continentalness": 0.0,
+            "erosion": 0.0,
+            "depth": 0.0,
+            "weirdness": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "hardwrought:ossuary",
+          "parameters": {
+            "temperature": -0.6,
+            "humidity": -0.65,
+            "continentalness": 0.0,
+            "erosion": 0.0,
+            "depth": 0.0,
+            "weirdness": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "hardwrought:flooded_halls",
+          "parameters": {
+            "temperature": 0.7,
+            "humidity": -0.05,
+            "continentalness": 0.0,
+            "erosion": 0.0,
+            "depth": 0.0,
+            "weirdness": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "hardwrought:echo_chasm",
+          "parameters": {
+            "temperature": -0.65,
+            "humidity": 0.55,
+            "continentalness": 0.0,
+            "erosion": 0.0,
+            "depth": 0.0,
+            "weirdness": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "minecraft:deep_dark",
+          "parameters": {
+            "temperature": 0.05,
+            "humidity": 0.7,
+            "continentalness": 0.0,
+            "erosion": 0.0,
+            "depth": 0.0,
+            "weirdness": 0.0,
+            "offset": 0.0
+          }
+        }
+      ]
+    }
+  }
+}

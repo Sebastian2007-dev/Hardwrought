@@ -69,7 +69,16 @@ public final class MobHits {
         Entity attacker = source.getEntity();
         if (attacker instanceof CaveSpider spider) retreat(spider, CAVE_SPIDER_RETREAT);
         if (attacker instanceof Vex vex) retreat(vex, VEX_RETREAT);
+        // A blow struck at anything that fights back is a fight: the striker's blood is up.
+        if (attacker instanceof ServerPlayer fighter && !fighter.isCreative() && !fighter.isSpectator()
+                && (victim instanceof net.minecraft.world.entity.monster.Enemy || victim instanceof ServerPlayer)) {
+            de.ipnats.hardwrought.survival.Adrenaline.struck(fighter);
+        }
         if (!(victim instanceof ServerPlayer player) || player.isCreative() || player.isSpectator()) return;
+        // A blow from something living is a fight: part of it is not felt until it is over.
+        if (attacker instanceof LivingEntity && attacker != player) {
+            de.ipnats.hardwrought.survival.Adrenaline.taken(player, taken);
+        }
         var runtime = CoreLifecycle.find(level.getServer());
         if (attacker instanceof Husk && runtime != null) {
             runtime.survival().afflict(player, -HUSK_WATER, 0, 0);
@@ -80,7 +89,9 @@ public final class MobHits {
             player.addEffect(new MobEffectInstance(ModEffects.WINDED, WINDED_TICKS));
         }
         // A heavy blow from a monster, or a bite, leaves a wound open to dirt.
-        de.ipnats.hardwrought.health.Wounds.hurt(player, attacker, taken);
+        de.ipnats.hardwrought.health.Wounds.hurt(player, source, taken);
+        // Fire, frost, drowning and magic leave an ailment of their own instead.
+        de.ipnats.hardwrought.health.Ailments.harmed(player, source, taken);
         if (attacker instanceof Drowned && player.isInWater()) {
             Vec3 motion = player.getDeltaMovement();
             player.setDeltaMovement(motion.x, Math.min(motion.y, -DROWNED_PULL), motion.z);

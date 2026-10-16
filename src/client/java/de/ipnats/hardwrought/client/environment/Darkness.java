@@ -78,7 +78,9 @@ public final class Darkness {
         }
         adaptation = adapt(adaptation, lightAtEyes(level, camera.blockPosition(), state));
         if (maxComponent(state.ambientColor) <= DARK_DIMENSION_AMBIENT) {
-            float ambient = Math.max(UNADAPTED_AMBIENT, ambientFor(ADAPTED_DISPLAY * adaptation, state.brightness));
+            // In the Underworld the eyes have nothing to adapt to: without a light, black, however long.
+            float adapted = level.dimension() == de.ipnats.hardwrought.underworld.Underworld.LEVEL ? 0 : ADAPTED_DISPLAY;
+            float ambient = Math.max(UNADAPTED_AMBIENT, ambientFor(adapted * adaptation, state.brightness));
             state.ambientColor = new Vector3f(SCOTOPIC_TINT).mul(ambient);
         }
     }

@@ -1,0 +1,173 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": {
+        "type": "minecraft:uniform",
+        "min": 2,
+        "max": 4
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:arrow",
+          "weight": 6,
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "minecraft:uniform",
+              "min": 2,
+              "max": 8
+            }
+          }
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:spyglass",
+          "weight": 1,
+          "modifier": {
+            "type": "minecraft:set_damage",
+            "damage": {
+              "type": "minecraft:uniform",
+              "min": 0.3,
+              "max": 0.8
+            }
+          }
+        },
+        {
+          "type": "minecraft:item",
+          "name": "hardwrought:stale_bread",
+          "weight": 10,
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "minecraft:uniform",
+              "min": 1,
+              "max": 3
+            }
+          }
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:potion",
+          "weight": 5,
+          "modifier": [
+            {
+              "type": "minecraft:set_potion",
+              "id": "minecraft:water"
+            },
+            {
+              "type": "minecraft:set_components",
+              "components": {
+                "hardwrought:water_quality": "swamp"
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:torch",
+          "weight": 7,
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "minecraft:uniform",
+              "min": 1,
+              "max": 4
+            }
+          }
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:candle",
+          "weight": 6,
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "minecraft:uniform",
+              "min": 1,
+              "max": 3
+            }
+          }
+        },
+        {
+          "type": "minecraft:item",
+          "name": "hardwrought:bandage",
+          "weight": 5,
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "minecraft:uniform",
+              "min": 1,
+              "max": 2
+            }
+          }
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:iron_sword",
+          "weight": 3,
+          "modifier": {
+            "type": "minecraft:set_damage",
+            "damage": {
+              "type": "minecraft:uniform",
+              "min": 0.15,
+              "max": 0.5
+            }
+          }
+        },
+        {
+          "type": "minecraft:item",
+          "name": "hardwrought:steel_sword",
+          "weight": 2,
+          "modifier": [
+            {
+              "type": "minecraft:set_damage",
+              "damage": {
+                "type": "minecraft:uniform",
+                "min": 0.1,
+                "max": 0.45
+              }
+            },
+            {
+              "type": "minecraft:set_components",
+              "components": {
+                "hardwrought:rust": 0.45
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:bow",
+          "weight": 2,
+          "modifier": {
+            "type": "minecraft:set_damage",
+            "damage": {
+              "type": "minecraft:uniform",
+              "min": 0.2,
+              "max": 0.6
+            }
+          }
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "condition": {
+        "type": "minecraft:random_chance",
+        "chance": 0.6
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:written_book",
+          "modifier": {
+            "type": "hardwrought:underworld_journal"
+          }
+        }
+      ]
+    }
+  ],
+  "random_sequence": "hardwrought:chests/underworld_watchtower"
+}

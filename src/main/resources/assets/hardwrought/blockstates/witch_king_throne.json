@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "cold=false": {
+      "model": "hardwrought:block/witch_king_throne"
+    },
+    "cold=true": {
+      "model": "hardwrought:block/witch_king_throne_cold"
+    }
+  }
+}

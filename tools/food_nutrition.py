@@ -32,8 +32,8 @@ FOODS = {
     "bread":                  (2,  1, 12,  1,  4,  0),
     "carrot":                 (0,  0,  3,  7,  4,  2),
     "golden_carrot":          (1,  0,  8, 14,  5,  2),
-    "golden_apple":           (1,  0, 12, 12,  4,  3),
-    "enchanted_golden_apple": (2,  0, 15, 20,  5,  3),
+    "golden_apple":           (0,  0,  0,  0,  0,  0),  # not food: eaten for what it does
+    "enchanted_golden_apple": (0,  0,  0,  0,  0,  0),
     "chorus_fruit":           (0,  0,  4,  2,  3,  2),
     "melon_slice":            (0,  0,  3,  3,  1,  6),
     "sweet_berries":          (0,  0,  3,  4,  2,  2),
@@ -64,6 +64,8 @@ FOODS = {
     "rotten_flesh":           (3,  1,  0,  0,  0,  0),
     "spider_eye":             (2,  0,  0,  0,  0,  0),
     "milk_bucket":            (4,  4,  3,  3,  0, 10),
+    # Found in the Underworld's ruins: old, hard, a little mouldy.
+    "hardwrought:stale_bread":(1,  0,  6,  0,  2,  0),
 }
 
 
@@ -73,11 +75,11 @@ def main():
         old.unlink()
     names = ("protein", "fat", "carbohydrates", "vitamins", "fiber", "hydration")
     for item, values in FOODS.items():
-        data = {"item": f"minecraft:{item}"}
+        data = {"item": item if ":" in item else f"minecraft:{item}"}
         # The water in a food is what it is; only the nutrients are scaled.
         scaled = [max(1, round(value * SCALE)) if value else 0 for value in values[:5]] + [values[5]]
         data.update({name: value for name, value in zip(names, scaled) if value})
-        (OUT / f"{item}.json").write_text(json.dumps(data) + "\n", encoding="utf-8")
+        (OUT / f"{item.split(':')[-1]}.json").write_text(json.dumps(data) + "\n", encoding="utf-8")
     print(f"{len(FOODS)} foods written")
 
 

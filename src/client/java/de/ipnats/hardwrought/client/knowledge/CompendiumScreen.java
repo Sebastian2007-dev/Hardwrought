@@ -73,6 +73,10 @@ public class CompendiumScreen extends Screen {
 
     private static final int TAB_WIDTH = CONTENT_WIDTH - 3;
     private static final int TAB_HEIGHT = 14;
+    private static final int MULTIBLOCK_ROW = 20;
+    /** The shelves and, after them, the multiblock section, all fitted above the page buttons. */
+    private static final int TAB_ROW = Math.min(TAB_HEIGHT,
+            (CONTROLS_Y - 4 - (PAPER_TOP + 9)) / (KnowledgeCategory.values().length + 1));
     private static final int TABS_TOP = PAPER_TOP + 9;
     private static final int SLOT = 18;
     private static final int GRID_STEP = 21;
@@ -329,6 +333,7 @@ public class CompendiumScreen extends Screen {
             return Math.max(1, current.journal().size());
         }
         if (mode == CompendiumPagePayload.MODE_SHELF) {
+            if (MultiblockSection.open()) return 1;
             return Math.max(1, (current.entries().size() + PER_PAGE - 1) / PER_PAGE);
         }
         int method = effectiveMethod(current);
@@ -449,6 +454,8 @@ public class CompendiumScreen extends Screen {
             if (current == null) {
                 ink(graphics, Component.translatable("gui.hardwrought.compendium.loading"),
                         headingX, top + CARDS_TOP + 4, FADED_COLOR);
+            } else if (mode == CompendiumPagePayload.MODE_SHELF && MultiblockSection.open()) {
+                drawMultiblocks(graphics, mouseX, mouseY);
             } else if (mode == CompendiumPagePayload.MODE_SHELF) {
                 drawShelf(graphics, current);
             } else {
@@ -876,7 +883,8 @@ public class CompendiumScreen extends Screen {
 
     private Component heading() {
         if (mode == CompendiumPagePayload.MODE_SHELF) {
-            return Component.translatable(CompendiumClient.shelf().translationKey());
+            return Component.translatable(MultiblockSection.open() ? "gui.hardwrought.compendium.multiblocks"
+                    : CompendiumClient.shelf().translationKey());
         }
         CompendiumPagePayload current = CompendiumClient.page();
         Component name = ShadowItem.UNKNOWN_NAME;
@@ -970,18 +978,63 @@ public class CompendiumScreen extends Screen {
         if (mode != CompendiumPagePayload.MODE_SHELF) return;
         int y = top + TABS_TOP;
         for (KnowledgeCategory category : KnowledgeCategory.values()) {
-            boolean selected = mode == CompendiumPagePayload.MODE_SHELF
-                    && category == CompendiumClient.shelf();
-            boolean hovered = mouseX >= leftContentX() && mouseX < leftContentX() + TAB_WIDTH
-                    && mouseY >= y && mouseY < y + TAB_HEIGHT;
-            graphics.blitSprite(RenderPipelines.GUI_TEXTURED,
-                    selected ? TAB_SELECTED_SPRITE : TAB_SPRITE,
-                    leftContentX(), y, TAB_WIDTH + (selected ? 3 : 0), TAB_HEIGHT);
-            ink(graphics, Component.translatable(category.translationKey()), leftContentX() + 6, y + 3,
-                    selected || hovered ? TEXT_COLOR : TAB_COLOR);
-            y += TAB_HEIGHT;
+            boolean selected = !MultiblockSection.open() && category == CompendiumClient.shelf();
+            drawTab(graphics, Component.translatable(category.translationKey()), y, selected, mouseX, mouseY);
+            y += TAB_ROW;
+        }
+        drawTab(graphics, Component.translatable("gui.hardwrought.compendium.multiblocks"), y, MultiblockSection.open(),
+                mouseX, mouseY);
+    }
+
+    private void drawTab(GuiGraphicsExtractor graphics, Component label, int y, boolean selected, int mouseX, int mouseY) {
+        boolean hovered = mouseX >= leftContentX() && mouseX < leftContentX() + TAB_WIDTH
+                && mouseY >= y && mouseY < y + TAB_ROW;
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, selected ? TAB_SELECTED_SPRITE : TAB_SPRITE,
+                leftContentX(), y, TAB_WIDTH + (selected ? 3 : 0), TAB_ROW);
+        ink(graphics, label, leftContentX() + 6, y + (TAB_ROW - 8) / 2, selected || hovered ? TEXT_COLOR : TAB_COLOR);
+    }
+
+    /** The multiblock section: one row a structure, its name and its look where it is known. */
+    private void drawMultiblocks(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+        int y = top + GRID_TOP;
+        for (var multiblock : de.ipnats.hardwrought.knowledge.Multiblocks.ALL) {
+            boolean readable = MultiblockSection.readable(multiblock);
+            boolean hovered = readable && inside(mouseX, mouseY, rightContentX(), y, CONTENT_WIDTH, MULTIBLOCK_ROW);
+            if (hovered) graphics.fill(rightContentX() - 2, y - 1, rightContentX() + CONTENT_WIDTH, y + MULTIBLOCK_ROW - 1, 0x20000000);
+            ItemStack icon = readable ? multiblockIcon(multiblock) : ItemStack.EMPTY;
+            if (!icon.isEmpty()) graphics.item(icon, rightContentX(), y);
+            Component name = readable ? MultiblockScreen.name(multiblock) : ShadowItem.UNKNOWN_NAME;
+            ink(graphics, name, rightContentX() + 20, y + 4, readable ? TEXT_COLOR : FADED_COLOR);
+            y += MULTIBLOCK_ROW;
         }
     }
+
+    /** The structure's face in the list: the first block of its legend the player knows. */
+    private static ItemStack multiblockIcon(de.ipnats.hardwrought.knowledge.Multiblocks.Multiblock multiblock) {
+        for (var choice : multiblock.legend().values()) {
+            for (Identifier id : choice) {
+                if (!MultiblockSection.studied().contains(id)) continue;
+                Item item = BuiltInRegistries.ITEM.getValue(id);
+                if (item != null) return new ItemStack(item);
+            }
+        }
+        return ItemStack.EMPTY;
+    }
+
+    /** Opens the structure the row under the mouse shows, if it can be read. */
+    private boolean clickMultiblock(double mouseX, double mouseY) {
+        int y = top + GRID_TOP;
+        for (var multiblock : de.ipnats.hardwrought.knowledge.Multiblocks.ALL) {
+            if (inside(mouseX, mouseY, rightContentX(), y, CONTENT_WIDTH, MULTIBLOCK_ROW)) {
+                if (!MultiblockSection.readable(multiblock)) return true;
+                minecraft.gui.setScreen(new MultiblockScreen(this, multiblock, MultiblockSection.studied()));
+                return true;
+            }
+            y += MULTIBLOCK_ROW;
+        }
+        return false;
+    }
+
 
     private void drawShelf(GuiGraphicsExtractor graphics, CompendiumPagePayload current) {
         List<CompendiumPagePayload.Entry> entries = current.entries();
@@ -1308,13 +1361,21 @@ public class CompendiumScreen extends Screen {
             int y = top + TABS_TOP;
             for (KnowledgeCategory category : KnowledgeCategory.values()) {
                 if (event.x() >= leftContentX() && event.x() < leftContentX() + TAB_WIDTH
-                        && event.y() >= y && event.y() < y + TAB_HEIGHT) {
+                        && event.y() >= y && event.y() < y + TAB_ROW) {
                     // Another shelf is asked the same question: what was being looked for stays in the field.
+                    MultiblockSection.leave();
                     CompendiumClient.openShelf(category, searchText);
                     return true;
                 }
-                y += TAB_HEIGHT;
+                y += TAB_ROW;
             }
+            if (event.x() >= leftContentX() && event.x() < leftContentX() + TAB_WIDTH
+                    && event.y() >= y && event.y() < y + TAB_ROW) {
+                MultiblockSection.select();
+                page = 0;
+                return true;
+            }
+            if (MultiblockSection.open() && clickMultiblock(event.x(), event.y())) return true;
         }
         for (Hotspot hotspot : hotspots) {
             if (!hotspot.contains(event.x(), event.y()) || !hotspot.navigable()) continue;

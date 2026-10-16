@@ -42,7 +42,8 @@ import java.util.function.Function;
  *   <li><b>Provisional</b>: a magma heart in blackstone. It runs on the heat around it — the Nether's,
  *       or lava's or magma's right beside it — and on nothing else. The way home from a start over.
  *   <li><b>Stabiliser</b>: quartz and gold around a provisional one, lit by blaze rods. It runs on
- *       current, {@link #RUNNING_VOLTS} or more, strung to it like a lamp, and works anywhere.
+ *       current, {@link #RUNNING_VOLTS} or more, taken like a machine's through a copper coil set
+ *       against it, and works anywhere.
  * </ul>
  *
  * <p>Either shows that it is running: its heart glows, and it throws embers or sparks.
@@ -152,7 +153,7 @@ public final class PortalStabilizers {
         }
     }
 
-    /** Runs on current, strung to it like a lamp; the network says how much reaches it. */
+    /** Runs on current, through a copper coil set against it like a machine; the network says how much reaches it. */
     public static final class Electric extends ElectricNodeBlock {
         public Electric(Properties properties) {
             super(properties);
@@ -164,10 +165,10 @@ public final class PortalStabilizers {
             builder.add(ACTIVE);
         }
 
-        /** The wire is made fast on top. */
+        /** Where the network measures it from; the wires themselves go to its coils. */
         @Override
         public Vec3 terminal(BlockState state) {
-            return new Vec3(0.5, 1.0, 0.5);
+            return new Vec3(0.5, 0.5, 0.5);
         }
 
         @Override
@@ -220,6 +221,12 @@ public final class PortalStabilizers {
         @Override
         public boolean mindsRain() {
             return true;
+        }
+
+        /** No wire goes to it directly: like a machine, it is fed through a copper coil set against it. */
+        @Override
+        public boolean takesWires() {
+            return false;
         }
 
         @Override

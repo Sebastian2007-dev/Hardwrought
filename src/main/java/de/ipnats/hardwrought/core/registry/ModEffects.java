@@ -98,6 +98,33 @@ public final class ModEffects {
     public static final Holder<MobEffect> HEAT_RESISTANCE = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
             Hardwrought.id("heat_resistance"), new de.ipnats.hardwrought.survival.ThirstEffect(MobEffectCategory.BENEFICIAL, 0x7FD4E8));
 
+    /** Tired, exhausted, overtired: fatigue run high, its level the stage (see {@code Tiredness}). */
+    public static final Holder<MobEffect> TIRED = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("tired"), new de.ipnats.hardwrought.survival.Tiredness.Tired(MobEffectCategory.HARMFUL, 0x4A4A6A));
+    /** A microsleep: a moment of black, and no moving (see {@code Tiredness}). */
+    public static final Holder<MobEffect> MICROSLEEP = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("microsleep"), new de.ipnats.hardwrought.survival.Tiredness.Microsleep(MobEffectCategory.HARMFUL, 0x101018));
+
+    /** Adrenaline: a fight not yet felt (see {@code Adrenaline}). A marker, its level shown. */
+    public static final Holder<MobEffect> ADRENALINE = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("adrenaline"), new de.ipnats.hardwrought.survival.ThirstEffect(MobEffectCategory.BENEFICIAL, 0xE0303A));
+    /** The crash after it: the fight being paid for. A marker. */
+    public static final Holder<MobEffect> ADRENALINE_CRASH = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("adrenaline_crash"), new de.ipnats.hardwrought.survival.ThirstEffect(MobEffectCategory.HARMFUL, 0x5A4A50));
+
+    /** A burn, from fire or lava: may become inflamed (see {@code Ailments}). Three levels. */
+    public static final Holder<MobEffect> BURN = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("burn"), new de.ipnats.hardwrought.health.Ailments.Burn(MobEffectCategory.HARMFUL, 0xD9541E));
+    /** Frostbite, from frost: slower feet and pick (see {@code Ailments}). Three levels. */
+    public static final Holder<MobEffect> FROSTBITE = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("frostbite"), new de.ipnats.hardwrought.health.Ailments.Frostbite(MobEffectCategory.HARMFUL, 0xA8D8F0));
+    /** Water in the lungs, from drowning: a cough, perhaps a cold (see {@code Ailments}). Three levels. */
+    public static final Holder<MobEffect> WATER_IN_LUNGS = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("water_in_lungs"), new de.ipnats.hardwrought.health.Ailments.WaterInLungs(MobEffectCategory.HARMFUL, 0x3F76E4));
+    /** The drain, from magic and the wither: breath slow, hunger fast (see {@code Ailments}). Three levels. */
+    public static final Holder<MobEffect> DRAIN = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("drain"), new de.ipnats.hardwrought.health.Ailments.Drain(MobEffectCategory.HARMFUL, 0x6A2C8C));
+
     /** Brewed from an awkward potion and a cactus, which keeps its water through any drought. */
     public static final Holder<net.minecraft.world.item.alchemy.Potion> HYDRATION_REGENERATION_POTION = potion(
             "hydration_regeneration", HYDRATION_REGENERATION, 3600, 0);

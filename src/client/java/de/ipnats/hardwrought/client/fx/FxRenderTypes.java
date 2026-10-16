@@ -53,6 +53,12 @@ public final class FxRenderTypes {
     public static final RenderType SHIELD = additive("shield");
     public static final RenderType SPHERE = additive("sphere");
     public static final RenderType SMOKE = translucent("smoke");
+    // The Witch King's own: see the hex_*.fsh shaders.
+    public static final RenderType HEX_SIGIL = additive("hex_sigil");
+    public static final RenderType HEX_WAVE = additive("hex_wave");
+    public static final RenderType HEX_WARD = additive("hex_ward");
+    public static final RenderType HEX_RIFT = additive("hex_rift");
+    public static final RenderType HEX_BLADE = additive("hex_blade");
 
     /** Draws into the distortion field, not the scene; see {@code fx_distort.fsh}. */
     public static final RenderPipeline DISTORT = RenderPipelines.register(RenderPipeline.builder(SNIPPET)

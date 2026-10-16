@@ -64,6 +64,10 @@ second. Disconnecting or restarting a world does not reset the values.
   30 of 100, so a whole cycle can always be seen through without being forced to sleep, and one night
   of good sleep clears more than a day of being awake builds up. Bad air adds to it but stays in the
   same order of magnitude as normal waking.
+  Run high, it is felt and seen (`Tiredness`): from 50 **tired** (4 % slower, the eyes falling shut
+  now and then), from 70 **exhausted** (8 % slower on foot, 12 % slower swings, blinking often), from
+  85 **overtired** (slower still, **microsleep** — two seconds of black with no moving, about once a
+  minute — and monsters heard behind that are not there). The stage is an effect with its own icon.
 - **Sleep:** `V` toggles sleeping on a safe, dry surface. Vanilla beds work too, **at any hour** —
   section 11 asks that a player be able to sleep almost anywhere, and since Hardwrought sleep never
   skips the night there is nothing to protect against by refusing a bed at noon. A night shift is a

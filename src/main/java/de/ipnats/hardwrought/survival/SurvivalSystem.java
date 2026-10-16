@@ -248,6 +248,13 @@ public final class SurvivalSystem {
         return ArmorCoverage.of(player, server.getOrThrow(ArmorProfiles.KEY)).staminaDrain();
     }
 
+    /** Takes stamina straight off, unmasked and whatever is left: what adrenaline owed, paid after a fight. */
+    public void drainStamina(ServerPlayer player, double amount) {
+        if (exempt(player) || amount <= 0) return;
+        PlayerVitals current = vitals(player);
+        save.setVitals(player.getUUID(), current.withStamina(Math.max(0, current.stamina() - amount)));
+    }
+
     public boolean spendStamina(ServerPlayer player, double amount) {
         if (exempt(player)) return true;
         PlayerVitals current = vitals(player);
@@ -256,6 +263,8 @@ public final class SurvivalSystem {
             return false;
         }
         amount *= Overeating.staminaFactor(player);
+        // In a fight, part of it is not felt yet (see Adrenaline).
+        amount = Adrenaline.maskStamina(player, amount);
         save.setVitals(player.getUUID(), current.withStamina(current.stamina() - amount));
         recordWork(player, amount * ENERGY_PER_STAMINA, amount * 0.008);
         return true;
@@ -490,6 +499,8 @@ public final class SurvivalSystem {
             if (active) delta -= ARMOR_STAMINA_PER_TICK * armorStaminaDrain(player);
             // Every effort is harder on a full belly.
             delta *= Overeating.staminaFactor(player);
+            // In a fight, part of what effort costs is not felt yet (see Adrenaline).
+            if (delta < 0) delta = -Adrenaline.maskStamina(player, -delta);
             // Stamina regeneration refills the reserve whatever the player is doing, stronger per level.
             var staminaRegeneration = player.getEffect(de.ipnats.hardwrought.core.registry.ModEffects.STAMINA_REGENERATION);
             if (staminaRegeneration != null) {
@@ -498,7 +509,8 @@ public final class SurvivalSystem {
             if (!active && !player.isSleeping()) {
                 double recovery = IDLE_RECOVERY_PER_TICK
                         * recoveryFactor(player, value, load, environment.reading(player).gases())
-                        * de.ipnats.hardwrought.health.Diseases.recoveryFactor(player);
+                        * de.ipnats.hardwrought.health.Diseases.recoveryFactor(player)
+                        * de.ipnats.hardwrought.health.Ailments.recoveryFactor(player);
                 delta += recovery;
             }
             if (player.isSleeping()) {
@@ -612,7 +624,8 @@ public final class SurvivalSystem {
             Nutrition diet = v.nutrition();
             double hungerFactor = (diet.high(Nutrient.PROTEIN) ? DIET_HUNGER_FACTOR : 1.0)
                     * (diet.low(Nutrient.FIBER) ? DIET_HUNGER_FACTOR : 1.0)
-                    * de.ipnats.hardwrought.health.Diseases.hungerFactor(player);
+                    * de.ipnats.hardwrought.health.Diseases.hungerFactor(player)
+                    * de.ipnats.hardwrought.health.Ailments.hungerFactor(player);
             player.causeFoodExhaustion((float) (energyUse * EXHAUSTION_PER_ENERGY * hungerFactor));
             double fatigueFactor = (diet.high(Nutrient.CARBOHYDRATES) ? CARB_EXCESS_FATIGUE
                     : diet.balanced() ? BALANCED_FATIGUE : 1.0) * de.ipnats.hardwrought.health.Diseases.fatigueFactor(player);
@@ -640,6 +653,8 @@ public final class SurvivalSystem {
             double airDrain = oxygenStress * 0.45 + carbonDioxideStress * 0.30 + carbonMonoxideStress * 0.35;
             if (airDrain > 0) next = next.withStamina(next.stamina() - airDrain);
             save.setVitals(player.getUUID(), next);
+            // Fatigue run high is felt, and seen (see Tiredness).
+            Tiredness.apply(player, next.fatigue());
             applyAirDamage(player, gases);
             applyStrain(player, strain, next.stress());
             if (metabolismPasses % THERMAL_DAMAGE_PASSES == 0) {
