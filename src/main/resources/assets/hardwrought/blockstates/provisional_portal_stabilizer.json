@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "active=false": {
+      "model": "hardwrought:block/provisional_portal_stabilizer"
+    },
+    "active=true": {
+      "model": "hardwrought:block/provisional_portal_stabilizer_active"
+    }
+  }
+}

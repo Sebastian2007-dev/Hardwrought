@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "group": "planks",
+  "ingredients": [
+    "#hardwrought:ashcork_logs"
+  ],
+  "result": {
+    "id": "hardwrought:ashcork_planks",
+    "count": 4
+  }
+}

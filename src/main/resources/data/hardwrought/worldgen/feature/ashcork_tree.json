@@ -1,0 +1,39 @@
+{
+  "type": "minecraft:tree",
+  "trunk_provider": {
+    "id": "hardwrought:ashcork_log",
+    "properties": {
+      "axis": "y"
+    }
+  },
+  "trunk_placer": {
+    "type": "minecraft:forking_trunk_placer",
+    "base_height": 4,
+    "height_rand_a": 2,
+    "height_rand_b": 2
+  },
+  "foliage_provider": {
+    "id": "hardwrought:ashcork_leaves",
+    "properties": {
+      "distance": "7",
+      "persistent": "false",
+      "waterlogged": "false"
+    }
+  },
+  "foliage_placer": {
+    "type": "minecraft:acacia_foliage_placer",
+    "radius": 2,
+    "offset": 0
+  },
+  "minimum_size": {
+    "type": "minecraft:two_layers_feature_size",
+    "limit": 1,
+    "lower_size": 0,
+    "upper_size": 2
+  },
+  "decorators": [],
+  "ignore_vines": true,
+  "below_trunk_provider": {
+    "id": "minecraft:netherrack"
+  }
+}

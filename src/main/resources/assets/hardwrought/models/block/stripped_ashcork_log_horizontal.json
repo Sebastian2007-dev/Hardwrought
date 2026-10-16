@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column_horizontal",
+  "textures": {
+    "end": "hardwrought:block/stripped_ashcork_log_top",
+    "side": "hardwrought:block/stripped_ashcork_log"
+  }
+}

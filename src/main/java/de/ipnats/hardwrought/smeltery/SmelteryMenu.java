@@ -51,7 +51,8 @@ public class SmelteryMenu extends AbstractContainerMenu {
             addSlot(new Slot(smeltery, 1 + i, at[0], at[1]) {
                 @Override
                 public boolean mayPlace(ItemStack stack) {
-                    return MoltenMetals.melt(stack.getItem()) != null;
+                    return MoltenMetals.melt(stack.getItem()) != null
+                            || de.ipnats.hardwrought.nether.CastObsidian.tempers(stack);
                 }
 
                 @Override

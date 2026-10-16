@@ -12,7 +12,17 @@ import java.util.List;
 
 /** Builds every timber variant of the joined bench directly from its hewn predecessor. */
 public final class NailedWorkbenchTextureGenerator {
-    private record Wood(String id, String vanilla) { }
+    /**
+     * A timber and the log its textures are read from. Vanilla logs come out of the client jar; a
+     * log this mod adds itself names its namespace and is read from the mod's own texture folder.
+     */
+    private record Wood(String id, String vanilla, String namespace) {
+        Wood(String id, String vanilla) { this(id, vanilla, "minecraft"); }
+
+        Path source(Path vanillaBlocks, Path modBlocks) {
+            return namespace.equals("minecraft") ? vanillaBlocks : modBlocks;
+        }
+    }
 
     private static final List<Wood> WOODS = List.of(
             new Wood("oak", "oak_log"),
@@ -27,7 +37,8 @@ public final class NailedWorkbenchTextureGenerator {
             new Wood("cherry", "cherry_log"),
             new Wood("bamboo", "bamboo_block"),
             new Wood("crimson", "crimson_stem"),
-            new Wood("warped", "warped_stem")
+            new Wood("warped", "warped_stem"),
+            new Wood("ashcork", "ashcork_log", "hardwrought")
     );
 
     public static void main(String[] args) throws Exception {
@@ -49,11 +60,12 @@ public final class NailedWorkbenchTextureGenerator {
             Wood wood = WOODS.get(index);
             BufferedImage hewnTop = read(textures.resolve("hewn_workbench_top_" + wood.id + ".png"));
             BufferedImage hewnSide = read(textures.resolve("hewn_workbench_side_" + wood.id + ".png"));
-            BufferedImage vanillaBark = firstFrame(readAny(vanillaBlocks.resolve(wood.vanilla + ".png")));
+            Path logs = wood.source(vanillaBlocks, textures);
+            BufferedImage vanillaBark = firstFrame(readAny(logs.resolve(wood.vanilla + ".png")));
             BufferedImage vanillaSide = firstFrame(readAny(
-                    vanillaBlocks.resolve("stripped_" + wood.vanilla + ".png")));
+                    logs.resolve("stripped_" + wood.vanilla + ".png")));
             BufferedImage vanillaBottom = firstFrame(readAny(
-                    vanillaBlocks.resolve(wood.vanilla + "_top.png")));
+                    logs.resolve(wood.vanilla + "_top.png")));
             int seed = 37 * index + 11;
             // The joined bench is still the same log: its top is exactly the hewn work surface and
             // its underside is the untouched end grain of the source log.
@@ -74,7 +86,8 @@ public final class NailedWorkbenchTextureGenerator {
         writeBlockstate(root.resolve("src/main/resources/assets/hardwrought/blockstates/nailed_workbench.json"));
         writeItemDefinition(root.resolve("src/main/resources/assets/hardwrought/items/nailed_workbench.json"));
         write(root.resolve("art_source/bench_tiers/nailed_workbench_pixel_atlas.png"), atlas(atlas));
-        System.out.println("Generated 52 nailed-workbench textures for 13 timber variants.");
+        System.out.println("Generated " + atlas.size() + " nailed-workbench textures for "
+                + WOODS.size() + " timber variants.");
     }
 
     private static BufferedImage workedSide(BufferedImage bark, BufferedImage stripped,

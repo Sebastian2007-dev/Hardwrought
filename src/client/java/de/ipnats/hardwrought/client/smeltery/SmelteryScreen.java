@@ -325,7 +325,9 @@ public class SmelteryScreen extends AbstractContainerScreen<SmelteryMenu> {
                 ? Component.translatable("gui.hardwrought.smeltery.too_cold").withStyle(net.minecraft.ChatFormatting.AQUA)
                 : state == SmelteryControllerBlockEntity.TANK_FULL
                 ? Component.translatable("gui.hardwrought.smeltery.tank_full").withStyle(net.minecraft.ChatFormatting.RED)
-                : Component.translatable("gui.hardwrought.smeltery.melting", state / 10).withStyle(net.minecraft.ChatFormatting.GOLD);
+                : Component.translatable(de.ipnats.hardwrought.nether.CastObsidian.tempers(stack)
+                        ? "gui.hardwrought.smeltery.tempering" : "gui.hardwrought.smeltery.melting", state / 10)
+                        .withStyle(net.minecraft.ChatFormatting.GOLD);
         lines.add(status);
         return lines;
     }

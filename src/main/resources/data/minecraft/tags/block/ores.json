@@ -143,6 +143,10 @@
     {
       "id": "hardwrought:deepslate_adamantium_ore",
       "required": false
-    }
+    },
+    "hardwrought:nether_coal_ore",
+    "hardwrought:nether_copper_ore",
+    "hardwrought:nether_tin_ore",
+    "hardwrought:nether_iron_ore"
   ]
 }

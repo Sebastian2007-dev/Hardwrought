@@ -163,6 +163,12 @@ public final class WaterEvents {
             return InteractionResult.FAIL;
         }
         BlockPos target = surfaceAbove(level, aimed);
+        // In the Nether, outside the Ash Grove, it boils off the moment it leaves the bucket.
+        if (de.ipnats.hardwrought.nether.AshGrove.evaporates(level, target)) {
+            de.ipnats.hardwrought.nether.AshGrove.fizz(level, target);
+            if (!player.isCreative()) player.setItemInHand(hand, BucketWater.with(stack, 0, null));
+            return InteractionResult.SUCCESS;
+        }
         int present = WaterStorage.amount(level, target);
         int poured = Math.min(carried, Math.max(0, WaterAmounts.BLOCK - present));
         if (poured <= 0) {

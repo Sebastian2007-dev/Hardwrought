@@ -95,6 +95,22 @@ public final class SmelteryGameTests {
         helper.succeed();
     }
 
+    @GameTest(maxTicks = 1500)
+    public void castObsidianIsTemperedIntoObsidianNotMelted(GameTestHelper helper) {
+        BlockPos controllerPos = build(helper);
+        SmelteryControllerBlockEntity smeltery = (SmelteryControllerBlockEntity) helper.getLevel().getBlockEntity(controllerPos);
+        helper.assertTrue(smeltery.canPlaceItem(1, new ItemStack(de.ipnats.hardwrought.nether.CastObsidian.ITEM)),
+                "Cast obsidian goes into a melting place");
+        smeltery.setItem(SmelteryControllerBlockEntity.FUEL_SLOT, new ItemStack(SmelteryBlocks.COKE, 4));
+        smeltery.setItem(1, new ItemStack(de.ipnats.hardwrought.nether.CastObsidian.ITEM));
+        smeltery.setTemperatureForTesting(de.ipnats.hardwrought.nether.CastObsidian.TEMPER_CELSIUS + 100);
+        helper.runAfterDelay(de.ipnats.hardwrought.nether.CastObsidian.TEMPER_TICKS / 2, () ->
+                helper.assertTrue(smeltery.getItem(1).is(de.ipnats.hardwrought.nether.CastObsidian.ITEM)
+                        && smeltery.fluids().isEmpty(), "Half way it is still cast obsidian, and nothing has melted"));
+        helper.succeedWhen(() -> helper.assertTrue(smeltery.getItem(1).is(Items.OBSIDIAN),
+                "Held hot long enough, it is tempered into real obsidian where it lies: " + smeltery.getItem(1)));
+    }
+
     @GameTest(maxTicks = 600)
     public void ironAndCoalBecomeSteelAndACastBar(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();

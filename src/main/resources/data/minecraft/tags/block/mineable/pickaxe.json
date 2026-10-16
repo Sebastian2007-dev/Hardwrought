@@ -244,6 +244,14 @@
     "hardwrought:ceramic_filter",
     "hardwrought:water_purifier",
     "hardwrought:gas_pump",
-    "hardwrought:electric_gas_pump"
+    "hardwrought:electric_gas_pump",
+    "hardwrought:nether_grass",
+    "hardwrought:cast_obsidian",
+    "hardwrought:nether_coal_ore",
+    "hardwrought:nether_copper_ore",
+    "hardwrought:nether_tin_ore",
+    "hardwrought:nether_iron_ore",
+    "hardwrought:provisional_portal_stabilizer",
+    "hardwrought:portal_stabilizer"
   ]
 }

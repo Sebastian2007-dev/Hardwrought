@@ -15,7 +15,8 @@
       { "when": "cherry",   "model": { "type": "minecraft:model", "model": "hardwrought:block/hewn_workbench_cherry" } },
       { "when": "bamboo",   "model": { "type": "minecraft:model", "model": "hardwrought:block/hewn_workbench_bamboo" } },
       { "when": "crimson",  "model": { "type": "minecraft:model", "model": "hardwrought:block/hewn_workbench_crimson" } },
-      { "when": "warped",   "model": { "type": "minecraft:model", "model": "hardwrought:block/hewn_workbench_warped" } }
+      { "when": "warped",   "model": { "type": "minecraft:model", "model": "hardwrought:block/hewn_workbench_warped" } },
+      { "when": "ashcork",  "model": { "type": "minecraft:model", "model": "hardwrought:block/hewn_workbench_ashcork" } }
     ],
     "fallback": {
       "type": "minecraft:model",

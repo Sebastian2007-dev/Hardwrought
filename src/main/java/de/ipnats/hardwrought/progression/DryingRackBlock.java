@@ -51,6 +51,18 @@ public class DryingRackBlock extends Block implements EntityBlock {
         return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 
+    /** In the Nether the heat dries what hangs here, and it shows: steam wisps off anything still green. */
+    @Override
+    public void animateTick(BlockState state, Level level, BlockPos pos, net.minecraft.util.RandomSource random) {
+        if (level.dimension() != Level.NETHER || random.nextInt(3) != 0) return;
+        if (!(level.getBlockEntity(pos) instanceof DryingRackBlockEntity rack)
+                || rack.items().stream().noneMatch(DryingRackBlockEntity::dries)) {
+            return;
+        }
+        level.addParticle(net.minecraft.core.particles.ParticleTypes.WHITE_SMOKE, pos.getX() + 0.2 + random.nextDouble() * 0.6,
+                pos.getY() + 0.5 + random.nextDouble() * 0.4, pos.getZ() + 0.2 + random.nextDouble() * 0.6, 0, 0.03, 0);
+    }
+
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return state.getValue(FACING).getAxis() == Direction.Axis.Z ? SHAPE : SHAPE_X;

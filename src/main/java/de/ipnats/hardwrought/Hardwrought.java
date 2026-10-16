@@ -78,6 +78,13 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.survival.Overeating.initialize();
 		de.ipnats.hardwrought.health.Herbs.initialize();
 		de.ipnats.hardwrought.fun.StampiEasterEgg.initialize();
+		de.ipnats.hardwrought.nether.NetherCrossing.initialize();
+		de.ipnats.hardwrought.nether.Ashcork.initialize();
+		de.ipnats.hardwrought.nether.AshGrove.initialize();
+		de.ipnats.hardwrought.nether.CastObsidian.initialize();
+		de.ipnats.hardwrought.nether.NetherOres.initialize();
+		de.ipnats.hardwrought.nether.NetherLoot.initialize();
+		de.ipnats.hardwrought.nether.PortalStabilizers.initialize();
 		de.ipnats.hardwrought.water.WaterTreatmentBlocks.initialize();
 		de.ipnats.hardwrought.gasline.GasLines.initialize();
 		de.ipnats.hardwrought.refining.RefineryBlocks.initialize();

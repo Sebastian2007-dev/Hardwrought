@@ -51,6 +51,10 @@ public final class BucketMachinery {
                 if (!WaterStorage.canHold(level, target.above())) break;
                 target = target.above();
             }
+            if (de.ipnats.hardwrought.nether.AshGrove.evaporates(level, target)) {
+                de.ipnats.hardwrought.nether.AshGrove.fizz(level, target);
+                return BucketWater.with(stack, 0, null);
+            }
             int present = WaterStorage.amount(level, target);
             int poured = Math.min(carried, Math.max(0, WaterAmounts.BLOCK - present));
             if (poured <= 0) return super.execute(source, stack);

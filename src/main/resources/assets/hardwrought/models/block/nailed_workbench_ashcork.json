@@ -1,0 +1,10 @@
+{
+  "parent": "hardwrought:block/nailed_workbench_base",
+  "textures": {
+    "top": "hardwrought:block/nailed_workbench_top_ashcork",
+    "side": "hardwrought:block/nailed_workbench_side_ashcork",
+    "front": "hardwrought:block/nailed_workbench_front_ashcork",
+    "bottom": "hardwrought:block/nailed_workbench_bottom_ashcork",
+    "particle": "hardwrought:block/nailed_workbench_side_ashcork"
+  }
+}

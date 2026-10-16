@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "condition": {
+        "type": "minecraft:survives_explosion"
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "hardwrought:provisional_portal_stabilizer"
+        }
+      ]
+    }
+  ],
+  "random_sequence": "hardwrought:blocks/provisional_portal_stabilizer"
+}

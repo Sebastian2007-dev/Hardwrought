@@ -18,6 +18,8 @@ WOODS = {
     "bamboo": "bamboo_block",
     "crimson": "crimson_stem",
     "warped": "warped_stem",
+    # A tree of this mod: its log and planks are drawn from the mod's own textures.
+    "ashcork": "hardwrought:ashcork_log",
 }
 
 TEXTURE_KEYS = {
@@ -118,13 +120,15 @@ def main():
         })
 
     for wood, log in WOODS.items():
+        namespace, _, log = log.rpartition(":")
+        namespace = namespace or "minecraft"
         for part in ("left", "right"):
             write_json(model_dir / f"magic_table_{part}_{wood}.json", {
                 "parent": f"hardwrought:block/magic_table_{part}_base",
                 "textures": {
-                    "wood": f"minecraft:block/{log}",
-                    "planks": f"minecraft:block/{wood}_planks",
-                    "particle": f"minecraft:block/{wood}_planks",
+                    "wood": f"{namespace}:block/{log}",
+                    "planks": f"{namespace}:block/{wood}_planks",
+                    "particle": f"{namespace}:block/{wood}_planks",
                 },
             })
 

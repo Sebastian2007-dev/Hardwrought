@@ -90,6 +90,14 @@ public final class ModEffects {
     public static final Holder<MobEffect> EMBER_SKIN = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
             Hardwrought.id("ember_skin"), new de.ipnats.hardwrought.survival.ThirstEffect(MobEffectCategory.BENEFICIAL, 0xFF6A2A));
 
+    /**
+     * Heat resistance: the body pays the hot air no heed while it lasts. Given on arriving in the
+     * Nether and after every respawn there (see {@code NetherCrossing}), so a player has time to get
+     * their bearings. A marker: the survival metabolism reads it.
+     */
+    public static final Holder<MobEffect> HEAT_RESISTANCE = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("heat_resistance"), new de.ipnats.hardwrought.survival.ThirstEffect(MobEffectCategory.BENEFICIAL, 0x7FD4E8));
+
     /** Brewed from an awkward potion and a cactus, which keeps its water through any drought. */
     public static final Holder<net.minecraft.world.item.alchemy.Potion> HYDRATION_REGENERATION_POTION = potion(
             "hydration_regeneration", HYDRATION_REGENERATION, 3600, 0);

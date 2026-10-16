@@ -389,6 +389,36 @@
     "facing=west,part=right,wood=warped": {
       "model": "hardwrought:block/magic_table_right_warped",
       "y": 270
+    },
+    "facing=north,part=left,wood=ashcork": {
+      "model": "hardwrought:block/magic_table_left_ashcork"
+    },
+    "facing=east,part=left,wood=ashcork": {
+      "model": "hardwrought:block/magic_table_left_ashcork",
+      "y": 90
+    },
+    "facing=south,part=left,wood=ashcork": {
+      "model": "hardwrought:block/magic_table_left_ashcork",
+      "y": 180
+    },
+    "facing=west,part=left,wood=ashcork": {
+      "model": "hardwrought:block/magic_table_left_ashcork",
+      "y": 270
+    },
+    "facing=north,part=right,wood=ashcork": {
+      "model": "hardwrought:block/magic_table_right_ashcork"
+    },
+    "facing=east,part=right,wood=ashcork": {
+      "model": "hardwrought:block/magic_table_right_ashcork",
+      "y": 90
+    },
+    "facing=south,part=right,wood=ashcork": {
+      "model": "hardwrought:block/magic_table_right_ashcork",
+      "y": 180
+    },
+    "facing=west,part=right,wood=ashcork": {
+      "model": "hardwrought:block/magic_table_right_ashcork",
+      "y": 270
     }
   }
 }

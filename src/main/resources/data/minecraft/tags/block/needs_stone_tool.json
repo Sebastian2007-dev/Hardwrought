@@ -48,6 +48,9 @@
     {
       "id": "hardwrought:deepslate_aluminum_ore",
       "required": false
-    }
+    },
+    "hardwrought:nether_copper_ore",
+    "hardwrought:nether_tin_ore",
+    "hardwrought:nether_iron_ore"
   ]
 }

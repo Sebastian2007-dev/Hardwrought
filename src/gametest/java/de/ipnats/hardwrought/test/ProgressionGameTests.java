@@ -3,6 +3,7 @@ package de.ipnats.hardwrought.test;
 import de.ipnats.hardwrought.core.registry.ModBlocks;
 import de.ipnats.hardwrought.core.registry.ModItems;
 import de.ipnats.hardwrought.core.registry.ModToolMaterials;
+import de.ipnats.hardwrought.nether.Ashcork;
 import de.ipnats.hardwrought.progression.BenchTier;
 import de.ipnats.hardwrought.progression.BlockBreaking;
 import de.ipnats.hardwrought.progression.NailedWorkbenchBlock;
@@ -295,6 +296,9 @@ public final class ProgressionGameTests {
                         && HewnWood.of(Blocks.POPLAR_LOG.defaultBlockState()) == HewnWood.POPLAR
                         && HewnWood.of(Blocks.CRIMSON_STEM.defaultBlockState()) == HewnWood.CRIMSON,
                 "Every kind of timber is recognised, stripped, wood and stem alike");
+        helper.assertTrue(HewnWood.of(Ashcork.LOG.defaultBlockState()) == HewnWood.ASHCORK
+                        && HewnWood.of(Ashcork.STRIPPED_LOG.defaultBlockState()) == HewnWood.ASHCORK,
+                "The Nether's ashcork is a timber of its own, not an oak");
         helper.assertTrue(HewnWood.of(Blocks.STONE.defaultBlockState()) == HewnWood.OAK,
                 "and anything unknown falls back to oak rather than failing");
         helper.assertTrue(ModBlocks.HEWN_WORKBENCH.defaultBlockState()

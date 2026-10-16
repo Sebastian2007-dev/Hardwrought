@@ -33,6 +33,7 @@
       "de.ipnats.hardwrought.test.KnowledgeGameTests",
       "de.ipnats.hardwrought.test.HealthGameTests",
       "de.ipnats.hardwrought.test.FunGameTests",
+      "de.ipnats.hardwrought.test.NetherGameTests",
       "de.ipnats.hardwrought.test.FirecraftGameTests",
       "de.ipnats.hardwrought.test.MachineryGameTests",
       "de.ipnats.hardwrought.test.KineticsGameTests",

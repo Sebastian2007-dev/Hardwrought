@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "BBB",
+    "B B"
+  ],
+  "key": {
+    "B": "hardwrought:ashcork_bark"
+  },
+  "result": {
+    "id": "hardwrought:ashcork_helmet"
+  }
+}

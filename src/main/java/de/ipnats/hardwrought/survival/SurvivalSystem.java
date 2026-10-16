@@ -579,6 +579,13 @@ public final class SurvivalSystem {
             }
             // The rune moves the air towards what the body wanted; everything after it is ordinary weather.
             double feltAmbient = Temperance.temper(ambient, Temperance.of(player), immersed);
+            // Heat-shielding armour (ashcork bark) keeps the hot air off, and leaves the cold alone.
+            feltAmbient = de.ipnats.hardwrought.nether.HeatShield.shield(feltAmbient,
+                    de.ipnats.hardwrought.nether.HeatShield.of(player), immersed);
+            // Heat resistance: the hot side of the weather does not reach the body while it lasts.
+            if (player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.HEAT_RESISTANCE)) {
+                feltAmbient = Math.min(feltAmbient, Thermal.comfort(immersed));
+            }
             double insulation = Thermal.wornInsulation(
                     ArmorCoverage.of(player, server.getOrThrow(ArmorProfiles.KEY)).insulation(), wetness);
             double targetBody = Thermal.targetBody(feltAmbient, immersed, insulation, armorMass,

@@ -166,6 +166,8 @@ public final class WaterQualityStorage {
     /** Marks a cell, or clears the mark where the water is no different from its surroundings. */
     public static void mark(ServerLevel level, BlockPos pos, WaterQuality quality) {
         if (!level.hasChunkAt(pos)) return;
+        // In the Ash Grove water is always boiled: whatever was poured, purified water is what stands.
+        if (quality != null && de.ipnats.hardwrought.nether.AshGrove.boils(level, pos)) quality = WaterQuality.PURIFIED;
         // Kept even where the surroundings would say the same, if the client would draw it otherwise:
         // swamp water poured into a meadow pond is swamp water by both counts, and must look it.
         if (quality == null || quality == WaterQualityProfiles.ambient(level, pos) && quality == shownByDefault(level, pos)) {

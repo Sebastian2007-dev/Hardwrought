@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "hardwrought:ashcork"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "hardwrought:ashcork"
+      }
+    ]
+  }
+}

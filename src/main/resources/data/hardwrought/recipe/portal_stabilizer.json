@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "Q": "minecraft:quartz",
+    "G": "minecraft:gold_ingot",
+    "B": "minecraft:blaze_rod",
+    "S": "hardwrought:provisional_portal_stabilizer"
+  },
+  "pattern": [
+    "QGQ",
+    "BSB",
+    "QGQ"
+  ],
+  "result": {
+    "id": "hardwrought:portal_stabilizer"
+  }
+}

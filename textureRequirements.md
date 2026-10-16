@@ -17,11 +17,36 @@ The dirt slab also uses a vanilla texture, deliberately: it is made from ordinar
 | 3 | Das Kompendium samt Oberfläche | umgesetzt |
 | 4 | Die Werkbank der zweiten Stufe | umgesetzt: 52 Block-Sprites für 13 Holzarten |
 | 5 | Schmieden: Esse, Blasebalg, Handschuhe, Schamotte, feuerfester Ziegel | Werkzeugteile umgesetzt; übrige Platzhalter siehe Abschnitt „Schmieden“ |
+| 6 | Aschkork und Rindenrüstung (Nether) | 11 Sprites und 2 Rüstungsschichten, heute aus Vanilla umgefärbte Platzhalter; siehe Abschnitt „Nether: der Aschenhain“ |
 
 Die Werkbank-Stufen haben ein eigenes Dokument, weil dort die Erzählung über die Stufen hinweg
 zusammenhängen muss: [`art_source/bench_tiers_style_prompt.md`](art_source/bench_tiers_style_prompt.md).
 Dort stehen die Dateipfade, die Beschreibung jeder Fläche, der fertige Imagegen-Prompt und warum
 für einen würfelförmigen Block kein Blockbench nötig ist.
+
+## Nether: der Aschenhain (Platzhalter)
+
+Alle Dateien unten sind heute aus Vanilla-Texturen umgefärbt (Akazie, Azalee, Leder), damit das Spiel sie zeigt.
+Aschkork ist ein Baum, der in der Hitze des Nethers wächst: aschgraue, rissige Rinde, in deren tiefsten Rissen
+noch Glut sitzt; innen korkfarbenes, warmes Holz; graugrüne, staubige Blätter, von denen weiße Asche rieselt.
+
+| Datei | Heute | Was es sein soll |
+| --- | --- | --- |
+| `textures/block/ashcork_log.png` | Akazienstamm umgefärbt | Aschgraue, tief gefurchte Rinde; in einzelnen Furchen ein schmaler orangeroter Glutstreifen. |
+| `textures/block/ashcork_log_top.png` | Akazien-Stirnseite umgefärbt | Korkfarbene Jahresringe, außen ein Ring aus grauer Rinde. |
+| `textures/block/stripped_ashcork_log.png`, `..._top.png` | umgefärbt | Das nackte Korkholz: warmes Hellbraun, porig, ohne Rinde. |
+| `textures/block/ashcork_planks.png` | Akazienbretter umgefärbt | Bretter aus Korkholz, heller und gröber als Eiche. |
+| `textures/block/ashcork_leaves.png` | Azaleenlaub umgefärbt | Kleine, graugrüne, wie mit Asche bestäubte Blätter; Lücken durchsichtig. |
+| `textures/block/ashcork_sapling.png` | Akaziensetzling umgefärbt | Ein dünner grauer Trieb mit wenigen staubigen Blättern. |
+| `textures/item/ashcork_bark.png` | Weidenrinde umgefärbt | Ein gebogenes Stück dicker, grauer Korkrinde mit hellem Innenrand. |
+| `textures/item/ashcork_{helmet,chestplate,leggings,boots}.png` | Lederrüstung umgefärbt | Rüstung aus vernähten Rindenplatten: grau außen, korkbraun an den Kanten, mit Schnur gebunden. |
+| `textures/entity/equipment/humanoid/ashcork.png`, `humanoid_leggings/ashcork.png` | Lederrüstung umgefärbt | Dieselbe Rindenrüstung am Körper. |
+| `textures/block/nether_grass.png`, `nether_grass_side.png` | Wirr-Nylium umgefärbt | Graues, staubiges Gras auf Netherrack; an der Seite hängt es in Fransen über den roten Stein. |
+| `textures/block/cast_obsidian.png` | Obsidian aufgehellt, mit Glutflecken | Schnell erstarrte Lava: glasiger und grauer als Obsidian, von feinen Rissen durchzogen, in denen orange Glut sitzt. |
+| `textures/block/nether_{coal,copper,tin,iron}_ore.png` | Erzflecken der Overworld-Erze auf Netherrack kopiert | Dieselben Erze, aber eingewachsen in rötlichen Netherrack; die Flecken etwas von Hitze angelaufen. |
+| `textures/item/blackstone_piece.png` | Bruchsteinstück in Schwarzstein-Farben | Ein scharfkantiger Brocken Schwarzstein, fast schwarz mit violettem Schimmer. |
+| `textures/block/provisional_portal_stabilizer{,_active,_top}.png` | Schwarzsteinziegel mit Magma-Fenster | Ein grober Block aus Schwarzstein, in der Mitte ein Herz aus Magma hinter Gittern; aus: erkaltet dunkel, an: glühend. |
+| `textures/block/portal_stabilizer{,_active,_top}.png` | Quarz mit Goldrand, Fenster aus weinendem Obsidian | Ein gefasster Quarzblock mit Goldbeschlägen, oben ein Anschluss für den Draht; in der Mitte ein Kristall, aus: matt violett, an: hell leuchtend. |
 
 ## How a placeholder is replaced
 

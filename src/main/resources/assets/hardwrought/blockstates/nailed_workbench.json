@@ -51,6 +51,10 @@
     "facing=north,wood=warped": {"model": "hardwrought:block/nailed_workbench_warped"},
     "facing=east,wood=warped": {"model": "hardwrought:block/nailed_workbench_warped", "y": 90},
     "facing=south,wood=warped": {"model": "hardwrought:block/nailed_workbench_warped", "y": 180},
-    "facing=west,wood=warped": {"model": "hardwrought:block/nailed_workbench_warped", "y": 270}
+    "facing=west,wood=warped": {"model": "hardwrought:block/nailed_workbench_warped", "y": 270},
+    "facing=north,wood=ashcork": {"model": "hardwrought:block/nailed_workbench_ashcork"},
+    "facing=east,wood=ashcork": {"model": "hardwrought:block/nailed_workbench_ashcork", "y": 90},
+    "facing=south,wood=ashcork": {"model": "hardwrought:block/nailed_workbench_ashcork", "y": 180},
+    "facing=west,wood=ashcork": {"model": "hardwrought:block/nailed_workbench_ashcork", "y": 270}
   }
 }

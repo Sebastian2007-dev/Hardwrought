@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "hardwrought:block/stripped_ashcork_log_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y": {
+      "model": "hardwrought:block/stripped_ashcork_log"
+    },
+    "axis=z": {
+      "model": "hardwrought:block/stripped_ashcork_log_horizontal",
+      "x": 90
+    }
+  }
+}

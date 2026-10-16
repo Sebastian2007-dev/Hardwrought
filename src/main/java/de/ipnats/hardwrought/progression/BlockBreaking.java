@@ -152,6 +152,11 @@ public final class BlockBreaking {
         if (state.is(BlockTags.DIRT)) return new ItemStack(ModItems.DIRT_BLOB, 2);
         if (state.is(Blocks.GRAVEL)) return new ItemStack(ModItems.FLINT_SHARD, 1);
         if (state.is(BlockTags.BASE_STONE_OVERWORLD)) return new ItemStack(ModItems.COBBLESTONE_PIECE, 1);
+        // Crumbly enough to come away whole: the first shelter of a start over in the Nether is built of it.
+        if (state.is(Blocks.NETHERRACK) || state.is(de.ipnats.hardwrought.nether.AshGrove.NETHER_GRASS)
+                || state.is(BlockTags.NYLIUM)) {
+            return new ItemStack(Blocks.NETHERRACK);
+        }
         return ItemStack.EMPTY;
     }
 }

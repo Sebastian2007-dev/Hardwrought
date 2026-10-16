@@ -307,6 +307,10 @@ public class SmelteryControllerBlockEntity extends BlockEntity implements Contai
         int capacity = capacity();
         for (int i = 0; i < MELT_SLOTS; i++) {
             ItemStack stack = items.get(1 + i);
+            if (de.ipnats.hardwrought.nether.CastObsidian.tempers(stack)) {
+                temper(i);
+                continue;
+            }
             MoltenMetals.Melt melt = stack.isEmpty() ? null : MoltenMetals.melt(stack.getItem());
             if (melt == null) {
                 progress[i] = 0;
@@ -332,6 +336,25 @@ public class SmelteryControllerBlockEntity extends BlockEntity implements Contai
             fluids.merge(melt.material(), melt.amount(), Integer::sum);
             dirty = true;
         }
+    }
+
+    /**
+     * Cast obsidian does not melt: held hot enough for long enough it tempers into real obsidian where
+     * it lies, which is the only way to a portal frame that does not mean mining one (see CastObsidian).
+     */
+    private void temper(int i) {
+        if (temperature < de.ipnats.hardwrought.nether.CastObsidian.TEMPER_CELSIUS) {
+            progress[i] = 0;
+            state[i] = TOO_COLD;
+            return;
+        }
+        int needed = de.ipnats.hardwrought.nether.CastObsidian.TEMPER_TICKS;
+        state[i] = Math.min(999, progress[i] * 1000 / needed);
+        if (++progress[i] < needed) return;
+        progress[i] = 0;
+        state[i] = 0;
+        items.set(1 + i, new ItemStack(net.minecraft.world.item.Items.OBSIDIAN));
+        dirty = true;
     }
 
     private void alloy(ServerLevel level) {
@@ -478,7 +501,8 @@ public class SmelteryControllerBlockEntity extends BlockEntity implements Contai
     @Override
     public boolean canPlaceItem(int slot, ItemStack stack) {
         if (slot == FUEL_SLOT) return fuelTicks(stack) > 0;
-        return items.get(slot).isEmpty() && MoltenMetals.melt(stack.getItem()) != null;
+        return items.get(slot).isEmpty() && (MoltenMetals.melt(stack.getItem()) != null
+                || de.ipnats.hardwrought.nether.CastObsidian.tempers(stack));
     }
 
     @Override

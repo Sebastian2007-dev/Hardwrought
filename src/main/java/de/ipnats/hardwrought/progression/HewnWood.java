@@ -12,7 +12,8 @@ import java.util.Locale;
  * exactly the kind of detail that makes a block look pasted into the world, so the wood travels with
  * the block as a state and the model follows it.
  *
- * @param texture the block the lower half borrows its bark from
+ * @param texture the block the lower half borrows its bark from; a bare name is a vanilla block, a
+ *                namespaced one a log this mod adds itself
  */
 public enum HewnWood implements StringRepresentable {
     OAK("oak", "oak_log"),
@@ -27,7 +28,8 @@ public enum HewnWood implements StringRepresentable {
     CHERRY("cherry", "cherry_log"),
     BAMBOO("bamboo", "bamboo_block"),
     CRIMSON("crimson", "crimson_stem"),
-    WARPED("warped", "warped_stem");
+    WARPED("warped", "warped_stem"),
+    ASHCORK("ashcork", "hardwrought:ashcork_log");
 
     private final String name;
     private final String texture;
@@ -42,7 +44,7 @@ public enum HewnWood implements StringRepresentable {
         return name;
     }
 
-    /** The vanilla block whose bark and end grain this wood is drawn with. */
+    /** The block whose bark and end grain this wood is drawn with, bare for vanilla, namespaced otherwise. */
     public String texture() {
         return texture;
     }

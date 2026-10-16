@@ -116,6 +116,10 @@ public final class Smelting {
                 put(metal.id(), ModMetals.raw(metal), ModMetals.ore(metal), ModMetals.deepslateOre(metal),
                         OrePowders.powder(metal), ModMetals.ingot(metal));
             }
+            // The Nether's ores melt as the metal they hold, like their overworld kin.
+            for (var ore : de.ipnats.hardwrought.nether.NetherOres.Ore.values()) {
+                if (ore.material() != null) put(ore.material(), ore.block());
+            }
             for (Item stock : de.ipnats.hardwrought.smithing.MetalStock.all()) {
                 put(de.ipnats.hardwrought.smithing.MetalStock.materialOf(stock), stock);
             }

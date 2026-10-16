@@ -12,7 +12,17 @@ import java.util.List;
 
 /** Builds a hewn workbench that still reads as an ordinary vanilla log at first glance. */
 public final class HewnWorkbenchTextureGenerator {
-    private record Wood(String id, String vanilla) { }
+    /**
+     * A timber and the log its textures are read from. Vanilla logs come out of the client jar; a
+     * log this mod adds itself names its namespace and is read from the mod's own texture folder.
+     */
+    private record Wood(String id, String vanilla, String namespace) {
+        Wood(String id, String vanilla) { this(id, vanilla, "minecraft"); }
+
+        Path source(Path vanillaBlocks, Path modBlocks) {
+            return namespace.equals("minecraft") ? vanillaBlocks : modBlocks;
+        }
+    }
 
     private static final List<Wood> WOODS = List.of(
             new Wood("oak", "oak_log"),
@@ -27,7 +37,8 @@ public final class HewnWorkbenchTextureGenerator {
             new Wood("cherry", "cherry_log"),
             new Wood("bamboo", "bamboo_block"),
             new Wood("crimson", "crimson_stem"),
-            new Wood("warped", "warped_stem")
+            new Wood("warped", "warped_stem"),
+            new Wood("ashcork", "ashcork_log", "hardwrought")
     );
 
     public static void main(String[] args) throws Exception {
@@ -51,9 +62,10 @@ public final class HewnWorkbenchTextureGenerator {
 
         for (Wood wood : WOODS) {
             String stripped = "stripped_" + wood.vanilla;
-            BufferedImage vanillaBark = firstFrame(read(vanillaBlocks.resolve(wood.vanilla + ".png")));
-            BufferedImage vanillaSide = firstFrame(read(vanillaBlocks.resolve(stripped + ".png")));
-            BufferedImage vanillaTop = firstFrame(read(vanillaBlocks.resolve(stripped + "_top.png")));
+            Path logs = wood.source(vanillaBlocks, textureRoot);
+            BufferedImage vanillaBark = firstFrame(read(logs.resolve(wood.vanilla + ".png")));
+            BufferedImage vanillaSide = firstFrame(read(logs.resolve(stripped + ".png")));
+            BufferedImage vanillaTop = firstFrame(read(logs.resolve(stripped + "_top.png")));
             BufferedImage top = workedTop(craftingTop, vanillaTop, vanillaSide, oakPalette);
             BufferedImage side = workedSide(vanillaBark, vanillaSide, wood.id.hashCode());
 
@@ -176,10 +188,10 @@ public final class HewnWorkbenchTextureGenerator {
                 {
                   "parent": "minecraft:block/block",
                   "textures": {
-                    "bark_top": "minecraft:block/%s_top",
+                    "bark_top": "%s:block/%s_top",
                     "worked": "hardwrought:block/hewn_workbench_side_%s",
                     "top": "hardwrought:block/hewn_workbench_top_%s",
-                    "particle": "minecraft:block/%s"
+                    "particle": "%s:block/%s"
                   },
                   "elements": [
                     {
@@ -196,7 +208,7 @@ public final class HewnWorkbenchTextureGenerator {
                     }
                   ]
                 }
-                """.formatted(wood.vanilla, wood.id, wood.id, wood.vanilla);
+                """.formatted(wood.namespace, wood.vanilla, wood.id, wood.id, wood.namespace, wood.vanilla);
         Files.writeString(path, model);
     }
 

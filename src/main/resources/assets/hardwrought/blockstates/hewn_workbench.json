@@ -38,6 +38,9 @@
     },
     "wood=warped": {
       "model": "hardwrought:block/hewn_workbench_warped"
+    },
+    "wood=ashcork": {
+      "model": "hardwrought:block/hewn_workbench_ashcork"
     }
   }
 }

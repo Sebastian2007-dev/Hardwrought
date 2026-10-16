@@ -32,6 +32,7 @@
     {
       "id": "hardwrought:deepslate_adamantium_ore",
       "required": false
-    }
+    },
+    "hardwrought:cast_obsidian"
   ]
 }

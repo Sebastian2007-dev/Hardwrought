@@ -22,6 +22,9 @@ public final class FunGameTests {
                 "Anyone else gets either");
         helper.assertTrue(StampiEasterEgg.WORDS.containsAll(java.util.List.of("SCHMELZERIE", "SCHMELZERY", "SCHMELZERI")),
                 "All three spellings call them up");
+        helper.assertTrue(StampiEasterEgg.isMaker("StampiCraft") && StampiEasterEgg.isMaker("StampiGames")
+                        && !StampiEasterEgg.isMaker("Steve"),
+                "Only the two makers lose the NPC label");
 
         var types = helper.getLevel().registryAccess().lookupOrThrow(Registries.DAMAGE_TYPE);
         var player = helper.makeMockServerPlayerInLevel();

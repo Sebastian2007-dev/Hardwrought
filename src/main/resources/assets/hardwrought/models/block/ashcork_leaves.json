@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/leaves",
+  "textures": {
+    "all": "hardwrought:block/ashcork_leaves"
+  }
+}

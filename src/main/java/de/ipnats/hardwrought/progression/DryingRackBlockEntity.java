@@ -27,12 +27,17 @@ import java.util.Map;
  * <p>Drying needs the sun: daylight, open sky above the rack, and no rain. Only then does it go on,
  * so a fibre hung up in the evening is still green in the morning. {@link #DRY_TICKS} of good drying
  * is half a day — hung up in the morning, twisted into cord by the afternoon.
+ *
+ * <p>In the Nether there is no sun and no need of one: the heat dries everything, under any roof and
+ * at any hour, {@link #NETHER_RATE} times as fast. A start over there is not held up a day for cord.
  */
 public class DryingRackBlockEntity extends BlockEntity {
     public static final int SLOTS = 4;
     /** Ticks of sun, open sky and dry weather one piece needs. Half of a Minecraft day. */
     public static final int DRY_TICKS = 6000;
     private static final int STEP = 20;
+    /** How many times faster the Nether's heat dries than the overworld's sun. */
+    public static final int NETHER_RATE = 6;
 
     /** What each thing hung up becomes once it is dry. */
     private static final Map<Item, Item> DRIES_INTO = Map.of(ModItems.GREEN_FIBRE, ModItems.LEAF_STRING,
@@ -58,6 +63,7 @@ public class DryingRackBlockEntity extends BlockEntity {
      * roof or a tree's crown both count — and no rain.
      */
     public static boolean drying(Level level, BlockPos pos) {
+        if (level.dimension() == Level.NETHER) return true;
         if (!level.isBrightOutside() || level.isRainingAt(pos.above())) return false;
         int top = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, pos.getX(), pos.getZ());
         return top <= pos.getY() + 1;
@@ -116,7 +122,7 @@ public class DryingRackBlockEntity extends BlockEntity {
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, DryingRackBlockEntity rack) {
         if ((level.getGameTime() + pos.asLong()) % STEP != 0) return;
-        if (drying(level, pos)) rack.dry(STEP);
+        if (drying(level, pos)) rack.dry(level.dimension() == Level.NETHER ? STEP * NETHER_RATE : STEP);
     }
 
     private void changed() {

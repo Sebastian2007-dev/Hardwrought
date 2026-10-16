@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      {"model": "hardwrought:block/nether_grass"},
+      {"model": "hardwrought:block/nether_grass", "y": 90},
+      {"model": "hardwrought:block/nether_grass", "y": 180},
+      {"model": "hardwrought:block/nether_grass", "y": 270}
+    ]
+  }
+}

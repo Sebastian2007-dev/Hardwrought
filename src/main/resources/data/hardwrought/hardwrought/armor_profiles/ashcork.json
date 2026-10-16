@@ -1,0 +1,13 @@
+{
+  "items": [
+    "hardwrought:ashcork_helmet",
+    "hardwrought:ashcork_chestplate",
+    "hardwrought:ashcork_leggings",
+    "hardwrought:ashcork_boots"
+  ],
+  "slash_resistance": 0.1,
+  "pierce_resistance": 0.05,
+  "blunt_resistance": 0.15,
+  "stamina_drain": 0.04,
+  "insulation": 0.3
+}

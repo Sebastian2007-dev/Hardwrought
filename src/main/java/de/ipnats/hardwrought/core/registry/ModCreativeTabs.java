@@ -35,6 +35,7 @@ public final class ModCreativeTabs {
                 output.accept(ModItems.FILLED_WATERSKIN);
                 output.accept(ModItems.WATER_BOWL);
                 de.ipnats.hardwrought.health.Herbs.items().forEach(output::accept);
+                de.ipnats.hardwrought.nether.Ashcork.items().forEach(output::accept);
                 de.ipnats.hardwrought.water.WaterTreatmentBlocks.items().forEach(output::accept);
                 output.accept(ModItems.SAFETY_LAMP);
                 output.accept(ModItems.STRUCTURAL_ANCHOR);
