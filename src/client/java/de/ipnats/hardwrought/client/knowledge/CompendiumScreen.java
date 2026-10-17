@@ -84,6 +84,8 @@ public class CompendiumScreen extends Screen {
     private static final int SEARCH_TOP = PAPER_TOP + 2;
     private static final int SHELF_HEADING_TOP = SEARCH_TOP + 23;
     private static final int GRID_TOP = SHELF_HEADING_TOP + 13;
+    /** As many structures to a page as fit above the page buttons; the rest on the pages after. */
+    private static final int MULTIBLOCK_ROWS = (CONTENT_BOTTOM - GRID_TOP) / MULTIBLOCK_ROW;
     /** As many rows as fit between the heading and the controls. */
     private static final int GRID_ROWS = (CONTENT_BOTTOM - GRID_TOP - SLOT) / GRID_STEP + 1;
     private static final int PER_PAGE = GRID_COLUMNS * GRID_ROWS;
@@ -333,7 +335,9 @@ public class CompendiumScreen extends Screen {
             return Math.max(1, current.journal().size());
         }
         if (mode == CompendiumPagePayload.MODE_SHELF) {
-            if (MultiblockSection.open()) return 1;
+            if (MultiblockSection.open()) {
+                return Math.max(1, (de.ipnats.hardwrought.knowledge.Multiblocks.ALL.size() + MULTIBLOCK_ROWS - 1) / MULTIBLOCK_ROWS);
+            }
             return Math.max(1, (current.entries().size() + PER_PAGE - 1) / PER_PAGE);
         }
         int method = effectiveMethod(current);
@@ -997,7 +1001,7 @@ public class CompendiumScreen extends Screen {
     /** The multiblock section: one row a structure, its name and its look where it is known. */
     private void drawMultiblocks(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         int y = top + GRID_TOP;
-        for (var multiblock : de.ipnats.hardwrought.knowledge.Multiblocks.ALL) {
+        for (var multiblock : multiblocksOnPage()) {
             boolean readable = MultiblockSection.readable(multiblock);
             boolean hovered = readable && inside(mouseX, mouseY, rightContentX(), y, CONTENT_WIDTH, MULTIBLOCK_ROW);
             if (hovered) graphics.fill(rightContentX() - 2, y - 1, rightContentX() + CONTENT_WIDTH, y + MULTIBLOCK_ROW - 1, 0x20000000);
@@ -1007,6 +1011,13 @@ public class CompendiumScreen extends Screen {
             ink(graphics, name, rightContentX() + 20, y + 4, readable ? TEXT_COLOR : FADED_COLOR);
             y += MULTIBLOCK_ROW;
         }
+    }
+
+    /** The structures on the page turned to. */
+    private List<de.ipnats.hardwrought.knowledge.Multiblocks.Multiblock> multiblocksOnPage() {
+        var all = de.ipnats.hardwrought.knowledge.Multiblocks.ALL;
+        int from = Math.min(all.size(), page * MULTIBLOCK_ROWS);
+        return all.subList(from, Math.min(all.size(), from + MULTIBLOCK_ROWS));
     }
 
     /** The structure's face in the list: the first block of its legend the player knows. */
@@ -1024,7 +1035,7 @@ public class CompendiumScreen extends Screen {
     /** Opens the structure the row under the mouse shows, if it can be read. */
     private boolean clickMultiblock(double mouseX, double mouseY) {
         int y = top + GRID_TOP;
-        for (var multiblock : de.ipnats.hardwrought.knowledge.Multiblocks.ALL) {
+        for (var multiblock : multiblocksOnPage()) {
             if (inside(mouseX, mouseY, rightContentX(), y, CONTENT_WIDTH, MULTIBLOCK_ROW)) {
                 if (!MultiblockSection.readable(multiblock)) return true;
                 minecraft.gui.setScreen(new MultiblockScreen(this, multiblock, MultiblockSection.studied()));

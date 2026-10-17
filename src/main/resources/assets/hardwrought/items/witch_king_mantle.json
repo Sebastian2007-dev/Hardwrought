@@ -1,6 +1,14 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "hardwrought:item/witch_king_mantle"
+    "type": "minecraft:condition",
+    "property": "minecraft:broken",
+    "on_false": {
+      "type": "minecraft:model",
+      "model": "hardwrought:item/witch_king_mantle"
+    },
+    "on_true": {
+      "type": "minecraft:model",
+      "model": "hardwrought:item/witch_king_mantle_broken"
+    }
   }
 }

@@ -24,7 +24,7 @@ import net.minecraft.world.phys.Vec3;
  * it reaches — magic harm and limbs gone heavy. It can be outrun for a while, and struck out of the air.
  */
 public class SoulOrb extends Projectile {
-    static final float DAMAGE = 5.0f;
+    static final float DAMAGE = 6.0f;
     static final double SPEED = 0.32;
     static final int MAX_AGE = 180;
 
@@ -64,7 +64,9 @@ public class SoulOrb extends Projectile {
         if (!(level() instanceof ServerLevel level)) return;
         Entity owner = getOwner();
         DamageSource source = damageSources().indirectMagic(this, owner instanceof LivingEntity living ? living : this);
-        if (result.getEntity().hurtServer(level, source, DAMAGE) && result.getEntity() instanceof LivingEntity victim) {
+        boolean hurt = owner instanceof WitchKing && result.getEntity() instanceof LivingEntity living
+                ? WitchKing.rend(level, living, this, DAMAGE, 0) : result.getEntity().hurtServer(level, source, DAMAGE);
+        if (hurt && result.getEntity() instanceof LivingEntity victim) {
             victim.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 60, 1), this);
         }
         burst(level);

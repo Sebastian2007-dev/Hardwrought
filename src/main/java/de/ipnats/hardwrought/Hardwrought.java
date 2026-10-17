@@ -51,6 +51,7 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.water.BucketMachinery.initialize();
 		de.ipnats.hardwrought.oil.ModFluids.initialize();
 		ModBlocks.initialize();
+		de.ipnats.hardwrought.ritual.RitualContent.initialize();
 		net.fabricmc.fabric.api.registry.FlammableBlockRegistry.getDefaultInstance().add(ModBlocks.CRUDE_OIL,
 				de.ipnats.hardwrought.oil.CrudeOilBlock.CATCH_CHANCE, de.ipnats.hardwrought.oil.CrudeOilBlock.BURN_CHANCE);
 		de.ipnats.hardwrought.oil.OilLakes.initialize();
@@ -81,6 +82,7 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.survival.GoldenApples.initialize();
 		de.ipnats.hardwrought.survival.Adrenaline.initialize();
 		de.ipnats.hardwrought.knowledge.MultiblockKnowledge.initialize();
+		de.ipnats.hardwrought.knowledge.MultiblockPlacing.initialize();
 		de.ipnats.hardwrought.fun.StampiEasterEgg.initialize();
 		de.ipnats.hardwrought.nether.NetherCrossing.initialize();
 		de.ipnats.hardwrought.nether.Ashcork.initialize();
@@ -98,6 +100,10 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.underworld.GraveUndead.initialize();
 		de.ipnats.hardwrought.underworld.Graveyard.initialize();
 		de.ipnats.hardwrought.witchking.WitchKingContent.initialize();
+		de.ipnats.hardwrought.end.EndRules.initialize();
+		de.ipnats.hardwrought.end.BrokenIsland.initialize();
+		de.ipnats.hardwrought.end.dragon.VoidDragon.initialize();
+		de.ipnats.hardwrought.enchanting.Soulbound.initialize();
 		de.ipnats.hardwrought.water.WaterTreatmentBlocks.initialize();
 		de.ipnats.hardwrought.gasline.GasLines.initialize();
 		de.ipnats.hardwrought.refining.RefineryBlocks.initialize();

@@ -22,6 +22,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.rendertype.RenderType;
+import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.joml.Vector4fc;
 import org.lwjgl.system.MemoryStack;
@@ -55,7 +56,14 @@ public final class FxPost {
     private static final RenderPipeline BLOOM_DOWN = post("bloom_down", GpuFormat.RGBA16_FLOAT, Optional.empty(), false, "InSampler");
     private static final RenderPipeline BLOOM_UP = post("bloom_up", GpuFormat.RGBA16_FLOAT, Optional.of(BlendFunction.ADDITIVE), false, "InSampler");
     private static final RenderPipeline COMPOSITE = post("composite", GpuFormat.RGBA8_UNORM, Optional.empty(), true,
-            "SceneSampler", "BloomSampler", "DistortSampler");
+            "SceneSampler", "BloomSampler", "DistortSampler", "DepthSampler");
+    /** The composite uniform: its parameters, the void tear, and two matrices. */
+    private static final int COMPOSITE_SIZE = 16 + 16 + 64 + 64;
+    /** How fast the tear in the void opens and closes, a share a frame. */
+    private static final float TEAR_EASE = 0.02f;
+
+    /** How torn the void is to be (see {@link #voidTear}), and how torn it is this frame. */
+    private static float tearWanted, tear;
 
     /** A texture with its view, remade whenever the window changes size. */
     private static final class Target {
@@ -137,7 +145,9 @@ public final class FxPost {
         }
         Batch warpBatch = warp.size > 0 ? new Batch(FxRenderTypes.DISTORT, vertexCount, warp.size / 8) : null;
         if (warpBatch != null) vertexCount += warpBatch.vertexCount;
-        if (glowBatches.isEmpty() && warpBatch == null && aberration < 0.001f && Math.abs(saturation) < 0.001f) return;
+        tear += (tearWanted - tear) * TEAR_EASE;
+        if (tear < 0.001f) tear = 0;
+        if (glowBatches.isEmpty() && warpBatch == null && aberration < 0.001f && Math.abs(saturation) < 0.001f && tear <= 0) return;
 
         RenderTarget main = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         if (main.getColorTexture() == null || main.getDepthTextureView() == null) return;
@@ -195,9 +205,10 @@ public final class FxPost {
         }
         // 4. The scene through the distortion, with the bloom over it.
         encoder.copyTextureToTexture(main.getColorTexture(), scene.texture, 0, 0, 0, 0, 0, width, height);
-        writeCompositeUniform(encoder, aberration, saturation);
+        writeCompositeUniform(encoder, aberration, saturation, context);
         fullscreen(encoder, COMPOSITE, main.getColorTextureView(), Optional.empty(), linear, true,
-                "SceneSampler", scene.view, "BloomSampler", bloom[0].view, "DistortSampler", distort.view);
+                "SceneSampler", scene.view, "BloomSampler", bloom[0].view, "DistortSampler", distort.view,
+                "DepthSampler", main.getDepthTextureView());
     }
 
     private static void fullscreen(CommandEncoder encoder, RenderPipeline pipeline, GpuTextureView output,
@@ -214,13 +225,31 @@ public final class FxPost {
         }
     }
 
-    private static void writeCompositeUniform(CommandEncoder encoder, float aberration, float saturation) {
+    /**
+     * How torn the void is to be, 0 to 1: the End's dragon raging (see {@code DragonFx}). It opens and
+     * closes over a few seconds rather than at once.
+     */
+    public static void voidTear(float wanted) {
+        tearWanted = Math.clamp(wanted, 0, 1);
+    }
+
+    private static void writeCompositeUniform(CommandEncoder encoder, float aberration, float saturation, LevelRenderContext context) {
         if (compositeUniform == null) {
             compositeUniform = RenderSystem.getDevice().createBuffer(() -> "Hardwrought FX composite",
-                    GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, 16);
+                    GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, COMPOSITE_SIZE);
         }
+        var camera = context.levelState().cameraRenderState;
+        Matrix4f projection = camera.projectionMatrix == null ? new Matrix4f() : new Matrix4f(camera.projectionMatrix);
+        Matrix4f rotation = camera.viewRotationMatrix == null ? new Matrix4f() : camera.viewRotationMatrix;
+        Matrix4f invViewProj = new Matrix4f(projection).mul(rotation).invert();
+        Matrix4f invProj = new Matrix4f(projection).invert();
+        var fog = camera.fogData;
+        float fogStart = fog == null ? 64 : Math.min(fog.environmentalStart, fog.renderDistanceStart);
+        float fogEnd = fog == null ? 128 : Math.max(fogStart + 1, Math.min(fog.environmentalEnd, fog.renderDistanceEnd));
+        float seconds = (System.currentTimeMillis() % 3_600_000L) / 1000f;
         try (MemoryStack stack = MemoryStack.stackPush()) {
-            ByteBuffer data = Std140Builder.onStack(stack, 16).putVec4(BLOOM_STRENGTH, aberration, saturation, 0).get();
+            ByteBuffer data = Std140Builder.onStack(stack, COMPOSITE_SIZE).putVec4(BLOOM_STRENGTH, aberration, saturation, 0)
+                    .putVec4(tear, seconds, fogStart * 0.6f, fogEnd).putMat4f(invViewProj).putMat4f(invProj).get();
             encoder.writeToBuffer(compositeUniform.slice(), data);
         }
     }

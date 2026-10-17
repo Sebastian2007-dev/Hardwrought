@@ -109,6 +109,76 @@ public final class WitchKingGameTests {
     }
 
     @GameTest
+    public void theMantleHoversUntilItsChargeIsSpentAndGivesOutTooHigh(GameTestHelper helper) {
+        var player = (net.minecraft.server.level.ServerPlayer) helper.makeMockServerPlayer(net.minecraft.world.level.GameType.SURVIVAL);
+        player.setItemSlot(EquipmentSlot.CHEST, new ItemStack(WitchKingContent.MANTLE));
+        BlockPos air = helper.absolutePos(new BlockPos(2, 6, 2));
+        player.snapTo(air.getX() + 0.5, air.getY(), air.getZ() + 0.5, 0, 0);
+        player.setOnGround(false);
+        de.ipnats.hardwrought.witchking.MantleFlight.requestForTesting(player, true);
+        helper.assertTrue(de.ipnats.hardwrought.witchking.MantleFlight.hovering(player), "In the air, at the key, it hovers");
+        for (int i = 0; i < de.ipnats.hardwrought.witchking.MantleFlight.HOVER_TICKS / 2; i++) {
+            de.ipnats.hardwrought.witchking.MantleFlight.stepForTesting(player);
+        }
+        float half = de.ipnats.hardwrought.witchking.MantleFlight.chargeForTesting(player);
+        helper.assertTrue(half > 0.4f && half < 0.6f, "Hovering spends its charge: " + half);
+        for (int i = 0; i < de.ipnats.hardwrought.witchking.MantleFlight.HOVER_TICKS; i++) {
+            de.ipnats.hardwrought.witchking.MantleFlight.stepForTesting(player);
+        }
+        helper.assertFalse(de.ipnats.hardwrought.witchking.MantleFlight.hovering(player), "and spent, it drops its wearer");
+        de.ipnats.hardwrought.witchking.MantleFlight.requestForTesting(player, true);
+        helper.assertFalse(de.ipnats.hardwrought.witchking.MantleFlight.hovering(player), "nor hovers again until it has filled");
+        player.setOnGround(true);
+        for (int i = 0; i < de.ipnats.hardwrought.witchking.MantleFlight.REFILL_TICKS; i++) {
+            de.ipnats.hardwrought.witchking.MantleFlight.stepForTesting(player);
+        }
+        helper.assertTrue(de.ipnats.hardwrought.witchking.MantleFlight.chargeForTesting(player) >= 0.99f, "Standing, it fills again");
+        player.setOnGround(false);
+        de.ipnats.hardwrought.witchking.MantleFlight.requestForTesting(player, true);
+        double ceiling = de.ipnats.hardwrought.witchking.MantleFlight.ceiling(player);
+        player.snapTo(player.getX(), ceiling + 2, player.getZ(), 0, 0);
+        de.ipnats.hardwrought.witchking.MantleFlight.stepForTesting(player);
+        helper.assertFalse(de.ipnats.hardwrought.witchking.MantleFlight.hovering(player), "Too high, it gives out");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void hisMagicTearsThroughRunedArmour(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        var protection = level.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT)
+                .getOrThrow(net.minecraft.world.item.enchantment.Enchantments.PROTECTION);
+        var shielded = helper.spawn(EntityTypes.ZOMBIE, new BlockPos(1, 1, 1));
+        var rent = helper.spawn(EntityTypes.ZOMBIE, new BlockPos(3, 1, 1));
+        for (var zombie : java.util.List.of(shielded, rent)) {
+            zombie.setNoAi(true);
+            for (EquipmentSlot slot : new EquipmentSlot[] {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
+                ItemStack piece = new ItemStack(switch (slot) {
+                    case HEAD -> net.minecraft.world.item.Items.DIAMOND_HELMET;
+                    case CHEST -> net.minecraft.world.item.Items.DIAMOND_CHESTPLATE;
+                    case LEGS -> net.minecraft.world.item.Items.DIAMOND_LEGGINGS;
+                    default -> net.minecraft.world.item.Items.DIAMOND_BOOTS;
+                });
+                piece.enchant(protection, 6);
+                zombie.setItemSlot(slot, piece);
+            }
+        }
+        float before = shielded.getHealth();
+        shielded.hurtServer(level, level.damageSources().magic(), 10);
+        float byMagic = before - shielded.getHealth();
+        before = rent.getHealth();
+        WitchKing.rend(level, rent, null, 10, 0);
+        float byHim = before - rent.getHealth();
+        helper.assertTrue(byMagic < 3, "Runes hold off nearly all of other magic: " + byMagic);
+        helper.assertTrue(byHim > 5.5f && byHim < 6.5f, "but only half against his: " + byHim);
+        before = rent.getHealth();
+        rent.damageCooldownTime = 0;
+        WitchKing.rend(level, rent, null, 10, 0.5f);
+        float blow = before - rent.getHealth();
+        helper.assertTrue(blow > 2 && blow < byHim, "Against his blows armour holds, half of it: " + blow);
+        helper.succeed();
+    }
+
+    @GameTest
     public void theMantleDrivesItsWearerOn(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         var player = helper.makeMockServerPlayerInLevel();
@@ -120,6 +190,12 @@ public final class WitchKingGameTests {
         for (int i = 0; i < 24; i++) WitchKingMantle.drive(player, level, player.getItemBySlot(EquipmentSlot.CHEST));
         helper.assertTrue(player.getDeltaMovement().z > 1.0, "It drives on along the gaze: " + player.getDeltaMovement());
         helper.assertTrue(mantle.has(net.minecraft.core.component.DataComponents.GLIDER), "and glides as elytra do");
+        var runes = de.ipnats.hardwrought.enchanting.RuneEnchanting.suited(level, mantle).stream()
+                .map(rune -> rune.unwrapKey().orElseThrow()).toList();
+        helper.assertTrue(runes.contains(net.minecraft.world.item.enchantment.Enchantments.UNBREAKING)
+                        && runes.contains(net.minecraft.world.item.enchantment.Enchantments.MENDING)
+                        && runes.contains(net.minecraft.world.item.enchantment.Enchantments.PROTECTION),
+                "Runes can be written on it, as on a chestplate: " + runes);
         helper.succeed();
     }
 }

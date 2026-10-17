@@ -67,7 +67,9 @@ public final class Wounds {
     public static boolean cuts(DamageSource source) {
         return !source.is(DamageTypeTags.IS_FIRE) && !source.is(DamageTypeTags.IS_FREEZING)
                 && !source.is(DamageTypeTags.IS_DROWNING) && !source.is(DamageTypes.MAGIC)
-                && !source.is(DamageTypes.INDIRECT_MAGIC) && !source.is(DamageTypes.WITHER);
+                && !source.is(DamageTypes.INDIRECT_MAGIC) && !source.is(DamageTypes.WITHER)
+                && !source.is(de.ipnats.hardwrought.core.registry.ModDamageTypes.HEX)
+                && !source.is(de.ipnats.hardwrought.core.registry.ModDamageTypes.VOID);
     }
 
     /** How bad a wound a blow this hard leaves, 0 to 2; a bite one level worse. */

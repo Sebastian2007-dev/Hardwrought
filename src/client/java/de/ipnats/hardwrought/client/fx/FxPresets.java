@@ -1,6 +1,7 @@
 package de.ipnats.hardwrought.client.fx;
 
 import de.ipnats.hardwrought.client.fx.sound.FxSounds;
+import de.ipnats.hardwrought.client.witchking.WitchKingFx;
 import de.ipnats.hardwrought.fx.FxEffect;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.client.Minecraft;
@@ -68,6 +69,16 @@ public final class FxPresets {
             case FIRESTORM -> FxComboPresets.firestorm(fx, pos, color, s);
             case SHOCKWAVE -> FxComboPresets.shockwave(fx, pos, color, s);
             case SHOWCASE -> showcase(fx, follow != null ? follow : Minecraft.getInstance().player);
+            case HEX_MARK -> WitchKingFx.mark(fx, pos, color, s, (int) Math.round(target.y - pos.y));
+            case HEX_ERUPTION -> WitchKingFx.eruption(fx, pos, color, s);
+            case HEX_LANCE_CHARGE -> WitchKingFx.lanceCharge(fx, pos, target, color);
+            case HEX_LANCE -> WitchKingFx.lance(fx, pos, target, color);
+            case END_PLATFORM -> de.ipnats.hardwrought.client.end.EndClient.platform(fx, pos, color, s, (int) Math.round(target.y - pos.y));
+            case DRAGON_SHIELDED, DRAGON_GUST_CHARGE, DRAGON_GUST, DRAGON_LOCK, DRAGON_STOMP, DRAGON_ROAR, DRAGON_LAND, VOID_CLOUD, VOID_PULL,
+                 FRAGMENT_CRUMBLE, CRYSTAL_WARD_HIT, CRYSTAL_WARD_BREAK -> de.ipnats.hardwrought.client.end.DragonFx.play(fx, effect, pos, target, color, s, follow);
+            case RITUAL_IGNITE, RITUAL_BEAM, RITUAL_RING, RITUAL_SKYBEAM, RITUAL_CONVERGE, RITUAL_DISSOLVE, RITUAL_FINALE,
+                 RITUAL_WARD, RITUAL_APOTHEOSIS ->
+                    de.ipnats.hardwrought.client.ritual.RitualFx.play(fx, effect, pos, target, color, s);
             case SHAKE -> FxScreen.shake(0.5f * s);
             case FLASH -> {
                 FxScreen.flash(color, Math.min(1, 0.7f * s), 450);

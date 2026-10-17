@@ -5,6 +5,7 @@ import de.ipnats.hardwrought.client.fx.FxDecal;
 import de.ipnats.hardwrought.client.fx.FxEngine;
 import de.ipnats.hardwrought.client.fx.FxLight;
 import de.ipnats.hardwrought.client.fx.FxParticle;
+import de.ipnats.hardwrought.client.fx.FxScreen;
 import de.ipnats.hardwrought.witchking.HexBlade;
 import de.ipnats.hardwrought.witchking.SoulOrb;
 import de.ipnats.hardwrought.witchking.WitchKing;
@@ -28,7 +29,7 @@ import java.util.Map;
  * the rest answers the events he sends when something happens.
  */
 public final class WitchKingFx {
-    static final int VIOLET = 0xFFB25CFF, DEEP = 0xFF7A2CFF, SOUL = 0xFF5CE1FF, GOLD = 0xFFFFC94A, PALE = 0xFFF0E0FF;
+    static final int VIOLET = 0xFFB25CFF, DEEP = 0xFF7A2CFF, SOUL = 0xFF5CE1FF, GOLD = 0xFFFFC94A, PALE = 0xFFF0E0FF, BLOOD = 0xFFFF3C6A;
     private static final Vec3 UP = new Vec3(0, 1, 0);
     private static final RandomSource RANDOM = RandomSource.create();
 
@@ -111,6 +112,14 @@ public final class WitchKingFx {
         else {
             FxDecal ward = WARD.remove(king.getId());
             if (ward != null) ward.kill();
+        }
+        if (king.enraged()) {
+            // Raging: his light turned to blood, embers torn off him.
+            light.color(BLOOD);
+            Vec3 at = middle.add(RANDOM.nextGaussian() * king.getBbWidth() * 0.4, RANDOM.nextGaussian() * king.getBbHeight() * 0.3,
+                    RANDOM.nextGaussian() * king.getBbWidth() * 0.4);
+            fx.particle(at).shape(FxParticle.Shape.SPARK).velocity(RANDOM.nextGaussian() * 0.03, 0.06, RANDOM.nextGaussian() * 0.03).life(20)
+                    .size(0.09f, 0).color(PALE, BLOOD).hot(1.0f);
         }
         if (king.phase() == 3 && !king.growing() && RANDOM.nextInt(2) == 0) {
             // A giant's footfall of power: embers thrown up round him.
@@ -217,6 +226,7 @@ public final class WitchKingFx {
                 fx.decal(FxDecal.Kind.HEX_WAVE, floor.add(0, 1.2, 0), UP).radius(0.5f, reach * 0.8f).life(20).color(PALE).alpha(0.6f).fade(0, 0.5f);
                 fx.decal(FxDecal.Kind.WARP_RING, floor.add(0, 1, 0), UP).radius(0.5f, reach).life(18).param(0.6f);
                 fx.light(middle, VIOLET, reach, 14).fadeFrom(0.2f);
+                FxScreen.shake(floor, 0.5f, reach * 2.2f);
                 for (int i = 0; i < 60; i++) {
                     double angle = i * Math.PI * 2 / 60;
                     fx.particle(floor.add(0, 0.2, 0)).shape(FxParticle.Shape.SPARK)
@@ -247,6 +257,9 @@ public final class WitchKingFx {
                 fx.decal(FxDecal.Kind.HEX_WAVE, hall.add(0, 0.1, 0), UP).radius(1, 40).life(30).color(DEEP).fade(0, 0.7f);
                 fx.decal(FxDecal.Kind.GLOW, middle, null).radius(2, 22).life(14).color(PALE).alpha(0.8f).fade(0, 0.3f);
                 fx.light(middle, PALE, 40, 16).fadeFrom(0.1f);
+                FxScreen.shake(0.6f * FxScreen.proximity(hall, 48));
+                FxScreen.flash(hall, DEEP, 0.55f, 500, 48);
+                FxScreen.vignette(hall, DEEP, 0.7f, 1600, 48);
                 for (int i = 0; i < 260; i++) {
                     double angle = RANDOM.nextDouble() * Math.PI * 2, distance = Math.sqrt(RANDOM.nextDouble()) * 18;
                     Vec3 from = hall.add(Math.cos(angle) * distance, 14 + RANDOM.nextDouble() * 6, Math.sin(angle) * distance);
@@ -275,9 +288,13 @@ public final class WitchKingFx {
                 }
                 fx.decal(FxDecal.Kind.GLOW, middle, null).radius(1, 12).life(12).color(PALE).fade(0, 0.3f);
                 fx.light(middle, VIOLET, 30, 40).fadeFrom(0.2f);
+                FxScreen.shake(middle, 0.9f, 48);
+                FxScreen.aberration(middle, 1.2f, 900, 48);
+                FxScreen.flash(middle, PALE, 0.6f, 400, 48);
             }
             case WitchKing.EV_CRYSTAL -> {
                 fx.decal(FxDecal.Kind.GLOW, middle, null).radius(1, 5).life(10).color(PALE).fade(0, 0.3f);
+                FxScreen.shake(middle, 0.3f, 40);
                 for (BlockPos spot : WitchKing.CRYSTAL_SPOTS) {
                     BlockPos at = king.home().offset(spot);
                     if (king.level().getBlockState(at).is(WitchKingContent.CRYSTAL)) continue;
@@ -300,12 +317,14 @@ public final class WitchKingFx {
                 Vec3 front = feet.add(king.getLookAngle().multiply(1, 0, 1).normalize().scale(king.getBbWidth()));
                 fx.decal(FxDecal.Kind.HEX_WAVE, new Vec3(front.x, king.home().getY() + 0.06, front.z), UP).radius(0.5f, 5).life(14).color(VIOLET);
                 burst(fx, front.add(0, 0.3, 0), 30, 0.3, PALE);
+                FxScreen.shake(front, 0.35f, 18);
             }
             case WitchKing.EV_ENTRANCE -> {
                 fx.decal(FxDecal.Kind.HEX_SIGIL, floor, UP).radius(8).color(VIOLET).spin(0.04f).reveal(40).life(WitchKing.ENTRANCE_TICKS + 20)
                         .fade(0.05f, 0.8f);
                 rift(fx, middle, 2.4f);
                 fx.light(middle, VIOLET, 18, WitchKing.ENTRANCE_TICKS).fadeFrom(0.6f);
+                FxScreen.shake(middle, 0.45f, 40);
             }
             case WitchKing.EV_DEATH -> {
                 fx.decal(FxDecal.Kind.HEX_SIGIL, floor, UP).radius(10).color(PALE).spin(-0.08f).reveal(20).life(WitchKing.DEATH_TICKS);
@@ -317,12 +336,146 @@ public final class WitchKingFx {
                     burst(fx, at, 200, 0.6, SOUL);
                 });
             }
+            case WitchKing.EV_SLAM_WINDUP -> {
+                // Light gathering into his fists.
+                for (int i = 0; i < 24; i++) {
+                    Vec3 dir = new Vec3(RANDOM.nextGaussian(), RANDOM.nextGaussian(), RANDOM.nextGaussian()).normalize();
+                    Vec3 from = middle.add(dir.scale(1.5 * scale));
+                    Vec3 v = middle.subtract(from).scale(1 / 10.0);
+                    fx.particle(from).velocity(v.x, v.y, v.z).life(10).size(0.12f, 0.04f).color(PALE, BLOOD).hot(0.9f).drag(1.0f);
+                }
+            }
+            case WitchKing.EV_LEAP -> {
+                fx.decal(FxDecal.Kind.HEX_WAVE, floor, UP).radius(0.5f, 5 * scale / 2).life(12).color(VIOLET).fade(0, 0.6f);
+                burst(fx, feet.add(0, 0.3, 0), 40, 0.3, VIOLET);
+                FxScreen.shake(feet, 0.3f, 24);
+            }
+            case WitchKing.EV_LAND -> {
+                fx.decal(FxDecal.Kind.HEX_WAVE, floor.add(0, 0.02, 0), UP).radius(0.5f, 10).life(18).color(BLOOD).fade(0, 0.6f);
+                fx.decal(FxDecal.Kind.WARP_RING, floor.add(0, 0.8, 0), UP).radius(0.5f, 9).life(14).param(0.8f);
+                fx.light(middle, BLOOD, 16, 16).intensity(2).fadeFrom(0.2f);
+                for (int i = 0; i < 90; i++) {
+                    double angle = RANDOM.nextDouble() * Math.PI * 2;
+                    double speed = 0.3 + RANDOM.nextDouble() * 0.5;
+                    fx.particle(floor.add(Math.cos(angle) * 1.5, 0.2, Math.sin(angle) * 1.5)).shape(i % 2 == 0 ? FxParticle.Shape.SPARK : FxParticle.Shape.SMOKE)
+                            .velocity(Math.cos(angle) * speed, 0.1 + RANDOM.nextDouble() * 0.2, Math.sin(angle) * speed).life(20 + RANDOM.nextInt(15))
+                            .size(i % 2 == 0 ? 0.08f : 0.5f, i % 2 == 0 ? 0 : 1.2f).color(i % 2 == 0 ? PALE : 0xFF2A2030, i % 2 == 0 ? BLOOD : 0xFF100A14)
+                            .alpha(i % 2 == 0 ? 1 : 0.6f).drag(0.9f).gravity(i % 2 == 0 ? 0.02f : 0);
+                }
+                FxScreen.shake(feet, 0.85f, 32);
+                FxScreen.aberration(feet, 0.6f, 400, 20);
+            }
+            case WitchKing.EV_RAGE -> {
+                fx.decal(FxDecal.Kind.GLOW, middle, null).radius(2, 18).life(16).color(BLOOD).fade(0, 0.3f);
+                fx.decal(FxDecal.Kind.HEX_SIGIL, floor, UP).radius(9).color(BLOOD).spin(0.1f).reveal(10).life(60).fade(0.05f, 0.7f);
+                fx.light(middle, BLOOD, 30, 50).intensity(2).fadeFrom(0.3f);
+                burst(fx, middle, 160, 0.5, BLOOD);
+                FxScreen.shake(middle, 1.0f, 48);
+                FxScreen.flash(middle, BLOOD, 0.5f, 600, 48);
+                FxScreen.vignette(middle, BLOOD, 0.8f, 3000, 48);
+                FxScreen.saturation(middle, 0.6f, 3000, 48);
+            }
             case WitchKing.EV_WARD_HIT -> {
                 fx.decal(FxDecal.Kind.HEX_WARD, middle, null).radius(2.7f).color(PALE).alpha(0.9f).param(0.5f).life(6).fade(0, 0.2f);
                 burst(fx, middle, 10, 0.2, PALE);
             }
             default -> { }
         }
+    }
+
+    // ------------------------------------------------------------------------------------ the FX module's Witch King effects
+
+    /** A warning on the floor: a sigil drawing itself over the ticks left, sparks rising ever thicker, and then gone as it strikes. */
+    public static void mark(FxEngine fx, Vec3 at, int color, float radius, int ticks) {
+        int c = 0xFF000000 | color;
+        int life = Math.max(4, ticks);
+        Vec3 floor = at.add(0, 0.05, 0);
+        fx.decal(FxDecal.Kind.HEX_SIGIL, floor, UP).radius(radius).color(c).alpha(0.85f).spin(0.06f).reveal(life).life(life + 2).fade(0.05f, 0.9f);
+        fx.decal(FxDecal.Kind.HEX_SIGIL, floor.add(0, 0.01, 0), UP).radius(radius * 0.45f).color(PALE).alpha(0.6f).spin(-0.12f).reveal(life / 2)
+                .life(life + 2).fade(0.05f, 0.9f);
+        fx.light(floor.add(0, 0.5, 0), c, 3 + radius, life).fadeFrom(0.95f);
+        fx.task((engine, age) -> {
+            float t = age / (float) life;
+            for (int i = 0; i < 1 + t * 3 * radius; i++) {
+                double angle = RANDOM.nextDouble() * Math.PI * 2, d = Math.sqrt(RANDOM.nextDouble()) * radius;
+                engine.particle(floor.add(Math.cos(angle) * d, 0.05, Math.sin(angle) * d)).shape(FxParticle.Shape.SPARK)
+                        .velocity(0, 0.03 + t * 0.08, 0).life(10).size(0.06f, 0).color(PALE, c).hot(0.8f);
+            }
+            return age < life;
+        });
+    }
+
+    /** Souls breaking up out of the floor: a column of pale fire, a ring thrown out along the floor, the ground shaking. */
+    public static void eruption(FxEngine fx, Vec3 at, int color, float radius) {
+        int c = 0xFF000000 | color;
+        Vec3 floor = at.add(0, 0.06, 0);
+        fx.decal(FxDecal.Kind.HEX_WAVE, floor, UP).radius(0.3f, radius * 1.7f).life(14).color(c).fade(0, 0.6f);
+        fx.decal(FxDecal.Kind.GLOW, floor.add(0, 1.2, 0), null).radius(radius * 0.5f, radius * 1.5f).life(10).color(PALE).alpha(0.8f).fade(0, 0.3f);
+        fx.light(floor.add(0, 1, 0), c, 5 + radius * 3, 16).intensity(1.8f).fadeFrom(0.2f);
+        for (int i = 0; i < 26 * radius; i++) {
+            double angle = RANDOM.nextDouble() * Math.PI * 2, d = Math.sqrt(RANDOM.nextDouble()) * radius * 0.8;
+            fx.particle(floor.add(Math.cos(angle) * d, 0.1, Math.sin(angle) * d))
+                    .velocity(RANDOM.nextGaussian() * 0.03, 0.3 + RANDOM.nextDouble() * 0.4, RANDOM.nextGaussian() * 0.03).life(12 + RANDOM.nextInt(12))
+                    .size(0.22f, 0).color(PALE, i % 3 == 0 ? SOUL : c).hot(0.9f).drag(0.9f);
+        }
+        for (int i = 0; i < 10 * radius; i++) {
+            double angle = RANDOM.nextDouble() * Math.PI * 2;
+            fx.particle(floor.add(0, 0.2, 0)).shape(FxParticle.Shape.SPARK)
+                    .velocity(Math.cos(angle) * 0.25, 0.15 + RANDOM.nextDouble() * 0.25, Math.sin(angle) * 0.25).life(16).size(0.07f, 0)
+                    .color(PALE, c).gravity(0.03f).collide(0.3f);
+        }
+        FxScreen.shake(at, 0.22f, 14);
+    }
+
+    /** A thin line of light from him to where his lance will run: get off it. */
+    public static void lanceCharge(FxEngine fx, Vec3 from, Vec3 to, int color) {
+        int c = 0xFF000000 | color;
+        int life = WitchKing.LANCE_CHARGE;
+        Vec3 dir = to.subtract(from).normalize();
+        fx.beam(from, to).width(0.06f).life(life).color(c).alpha(0.7f).energy(0.2f, 4).fade(0.3f, 0.95f);
+        fx.decal(FxDecal.Kind.HEX_SIGIL, from.add(dir.scale(1.2)), dir).radius(1.6f).color(c).spin(0.15f).reveal(life).life(life + 4).fade(0.05f, 0.9f);
+        fx.decal(FxDecal.Kind.HEX_SIGIL, to.subtract(dir.scale(0.05)), dir.scale(-1)).radius(1.2f).color(c).alpha(0.8f).spin(-0.1f).reveal(life)
+                .life(life + 4).fade(0.05f, 0.9f);
+        fx.light(from, c, 8, life).fadeFrom(0.95f);
+        fx.task((engine, age) -> {
+            // Light gathering into his hand along the line, faster as it fills.
+            double along = RANDOM.nextDouble();
+            Vec3 p = from.add(to.subtract(from).scale(along));
+            Vec3 v = from.subtract(p).scale(0.08);
+            engine.particle(p).velocity(v.x, v.y, v.z).life(12).size(0.1f, 0.03f).color(PALE, c).hot(0.9f).drag(1.0f);
+            return age < life;
+        });
+    }
+
+    /** His lance: a beam the width of a man, the hall lit by it, the view torn for a moment. */
+    public static void lance(FxEngine fx, Vec3 from, Vec3 to, int color) {
+        int c = 0xFF000000 | color;
+        fx.beam(from, to).width(1.3f).life(16).color(c).alpha(0.85f).energy(0.9f, 5).fade(0, 0.5f);
+        fx.beam(from, to).width(0.45f).life(16).color(PALE).energy(0.4f, 8).fade(0, 0.5f);
+        fx.light(to, c, 14, 18).intensity(2.5f).fadeFrom(0.2f);
+        fx.light(from.lerp(to, 0.5), c, 16, 16).intensity(1.5f).fadeFrom(0.2f);
+        Vec3 dir = to.subtract(from).normalize();
+        fx.decal(FxDecal.Kind.HEX_WAVE, to.subtract(dir.scale(0.1)), dir.scale(-1)).radius(0.5f, 4).life(14).color(c).fade(0, 0.6f);
+        for (int i = 0; i < 50; i++) {
+            Vec3 v = new Vec3(RANDOM.nextGaussian(), RANDOM.nextGaussian(), RANDOM.nextGaussian()).normalize().scale(0.2 + RANDOM.nextDouble() * 0.3)
+                    .subtract(dir.scale(0.2));
+            fx.particle(to).shape(FxParticle.Shape.SPARK).velocity(v.x, v.y, v.z).life(14 + RANDOM.nextInt(10)).size(0.07f, 0).color(PALE, c)
+                    .gravity(0.02f).drag(0.94f).collide(0.4f).hot(1.0f);
+        }
+        Vec3 near = nearestOnLine(from, to);
+        FxScreen.shake(near, 0.45f, 18);
+        FxScreen.aberration(near, 0.8f, 350, 12);
+        FxScreen.flash(near, c, 0.35f, 250, 8);
+    }
+
+    /** The point of a line nearest the camera, so what is felt of it is felt by those it passed. */
+    private static Vec3 nearestOnLine(Vec3 a, Vec3 b) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.gameRenderer == null) return a;
+        Vec3 p = minecraft.gameRenderer.mainCamera().position();
+        Vec3 ab = b.subtract(a);
+        double t = Math.clamp(p.subtract(a).dot(ab) / Math.max(1.0e-6, ab.lengthSqr()), 0, 1);
+        return a.add(ab.scale(t));
     }
 
     /** A tear in the air, opening and closing, sparks thrown off it. */

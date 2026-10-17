@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " G ",
+    " C ",
+    "BBB"
+  ],
+  "key": {
+    "G": "minecraft:gold_ingot",
+    "C": "minecraft:chiseled_polished_blackstone",
+    "B": "minecraft:polished_blackstone_bricks"
+  },
+  "result": {
+    "id": "hardwrought:ritual_pedestal",
+    "count": 1
+  }
+}

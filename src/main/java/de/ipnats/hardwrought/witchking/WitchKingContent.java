@@ -52,7 +52,7 @@ public final class WitchKingContent {
     public static final ResourceKey<EquipmentAsset> MANTLE_ASSET = ResourceKey.create(EquipmentAssets.ROOT_ID, Hardwrought.id("witch_king_mantle"));
     /** The Witch King's mantle: the magic way to fly. */
     public static final Item MANTLE = item("witch_king_mantle", WitchKingMantle::new, new Item.Properties().durability(640)
-            .rarity(Rarity.EPIC).component(DataComponents.GLIDER, Unit.INSTANCE).repairable(Underworld.PALE_SHARD)
+            .rarity(Rarity.EPIC).enchantable(15).component(DataComponents.GLIDER, Unit.INSTANCE).repairable(Underworld.PALE_SHARD)
             .component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.CHEST).setEquipSound(SoundEvents.ARMOR_EQUIP_ELYTRA)
                     .setAsset(MANTLE_ASSET).setDamageOnHurt(false).build()));
     public static final Item THRONE_ITEM = blockItem(THRONE);

@@ -33,7 +33,7 @@ import net.minecraft.world.phys.Vec3;
 public class HexBlade extends Projectile {
     public static final int HANGING = 0, FLYING = 1;
     private static final EntityDataAccessor<Integer> STATE = SynchedEntityData.defineId(HexBlade.class, EntityDataSerializers.INT);
-    static final float DAMAGE = 7.0f;
+    static final float DAMAGE = 8.0f;
     static final int MAX_AGE = 240;
     /** Ticks of hanging before it flies, when it is not held by the king. */
     int poise = -1;
@@ -106,8 +106,12 @@ public class HexBlade extends Projectile {
     protected void onHitEntity(EntityHitResult result) {
         if (!(level() instanceof ServerLevel level)) return;
         Entity owner = getOwner();
-        DamageSource source = damageSources().indirectMagic(this, owner instanceof LivingEntity living ? living : this);
-        result.getEntity().hurtServer(level, source, DAMAGE);
+        if (owner instanceof WitchKing && result.getEntity() instanceof LivingEntity victim) {
+            WitchKing.rend(level, victim, this, DAMAGE, 0);
+        } else {
+            DamageSource source = damageSources().indirectMagic(this, owner instanceof LivingEntity living ? living : this);
+            result.getEntity().hurtServer(level, source, DAMAGE);
+        }
         shatter();
     }
 

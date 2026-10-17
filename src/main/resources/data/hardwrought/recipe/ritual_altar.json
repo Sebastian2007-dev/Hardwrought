@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GEG",
+    "CVC",
+    "BBB"
+  ],
+  "key": {
+    "G": "minecraft:gold_block",
+    "E": "minecraft:ender_eye",
+    "C": "minecraft:crying_obsidian",
+    "V": "hardwrought:void_crystal_shard",
+    "B": "minecraft:polished_blackstone_bricks"
+  },
+  "result": {
+    "id": "hardwrought:ritual_altar",
+    "count": 1
+  }
+}

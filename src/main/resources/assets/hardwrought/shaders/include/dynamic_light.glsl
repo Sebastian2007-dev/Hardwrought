@@ -27,7 +27,7 @@ vec3 hw_dynamic_light(vec3 pos, vec3 normal, float blockLight) {
         // Falls off smoothly to exactly nothing at the radius, and stays finite at the source.
         float t = dist / radius;
         float falloff = (1.0 - t * t);
-        falloff *= falloff / (1.0 + dist * dist * 0.08);
+        falloff *= falloff / (1.0 + dist * dist * 0.05);
         // Wrapped diffuse: surfaces turned half away still catch some of the light.
         float diffuse = facing ? clamp(dot(normal, toLight / max(dist, 1e-3)) * 0.65 + 0.35, 0.0, 1.0) : 0.8;
         vec3 lit = HwLightColor[i].rgb * HwLightColor[i].a * falloff * diffuse;
@@ -53,7 +53,7 @@ vec3 hw_dynamic_light(vec3 pos, vec3 normal) {
 // or fire, stays.
 #define HW_BOUNCE 0.5
 // The weakest a placed light is sent while not fading: FxLighting.PLACED_INTENSITY at the low of its flicker.
-#define HW_PLACED_INTENSITY 0.96
+#define HW_PLACED_INTENSITY 1.12
 float hw_vanilla_block_scale(float blockLight, vec3 pos) {
     float taken = 0.0;
     int count = min(HwLightInfo.x, HW_MAX_LIGHTS);

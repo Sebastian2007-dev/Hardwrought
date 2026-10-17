@@ -57,6 +57,39 @@ public enum FxEffect {
     /** A wave through the ground, throwing dust and stones up as it runs outward. */
     SHOCKWAVE(Aim.AREA, 0x9A7A4A),
     SHOWCASE(Aim.SELF, 0xFFFFFF),
+    /** The Witch King's warning on the floor: scale is its radius, and target lies as many blocks above pos as it has ticks left. */
+    HEX_MARK(Aim.AREA, 0xB25CFF),
+    /** Souls breaking up out of the floor where a mark was; scale is its radius. */
+    HEX_ERUPTION(Aim.AREA, 0xB25CFF),
+    /** A thin line of light from pos to target: where his lance is about to strike. */
+    HEX_LANCE_CHARGE(Aim.RAY, 0xB25CFF),
+    /** His lance, from pos to target. */
+    HEX_LANCE(Aim.RAY, 0xB25CFF),
+    /** The floor of light a traveller arrives on in the End: scale is its reach, and target lies as many blocks above pos as it has ticks to hold. */
+    END_PLATFORM(Aim.AREA, 0x9FE8FF),
+    // The dragon of the End (see {@code VoidDragon}). Where an effect lasts, target lies as many blocks above pos as it has ticks.
+    DRAGON_SHIELDED(Aim.AREA, 0xB04CFF),
+    DRAGON_GUST_CHARGE(Aim.AREA, 0xB04CFF),
+    DRAGON_GUST(Aim.RAY, 0xB04CFF),
+    DRAGON_LOCK(Aim.AREA, 0xFF3CC8),
+    DRAGON_STOMP(Aim.AREA, 0xB04CFF),
+    DRAGON_ROAR(Aim.AREA, 0xB04CFF),
+    DRAGON_LAND(Aim.AREA, 0xB04CFF),
+    VOID_CLOUD(Aim.AREA, 0xB04CFF),
+    VOID_PULL(Aim.SELF, 0x2A0838),
+    FRAGMENT_CRUMBLE(Aim.AREA, 0xB04CFF),
+    CRYSTAL_WARD_HIT(Aim.AREA, 0xFF3CC8),
+    CRYSTAL_WARD_BREAK(Aim.AREA, 0xFF3CC8),
+    // The ritual at the end of the game (see {@code Ritual}). Where an effect lasts, scale is how many ticks.
+    RITUAL_IGNITE(Aim.AREA, 0xFFE89A),
+    RITUAL_BEAM(Aim.RAY, 0xFFE89A),
+    RITUAL_RING(Aim.AREA, 0xFFE89A),
+    RITUAL_SKYBEAM(Aim.RAY, 0xFFE89A),
+    RITUAL_CONVERGE(Aim.AREA, 0xFFE89A),
+    RITUAL_DISSOLVE(Aim.RAY, 0xFFE89A),
+    RITUAL_FINALE(Aim.AREA, 0xFFE89A),
+    RITUAL_WARD(Aim.AREA, 0xFFE89A),
+    RITUAL_APOTHEOSIS(Aim.AREA, 0xFFD24A),
     SHAKE(Aim.SELF, 0xFFFFFF),
     FLASH(Aim.SELF, 0xFFFFFF),
     CLEAR(Aim.SELF, 0xFFFFFF);

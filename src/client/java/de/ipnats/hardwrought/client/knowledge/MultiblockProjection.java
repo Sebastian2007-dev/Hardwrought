@@ -128,6 +128,15 @@ public final class MultiblockProjection {
     public static void confirm() {
         placing = false;
         Minecraft client = Minecraft.getInstance();
+        // In creative it is built at once, whole, where the ghost was.
+        if (client.player != null && client.player.isCreative()
+                && net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.canSend(de.ipnats.hardwrought.knowledge.MultiblockPlacing.Place.TYPE)) {
+            net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                    new de.ipnats.hardwrought.knowledge.MultiblockPlacing.Place(shown.id(), anchor, turns));
+            say(Component.translatable("message.hardwrought.projection.built", MultiblockScreen.name(shown)).withStyle(ChatFormatting.GREEN));
+            clear();
+            return;
+        }
         if (client.player != null) {
             client.level.playLocalSound(client.player.getX(), client.player.getY(), client.player.getZ(),
                     SoundEvents.WOOD_PLACE, SoundSource.PLAYERS, 0.7f, 1.2f, false);
@@ -233,7 +242,8 @@ public final class MultiblockProjection {
         Minecraft client = Minecraft.getInstance();
         if (client.gui.screen() != null) return;
         Component line = placing
-                ? Component.translatable("hud.hardwrought.projection.placing", KEY.getTranslatedKeyMessage())
+                ? Component.translatable(client.player != null && client.player.isCreative()
+                        ? "hud.hardwrought.projection.placing_creative" : "hud.hardwrought.projection.placing", KEY.getTranslatedKeyMessage())
                 : Component.translatable("hud.hardwrought.projection.placed", KEY.getTranslatedKeyMessage());
         int x = graphics.guiWidth() / 2, y = graphics.guiHeight() - 72;
         graphics.centeredText(client.font, MultiblockScreen.name(shown), x, y - 11, 0xFFFFFFFF);

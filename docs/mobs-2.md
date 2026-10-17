@@ -80,7 +80,7 @@ again.
 | 37 | Warden | Running machinery within a chunk of a warden sends out a vibration every two seconds, and a collapsing structure is one heavy vibration; the warden follows both. It breaks weak wooden obstacles, not stone. It shakes off every stagger. |
 | 38 | Breeze | A wind burst — its own or a player's — puts out fire, blows out lit candles and campfires, and drives gas away from where it hits, which may help as much as hurt. |
 | 40 | Wither | Calls three wither skeletons at half its health and three more at a quarter. Breaking a load-bearing block brings down what it held, through the statics. |
-| 41 | Ender dragon | Phase 2 below 75 %: four endermen come to its defence. Phase 3 below 45 %: it lands and fights on the ground. Phase 4 below 20 %: hits often turn it into a charge at the nearest player. |
+| 41 | Ender dragon | Its own AI and phases for the End's air fight: see endgame § 4 and `VoidDragon`. |
 
 ## Composition (§ 44)
 

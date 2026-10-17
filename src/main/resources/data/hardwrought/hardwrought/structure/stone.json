@@ -41,6 +41,15 @@
     "minecraft:prismarine_bricks",
     "minecraft:dark_prismarine",
     "minecraft:purpur_block",
-    "minecraft:purpur_pillar"
+    "minecraft:purpur_pillar",
+    "minecraft:quartz_block",
+    "minecraft:chiseled_quartz_block",
+    "minecraft:chiseled_deepslate",
+    "minecraft:chiseled_tuff",
+    "minecraft:chiseled_tuff_bricks",
+    "minecraft:amethyst_block",
+    "minecraft:lapis_block",
+    "minecraft:chiseled_polished_blackstone",
+    "minecraft:polished_blackstone_bricks"
   ]
 }

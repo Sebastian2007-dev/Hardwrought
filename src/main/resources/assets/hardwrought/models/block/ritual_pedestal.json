@@ -1,0 +1,21 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "base": "minecraft:block/polished_blackstone_bricks",
+    "column": "minecraft:block/chiseled_polished_blackstone",
+    "top": "minecraft:block/gold_block",
+    "particle": "minecraft:block/polished_blackstone_bricks"
+  },
+  "elements": [
+    {"from": [1, 0, 1], "to": [15, 4, 15], "faces": {
+      "down": {"texture": "#base", "cullface": "down"}, "up": {"texture": "#base"},
+      "north": {"texture": "#base"}, "south": {"texture": "#base"}, "west": {"texture": "#base"}, "east": {"texture": "#base"}}},
+    {"from": [4, 4, 4], "to": [12, 12, 12], "faces": {
+      "north": {"texture": "#column"}, "south": {"texture": "#column"}, "west": {"texture": "#column"}, "east": {"texture": "#column"}}},
+    {"from": [2, 12, 2], "to": [14, 14, 14], "faces": {
+      "down": {"texture": "#base"}, "up": {"texture": "#base"},
+      "north": {"texture": "#base"}, "south": {"texture": "#base"}, "west": {"texture": "#base"}, "east": {"texture": "#base"}}},
+    {"from": [3, 14, 3], "to": [13, 15, 13], "light_emission": 10, "faces": {
+      "up": {"texture": "#top"}, "north": {"texture": "#top"}, "south": {"texture": "#top"}, "west": {"texture": "#top"}, "east": {"texture": "#top"}}}
+  ]
+}

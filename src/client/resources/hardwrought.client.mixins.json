@@ -3,6 +3,7 @@
 	"package": "de.ipnats.hardwrought.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
+		"PlayerHoverMixin",
 		"AbstractContainerScreenMixin",
 		"AvatarRendererMixin",
 		"PlayerModelBellyMixin",
@@ -19,6 +20,8 @@
 		"GlobalSettingsUniformMixin",
 		"GuiGraphicsExtractorAccessor",
 		"InventoryScreenMixin",
+		"ItemLayerRenderStateAccessor",
+		"ItemStackRenderStateAccessor",
 		"LightmapRenderStateExtractorMixin",
 		"MinecraftGasPushMixin",
 		"MinecraftProjectionClickMixin",

@@ -9,7 +9,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.monster.Vex;
 import net.minecraft.world.entity.monster.skeleton.Stray;
@@ -62,7 +61,6 @@ public final class MobHits {
     private static void afterDamage(LivingEntity victim, DamageSource source, float baseDamage, float taken, boolean blocked) {
         if (!(victim.level() instanceof ServerLevel level)) return;
         if (victim instanceof WitherBoss wither) Bosses.witherHurt(level, wither);
-        if (victim instanceof EnderDragon dragon) Bosses.dragonHurt(level, dragon);
         if (blocked || taken <= 0) return;
         // A fleeing mob that is hit turns on its pursuer.
         if (victim instanceof net.minecraft.world.entity.Mob fleeing) Panic.hurt(fleeing);

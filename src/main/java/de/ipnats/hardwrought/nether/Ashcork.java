@@ -124,6 +124,8 @@ public final class Ashcork {
         items.add(de.ipnats.hardwrought.underworld.UnderworldRuins.STALE_BREAD);
         items.addAll(de.ipnats.hardwrought.underworld.GraveUndead.items());
         items.addAll(de.ipnats.hardwrought.witchking.WitchKingContent.items());
+        items.add(de.ipnats.hardwrought.end.dragon.DragonHeart.HEART);
+        items.addAll(de.ipnats.hardwrought.ritual.RitualContent.items());
         items.add(de.ipnats.hardwrought.underworld.Underworld.PALE_SHARD);
         items.add(de.ipnats.hardwrought.underworld.Underworld.PALE_SHARD_CLUSTER.asItem());
         items.addAll(NetherOres.items());

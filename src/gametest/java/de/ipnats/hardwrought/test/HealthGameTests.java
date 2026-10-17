@@ -234,6 +234,13 @@ public final class HealthGameTests {
         helper.assertTrue(player.hasEffect(ModEffects.ADRENALINE), "It shows, while it runs");
         Diseases.infect(player, Disease.WOUND, 20);
         helper.assertTrue(Diseases.health(player).infection(Disease.WOUND) == null, "and nothing takes hold in the fight");
+        float hunger = de.ipnats.hardwrought.survival.Adrenaline.maskHunger(player, 1.0f);
+        helper.assertTrue(hunger < 0.75f && hunger > 0, "Hunger is spent less in it: " + hunger);
+        player.getFoodData().setFoodLevel(0);
+        float before = player.getHealth();
+        player.hurtServer(helper.getLevel(), player.damageSources().starve(), 1.0f);
+        helper.assertTrue(player.getHealth() == before, "and an empty stomach does not hurt");
+        player.getFoodData().setFoodLevel(20);
         // The fight over: the account is paid, down to half a heart and no further.
         de.ipnats.hardwrought.survival.Adrenaline.endFightForTesting(player);
         for (int second = 0; second < 30; second++) de.ipnats.hardwrought.survival.Adrenaline.settleForTesting(player);

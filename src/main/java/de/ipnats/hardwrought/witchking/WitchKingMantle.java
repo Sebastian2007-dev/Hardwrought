@@ -29,6 +29,7 @@ public class WitchKingMantle extends Item {
 
     static void initialize() {
         ServerTickEvents.END_SERVER_TICK.register(WitchKingMantle::tick);
+        MantleFlight.initialize();
     }
 
     private static void tick(MinecraftServer server) {

@@ -46,6 +46,11 @@ public final class FxLight {
         return this;
     }
 
+    public FxLight color(int color) {
+        this.color = color;
+        return this;
+    }
+
     public FxLight moveTo(Vec3 pos) {
         this.pos = pos;
         return this;

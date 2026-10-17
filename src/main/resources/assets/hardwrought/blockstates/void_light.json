@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "fading=false": {
+      "model": "hardwrought:block/void_light"
+    },
+    "fading=true": {
+      "model": "hardwrought:block/void_light_fading"
+    }
+  }
+}

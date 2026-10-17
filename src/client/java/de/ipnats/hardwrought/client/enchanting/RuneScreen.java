@@ -42,12 +42,12 @@ public class RuneScreen extends Screen {
     private int surface, panelWidth, panelHeight, listX, rows;
     /** Lapis blue for a rune that is written, a paler one where it hangs over the edge, red where it may not lie. */
     private static final int OVER_EDGE = 0x70A0A8C8, FORBIDDEN = 0xD0D84030;
-    /** Each ink as it lies written, and brighter under the pointer: lapis blue, mithril sea-green, adamant crimson. */
-    private static final int[] INKS = {0xFF3A62D8, 0xFF2FB8A4, 0xFFB02A4E}, INKS_HOVER = {0xFF6F92FF, 0xFF73E6D1, 0xFFE0607F};
+    /** Each ink as it lies written, and brighter under the pointer: lapis blue, mithril sea-green, adamant crimson, Wither essence ash-violet. */
+    private static final int[] INKS = {0xFF3A62D8, 0xFF2FB8A4, 0xFFB02A4E, 0xFF4A3A58}, INKS_HOVER = {0xFF6F92FF, 0xFF73E6D1, 0xFFE0607F, 0xFF8A70A4};
     /** The row of inks above the runes. */
     private static final int INK_BAR = 16;
     /** The inks as they look on a piece that has carried them a while. */
-    private static final int[] OLD_INKS = {0xFF2A4390, 0xFF237A70, 0xFF7A2038};
+    private static final int[] OLD_INKS = {0xFF2A4390, 0xFF237A70, 0xFF7A2038, 0xFF33283E};
 
     /** A rune as this screen knows it. */
     private record Rune(Identifier id, Holder<Enchantment> enchantment, int tier, RuneWork.Shape shape) { }
@@ -174,6 +174,7 @@ public class RuneScreen extends Screen {
         if (onPiece() + 1 > capacity(with)) return "too_many";
         Rune rune = rune(placement.rune());
         if (has(rune)) return "clash";
+        if (!RuneWork.inkSuits(placement.rune(), placement.ink())) return "wrong_ink";
         List<int[]> squares = squares(placement);
         for (RuneWork.Placement old : kept()) if (RuneWork.overlap(squares, squares(old))) return "overlapping";
         for (RuneWork.Placement other : laid) {
@@ -186,7 +187,7 @@ public class RuneScreen extends Screen {
     private int powderNeeded(RuneWork.Ink of) {
         int powder = 0;
         for (RuneWork.Placement placement : laid) {
-            if (placement.ink() == of) powder += RuneWork.powder(RuneWork.written(piece, squares(placement)));
+            if (placement.ink() == of) powder += RuneWork.powder(of, RuneWork.written(piece, squares(placement)));
         }
         return powder;
     }
@@ -239,7 +240,8 @@ public class RuneScreen extends Screen {
     /** The ink under the pointer in the row of inks, or null. */
     private RuneWork.Ink inkAt(double x, double y) {
         if (y < top + LIST_Y || y >= top + LIST_Y + INK_BAR - 2 || x < left + listX || x >= left + listX + LIST_WIDTH) return null;
-        return RuneWork.Ink.values()[Math.min(2, (int) ((x - left - listX) * 3 / LIST_WIDTH))];
+        int inks = RuneWork.Ink.values().length;
+        return RuneWork.Ink.values()[Math.min(inks - 1, (int) ((x - left - listX) * inks / LIST_WIDTH))];
     }
 
     /** Where the held rune would lie with the pointer here: its middle under the pointer. */
@@ -286,6 +288,9 @@ public class RuneScreen extends Screen {
             List<Rune> all = new ArrayList<>(runes.values());
             if (row >= 0 && row < all.size()) {
                 held = right || all.get(row).id().equals(held) ? null : all.get(row).id();
+                // The soulbound rune is written in Wither essence and nothing else; any other rune not in it.
+                if (held != null && RuneWork.SOULBOUND.equals(held)) ink = RuneWork.Ink.WITHER;
+                else if (held != null && ink == RuneWork.Ink.WITHER) ink = RuneWork.Ink.LAPIS;
                 turns = 0;
             }
             return true;
@@ -476,7 +481,8 @@ public class RuneScreen extends Screen {
         int lx = left + listX, ly = top + LIST_Y + INK_BAR;
         // The inks: which one the next rune is written in, and how much of each there is.
         for (RuneWork.Ink of : RuneWork.Ink.values()) {
-            int ix = lx + of.ordinal() * LIST_WIDTH / 3, iw = LIST_WIDTH / 3 - 2, iy = top + LIST_Y;
+            int inks = RuneWork.Ink.values().length;
+            int ix = lx + of.ordinal() * LIST_WIDTH / inks, iw = LIST_WIDTH / inks - 2, iy = top + LIST_Y;
             boolean over = inkAt(mouseX, mouseY) == of;
             graphics.fill(ix, iy, ix + iw, iy + INK_BAR - 2, of == ink ? 0xFFE8E0A8 : over ? 0xFFD8D8D8 : 0xFFB4B4B4);
             graphics.fill(ix + 2, iy + 2, ix + 12, iy + INK_BAR - 4, PANEL_DARK);

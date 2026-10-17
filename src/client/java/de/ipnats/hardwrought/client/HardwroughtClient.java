@@ -55,6 +55,14 @@ public class HardwroughtClient implements ClientModInitializer {
 		de.ipnats.hardwrought.client.fx.FxClient.initialize();
 		de.ipnats.hardwrought.client.underworld.UnderworldClient.initialize();
 		de.ipnats.hardwrought.client.witchking.WitchKingClient.initialize();
+		de.ipnats.hardwrought.client.end.EndClient.initialize();
+		de.ipnats.hardwrought.client.end.DragonFx.initialize();
+		de.ipnats.hardwrought.client.ritual.RitualCutscene.initialize();
+		de.ipnats.hardwrought.client.ritual.AscensionOutline.initialize();
+		de.ipnats.hardwrought.client.ritual.TempleFaultsClient.initialize();
+		net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
+				de.ipnats.hardwrought.ritual.RitualContent.PEDESTAL_ENTITY,
+				de.ipnats.hardwrought.client.ritual.RitualPedestalRenderer::new);
 		net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
 				de.ipnats.hardwrought.underworld.UnderworldGate.SHAFT_ENTITY,
 				context -> new de.ipnats.hardwrought.client.underworld.ShaftRenderer());

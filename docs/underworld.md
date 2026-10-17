@@ -125,7 +125,20 @@ deeper in, the Witch King — a trail of lore that also points the way.
 ## The Witch King
 
 At the bottom: the **Witch King's citadel**, reached through the Graveyard and the Ossuary below it.
-His fight is the third goal and gives the **way to fly** (endgame § 4). Designed separately (*open*).
+His fight is the third goal and gives the **way to fly** (endgame § 4).
+
+The fight ([WitchKing](../src/main/java/de/ipnats/hardwrought/witchking/WitchKing.java)) has three phases: *elusive*
+(hovering, slipping away through rifts; swords in volleys, fans and rings that close), *warded* (behind a ward over the
+middle of the hall until four soul crystals are broken; sword rain, hunting souls, his dead, a lance shown as a line of
+light before it strikes, the floor breaking open along spokes; every broken crystal makes him quicker and tears the floor
+open round whoever broke it) and *unbound* (a giant on the floor; blows wound up over a mark and struck up to three in a
+row, leaps across the hall that land in a shockwave, lines of eruptions racing towards the target, rifts behind it;
+below 30 % he rages and everything comes faster). A curse over the whole hall falls again and again from phase 2 on;
+only a magic shield stops it. He chooses each move by weight from what suits the distance and the fight, never the
+same twice in a row, and everything aimed is marked before it strikes.
+
+His harm is its own damage type, `hardwrought:hex`: armour does not hold it (half of it against his blows), and
+protective runes count only half, at most 40 % instead of 80 %.
 
 ## Built so far
 

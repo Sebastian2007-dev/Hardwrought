@@ -111,9 +111,10 @@ public final class RuneWork {
      * What a rune is written with. Lapis is the ordinary ink. Powdered mithril and adamant
      * overcharge the rune: written in them it reaches one or two levels beyond what its enchantment
      * has otherwise. They also let the piece hold more runes than its material takes by itself.
+     * Wither essence writes one rune only, and that rune only in it: soulbound (see {@link #inkSuits}).
      */
     public enum Ink {
-        LAPIS(0, 0), MITHRIL(1, 1), ADAMANT(2, 3);
+        LAPIS(0, 0), MITHRIL(1, 1), ADAMANT(2, 3), WITHER(0, 0);
 
         private final int overcharge, moreRunes;
 
@@ -140,6 +141,22 @@ public final class RuneWork {
             for (Ink ink : values()) if (ink.id().equals(id)) return ink;
             return LAPIS;
         }
+    }
+
+    /** The rune that keeps a piece through a death, once (see {@code Soulbound}). */
+    public static final Identifier SOULBOUND = Identifier.fromNamespaceAndPath("hardwrought", "soulbound");
+    /** Measures of Wither essence the soulbound rune takes, however much of it lies on the piece. */
+    public static final int SOULBOUND_ESSENCE = 2;
+
+    /** Whether a rune may be written in this ink: soulbound in Wither essence and in nothing else, every other rune in anything but it. */
+    public static boolean inkSuits(Identifier rune, Ink ink) {
+        return rune.equals(SOULBOUND) == (ink == Ink.WITHER);
+    }
+
+    /** Measures of powder of this ink it takes to write this many squares onto the piece. */
+    public static int powder(Ink ink, int written) {
+        if (written <= 0) return 0;
+        return ink == Ink.WITHER ? SOULBOUND_ESSENCE : powder(written);
     }
 
     /**

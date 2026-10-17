@@ -1,6 +1,8 @@
 {
   "replace": false,
   "values": [
+    "hardwrought:ritual_altar",
+    "hardwrought:ritual_pedestal",
     "#hardwrought:raw_metal_blocks",
     "hardwrought:rune_stone",
     {

@@ -143,8 +143,10 @@ public final class Multiblocks {
                     'L', List.of(Identifier.withDefaultNamespace("soul_lantern"))),
             Optional.empty());
 
-    public static final List<Multiblock> ALL = List.of(ORE_DRILL_RIG, HOODED_FORGE, SMELTERY, LARGE_ARC_FURNACE, LARGE_DIESEL,
-            UNDERWORLD_SEAL);
+    /** Every structure: the machines, the seal, and the three temples of the end of the game. */
+    public static final List<Multiblock> ALL = java.util.stream.Stream.concat(
+            java.util.stream.Stream.of(ORE_DRILL_RIG, HOODED_FORGE, SMELTERY, LARGE_ARC_FURNACE, LARGE_DIESEL, UNDERWORLD_SEAL),
+            de.ipnats.hardwrought.ritual.Temple.multiblocks().stream()).toList();
 
     private Multiblocks() { }
 

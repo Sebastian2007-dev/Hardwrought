@@ -99,6 +99,8 @@ public final class Ailments {
     /** Magic sent by someone, and the wither; not the sting of spirit on a wound or a potion drunk. */
     static boolean drains(DamageSource source) {
         return source.is(DamageTypes.WITHER) || source.is(DamageTypes.WITHER_SKULL) || source.is(DamageTypes.INDIRECT_MAGIC)
+                || source.is(de.ipnats.hardwrought.core.registry.ModDamageTypes.HEX)
+                || source.is(de.ipnats.hardwrought.core.registry.ModDamageTypes.VOID)
                 || source.is(DamageTypes.MAGIC) && source.getEntity() != null;
     }
 

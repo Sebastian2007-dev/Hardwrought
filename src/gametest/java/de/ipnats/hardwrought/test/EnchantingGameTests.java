@@ -238,4 +238,42 @@ public final class EnchantingGameTests {
                 "The runes on the head are on the pickaxe it becomes: " + pickaxe.getEnchantments());
         helper.succeed();
     }
+
+    @GameTest
+    public void aSoulboundPieceOutlivesItsOwnerOnce(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        List<Identifier> ready = List.of(RuneWork.SOULBOUND, UNBREAKING);
+        Mask piece = whole(Mask.SIZE);
+        var inLapis = new RuneWork.Placement(RuneWork.SOULBOUND, 2, 2, 0, RuneWork.Ink.LAPIS);
+        var inEssence = new RuneWork.Placement(RuneWork.SOULBOUND, 2, 2, 0, RuneWork.Ink.WITHER);
+        helper.assertTrue("wrong_ink".equals(RuneEnchanting.judge(level, piece, List.of(inLapis), ready, 3, false).refusal()),
+                "Soulbinding is not written in lapis");
+        helper.assertTrue("wrong_ink".equals(RuneEnchanting.judge(level, piece,
+                        List.of(new RuneWork.Placement(UNBREAKING, 2, 2, 0, RuneWork.Ink.WITHER)), ready, 3, false).refusal()),
+                "nor anything else in Wither essence");
+        var judged = RuneEnchanting.judge(level, piece, List.of(inEssence), ready, 3, false);
+        helper.assertTrue(judged.allowed() && judged.levels().get(rune(level, RuneWork.SOULBOUND)) == 1
+                        && judged.powder(RuneWork.Ink.WITHER) == RuneWork.SOULBOUND_ESSENCE && judged.powder(RuneWork.Ink.LAPIS) == 0,
+                "In Wither essence it takes, for two measures of it: " + judged);
+        helper.assertTrue(RuneEnchanting.powder(RuneWork.Ink.WITHER) == de.ipnats.hardwrought.wither.WitherPowers.ESSENCE, "the Wither's essence");
+
+        var player = helper.makeMockServerPlayerInLevel();
+        ItemStack chest = new ItemStack(Items.DIAMOND_CHESTPLATE);
+        chest.enchant(rune(level, RuneWork.SOULBOUND), 1);
+        chest.enchant(rune(level, UNBREAKING), 3);
+        chest.set(de.ipnats.hardwrought.core.registry.ModDataComponents.RUNES, new RuneWork.Marks(List.of(inEssence)));
+        player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, chest);
+        player.getInventory().setItem(0, new ItemStack(Items.IRON_SWORD));
+        de.ipnats.hardwrought.enchanting.Soulbound.keepForTesting(player, level);
+        helper.assertTrue(player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.CHEST).isEmpty(), "Dying, the bound piece goes with the soul");
+        helper.assertTrue(player.getInventory().getItem(0).is(Items.IRON_SWORD), "and what is not bound is left to drop");
+        de.ipnats.hardwrought.enchanting.Soulbound.giveBackForTesting(player);
+        ItemStack back = player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.CHEST);
+        helper.assertTrue(back.is(Items.DIAMOND_CHESTPLATE), "Risen again, it is back on: " + back);
+        helper.assertTrue(back.getEnchantments().getLevel(rune(level, RuneWork.SOULBOUND)) == 0
+                        && back.getEnchantments().getLevel(rune(level, UNBREAKING)) == 3,
+                "its binding spent, its other runes kept: " + back.getEnchantments());
+        helper.assertTrue(!back.has(de.ipnats.hardwrought.core.registry.ModDataComponents.RUNES), "and the room the rune took is free again");
+        helper.succeed();
+    }
 }

@@ -106,6 +106,7 @@ public final class RuneEnchanting {
             case LAPIS -> OrePowders.powder(OrePowders.VanillaOre.LAPIS_LAZULI);
             case MITHRIL -> OrePowders.powder(de.ipnats.hardwrought.metallurgy.Metal.MITHRIL);
             case ADAMANT -> OrePowders.powder(de.ipnats.hardwrought.metallurgy.Metal.ADAMANTIUM);
+            case WITHER -> de.ipnats.hardwrought.wither.WitherPowers.ESSENCE;
         };
     }
 
@@ -321,6 +322,7 @@ public final class RuneEnchanting {
             // Vanilla's rule that this enchantment shuts out that one is not kept: protection goes
             // with fire protection, sharpness with smite. Only the same rune twice is refused.
             if (levels.containsKey(rune) || present.contains(rune)) return Judged.refused("clash");
+            if (!RuneWork.inkSuits(placement.rune(), placement.ink())) return Judged.refused("wrong_ink");
             int tier = RuneWork.tier(rune);
             List<int[]> squares = RuneWork.squares(RuneWork.shape(placement.rune(), tier, coarser), placement);
             for (List<int[]> other : laid) if (RuneWork.overlap(squares, other)) return Judged.refused("overlapping");
@@ -330,7 +332,7 @@ public final class RuneEnchanting {
             if (given < 1) return Judged.refused("too_little");
             laid.add(squares);
             levels.put(rune, given);
-            powder[placement.ink().ordinal()] += RuneWork.powder(written);
+            powder[placement.ink().ordinal()] += RuneWork.powder(placement.ink(), written);
             experience += RuneWork.experienceFor(tier);
         }
         return new Judged(levels, powder, experience, null);

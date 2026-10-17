@@ -36,6 +36,18 @@ public final class ModDamageTypes {
     public static final ResourceKey<DamageType> ELECTROCUTION =
             ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("electrocution"));
 
+    /** The Witch King's magic: it tears at the soul, so armour is no help and runes only half a help (see {@code WitchKing.rend}). */
+    public static final ResourceKey<DamageType> HEX =
+            ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("hex"));
+
+    /** The dragon's teeth, its dives and its stamping: armour holds only half of it (see {@code Rending}). */
+    public static final ResourceKey<DamageType> DRAGON_BITE =
+            ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("dragon_bite"));
+
+    /** The void the dragon breathes and calls: armour does not hold it, runes only half. */
+    public static final ResourceKey<DamageType> VOID =
+            ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("void"));
+
     public static final TagKey<DamageType> IS_SUFFOCATING =
             TagKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("is_suffocating"));
 

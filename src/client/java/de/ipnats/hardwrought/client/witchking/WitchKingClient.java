@@ -16,5 +16,6 @@ public final class WitchKingClient {
         EntityRendererRegistry.register(WitchKingContent.HEX_BLADE, NoopRenderer::new);
         EntityRendererRegistry.register(WitchKingContent.SOUL_ORB, NoopRenderer::new);
         WitchKingFx.initialize();
+        MantleClient.initialize();
     }
 }

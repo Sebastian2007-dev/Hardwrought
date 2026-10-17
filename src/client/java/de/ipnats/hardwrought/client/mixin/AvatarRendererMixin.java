@@ -21,6 +21,7 @@ public abstract class AvatarRendererMixin {
             at = @At("TAIL"))
     private void hardwrought$extractBodyLook(Avatar entity, AvatarRenderState state, float partialTick, CallbackInfo callback) {
         BodyMarks.extract(entity, state);
+        de.ipnats.hardwrought.client.ritual.AscensionOutline.extract(entity, state, partialTick);
         // The easter egg's makers pass for players: their name over their head, no "NPC" under it.
         if (entity instanceof Mannequin && entity.getCustomName() != null
                 && StampiEasterEgg.isMaker(entity.getCustomName().getString())) {

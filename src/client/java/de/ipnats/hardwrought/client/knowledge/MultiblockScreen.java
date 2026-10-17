@@ -307,6 +307,13 @@ public class MultiblockScreen extends Screen {
         return super.mouseReleased(event);
     }
 
+    /** A great structure, a temple, may be looked at closer: near enough to make out a dozen blocks across. */
+    private float maxZoom() {
+        float across = (float) Math.sqrt(multiblock.width() * multiblock.width() + multiblock.height() * multiblock.height()
+                + multiblock.depth() * multiblock.depth());
+        return Math.max(MAX_ZOOM, across / 12);
+    }
+
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (scrollY == 0) return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
@@ -316,7 +323,7 @@ public class MultiblockScreen extends Screen {
             scroll = Math.max(0, scroll - (int) Math.signum(scrollY) * font.lineHeight * 2);
             return true;
         }
-        zoom = Math.clamp(zoom * (scrollY > 0 ? 1.15f : 1 / 1.15f), MIN_ZOOM, MAX_ZOOM);
+        zoom = Math.clamp(zoom * (scrollY > 0 ? 1.15f : 1 / 1.15f), MIN_ZOOM, maxZoom());
         return true;
     }
 

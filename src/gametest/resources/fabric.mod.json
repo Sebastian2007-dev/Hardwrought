@@ -37,6 +37,8 @@
       "de.ipnats.hardwrought.test.WitherGameTests",
       "de.ipnats.hardwrought.test.UnderworldGameTests",
       "de.ipnats.hardwrought.test.WitchKingGameTests",
+      "de.ipnats.hardwrought.test.EndGameTests",
+      "de.ipnats.hardwrought.test.RitualGameTests",
       "de.ipnats.hardwrought.test.FirecraftGameTests",
       "de.ipnats.hardwrought.test.MachineryGameTests",
       "de.ipnats.hardwrought.test.KineticsGameTests",
@@ -70,6 +72,9 @@
       "de.ipnats.hardwrought.test.MultiblockClientGameTest",
       "de.ipnats.hardwrought.test.UnderworldClientGameTest",
       "de.ipnats.hardwrought.test.WitchKingClientGameTest",
+      "de.ipnats.hardwrought.test.EndClientGameTest",
+      "de.ipnats.hardwrought.test.EndDragonClientGameTest",
+      "de.ipnats.hardwrought.test.RitualClientGameTest",
       "de.ipnats.hardwrought.test.HammerWarningClientGameTest"
     ]
   }

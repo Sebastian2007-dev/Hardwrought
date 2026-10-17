@@ -31,7 +31,7 @@ public final class FxLighting {
     private static final float[] colors = new float[MAX_LIGHTS * 4];
     private static int count;
     /** Placed lights stand in for most of vanilla's block light; the shader knows this as HW_PLACED_INTENSITY. */
-    private static final float PLACED_INTENSITY = 1.2f;
+    private static final float PLACED_INTENSITY = 1.4f;
 
     /** A light this frame. The weight leaves out the flicker, so the order does not change with every breath of a flame. */
     private record Candidate(float x, float y, float z, float radius, int color, float intensity,
@@ -50,8 +50,8 @@ public final class FxLighting {
         for (DynamicLight.Carried light : carried) {
             if (light.carrier().isRemoved()) continue;
             Vec3 at = light.position(partial).subtract(camera);
-            float radius = light.level() * 1.15f;
-            float steady = 1.6f;
+            float radius = light.level() * 1.3f;
+            float steady = 2.2f;
             float intensity = steady * (light.flame() ? flicker(seconds, light.carrier().getId()) : 1);
             candidates.add(new Candidate((float) at.x, (float) at.y, (float) at.z, radius, light.color(),
                     intensity, weight(steady, radius, at.length()), false));
@@ -60,7 +60,7 @@ public final class FxLighting {
             Vec3 at = light.position().subtract(camera);
             double distance = at.length();
             // Fades out towards the edge of the search, so a light leaving it does not blink out.
-            float fade = (float) Math.clamp((PlacedLights.RANGE - distance) / 6, 0, 1);
+            float fade = (float) Math.clamp((PlacedLights.RANGE - distance) / 12, 0, 1);
             if (fade <= 0) continue;
             float radius = light.level();
             float steady = PLACED_INTENSITY * fade;

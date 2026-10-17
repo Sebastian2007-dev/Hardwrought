@@ -420,6 +420,8 @@ public final class BuildingPhysics {
         BlockState state = structural(level, pos);
         if (storage(state)) return Statics.ANCHOR;
         if (BuiltBlocks.isBuilt(level, pos)) {
+            // A temple of the end of the game, round its standing altar, is held up by it (see TempleSupport).
+            if (de.ipnats.hardwrought.ritual.TempleSupport.holds(level, pos, state)) return Statics.ANCHOR;
             Optional<Statics.Member> member = StructuralMaterials.of(level.getServer(), state);
             if (member.isPresent() && BuiltBlocks.isAnchored(level, pos)) return member.get().withAnchor();
             return member.<Statics.Cell>map(value -> value).orElse(Statics.EMPTY);

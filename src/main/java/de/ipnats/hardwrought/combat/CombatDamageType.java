@@ -56,7 +56,7 @@ public enum CombatDamageType {
         if (source.is(DamageTypeTags.IS_FREEZING)) return COLD;
         if (source.is(DamageTypeTags.IS_LIGHTNING)) return ELECTRIC;
         if (source.is(DamageTypeTags.IS_EXPLOSION)) return EXPLOSION;
-        if (source.is(DamageTypes.MAGIC) || source.is(DamageTypes.INDIRECT_MAGIC)
+        if (source.is(DamageTypes.MAGIC) || source.is(DamageTypes.INDIRECT_MAGIC) || source.is(ModDamageTypes.HEX) || source.is(ModDamageTypes.VOID)
                 || source.is(DamageTypes.WITHER) || source.is(DamageTypes.SONIC_BOOM)) {
             return MAGIC;
         }

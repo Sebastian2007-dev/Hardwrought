@@ -35,9 +35,9 @@ public final class PlacedLights {
     public static final TagKey<Block> SHADER_LIGHTS = TagKey.create(Registries.BLOCK, Hardwrought.id("shader_lights"));
 
     /** Lights farther from the player than this are not looked for. */
-    public static final int RANGE = 28;
+    public static final int RANGE = 48;
     /** The shader takes only so many; the nearest win. */
-    private static final int MAX_LIGHTS = 40;
+    private static final int MAX_LIGHTS = 64;
     /** Placing a torch shows in the shaders within this many ticks; vanilla's light is there at once. */
     private static final int SCAN_INTERVAL = 8;
 

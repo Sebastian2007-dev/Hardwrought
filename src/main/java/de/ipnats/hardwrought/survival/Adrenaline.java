@@ -7,9 +7,11 @@ import de.ipnats.hardwrought.core.events.CoreLifecycle;
 import de.ipnats.hardwrought.core.registry.ModEffects;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 
 /**
@@ -21,6 +23,10 @@ import net.minecraft.world.effect.MobEffectInstance;
  * over for {@link #COMBAT_TICKS}, the account is paid: the stamina drains away and the health goes, over
  * a few seconds, from within. It never takes a player below {@link #FLOOR_HEALTH} — the crash knocks a
  * player down, it does not kill them — and it never saves one either: a blow that kills, kills.
+ *
+ * <p>Hunger is not felt in a fight either: while adrenaline shows, an empty stomach neither hurts nor
+ * stops a player from running, and up to {@link #HUNGER_MASK} of what effort costs the stomach is not
+ * spent at all. Unlike stamina and damage, this is not owed afterwards.
  */
 public final class Adrenaline {
     /** How long after the last blow a fight is over, in ticks. */
@@ -28,6 +34,8 @@ public final class Adrenaline {
     /** At full adrenaline, the share of stamina and of damage not yet felt. */
     public static final double STAMINA_MASK = 0.5;
     public static final double DAMAGE_MASK = 0.4;
+    /** At full adrenaline, the share of hunger not spent at all; while it shows, at least a third of that. */
+    public static final double HUNGER_MASK = 0.6;
     /** What a blow taken and a blow struck add to it, 0 to 1. */
     static final double TAKEN_RISE = 0.25, STRUCK_RISE = 0.15;
     /** How fast it ebbs a second, in a fight and after. */
@@ -61,6 +69,15 @@ public final class Adrenaline {
 
     public static void initialize() {
         ServerTickEvents.END_SERVER_TICK.register(Adrenaline::tick);
+        // Hunger is not felt in a fight: an empty stomach does not hurt while it runs.
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) ->
+                !(entity instanceof ServerPlayer player && source.is(DamageTypes.STARVE) && player.hasEffect(ModEffects.ADRENALINE)));
+    }
+
+    /** Hunger spent: in a fight, part of it is simply not spent. {@code exhaustion} is positive. */
+    public static float maskHunger(ServerPlayer player, float exhaustion) {
+        if (exhaustion <= 0 || !player.hasEffect(ModEffects.ADRENALINE)) return exhaustion;
+        return (float) (exhaustion * (1 - HUNGER_MASK * Math.max(of(player).level(), 0.34)));
     }
 
     static Rush of(ServerPlayer player) {
