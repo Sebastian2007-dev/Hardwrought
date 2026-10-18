@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "T": "hardwrought:steel_plate",
+    "W": "hardwrought:winding",
+    "C": "hardwrought:transformer_core",
+    "B": "hardwrought:bushing"
+  },
+  "pattern": [
+    "TWT",
+    "TCT",
+    "TBT"
+  ],
+  "result": {
+    "id": "hardwrought:transformer"
+  }
+}

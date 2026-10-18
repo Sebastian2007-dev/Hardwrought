@@ -16,8 +16,8 @@ import net.minecraft.world.level.block.state.BlockState;
  * the more it moves and the faster.
  *
  * <p>It joins other item pipes of any metal, and anything beside it that takes or gives items: a
- * chest, a hopper, a furnace, the chute of an ore drill. A side set to draw with a pipe wrench takes
- * items out of the block there; anything that pushes items out (a drill, a hopper) puts them in on
+ * chest, a hopper, a furnace. A side set to draw with a pipe wrench takes
+ * items out of the block there; anything that pushes items out (a hopper) puts them in on
  * any side. Inside, each batch goes to the nearest block along the pipes that has room for it, never
  * back where it came in and never into a block the pipes draw from. See {@link ItemPipeBlockEntity}.
  */
@@ -41,8 +41,6 @@ public class ItemPipeBlock extends ConnectedPipeBlock {
     @Override
     protected boolean offers(Level level, BlockPos neighbour, Direction face) {
         BlockState state = level.getBlockState(neighbour);
-        // The chute of a drill hands its ore to what is outside it, so the pipe reaches in to meet it.
-        if (state.getBlock() instanceof DrillFrameBlock && state.getValue(DrillFrameBlock.OUTPUT)) return true;
         return ItemStorage.SIDED.find(level, neighbour, face) != null;
     }
 

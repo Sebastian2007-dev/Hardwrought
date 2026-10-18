@@ -19,7 +19,6 @@
     "minecraft:barrel",
     "minecraft:ladder",
     "minecraft:scaffolding",
-    "minecraft:campfire",
     "minecraft:bowl",
     "minecraft:paper",
     "minecraft:book",
@@ -43,19 +42,7 @@
     "minecraft:leather_leggings",
     "minecraft:leather_boots",
     {
-      "id": "hardwrought:stone_hatchet",
-      "required": false
-    },
-    {
-      "id": "hardwrought:stone_pickaxe",
-      "required": false
-    },
-    {
       "id": "hardwrought:basic_backpack",
-      "required": false
-    },
-    {
-      "id": "hardwrought:brick_furnace",
       "required": false
     },
     {
@@ -68,7 +55,6 @@
     "hardwrought:bronze_mixture",
     "hardwrought:bronze_nails",
     "hardwrought:hammer",
-    "hardwrought:smithing_gloves",
     "hardwrought:frame_backpack",
     "hardwrought:provisional_portal_stabilizer"
   ]

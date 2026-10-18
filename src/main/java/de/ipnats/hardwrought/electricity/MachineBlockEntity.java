@@ -69,8 +69,9 @@ public class MachineBlockEntity extends ElectricBlockEntity implements WorldlyCo
                 case 0 -> Math.round(progress * 1000.0f / machine().ticks());
                 case 1 -> Math.round(Math.abs(volts()) * 10.0f);
                 case 2 -> Math.round(Math.abs(amps()) * 100.0f);
+                case 4 -> (int) Math.round(machine().ratedVolts());
                 default -> broken() ? MachineMenu.BURNT : !canWork() ? MachineMenu.IDLE
-                        : rate(volts()) <= 0.0 ? MachineMenu.STALLED : MachineMenu.RUNNING;
+                        : rate(volts(), machine().ratedVolts()) <= 0.0 ? MachineMenu.STALLED : MachineMenu.RUNNING;
             };
         }
 
@@ -139,12 +140,19 @@ public class MachineBlockEntity extends ElectricBlockEntity implements WorldlyCo
         return Math.abs(volts) < STALL_VOLTS ? 0.0 : share * share;
     }
 
+    /** The same for a machine wound for another voltage: it stalls below half of it. */
+    public static double rate(double volts, double rated) {
+        double share = Math.abs(volts) / rated;
+        return share < STALL_VOLTS / RATED_VOLTS ? 0.0 : share * share;
+    }
+
     @Override
     public Component note() {
         if (broken()) return Component.translatable("message.hardwrought.meter.motor_burnt");
         if (!canWork()) return Component.translatable("message.hardwrought.meter.motor_idle");
-        double rate = rate(volts());
-        return rate <= 0.0 ? Component.translatable("message.hardwrought.meter.motor_stalled", (int) STALL_VOLTS)
+        double rate = rate(volts(), machine().ratedVolts());
+        return rate <= 0.0 ? Component.translatable("message.hardwrought.meter.motor_stalled",
+                (int) (machine().ratedVolts() * STALL_VOLTS / RATED_VOLTS))
                 : Component.translatable("message.hardwrought.meter.motor_running", String.format(Locale.ROOT, "%.0f", rate * 100.0));
     }
 
@@ -152,7 +160,8 @@ public class MachineBlockEntity extends ElectricBlockEntity implements WorldlyCo
     protected void solved(ServerLevel level, double volts, double amps, boolean wet, double seconds) {
         super.solved(level, volts, amps, wet, seconds);
         if (seconds <= 0.0 || broken()) return;
-        double live = Math.abs(amps) > 0.0 ? Math.abs(volts) : 0.0;
+        // Measured as if it were a 60-volt machine, so that one wound for 240 strains at four times the voltage.
+        double live = Math.abs(amps) > 0.0 ? Math.abs(volts) * RATED_VOLTS / machine().ratedVolts() : 0.0;
         if (live >= STRAIN_VOLTS) {
             double over = (live - STRAIN_VOLTS) / (RATED_VOLTS * 1.5 - STRAIN_VOLTS);
             strain += (float) ((0.25 + over * over) * seconds);
@@ -181,7 +190,7 @@ public class MachineBlockEntity extends ElectricBlockEntity implements WorldlyCo
             machine.asking = wants;
             Electricity.update(server, pos);
         }
-        double rate = wants ? rate(machine.volts()) : 0.0;
+        double rate = wants ? rate(machine.volts(), machine.machine().ratedVolts()) : 0.0;
         boolean working = rate > 0.0;
         if (working) {
             int before = (int) machine.progress;
@@ -208,6 +217,7 @@ public class MachineBlockEntity extends ElectricBlockEntity implements WorldlyCo
     private boolean canWork() {
         ItemStack result = result();
         if (result.isEmpty()) return false;
+        if (items.get(INPUT).getCount() < machine().pieces(items.get(INPUT))) return false;
         ItemStack output = items.get(OUTPUT);
         return output.isEmpty() || (ItemStack.isSameItemSameComponents(output, result)
                 && output.getCount() + result.getCount() <= output.getMaxStackSize());
@@ -215,7 +225,7 @@ public class MachineBlockEntity extends ElectricBlockEntity implements WorldlyCo
 
     private void workOne() {
         ItemStack result = result().copy();
-        items.get(INPUT).shrink(1);
+        items.get(INPUT).shrink(machine().pieces(items.get(INPUT)));
         ItemStack output = items.get(OUTPUT);
         if (output.isEmpty()) items.set(OUTPUT, result);
         else output.grow(result.getCount());

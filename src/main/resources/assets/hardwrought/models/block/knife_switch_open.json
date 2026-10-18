@@ -1,0 +1,9 @@
+{
+  "parent": "hardwrought:block/switchgear",
+  "textures": {
+    "front": "hardwrought:block/hardwrought/knife_switch_open",
+    "side": "hardwrought:block/hardwrought/switchgear_side",
+    "top": "hardwrought:block/hardwrought/switchgear_top",
+    "particle": "hardwrought:block/hardwrought/switchgear_side"
+  }
+}

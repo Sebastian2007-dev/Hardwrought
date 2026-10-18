@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "I": "hardwrought:iron_plate",
+    "P": "hardwrought:porcelain",
+    "F": "hardwrought:fuse_cartridge"
+  },
+  "pattern": [
+    "III",
+    "PFP",
+    "III"
+  ],
+  "result": {
+    "id": "hardwrought:fuse_box"
+  }
+}

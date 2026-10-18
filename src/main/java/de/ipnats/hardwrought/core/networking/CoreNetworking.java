@@ -16,6 +16,7 @@ public final class CoreNetworking {
         PayloadTypeRegistry.clientboundPlay().register(SeasonPayload.TYPE, SeasonPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(CompendiumPagePayload.TYPE, CompendiumPagePayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(KnowledgeNotePayload.TYPE, KnowledgeNotePayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(JournalNotePayload.TYPE, JournalNotePayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ItemWeightPayload.TYPE, ItemWeightPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(MeltingPointPayload.TYPE, MeltingPointPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(FoodNutrientsPayload.TYPE, FoodNutrientsPayload.CODEC);
@@ -25,6 +26,7 @@ public final class CoreNetworking {
         PayloadTypeRegistry.serverboundPlay().register(ForgingPayloads.Cancel.TYPE, ForgingPayloads.Cancel.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(AtlasPayloads.Tiles.TYPE, AtlasPayloads.Tiles.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(AtlasPayloads.Markers.TYPE, AtlasPayloads.Markers.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(AtlasPayloads.Bearers.TYPE, AtlasPayloads.Bearers.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(AtlasPayloads.Request.TYPE, AtlasPayloads.Request.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(AtlasPayloads.Mark.TYPE, AtlasPayloads.Mark.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(AtlasPayloads.Unmark.TYPE, AtlasPayloads.Unmark.CODEC);
@@ -35,17 +37,9 @@ public final class CoreNetworking {
         PayloadTypeRegistry.clientboundPlay().register(GrindingPayloads.Open.TYPE, GrindingPayloads.Open.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(GrindingPayloads.Pass.TYPE, GrindingPayloads.Pass.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SleepRequestPayload.TYPE, SleepRequestPayload.CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(OreDrillPayloads.Info.TYPE, OreDrillPayloads.Info.CODEC);
-        PayloadTypeRegistry.serverboundPlay().register(OreDrillPayloads.Watch.TYPE, OreDrillPayloads.Watch.CODEC);
-        ServerPlayNetworking.registerGlobalReceiver(OreDrillPayloads.Watch.TYPE, (payload, context) -> {
-            var player = context.player();
-            if (player.blockPosition().distSqr(payload.pos())
-                    > de.ipnats.hardwrought.machinery.OreDrillBlock.WATCH_RANGE_SQR) return;
-            if (player.level().getBlockEntity(payload.pos())
-                    instanceof de.ipnats.hardwrought.machinery.OreDrillBlockEntity drill) {
-                ServerPlayNetworking.send(player, drill.info(player, false));
-            }
-        });
+        PayloadTypeRegistry.serverboundPlay().register(DrinkByHandPayload.TYPE, DrinkByHandPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(DrinkByHandPayload.TYPE,
+                (payload, context) -> de.ipnats.hardwrought.water.WaterEvents.drinkByHand(context.player()));
         PayloadTypeRegistry.serverboundPlay().register(CompendiumRequestPayload.TYPE, CompendiumRequestPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(LookPayloads.Request.TYPE, LookPayloads.Request.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(LookPayloads.Answer.TYPE, LookPayloads.Answer.CODEC);

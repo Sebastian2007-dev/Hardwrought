@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "G": "hardwrought:silicone_gasket",
+    "E": "hardwrought:elite_circuit",
+    "W": "hardwrought:winding",
+    "M": "hardwrought:plate_press_mk3",
+    "P": "hardwrought:electrical_steel_plate"
+  },
+  "pattern": [
+    "GEG",
+    "WMW",
+    "GPG"
+  ],
+  "result": {
+    "id": "hardwrought:plate_press_mk4"
+  }
+}

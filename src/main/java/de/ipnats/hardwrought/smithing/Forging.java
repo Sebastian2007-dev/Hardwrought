@@ -100,7 +100,7 @@ public final class Forging {
                     new ItemStack(Hammers.least(resultItem)).getHoverName()), true);
             return false;
         }
-        if (!Smithing.isIngot(recipe.input()) && tooCold(player, held)) return false;
+        if (tooCold(player, held)) return false;
         if (held.getCount() < recipe.count()) {
             player.sendSystemMessage(Component.translatable("message.hardwrought.forging_needs_more",
                     recipe.count(), held.getHoverName()), true);
@@ -122,9 +122,9 @@ public final class Forging {
      * One blow. It puts right whatever is wrong where it lands — as much as the hammer covers, see
      * {@link Hammers} — takes a little
      * heat out of the piece, and is counted: a blow that found nothing to put right is a wasted one.
-     * Raw metal being consolidated into an ingot still has to remain above working heat. Finished
-     * ingots can be shaped at any temperature; when a tool part is struck above the top of its ideal
-     * range, the blow still moves metal but strains the finished quality. The last blow that makes
+     * Every piece has to be at working heat: cold iron does not move, raw lump or finished bar alike, and
+     * has to go back to the fire. When a tool part is struck above the top of its working range, the
+     * blow still moves metal but strains the finished quality. The last blow that makes
      * the shape right turns the piece into what it was becoming.
      */
     public static boolean strike(ServerPlayer player, BlockPos anvil, int x, int y) {
@@ -145,7 +145,7 @@ public final class Forging {
         }
 
         double temperature = Heat.of(piece, now);
-        if (recipe != null && !Smithing.isIngot(recipe.input()) && tooCold(player, piece)) {
+        if (recipe != null && tooCold(player, piece)) {
             level.playSound(null, anvil, SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.2f, 1.6f);
             return false;
         }
@@ -245,7 +245,7 @@ public final class Forging {
     }
 
     /**
-     * Whether raw metal is below its working heat. Ingot recipes deliberately bypass this check.
+     * Whether the piece is below its working heat.
      * Tells the player because a hammer bouncing off a cold raw lump without a word looks like a bug.
      */
     private static boolean tooCold(ServerPlayer player, ItemStack piece) {

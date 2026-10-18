@@ -42,8 +42,9 @@ public final class RefiningRecipes {
         // The still: a bucket of crude oil and three bottles give a bottle of each light cut and bitumen.
         ItemStack still = new ItemStack(ModItems.STILL);
         List<List<ItemStack>> charge = WorldRecipes.one(FluidIcons.liquid(ModFluids.CRUDE_OIL, 1000), new ItemStack(Items.GLASS_BOTTLE, 3));
-        for (ItemStack product : List.of(new ItemStack(ModItems.LIGHT_FRACTION), new ItemStack(ModItems.FUEL_FRACTION),
-                new ItemStack(ModItems.HEAVY_OIL), new ItemStack(ModItems.BITUMEN))) {
+        // Read off the still itself, so that what a batch can give — the raw sulfur that comes over now
+        // and then too — is all in the book.
+        for (ItemStack product : de.ipnats.hardwrought.chemistry.StillRecipes.mostOf(new ItemStack(ModItems.CRUDE_OIL_BUCKET))) {
             recipes.add(new WorldRecipe(Hardwrought.id("still/" + BuiltInRegistries.ITEM.getKey(product.getItem()).getPath()),
                     charge, product, still));
         }
@@ -53,6 +54,14 @@ public final class RefiningRecipes {
                 new ItemStack(ModItems.SPIRIT), still));
         recipes.add(new WorldRecipe(Hardwrought.id("still/sulfur"), WorldRecipes.one(new ItemStack(ModItems.RAW_SULFUR)),
                 new ItemStack(ModItems.SULFUR), still));
+        // A bottle of the still emptied into a tank or a pipe is a third of a bucket of its liquid: the
+        // only way to a bucket of it.
+        for (RefineryProduct product : RefineryProduct.values()) {
+            var bottle = RefineryFluids.bottleOf(product);
+            if (bottle == null) continue;
+            recipes.add(new WorldRecipe(Hardwrought.id("emptying/" + product.getSerializedName()),
+                    WorldRecipes.one(new ItemStack(bottle)), FluidIcons.liquid(product.source(), BOTTLE), ItemStack.EMPTY));
+        }
 
         // The column: each batch of crude oil, and what every tray catches of it.
         ItemStack base = new ItemStack(RefineryBlocks.BASE);

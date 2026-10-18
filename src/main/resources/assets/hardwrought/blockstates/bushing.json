@@ -1,0 +1,30 @@
+{
+  "variants": {
+    "facing=up": {
+      "model": "hardwrought:block/bushing"
+    },
+    "facing=down": {
+      "model": "hardwrought:block/bushing",
+      "x": 180
+    },
+    "facing=north": {
+      "model": "hardwrought:block/bushing",
+      "x": 90
+    },
+    "facing=east": {
+      "model": "hardwrought:block/bushing",
+      "x": 90,
+      "y": 90
+    },
+    "facing=south": {
+      "model": "hardwrought:block/bushing",
+      "x": 90,
+      "y": 180
+    },
+    "facing=west": {
+      "model": "hardwrought:block/bushing",
+      "x": 90,
+      "y": 270
+    }
+  }
+}

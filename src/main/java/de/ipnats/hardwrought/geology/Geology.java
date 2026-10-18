@@ -14,10 +14,10 @@ import java.util.Map;
  * Milestone-6 geology: specification sections 51 to 54. What the ground is made of, where the rock
  * is worth working, and what a prospector can read off it.
  *
- * <p>Ore <em>blocks</em> are placed by ordinary world generation and this model does not touch them.
- * What it adds is the layer underneath the blocks: a region is made of one rock, some patches of
- * that rock are far richer than the rest, and both of those are things a player can find out and
- * act on. A rich patch pays more per block broken in it and is what a drill wants to stand on.
+ * <p>Ordinary ore veins are placed by ordinary world generation. What this adds is the layer underneath:
+ * a region is made of one rock, some patches of that rock are far richer than the rest, and both of those
+ * are things a player can find out and act on. A rich patch is threaded with veins of its ore (see
+ * {@link OreBodies}) and pays more per block broken in it.
  *
  * <p>Everything here is a <em>pure function of the world seed and a coordinate</em>. Nothing is
  * stored and nothing is cached, for three reasons that all matter:
@@ -138,7 +138,7 @@ public final class Geology {
         return bodyOver(seed, profiles, x, z, ore);
     }
 
-    /** Any body under this column, whatever ore it is. This is what a drill stands on. */
+    /** Any body under this column, whatever ore it is. */
     public static OreDeposit bodyOver(long seed, Map<Identifier, RockProfile> profiles, int x, int z) {
         return bodyOver(seed, profiles, x, z, null);
     }

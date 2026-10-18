@@ -1,7 +1,7 @@
 {
   "type": "minecraft:ore",
   "discard_chance_on_air_exposure": 0.0,
-  "size": 6,
+  "size": 9,
   "targets": [
     {
       "state": "hardwrought:nickel_ore",

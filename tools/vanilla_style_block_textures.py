@@ -408,9 +408,6 @@ def rewrite_models():
                                       "minecraft:block/anvil": "drill_steel"})
     replace_in("still.json", {"minecraft:block/copper_block": "hammered_copper",
                                "minecraft:block/cut_copper": "copper_pipe"})
-    replace_in("ore_drill.json", {"minecraft:block/iron_block": "iron_brace",
-                                   "minecraft:block/piston_top": "drill_steel",
-                                   "minecraft:block/piston_bottom": "drill_steel"})
     for name in ("wooden_anvil.json", "wooden_anvil_cracked.json", "wooden_anvil_split.json"):
         replace_in(name, {"minecraft:block/oak_log": "wooden_anvil_side",
                           "minecraft:block/stripped_oak_log_top": "wooden_anvil_top"})

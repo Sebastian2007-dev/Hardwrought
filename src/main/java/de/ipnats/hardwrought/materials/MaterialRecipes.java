@@ -1,9 +1,7 @@
 package de.ipnats.hardwrought.materials;
 
 import de.ipnats.hardwrought.Hardwrought;
-import de.ipnats.hardwrought.electricity.ElectricBlocks;
 import de.ipnats.hardwrought.knowledge.FluidIcons;
-import de.ipnats.hardwrought.knowledge.WorldRecipes;
 import de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.ItemStack;
@@ -49,10 +47,6 @@ public final class MaterialRecipes {
                 recipes.add(new WorldRecipe(Hardwrought.id(group(recipe) + "/" + path), inputs, output.copy(), controller));
             }
         }
-        recipes.add(new WorldRecipe(Hardwrought.id("pressing/plastic_sheet"), WorldRecipes.one(new ItemStack(Materials.PLASTIC_PELLETS)),
-                new ItemStack(Materials.PLASTIC_SHEET), new ItemStack(ElectricBlocks.PLATE_PRESS)));
-        recipes.add(new WorldRecipe(Hardwrought.id("sawing/silicon_wafer"), WorldRecipes.one(new ItemStack(Materials.RAW_SILICON)),
-                new ItemStack(Materials.SILICON_WAFER, 4), new ItemStack(ElectricBlocks.SAWMILL)));
         return recipes;
     }
 

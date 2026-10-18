@@ -28,6 +28,7 @@ public final class AtlasClient {
 
     private static final Map<Identifier, Map<Long, byte[]>> tiles = new HashMap<>();
     private static final Map<Identifier, List<Atlas.Marker>> markers = new HashMap<>();
+    private static final Map<Identifier, List<Atlas.Bearer>> bearers = new HashMap<>();
 
     private AtlasClient() { }
 
@@ -44,9 +45,12 @@ public final class AtlasClient {
         });
         ClientPlayNetworking.registerGlobalReceiver(AtlasPayloads.Markers.TYPE,
                 (payload, context) -> markers.put(payload.dimension(), payload.markers()));
+        ClientPlayNetworking.registerGlobalReceiver(AtlasPayloads.Bearers.TYPE,
+                (payload, context) -> bearers.put(payload.dimension(), payload.bearers()));
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             tiles.clear();
             markers.clear();
+            bearers.clear();
         });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (OPEN.consumeClick()) open();
@@ -72,5 +76,10 @@ public final class AtlasClient {
 
     public static List<Atlas.Marker> markers(Identifier dimension) {
         return markers.getOrDefault(dimension, List.of());
+    }
+
+    /** The other bearers near this one, as the server last told it. */
+    public static List<Atlas.Bearer> bearers(Identifier dimension) {
+        return bearers.getOrDefault(dimension, List.of());
     }
 }

@@ -28,7 +28,7 @@ public class MachineMenu extends AbstractContainerMenu {
     public static final int[] OUTPUT_AT = {122, 35};
     /** What the machine says about itself, in {@link #status}. */
     public static final int IDLE = 0, RUNNING = 1, STALLED = 2, BURNT = 3;
-    public static final int DATA_COUNT = 4;
+    public static final int DATA_COUNT = 5;
 
     private final Container machine;
     private final ContainerData data;
@@ -75,6 +75,12 @@ public class MachineMenu extends AbstractContainerMenu {
 
     public int status() {
         return data.get(3);
+    }
+
+    /** The voltage it is wound for. */
+    public float ratedVolts() {
+        int rated = data.get(4);
+        return rated > 0 ? rated : (float) MachineBlockEntity.RATED_VOLTS;
     }
 
     @Override

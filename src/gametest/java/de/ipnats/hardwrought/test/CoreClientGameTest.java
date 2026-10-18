@@ -1193,7 +1193,7 @@ public final class CoreClientGameTest implements FabricClientGameTest {
 
         world.getServer().runOnServer(server -> server.getPlayerList().getPlayers().getFirst().setItemSlot(
                 net.minecraft.world.entity.EquipmentSlot.MAINHAND,
-                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.TORCH)));
+                de.ipnats.hardwrought.environment.Torches.lit()));
         context.waitFor(client -> DynamicLight.ownLevel() > 0, 600);
         context.runOnClient(client -> {
             // The light is drawn by the shaders; nothing may be placed in the world for it.
@@ -1293,7 +1293,7 @@ public final class CoreClientGameTest implements FabricClientGameTest {
 
         world.getServer().runOnServer(server -> server.getPlayerList().getPlayers().getFirst().setItemSlot(
                 net.minecraft.world.entity.EquipmentSlot.MAINHAND,
-                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.TORCH)));
+                de.ipnats.hardwrought.environment.Torches.lit()));
         context.waitFor(client -> de.ipnats.hardwrought.client.environment.Darkness.adaptation() < 0.2f, 100);
         world.getServer().runOnServer(server -> server.getPlayerList().getPlayers().getFirst().setItemSlot(
                 net.minecraft.world.entity.EquipmentSlot.MAINHAND, net.minecraft.world.item.ItemStack.EMPTY));

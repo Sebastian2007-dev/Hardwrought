@@ -32,12 +32,6 @@ public final class ModBlockEntities {
                     new BlockEntityType<>(de.ipnats.hardwrought.machinery.StarterCrusherBlockEntity::new,
                             Set.of(ModBlocks.STARTER_CRUSHER)));
 
-    /** An ore drill's catch and how far the next piece has got. */
-    public static final BlockEntityType<de.ipnats.hardwrought.machinery.OreDrillBlockEntity> ORE_DRILL =
-            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Hardwrought.id("ore_drill"),
-                    new BlockEntityType<>(de.ipnats.hardwrought.machinery.OreDrillBlockEntity::new,
-                            Set.of(ModBlocks.ORE_DRILL)));
-
     /** A rig's borehole, its tank of oil and its store of gas. */
     public static final BlockEntityType<de.ipnats.hardwrought.oil.DrillingRigBlockEntity> DRILLING_RIG =
             Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Hardwrought.id("drilling_rig"),

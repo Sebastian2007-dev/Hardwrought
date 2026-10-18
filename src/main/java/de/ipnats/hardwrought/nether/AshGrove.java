@@ -64,6 +64,7 @@ public final class AshGrove {
     private AshGrove() { }
 
     public static void initialize() {
+        de.ipnats.hardwrought.knowledge.LootSources.inWorld(() -> NETHER_GRASS.asItem());
         ResourceKey<Item> item = ResourceKey.create(Registries.ITEM, Hardwrought.id("nether_grass"));
         Registry.register(BuiltInRegistries.ITEM, item,
                 new BlockItem(NETHER_GRASS, new Item.Properties().setId(item).useBlockDescriptionPrefix()));

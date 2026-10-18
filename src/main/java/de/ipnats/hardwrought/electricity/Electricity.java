@@ -61,6 +61,8 @@ public final class Electricity {
     public static final double SHOCK_VOLTS = 30.0;
     /** What a point standing in water, or rained on, lets through to the ground. */
     public static final double WATER_OHMS = 20.0, RAIN_OHMS = 150.0;
+    /** Up to this a wet support of glazed brick holds; above it rain on it flashes over. Porcelain holds the second. */
+    public static final double FLASHOVER_VOLTS = 150.0, PORCELAIN_VOLTS = 1000.0;
     /** How far through water a wet point reaches. */
     public static final double WATER_REACH = 4.0;
     /** How much heat a wire stands before it parts; see {@link #cook} for how fast it gathers. */
@@ -81,15 +83,23 @@ public final class Electricity {
     public record Flow(int from, int to, Gauge gauge, double length, double amps) { }
 
     /**
+     * A transformer between its low side, the block itself, and its high side, the coil on its marked
+     * face: the high side stands at {@code ratio} times the low, less what its windings keep.
+     *
+     * @param amps the current out of the high side; the low side takes {@code ratio} times as much
+     */
+    public record Coupling(int low, int high, double ratio, double ohms, double amps) { }
+
+    /**
      * One worked-out network.
      *
      * @param generated what its dynamos put into it, in watts
      * @param delivered what arrives in its lamps
      * @param leaked    what creeps away through wet points
-     * @param lost      what its wires turn into heat
+     * @param lost      what its wires and windings turn into heat
      */
     public record Network(List<ElectricBlockEntity> nodes, double[] volts, double[] amps, boolean[] wet,
-                          List<Flow> flows, double generated, double delivered, double leaked, double lost) {
+                          List<Flow> flows, List<Coupling> couplings, double generated, double delivered, double leaked, double lost) {
         public int indexOf(BlockPos pos) {
             for (int i = 0; i < nodes.size(); i++) if (nodes.get(i).getBlockPos().equals(pos)) return i;
             return -1;
@@ -146,7 +156,8 @@ public final class Electricity {
             return Refusal.FULL;
         }
         if (a.terminal().distanceTo(b.terminal()) > gauge.span()) return Refusal.TOO_FAR;
-        return clear(level, a, b) ? null : Refusal.BLOCKED;
+        // Sheathed wire is laid through a wall as well as along it.
+        return gauge.insulated() || clear(level, a, b) ? null : Refusal.BLOCKED;
     }
 
     /** Strings a wire. The caller has asked {@link #refusal} first. */
@@ -197,14 +208,25 @@ public final class Electricity {
 
     // --- working a network out ---
 
-    /** Whether water (2) or rain (1) is on this point, or neither (0). */
+    /**
+     * Whether water (2) or rain (1) is on this point, or neither (0) — or rain on more voltage than its
+     * insulation stands (3), which lets as much through as standing water, but over no water to shock.
+     * The voltage is the one last worked out: a flashover begins half a second after the line rose.
+     */
     static int wetness(ServerLevel level, ElectricBlockEntity node) {
         BlockPos pos = node.getBlockPos();
         if (level.getFluidState(pos).is(FluidTags.WATER)) return 2;
         for (Direction side : Direction.values()) {
             if (level.getFluidState(pos.relative(side)).is(FluidTags.WATER)) return 2;
         }
-        return node.mindsRain() && level.isRainingAt(pos.above()) ? 1 : 0;
+        if (!level.isRainingAt(pos.above())) return 0;
+        if (Math.abs(node.volts()) > node.insulationVolts()) return 3;
+        return node.mindsRain() ? 1 : 0;
+    }
+
+    /** What a point lets through to the ground for its wetness, in siemens. */
+    private static double leak(int wetness) {
+        return wetness == 2 || wetness == 3 ? 1.0 / WATER_OHMS : wetness == 1 ? 1.0 / RAIN_OHMS : 0.0;
     }
 
     /**
@@ -216,12 +238,16 @@ public final class Electricity {
         BlockState state = node.getBlockState();
         if (state.getBlock() instanceof CoilBlock) {
             BlockPos seat = CoilBlock.seat(pos, state);
+            // The coil on a transformer's high face is coupled to it, not joined.
             return level.isLoaded(seat) && level.getBlockEntity(seat) instanceof ElectricBlockEntity fed && !fed.takesWires()
+                    && fed.joins() && !(fed instanceof TransformerBlockEntity transformer && transformer.highFace() == state.getValue(CoilBlock.FACING))
                     ? List.of(fed) : List.of();
         }
-        if (node.takesWires()) return List.of();
+        if (node.takesWires() || !node.joins()) return List.of();
+        Direction high = node instanceof TransformerBlockEntity transformer ? transformer.highFace() : null;
         List<ElectricBlockEntity> coils = new ArrayList<>();
         for (Direction side : Direction.values()) {
+            if (side == high) continue;
             BlockPos beside = pos.relative(side);
             if (!level.isLoaded(beside)) continue;
             BlockState there = level.getBlockState(beside);
@@ -229,6 +255,19 @@ public final class Electricity {
                     && level.getBlockEntity(beside) instanceof ElectricBlockEntity coil) coils.add(coil);
         }
         return coils;
+    }
+
+    /**
+     * What this point is coupled to through a transformer: for a transformer that works, the coil on
+     * its high face; for that coil, the transformer. Null where it is coupled to nothing.
+     */
+    static ElectricBlockEntity coupled(ServerLevel level, ElectricBlockEntity node) {
+        if (node instanceof TransformerBlockEntity transformer) return transformer.highSide(level);
+        BlockState state = node.getBlockState();
+        if (!(state.getBlock() instanceof CoilBlock)) return null;
+        BlockPos seat = CoilBlock.seat(node.getBlockPos(), state);
+        return level.isLoaded(seat) && level.getBlockEntity(seat) instanceof TransformerBlockEntity transformer
+                && transformer.highSide(level) == node ? transformer : null;
     }
 
     /** Walks and works out the network this point belongs to, without changing anything. Null where it is no point. */
@@ -246,6 +285,7 @@ public final class Electricity {
             }
         }
         List<Edge> edges = new ArrayList<>();
+        List<Coupling> windings = new ArrayList<>();
         while (!pending.isEmpty()) {
             ElectricBlockEntity here = pending.poll();
             int mine = index.get(here.getBlockPos());
@@ -277,9 +317,26 @@ public final class Electricity {
                 }
                 if (mine < theirs) edges.add(new Edge(mine, theirs, null, 0.0));
             }
+            ElectricBlockEntity partner = coupled(level, here);
+            if (partner != null) {
+                Integer theirs = index.get(partner.getBlockPos());
+                if (theirs == null && nodes.size() < MAX_NODES) {
+                    theirs = nodes.size();
+                    nodes.add(partner);
+                    index.put(partner.getBlockPos(), theirs);
+                    pending.add(partner);
+                }
+                // Counted from the transformer's end.
+                if (theirs != null && here instanceof TransformerBlockEntity transformer) {
+                    windings.add(new Coupling(mine, theirs, TransformerBlockEntity.RATIO, TransformerBlockEntity.OHMS, 0.0));
+                }
+            }
         }
 
         int n = nodes.size();
+        // One unknown for the voltage at every point, and one for the current out of every transformer.
+        int unknowns = n + windings.size();
+        double[] solution = new double[unknowns];
         double[] volts = new double[n];
         double[] amps = new double[n];
         boolean[] wet = new boolean[n];
@@ -288,7 +345,7 @@ public final class Electricity {
         for (int i = 0; i < n; i++) {
             int wetness = wetness(level, nodes.get(i));
             wet[i] = wetness > 0;
-            leak[i] = wetness == 2 ? 1.0 / WATER_OHMS : wetness == 1 ? 1.0 / RAIN_OHMS : 0.0;
+            leak[i] = leak(wetness);
             emfs[i] = nodes.get(i).emf();
         }
         List<Flow> flows = new ArrayList<>();
@@ -299,16 +356,16 @@ public final class Electricity {
             for (double emf : emfs) if (emf > 0.0) driven = true;
             if (!driven) {
                 for (Edge edge : edges) flows.add(new Flow(edge.from(), edge.to(), edge.gauge(), edge.length(), 0.0));
-                return new Network(nodes, new double[n], amps, wet, flows, 0.0, 0.0, 0.0, 0.0);
+                return new Network(nodes, new double[n], amps, wet, flows, windings, 0.0, 0.0, 0.0, 0.0);
             }
             // Kirchhoff at every point: what flows in along the wires and out of a source is what flows to ground.
-            double[][] matrix = new double[n][n + 1];
+            double[][] matrix = new double[unknowns][unknowns + 1];
             for (int i = 0; i < n; i++) {
                 ElectricBlockEntity node = nodes.get(i);
                 matrix[i][i] += node.conductance() + leak[i];
                 if (emfs[i] > 0.0) {
                     matrix[i][i] += 1.0 / node.sourceOhms();
-                    matrix[i][n] += emfs[i] / node.sourceOhms();
+                    matrix[i][unknowns] += emfs[i] / node.sourceOhms();
                 }
             }
             for (Edge edge : edges) {
@@ -318,7 +375,19 @@ public final class Electricity {
                 matrix[edge.from()][edge.to()] -= g;
                 matrix[edge.to()][edge.from()] -= g;
             }
-            eliminate(matrix, volts);
+            // A transformer gives its current into the high side and takes ratio times as much from the
+            // low; and the high side stands at ratio times the low, less the drop in its windings.
+            for (int k = 0; k < windings.size(); k++) {
+                Coupling winding = windings.get(k);
+                int current = n + k;
+                matrix[winding.high()][current] -= 1.0;
+                matrix[winding.low()][current] += winding.ratio();
+                matrix[current][winding.high()] = 1.0;
+                matrix[current][winding.low()] = -winding.ratio();
+                matrix[current][current] = winding.ohms();
+            }
+            eliminate(matrix, solution);
+            System.arraycopy(solution, 0, volts, 0, n);
             boolean again = false;
             for (int i = 0; i < n && round < 6; i++) {
                 if (emfs[i] <= 0.0) continue;
@@ -355,7 +424,14 @@ public final class Electricity {
             lost += current * current * ohms;
             flows.add(new Flow(edge.from(), edge.to(), edge.gauge(), edge.length(), current));
         }
-        return new Network(nodes, volts, amps, wet, flows, generated, delivered, leaked, lost);
+        List<Coupling> couplings = new ArrayList<>();
+        for (int k = 0; k < windings.size(); k++) {
+            Coupling winding = windings.get(k);
+            double current = Math.abs(solution[n + k]) < 1e-9 ? 0.0 : solution[n + k];
+            lost += current * current * winding.ohms();
+            couplings.add(new Coupling(winding.low(), winding.high(), winding.ratio(), winding.ohms(), current));
+        }
+        return new Network(nodes, volts, amps, wet, flows, couplings, generated, delivered, leaked, lost);
     }
 
     /** Gaussian elimination with pivoting on an n by n+1 matrix. A point nothing holds to anything stays at nought. */
@@ -394,6 +470,16 @@ public final class Electricity {
     }
 
     /**
+     * Works out again the networks of this block and of every coil against it: where a block opened
+     * between its coils, what was one network is now one on each side, and the side without a source
+     * goes dark only if it is told.
+     */
+    public static void updateAround(ServerLevel level, BlockPos pos) {
+        update(level, pos);
+        for (Direction side : Direction.values()) update(level, pos.relative(side));
+    }
+
+    /**
      * The regular beat: works the network out and lets half a second of it happen — wires heat and
      * cool, lamps strain, the careless are shocked. A network with several dynamos is done once.
      */
@@ -421,6 +507,29 @@ public final class Electricity {
         for (int i = 0; i < network.nodes().size(); i++) {
             network.nodes().get(i).solved(level, network.volts()[i], network.amps()[i], network.wet()[i], seconds);
         }
+        // A transformer that burns out or a fuse that blows changes the network; it is worked out again after.
+        List<BlockPos> changed = new ArrayList<>();
+        for (Coupling coupling : network.couplings()) {
+            if (network.nodes().get(coupling.low()) instanceof TransformerBlockEntity transformer
+                    && transformer.carried(level, coupling.amps(), seconds)) changed.add(transformer.getBlockPos());
+        }
+        // What runs through a switch, a fuse or a breaker is what runs through the joints to its coils;
+        // with one coil in and one out, the larger of the two is all of it.
+        Map<SwitchgearBlockEntity, Double> through = new HashMap<>();
+        for (Flow flow : network.flows()) {
+            if (flow.gauge() != null) continue;
+            for (int end : new int[] {flow.from(), flow.to()}) {
+                if (network.nodes().get(end) instanceof SwitchgearBlockEntity gear) {
+                    through.merge(gear, Math.abs(flow.amps()), Math::max);
+                }
+            }
+        }
+        for (ElectricBlockEntity node : network.nodes()) {
+            if (node instanceof SwitchgearBlockEntity gear && gear.carried(level, through.getOrDefault(gear, 0.0), seconds)) {
+                changed.add(gear.getBlockPos());
+            }
+        }
+        for (BlockPos pos : changed) updateAround(level, pos);
         if (seconds > 0.0) return;
         // Looked at again without time passing: a wire that no longer carries too much stops glowing at once.
         for (Flow flow : network.flows()) {
@@ -470,14 +579,20 @@ public final class Electricity {
                 level.sendParticles(ParticleTypes.SMOKE, at.x, at.y, at.z, 1, 0.02, 0.02, 0.02, 0.0);
             }
             double live = Math.max(Math.abs(network.volts()[flow.from()]), Math.abs(network.volts()[flow.to()]));
-            if (live >= SHOCK_VOLTS) shockAlong(level, a.terminal(), b.terminal(), live);
+            if (live >= SHOCK_VOLTS && !flow.gauge().insulated()) shockAlong(level, a.terminal(), b.terminal(), live);
         }
         for (int i = 0; i < network.nodes().size(); i++) {
             if (!network.wet()[i] || Math.abs(network.volts()[i]) < 1.0) continue;
             ElectricBlockEntity node = network.nodes().get(i);
             Vec3 at = node.terminal();
             level.sendParticles(ParticleTypes.ELECTRIC_SPARK, at.x, at.y, at.z, 3, 0.2, 0.2, 0.2, 0.05);
-            if (wetness(level, node) != 2 || Math.abs(network.volts()[i]) < SHOCK_VOLTS) continue;
+            int wetness = wetness(level, node);
+            if (wetness == 3) {
+                // Flashing over: it crackles and glows in the rain.
+                level.sendParticles(ParticleTypes.ELECTRIC_SPARK, at.x, at.y, at.z, 10, 0.1, 0.3, 0.1, 0.2);
+                level.playSound(null, node.getBlockPos(), SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.3f, 2.0f);
+            }
+            if (wetness != 2 || Math.abs(network.volts()[i]) < SHOCK_VOLTS) continue;
             AABB reach = new AABB(node.getBlockPos()).inflate(WATER_REACH);
             for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, reach, LivingEntity::isInWater)) {
                 shock(level, entity, Math.abs(network.volts()[i]));

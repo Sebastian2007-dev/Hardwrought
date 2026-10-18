@@ -2,6 +2,7 @@ package de.ipnats.hardwrought.knowledge;
 
 import de.ipnats.hardwrought.core.debug.DiagnosticRegistry;
 import de.ipnats.hardwrought.core.networking.KnowledgeNotePayload;
+import de.ipnats.hardwrought.core.networking.JournalNotePayload;
 import de.ipnats.hardwrought.core.save.CoreSaveData;
 import de.ipnats.hardwrought.core.simulation.SimulationScheduler;
 import de.ipnats.hardwrought.core.simulation.SimulationTier;
@@ -57,6 +58,7 @@ public final class KnowledgeSystem {
     private final Compendium compendium = new Compendium();
     /** Learnings waiting to be shown, gathered so a single act does not fire a burst of toasts. */
     private final Map<UUID, List<KnowledgeNotePayload.Note>> pending = new HashMap<>();
+    private final Map<UUID, List<JournalNotePayload.Line>> journalPending = new HashMap<>();
     /** What each player is currently turning over in their hand, and for how long. */
     private final Map<UUID, Examination> examinations = new HashMap<>();
 
@@ -83,9 +85,11 @@ public final class KnowledgeSystem {
         Identifier id = idOf(item);
         if (id == null) return false;
         PlayerKnowledge knowledge = knowledge(player);
+        List<JournalEntry> open = unfollowed(knowledge, id);
         if (!knowledge.discover(id)) return false;
         save.setKnowledge(player.getUUID(), knowledge);
         note(player.getUUID(), id, KnowledgeLevel.DISCOVERED);
+        noteFollowed(player.getUUID(), knowledge, open, id);
         return true;
     }
 
@@ -97,9 +101,11 @@ public final class KnowledgeSystem {
         Identifier id = idOf(item);
         if (id == null) return false;
         PlayerKnowledge knowledge = knowledge(player);
+        List<JournalEntry> open = unfollowed(knowledge, id);
         if (!knowledge.study(id)) return false;
         save.setKnowledge(player.getUUID(), knowledge);
         note(player.getUUID(), id, KnowledgeLevel.STUDIED);
+        noteFollowed(player.getUUID(), knowledge, open, id);
         return true;
     }
 
@@ -183,12 +189,14 @@ public final class KnowledgeSystem {
     public void forget(UUID player) {
         save.setKnowledge(player, PlayerKnowledge.empty());
         pending.remove(player);
+        journalPending.remove(player);
         examinations.remove(player);
     }
 
     /** Drops what a leaving player had not been shown yet. */
     public void removePlayer(UUID player) {
         pending.remove(player);
+        journalPending.remove(player);
         examinations.remove(player);
     }
 
@@ -339,6 +347,36 @@ public final class KnowledgeSystem {
         notes.add(new KnowledgeNotePayload.Note(id, level.ordinal()));
     }
 
+    /** The thoughts this item takes part in that are not followed yet, before it is learned. */
+    private static List<JournalEntry> unfollowed(PlayerKnowledge knowledge, Identifier id) {
+        List<JournalEntry> open = new ArrayList<>();
+        for (JournalEntry entry : Journal.about(id)) {
+            if (!Journal.followed(knowledge, entry)) open.add(entry);
+        }
+        return open;
+    }
+
+    /**
+     * Records the thoughts that learning this item has just followed, for the quest toast: each one done,
+     * and after it the thought it opens, so the player is told at once what to do next.
+     */
+    private void noteFollowed(UUID player, PlayerKnowledge knowledge, List<JournalEntry> before, Identifier id) {
+        for (JournalEntry entry : before) {
+            if (!Journal.followed(knowledge, entry)) continue;
+            List<JournalNotePayload.Line> lines = journalPending.computeIfAbsent(player, key -> new ArrayList<>());
+            lines.add(new JournalNotePayload.Line(entry.id(), id, true));
+            JournalEntry next = Journal.next(entry);
+            if (next != null && !Journal.followed(knowledge, next) && next.subject() != null) {
+                lines.add(new JournalNotePayload.Line(next.id(), next.subject(), false));
+            }
+        }
+    }
+
+    /** Thoughts this player has followed but not yet been told about. Visible for tests. */
+    public List<JournalNotePayload.Line> pendingJournal(UUID player) {
+        return List.copyOf(journalPending.getOrDefault(player, List.of()));
+    }
+
     /** What this player has learned but not yet been told about. Visible for tests. */
     public List<KnowledgeNotePayload.Note> pendingNotes(UUID player) {
         return List.copyOf(pending.getOrDefault(player, List.of()));
@@ -350,6 +388,7 @@ public final class KnowledgeSystem {
      * of two toasts racing each other.
      */
     public void flushNotes() {
+        flushJournal();
         if (pending.isEmpty()) return;
         var iterator = pending.entrySet().iterator();
         while (iterator.hasNext()) {
@@ -359,6 +398,20 @@ public final class KnowledgeSystem {
             ServerPlayer player = server.getPlayerList().getPlayer(entry.getKey());
             if (player == null || !ServerPlayNetworking.canSend(player, KnowledgeNotePayload.TYPE)) continue;
             ServerPlayNetworking.send(player, new KnowledgeNotePayload(entry.getValue()));
+        }
+    }
+
+    /** Sends the thoughts followed since the last tick and forgets them. */
+    private void flushJournal() {
+        if (journalPending.isEmpty()) return;
+        var iterator = journalPending.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
+            iterator.remove();
+            if (entry.getValue().isEmpty()) continue;
+            ServerPlayer player = server.getPlayerList().getPlayer(entry.getKey());
+            if (player == null || !ServerPlayNetworking.canSend(player, JournalNotePayload.TYPE)) continue;
+            ServerPlayNetworking.send(player, new JournalNotePayload(entry.getValue()));
         }
     }
 

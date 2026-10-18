@@ -69,6 +69,8 @@ public final class VoidDragon {
     private VoidDragon() { }
 
     public static void initialize() {
+        de.ipnats.hardwrought.knowledge.LootSources.register(() -> DragonHeart.HEART,
+                de.ipnats.hardwrought.knowledge.LootSources.KIND_MOB, () -> net.minecraft.resources.Identifier.withDefaultNamespace("ender_dragon"));
         // Touch HUNT before the first dragon is made, so every phase manager has room for it.
         Hardwrought.LOGGER.debug("Dragon phase {} registered", HUNT.getId());
         VoidBolt.initialize();

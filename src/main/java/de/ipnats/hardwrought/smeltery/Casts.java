@@ -1,5 +1,6 @@
 package de.ipnats.hardwrought.smeltery;
 
+import de.ipnats.hardwrought.smithing.MetalStock;
 import de.ipnats.hardwrought.smithing.ToolParts;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -91,6 +92,30 @@ public final class Casts {
         if (part != null) return BY_SHAPE.get(part.id());
         MoltenMetals.Melt melt = MoltenMetals.melt(pressed.getItem());
         return melt != null && MoltenMetals.ingot(melt.material()) == pressed.getItem() ? BY_SHAPE.get(INGOT) : null;
+    }
+
+    /**
+     * The casts as the book shows them: a blank on the casting table with a piece of each shape pressed
+     * into it. Read off the casts there are, so a new tool part has its cast in the book at once.
+     */
+    public static List<de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe> worldRecipes() {
+        ItemStack table = new ItemStack(SmelteryBlocks.CASTING_TABLE);
+        List<de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe> rows = new ArrayList<>();
+        for (Cast cast : BY_SHAPE.values()) {
+            List<ItemStack> pieces = new ArrayList<>();
+            if (cast.part() == null) {
+                for (MetalStock.StockMetal metal : MetalStock.metals()) pieces.add(new ItemStack(metal.ingot().get()));
+            } else {
+                for (ToolParts.SmithMetal metal : ToolParts.SmithMetal.values()) {
+                    if (metal.parts().contains(cast.part())) pieces.add(new ItemStack(ToolParts.part(metal, cast.part())));
+                }
+            }
+            if (pieces.isEmpty()) continue;
+            rows.add(new de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe(
+                    de.ipnats.hardwrought.Hardwrought.id("imprint/" + cast.shape()),
+                    List.of(List.of(new ItemStack(BLANK)), pieces), new ItemStack(cast.unfired()), table));
+        }
+        return rows;
     }
 
     /** What lies on a casting table: a blank or a fired cast. */

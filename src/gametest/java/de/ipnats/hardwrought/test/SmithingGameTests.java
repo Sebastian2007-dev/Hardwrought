@@ -302,13 +302,20 @@ public final class SmithingGameTests {
 
             Mask head = square(1, 3, 14, 5);
             player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.IRON_INGOT, 3));
+            helper.assertFalse(Forging.begin(player, new ForgingPayloads.Begin(anvil,
+                            BuiltInRegistries.ITEM.getKey(pickHead()), bar.toArray(), head.toArray())),
+                    "Cold bars are no more to be worked than a cold lump");
+            ItemStack warm = new ItemStack(Items.IRON_INGOT, 3);
+            warm.set(ModDataComponents.HEAT, new Heat(1000f, level.getGameTime()));
+            player.setItemInHand(InteractionHand.OFF_HAND, warm);
             helper.assertTrue(Forging.begin(player, new ForgingPayloads.Begin(anvil,
                             BuiltInRegistries.ITEM.getKey(pickHead()), bar.toArray(), head.toArray())),
-                    "Ingots can be started as a tool part even while cold");
-            helper.assertTrue(Forging.strike(player, anvil, 3, 4),
-                    "and temperature does not prevent an ingot from being worked");
-            helper.assertTrue(player.getOffhandItem().get(ModDataComponents.FORGING_STATE).overheated() == 0,
-                    "a cold blow carries no overheating penalty");
+                    "At working heat they are begun");
+            helper.assertTrue(Forging.strike(player, anvil, 3, 4)
+                            && player.getOffhandItem().get(ModDataComponents.FORGING_STATE).overheated() == 0,
+                    "and a blow inside the working range moves metal without any penalty");
+            player.getOffhandItem().set(ModDataComponents.HEAT, new Heat(178f, level.getGameTime()));
+            helper.assertFalse(Forging.strike(player, anvil, 4, 4), "Cooled off, the work stops until it is reheated");
             Forging.cancel(player);
 
             ItemStack hot = new ItemStack(Items.IRON_INGOT, 3);

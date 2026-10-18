@@ -78,6 +78,11 @@ public final class CompendiumClient {
                         KnowledgeToast.addOrUpdate(toasts, note);
                     }
                 }));
+        ClientPlayNetworking.registerGlobalReceiver(de.ipnats.hardwrought.core.networking.JournalNotePayload.TYPE, (payload, context) ->
+                context.client().execute(() -> {
+                    var toasts = context.client().gui.toastManager();
+                    for (var line : payload.lines()) JournalToast.addOrUpdate(toasts, line);
+                }));
         ClientPlayNetworking.registerGlobalReceiver(BookmarkPayloads.Marks.TYPE, (payload, context) ->
                 context.client().execute(() -> bookmarks = payload.entries()));
         de.ipnats.hardwrought.knowledge.CompendiumItem.opener = CompendiumClient::openHome;

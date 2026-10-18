@@ -66,6 +66,8 @@ public final class WitherPowers {
     private WitherPowers() { }
 
     public static void initialize() {
+        de.ipnats.hardwrought.knowledge.LootSources.register(() -> ESSENCE,
+                de.ipnats.hardwrought.knowledge.LootSources.KIND_MOB, () -> net.minecraft.resources.Identifier.withDefaultNamespace("wither"));
         ServerTickEvents.END_SERVER_TICK.register(WitherPowers::runPending);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> PENDING.clear());
     }

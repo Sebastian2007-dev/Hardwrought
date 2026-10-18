@@ -284,7 +284,7 @@ public final class ProgressionGameTests {
                         == Integer.MAX_VALUE,
                 "and a knapped edge cannot cut a flat working surface out of round timber");
 
-        int iron = LogWorking.strokesNeeded(new ItemStack(ModItems.IRON_HATCHET), log);
+        int iron = LogWorking.strokesNeeded(new ItemStack(Items.IRON_AXE), log);
         helper.assertTrue(iron < Integer.MAX_VALUE && iron >= LogWorking.MIN_STROKES,
                 "The joiner's hatchet can, and it takes real work");
         helper.assertTrue(iron <= LogWorking.BASE_STROKES, "though it does finish");
@@ -318,19 +318,19 @@ public final class ProgressionGameTests {
 
     @GameTest
     public void aToolInARecipeIsUsedNotUsedUp(GameTestHelper helper) {
-        ItemStack hatchet = new ItemStack(ModItems.IRON_HATCHET);
+        ItemStack hatchet = new ItemStack(Items.IRON_AXE);
         helper.assertTrue(ToolCrafting.isCraftingTool(hatchet),
-                "The iron hatchet is what a workbench is joined with");
+                "The iron axe is what a workbench is joined with");
         helper.assertFalse(ToolCrafting.isCraftingTool(new ItemStack(Items.OAK_PLANKS)),
                 "while a board is a material, not a tool");
 
         ItemStack returned = ToolCrafting.worn(hatchet);
-        helper.assertTrue(returned.is(ModItems.IRON_HATCHET) && returned.getCount() == 1,
+        helper.assertTrue(returned.is(Items.IRON_AXE) && returned.getCount() == 1,
                 "Crafting with it gives it back");
         helper.assertTrue(returned.getDamageValue() == hatchet.getDamageValue() + ToolCrafting.WEAR_PER_CRAFT,
                 "one use of wear worse");
 
-        ItemStack spent = new ItemStack(ModItems.IRON_HATCHET);
+        ItemStack spent = new ItemStack(Items.IRON_AXE);
         spent.setDamageValue(spent.getMaxDamage() - 1);
         helper.assertTrue(ToolCrafting.worn(spent).isEmpty(),
                 "and a tool that finally wears through does not come back");
@@ -342,7 +342,7 @@ public final class ProgressionGameTests {
         // The rule is about reach, not about one item: a player holding a diamond axe has plainly
         // got past the point this gate exists for, and saying so in a list would miss every axe the
         // mod has never heard of.
-        for (Item good : new Item[]{ModItems.IRON_HATCHET, ModItems.BRONZE_HATCHET,
+        for (Item good : new Item[]{ModItems.BRONZE_HATCHET,
                 Items.IRON_AXE, Items.DIAMOND_AXE, Items.NETHERITE_AXE}) {
             helper.assertTrue(ToolCrafting.isCraftingTool(new ItemStack(good)),
                     "An axe of iron tier or better joins: " + good.getName(new ItemStack(good)).getString());
@@ -387,7 +387,7 @@ public final class ProgressionGameTests {
         // so nothing above it is faster either — the reward for a diamond axe is reach, not speed.
         BlockState log = Blocks.OAK_LOG.defaultBlockState();
         int byDiamond = LogWorking.strokesNeeded(diamond, log);
-        int byIron = LogWorking.strokesNeeded(new ItemStack(ModItems.IRON_HATCHET), log);
+        int byIron = LogWorking.strokesNeeded(new ItemStack(Items.IRON_AXE), log);
         helper.assertTrue(byDiamond <= byIron && byDiamond == LogWorking.MIN_STROKES,
                 "Every axe that may hew is already at the floor of the stroke count: "
                         + byDiamond + " against " + byIron);
@@ -420,7 +420,7 @@ public final class ProgressionGameTests {
                 "A fire pit can be scraped together");
         helper.assertTrue(recipeFitsInventoryGrid(helper, "minecraft:campfire"),
                 "and it fits the 2x2 grid, or the chain to a workbench is closed");
-        helper.assertTrue(recipeFitsInventoryGrid(helper, "hardwrought:iron_hatchet")
+        helper.assertTrue(recipeFitsInventoryGrid(helper, "minecraft:iron_axe")
                         && recipeFitsInventoryGrid(helper, "hardwrought:flint_hatchet"),
                 "Every tool on the way to a workbench fits it too");
         helper.assertTrue(hasRecipe(helper, "hardwrought:tin_ingot_from_campfire")

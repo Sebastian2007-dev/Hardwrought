@@ -64,19 +64,8 @@ public final class MachineryClientGameTest implements FabricClientGameTest {
                 level.setBlockAndUpdate(base.east(2), net.minecraft.world.level.block.Blocks.CAMPFIRE.defaultBlockState()
                         .setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.LIT, true));
                 level.setBlockAndUpdate(base.east(2).above(), ModBlocks.STILL.defaultBlockState());
-                // An ore drill: a titanium frame round its head, a bronze block in it, a crank box under it.
-                BlockPos head = base.north(3).above();
-                level.setBlockAndUpdate(head.below(), ModBlocks.CRANK_BOX.defaultBlockState().setValue(CrankBoxBlock.TURNING, true));
-                // Facing south, toward the camera, so its chute is in the picture.
-                level.setBlockAndUpdate(head, ModBlocks.ORE_DRILL.defaultBlockState()
-                        .setValue(de.ipnats.hardwrought.machinery.OreDrillBlock.FACING, net.minecraft.core.Direction.SOUTH));
                 // A pool of crude oil beside the still.
                 level.setBlockAndUpdate(base.below().south(1).west(4), ModBlocks.CRUDE_OIL.defaultBlockState());
-                var frame = de.ipnats.hardwrought.machinery.OreDrillBlockEntity.framePositions(head);
-                for (int i = 0; i < frame.size(); i++) {
-                    level.setBlockAndUpdate(frame.get(i), (i == 4 ? ModBlocks.DRILL_FRAME_BRONZE
-                            : ModBlocks.DRILL_FRAME_TITANIUM).defaultBlockState());
-                }
                 still[0] = base.east(2).above();
                 var entity = (de.ipnats.hardwrought.chemistry.StillBlockEntity) level.getBlockEntity(still[0]);
                 entity.setItem(de.ipnats.hardwrought.chemistry.StillBlockEntity.CHARGE,
@@ -97,25 +86,6 @@ public final class MachineryClientGameTest implements FabricClientGameTest {
             context.waitTicks(10);
             context.takeScreenshot("hardwrought-still-screen");
             context.runOnClient(client -> client.player.closeContainer());
-            // The drill's own screen: what it is doing and what its chunk holds.
-            world.getServer().runOnServer(server -> {
-                var player = server.getPlayerList().getPlayers().getFirst();
-                BlockPos head = player.blockPosition().north(5).above().north(3).above();
-                var drill = (de.ipnats.hardwrought.machinery.OreDrillBlockEntity) player.level().getBlockEntity(head);
-                drill.lookOverFrameNow();
-                net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player, drill.info(player, true));
-            });
-            context.waitTicks(10);
-            context.takeScreenshot("hardwrought-ore-drill-screen");
-            context.runOnClient(client -> client.gui.setScreen(null));
-            world.getServer().runOnServer(server -> {
-                var player = server.getPlayerList().getPlayers().getFirst();
-                net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player,
-                        de.ipnats.hardwrought.geology.OreScannerItem.scan(player));
-            });
-            context.waitTicks(10);
-            context.takeScreenshot("hardwrought-ore-scanner");
-            context.runOnClient(client -> client.gui.setScreen(null));
             // How gasoline is made: one bookmark for the cracker, one for the reformer, each with the machine on it.
             world.getServer().runOnServer(server -> {
                 var player = server.getPlayerList().getPlayers().getFirst();
@@ -240,8 +210,8 @@ public final class MachineryClientGameTest implements FabricClientGameTest {
                 context.takeScreenshot(shots[shot]);
                 context.runOnClient(client -> client.player.closeContainer());
             }
-            // The compendium's view of the drill, whole and then its bottom layer on its own.
-            var rig = de.ipnats.hardwrought.knowledge.Multiblocks.ORE_DRILL_RIG;
+            // The compendium's view of the hooded forge, whole and then its bottom layer on its own.
+            var rig = de.ipnats.hardwrought.knowledge.Multiblocks.HOODED_FORGE;
             var viewer = context.computeOnClient(client -> {
                 var screen = new de.ipnats.hardwrought.client.knowledge.MultiblockScreen(null, rig, rig.blocks());
                 client.gui.setScreen(screen);

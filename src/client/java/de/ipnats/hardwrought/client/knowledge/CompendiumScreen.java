@@ -24,6 +24,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * The compendium: the book a player keeps, in two halves.
@@ -159,6 +160,8 @@ public class CompendiumScreen extends Screen {
     private final Deque<View> history = new ArrayDeque<>();
     /** Rebuilt every frame so a click can reuse exactly what was drawn. */
     private final List<Hotspot> hotspots = new ArrayList<>();
+    /** The rows of the journal's contents as drawn this frame: top edge, and the page each leads to. */
+    private final List<int[]> chapterRows = new ArrayList<>();
     private int mode;
     private Identifier subject;
     private EditBox search;
@@ -218,6 +221,7 @@ public class CompendiumScreen extends Screen {
         this.page = 0;
         cardScroll = 0;
         journalScroll = 0;
+        infoScroll = 0;
         if (mode == CompendiumPagePayload.MODE_RECIPES || mode == CompendiumPagePayload.MODE_USAGES) {
             selectedMethod = CompendiumPagePayload.METHOD_CRAFTING;
             methodChosen = false;
@@ -312,19 +316,25 @@ public class CompendiumScreen extends Screen {
     /** How many rows a journal note longer than both pages is scrolled, and by how many it is too long. */
     private int journalScroll;
     private int journalOverflow;
+    /** How far the lines about the subject are scrolled where they run past the left page, and by how much. */
+    private int infoScroll;
+    private int infoOverflow;
 
     /**
-     * Whether this page is about a food. The left page of a food is kept for what it brings to a
-     * diet, so where it is found is listed on the right page alone.
+     * Whether the left page is kept for what the subject is: what a food brings to a diet, or the
+     * lines the book has about it. Where it is found is then listed on the right page alone.
      */
-    private boolean foodPage() {
-        return mode != CompendiumPagePayload.MODE_SHELF && mode != CompendiumPagePayload.MODE_JOURNAL
-                && mode != MODE_HOME
-                && de.ipnats.hardwrought.client.survival.NutritionScreen.nutrientsOf(subject) != null;
+    private boolean leftPageTaken() {
+        if (mode == CompendiumPagePayload.MODE_SHELF || mode == CompendiumPagePayload.MODE_JOURNAL
+                || mode == MODE_HOME) {
+            return false;
+        }
+        return de.ipnats.hardwrought.client.survival.NutritionScreen.nutrientsOf(subject) != null
+                || CompendiumInfo.key(subject) != null;
     }
 
     private int sourcesPerPage() {
-        return foodPage() ? SOURCE_ROWS : SOURCE_ROWS * 2;
+        return leftPageTaken() ? SOURCE_ROWS : SOURCE_ROWS * 2;
     }
 
     private int pageCount() {
@@ -332,7 +342,8 @@ public class CompendiumScreen extends Screen {
         CompendiumPagePayload current = CompendiumClient.page();
         if (current == null) return 1;
         if (mode == CompendiumPagePayload.MODE_JOURNAL) {
-            return Math.max(1, current.journal().size());
+            // The contents first, then one page to a note.
+            return current.journal().size() + 1;
         }
         if (mode == CompendiumPagePayload.MODE_SHELF) {
             if (MultiblockSection.open()) {
@@ -426,6 +437,7 @@ public class CompendiumScreen extends Screen {
         lastMouseX = mouseX;
         lastMouseY = mouseY;
         hotspots.clear();
+        chapterRows.clear();
         super.extractRenderState(graphics, mouseX, mouseY, delta);
         drawRibbons(graphics, mouseX, mouseY);
         if (mode == MODE_HOME) {
@@ -436,8 +448,8 @@ public class CompendiumScreen extends Screen {
         CompendiumPagePayload current = CompendiumClient.page();
         drawBookControls(graphics, mouseX, mouseY);
         if (mode == CompendiumPagePayload.MODE_JOURNAL) {
-            ink(graphics, Component.translatable("gui.hardwrought.compendium.journal"),
-                    leftContentX(), top + PAPER_TOP + 5, FADED_COLOR);
+            ink(graphics, journalHeading(current), leftContentX(), top + PAPER_TOP + 5, FADED_COLOR);
+            drawChapterTabs(graphics, current, mouseX, mouseY);
             if (current == null) {
                 ink(graphics, Component.translatable("gui.hardwrought.compendium.loading"),
                         leftContentX(), top + JOURNAL_TEXT_TOP, FADED_COLOR);
@@ -451,7 +463,7 @@ public class CompendiumScreen extends Screen {
             int headingY = top + (mode == CompendiumPagePayload.MODE_SHELF ? SHELF_HEADING_TOP : TABS_TOP);
             wrapInk(graphics, heading(), headingX, headingY, CONTENT_WIDTH, TEXT_COLOR);
             if (mode != CompendiumPagePayload.MODE_SHELF && current != null
-                    && (effectiveMethod(current) != CompendiumPagePayload.METHOD_LOOT || foodPage())) {
+                    && (effectiveMethod(current) != CompendiumPagePayload.METHOD_LOOT || leftPageTaken())) {
                 int below = headingY + font.split(heading(), CONTENT_WIDTH).size() * LINE_HEIGHT + 6;
                 drawProperties(graphics, current, headingX, below);
             }
@@ -467,10 +479,11 @@ public class CompendiumScreen extends Screen {
             }
         }
         if (pageCount() > 1) {
-            centeredInk(graphics, Component.translatable(
-                            mode == CompendiumPagePayload.MODE_JOURNAL
-                                    ? "gui.hardwrought.compendium.note" : "gui.hardwrought.compendium.page",
-                            page + 1, pageCount()),
+            Component counter = mode != CompendiumPagePayload.MODE_JOURNAL
+                    ? Component.translatable("gui.hardwrought.compendium.page", page + 1, pageCount())
+                    : page == 0 ? Component.translatable("gui.hardwrought.compendium.contents")
+                    : Component.translatable("gui.hardwrought.compendium.note", page, pageCount() - 1);
+            centeredInk(graphics, counter,
                     // Level with the middle of the page buttons it sits between, not below them on
                     // the edge of the cover.
                     rightPageX() + PAPER_WIDTH / 2, top + CONTROLS_Y + 5, FADED_COLOR);
@@ -750,11 +763,15 @@ public class CompendiumScreen extends Screen {
             return;
         }
         landOnCurrentNote(notes);
-        CompendiumPagePayload.Note note = notes.get(Math.min(page, notes.size() - 1));
+        if (page == 0) {
+            drawContents(graphics, notes);
+            return;
+        }
+        CompendiumPagePayload.Note note = notes.get(Math.min(page - 1, notes.size() - 1));
         boolean unread = note.state() == Journal.HIDDEN;
         int textLeft = leftContentX();
         Item subjectItem = note.subject() == null ? null : BuiltInRegistries.ITEM.getValue(note.subject());
-        if (!note.parts().isEmpty()) {
+        if (note.needsAll() && !note.parts().isEmpty()) {
             // A thought that takes several things together shows every one of them, each as itself
             // once held and as a shadow until then, along the top of the facing page.
             int partY = top + PAPER_TOP + 17;
@@ -812,9 +829,27 @@ public class CompendiumScreen extends Screen {
         List<FormattedCharSequence> lines = font.split(Component.translatable(textKey(note.id())), wrap);
         int linesPerPage = JOURNAL_LINES;
         int visible = linesPerPage * 2;
-        // The note as rows running down the left page and on down the right: its text, and once it has
-        // been followed, a blank row and the mark beside its tick.
+        // The note as rows running down the left page and on down the right: its text, the task it sets,
+        // and once it has been followed, a blank row and the mark beside its tick.
         List<FormattedCharSequence> rows = new ArrayList<>(lines);
+        // What each row of the task is: its heading, or a piece held (true) or still wanted (false).
+        java.util.Map<Integer, Boolean> taskRows = new java.util.HashMap<>();
+        int taskHeading = -1;
+        if (!note.parts().isEmpty()) {
+            rows.add(FormattedCharSequence.EMPTY);
+            taskHeading = rows.size();
+            rows.add(Component.translatable(note.parts().size() == 1 ? "gui.hardwrought.compendium.task"
+                    : note.needsAll() ? "gui.hardwrought.compendium.task.all"
+                    : "gui.hardwrought.compendium.task.any").getVisualOrderText());
+            for (CompendiumPagePayload.Part part : note.parts()) {
+                Item item = BuiltInRegistries.ITEM.getValue(part.id());
+                if (item == null || item == Items.AIR) continue;
+                Component name = new ItemStack(item).getHoverName();
+                taskRows.put(rows.size(), part.held());
+                rows.add(font.width(name) > CONTENT_WIDTH - 12
+                        ? ellipsis(name.getVisualOrderText(), CONTENT_WIDTH - 12) : name.getVisualOrderText());
+            }
+        }
         int followedFrom = -1;
         if (note.state() == Journal.DONE) {
             List<FormattedCharSequence> followed = font.split(
@@ -838,6 +873,13 @@ public class CompendiumScreen extends Screen {
             if (followedFrom >= 0 && row >= followedFrom) {
                 if (row == followedFrom) graphics.blitSprite(RenderPipelines.GUI_TEXTURED, FOLLOWED_SPRITE, x, y, 9, 9);
                 ink(graphics, rows.get(row), x + 12, y, DONE_COLOR);
+            } else if (row == taskHeading) {
+                ink(graphics, rows.get(row), x, y, FADED_COLOR);
+            } else if (taskRows.containsKey(row)) {
+                boolean held = taskRows.get(row);
+                // A tick for what has been held, a ring for what is still to be found or made.
+                ink(graphics, Component.literal(held ? "✔" : "•"), x + 2, y, held ? DONE_COLOR : TEXT_COLOR);
+                ink(graphics, rows.get(row), x + 12, y, held ? DONE_COLOR : TEXT_COLOR);
             } else {
                 ink(graphics, rows.get(row), x, y, TEXT_COLOR);
             }
@@ -860,19 +902,164 @@ public class CompendiumScreen extends Screen {
     }
 
     /**
-     * Opens the written half on the note the player is actually on rather than at the beginning.
-     * Once per page the server sends, so the arrows keep working afterwards.
+     * Opens the written half on the thought the player is working on: the first one that can be read
+     * and is not followed yet. Once per page the server sends, so the arrows keep working afterwards.
      */
     private void landOnCurrentNote(List<CompendiumPagePayload.Note> notes) {
         if (journalOpened) return;
         journalOpened = true;
+        int unfollowed = -1;
         for (int index = 0; index < notes.size(); index++) {
-            if (notes.get(index).state() != Journal.DONE) {
-                page = index;
+            int state = notes.get(index).state();
+            if (state == Journal.OPEN) {
+                page = index + 1;
                 return;
             }
+            if (state != Journal.DONE && unfollowed < 0) unfollowed = index;
         }
-        page = notes.size() - 1;
+        page = unfollowed >= 0 ? unfollowed + 1 : notes.size();
+    }
+
+    private static final String[] ROMAN = {"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII",
+            "XIII", "XIV", "XV", "XVI"};
+    private static final int CHAPTER_ROW = 13;
+    /** Chapters listed on one page of the contents; the rest go on the facing page. */
+    private static final int CONTENTS_ROWS = 7;
+    private static final int TAB_W = 22;
+    /** How far a bookmark stands up out of the top of the book; the open one stands further. */
+    private static final int TAB_RISE = 11;
+
+    /**
+     * One chapter as the player stands in it: where its thoughts lie in the chain, how many are followed,
+     * whether any of them can be read yet, and the page a click on it opens.
+     */
+    private record ChapterSpan(Identifier id, int number, int start, int end, int done, boolean unknown, int target) {
+        int total() { return end - start; }
+        boolean finished() { return done == total(); }
+        boolean holds(int notePage) { return notePage > start && notePage <= end; }
+    }
+
+    private static List<ChapterSpan> chapterSpans(List<CompendiumPagePayload.Note> notes) {
+        List<ChapterSpan> spans = new ArrayList<>();
+        for (int start = 0; start < notes.size(); ) {
+            Identifier chapter = notes.get(start).chapter();
+            int end = start, done = 0, hidden = 0, firstOpen = -1, firstUnfollowed = -1;
+            while (end < notes.size() && Objects.equals(notes.get(end).chapter(), chapter)) {
+                int state = notes.get(end).state();
+                if (state == Journal.DONE) done++;
+                else if (firstUnfollowed < 0) firstUnfollowed = end;
+                if (state == Journal.OPEN && firstOpen < 0) firstOpen = end;
+                if (state == Journal.HIDDEN) hidden++;
+                end++;
+            }
+            int target = firstOpen >= 0 ? firstOpen : firstUnfollowed >= 0 ? firstUnfollowed : start;
+            spans.add(new ChapterSpan(chapter, spans.size(), start, end, done, hidden == end - start, target + 1));
+            start = end;
+        }
+        return spans;
+    }
+
+    /** Above the contents the book's own word for this half; above a note, the chapter it belongs to. */
+    private Component journalHeading(CompendiumPagePayload current) {
+        if (current == null || page == 0 || current.journal().isEmpty()) {
+            return Component.translatable("gui.hardwrought.compendium.journal");
+        }
+        for (ChapterSpan span : chapterSpans(current.journal())) {
+            if (span.id() != null && span.holds(Math.min(page, current.journal().size()))) {
+                return Component.translatable("gui.hardwrought.compendium.chapter",
+                        roman(span.number()), chapterName(span.id()));
+            }
+        }
+        return Component.translatable("gui.hardwrought.compendium.journal");
+    }
+
+    private static String roman(int number) {
+        return ROMAN[Math.min(number, ROMAN.length - 1)];
+    }
+
+    private static Component chapterName(Identifier chapter) {
+        return Component.translatable("journal.hardwrought.chapter." + chapter.getPath());
+    }
+
+    /**
+     * The first page of the written half: the chapters of the way down to the last night, each with how
+     * many of its thoughts have been followed, running down the left page and on down the right. A chapter
+     * none of whose thoughts has come to mind yet is there only as a scrawl, so the player sees how far the
+     * road goes without reading where it leads.
+     */
+    private void drawContents(GuiGraphicsExtractor graphics, List<CompendiumPagePayload.Note> notes) {
+        int rule = top + JOURNAL_TEXT_TOP - 8;
+        graphics.fill(leftContentX(), rule, leftContentX() + CONTENT_WIDTH, rule + 1, RULE_COLOR);
+        graphics.fill(rightContentX(), rule, rightContentX() + CONTENT_WIDTH, rule + 1, RULE_COLOR);
+        ink(graphics, Component.translatable("gui.hardwrought.compendium.contents"),
+                leftContentX(), top + PAPER_TOP + 21, TEXT_COLOR);
+        int followedAll = 0;
+        int rightY = top + JOURNAL_TEXT_TOP - 2;
+        for (ChapterSpan span : chapterSpans(notes)) {
+            followedAll += span.done();
+            boolean onLeft = span.number() < CONTENTS_ROWS;
+            int x = onLeft ? leftContentX() : rightContentX();
+            int y = top + JOURNAL_TEXT_TOP - 2 + (onLeft ? span.number() : span.number() - CONTENTS_ROWS) * CHAPTER_ROW;
+            if (!onLeft) rightY = y + CHAPTER_ROW;
+            boolean hovered = !span.unknown() && inside(lastMouseX, lastMouseY, x, y - 2, CONTENT_WIDTH, CHAPTER_ROW);
+            int color = span.finished() ? DONE_COLOR : span.unknown() ? SCRAWL_COLOR : hovered ? FADED_COLOR : TEXT_COLOR;
+            ink(graphics, Component.literal(roman(span.number()) + "."), x, y, color);
+            Component name = span.unknown() || span.id() == null ? scrawl(14) : chapterName(span.id());
+            int nameX = x + 25;
+            Component count = Component.literal(span.done() + "/" + span.total());
+            int countX = x + CONTENT_WIDTH - font.width(count);
+            graphics.enableScissor(nameX, y - 1, countX - 3, y + 10);
+            ink(graphics, name, nameX, y, color);
+            graphics.disableScissor();
+            ink(graphics, count, countX, y, span.finished() ? DONE_COLOR : FADED_COLOR);
+            if (!span.unknown()) chapterRows.add(new int[]{x, y - 2, CONTENT_WIDTH, CHAPTER_ROW, span.target()});
+        }
+        int y = wrapInk(graphics, Component.translatable("gui.hardwrought.compendium.contents.progress",
+                followedAll, notes.size()), rightContentX(), rightY + 6, CONTENT_WIDTH, TEXT_COLOR);
+        if (y + 20 <= top + CONTENT_BOTTOM) {
+            wrapInk(graphics, Component.translatable("gui.hardwrought.compendium.contents.hint"),
+                    rightContentX(), y + 4, CONTENT_WIDTH, FADED_COLOR);
+        }
+    }
+
+    /**
+     * The chapters as bookmarks standing up out of the top of the book, the contents first: one click from
+     * any page of the written half to any chapter. The open chapter's stands out furthest; one finished is
+     * green; one not a thought of which has come to mind yet is faded, and leads nowhere.
+     */
+    private void drawChapterTabs(GuiGraphicsExtractor graphics, CompendiumPagePayload current, int mouseX, int mouseY) {
+        if (current == null || current.journal().isEmpty()) return;
+        List<ChapterSpan> spans = chapterSpans(current.journal());
+        int count = spans.size() + 1;
+        int step = Math.min(TAB_W + 2, (PANEL_WIDTH - 24) / count);
+        int x0 = left + (PANEL_WIDTH - step * count) / 2;
+        for (int index = 0; index < count; index++) {
+            ChapterSpan span = index == 0 ? null : spans.get(index - 1);
+            boolean open = span == null ? page == 0 : span.holds(page);
+            int x = x0 + index * step;
+            int rise = open ? TAB_RISE + 3 : TAB_RISE;
+            int y = top - rise;
+            int w = step - 2;
+            boolean dead = span != null && span.unknown();
+            boolean hovered = inside(mouseX, mouseY, x, y, w, rise + 3);
+            int cloth = dead ? RIBBON_SPARE : span != null && span.finished() ? 0xFF4F6B2E
+                    : (hovered || open) ? RIBBON_LIGHT : RIBBON_COLOR;
+            graphics.fill(x, y, x + w, top + 3, cloth);
+            graphics.fill(x, y, x + w, y + 1, RIBBON_LIGHT);
+            graphics.fill(x + w - 1, y, x + w, top + 3, RIBBON_DARK);
+            Component label = Component.literal(span == null ? "≡" : roman(span.number()));
+            centeredInk(graphics, label, x + w / 2, y + 2, dead ? 0xFFD8CBB8 : 0xFFF2E6D0);
+            if (!dead) chapterRows.add(new int[]{x, y, w, rise + 3, span == null ? 0 : span.target()});
+            if (hovered) {
+                Component name = span == null ? Component.translatable("gui.hardwrought.compendium.contents")
+                        : dead ? scrawl(12)
+                        : Component.translatable("gui.hardwrought.compendium.chapter", roman(span.number()), chapterName(span.id()));
+                List<Component> lines = new ArrayList<>();
+                lines.add(name);
+                if (span != null) lines.add(Component.literal(span.done() + "/" + span.total()).withStyle(ChatFormatting.GRAY));
+                graphics.setComponentTooltipForNextFrame(font, lines, mouseX, mouseY);
+            }
+        }
     }
 
     private static String titleKey(Identifier id) {
@@ -928,7 +1115,55 @@ public class CompendiumScreen extends Screen {
             }
         }
         var food = de.ipnats.hardwrought.client.survival.NutritionScreen.nutrientsOf(subject);
-        if (food != null) drawNutrients(graphics, food, studied, x, y);
+        if (food != null) y = drawNutrients(graphics, food, studied, x, y);
+        drawInfo(graphics, studied, x, y);
+    }
+
+    /**
+     * What the subject is good for, in a few lines under everything else on the left page. Like the
+     * numbers above it, this is what working with a thing teaches: before it is studied the lines are
+     * there as scrawl, so the player sees there is something to learn. Text that runs past the page is
+     * cut off above the buttons and scrolled with the wheel.
+     */
+    private void drawInfo(GuiGraphicsExtractor graphics, boolean studied, int x, int y) {
+        String key = CompendiumInfo.key(subject);
+        if (key == null) {
+            infoOverflow = 0;
+            return;
+        }
+        graphics.fill(x, y, x + CONTENT_WIDTH, y + 1, RULE_COLOR);
+        y += 5;
+        int bottom = treeSubject() != null ? treeButtonY() - 3 : top + CONTENT_BOTTOM;
+        if (bottom - y < LINE_HEIGHT) {
+            infoOverflow = 0;
+            return;
+        }
+        graphics.enableScissor(x, y, x + CONTENT_WIDTH + 4, bottom);
+        if (!studied) {
+            infoOverflow = 0;
+            for (int line = 0; line < 3; line++) {
+                ink(graphics, scrawl(22 + line % 2 * 4), x, y + line * (LINE_HEIGHT + 2), SCRAWL_COLOR);
+            }
+            graphics.disableScissor();
+            return;
+        }
+        List<FormattedCharSequence> lines = font.split(Component.translatable(key), CONTENT_WIDTH);
+        int room = bottom - y;
+        infoOverflow = Math.max(0, lines.size() * LINE_HEIGHT - room);
+        infoScroll = Math.clamp(infoScroll, 0, infoOverflow);
+        int lineY = y - infoScroll;
+        for (FormattedCharSequence line : lines) {
+            ink(graphics, line, x, lineY, TEXT_COLOR);
+            lineY += LINE_HEIGHT;
+        }
+        graphics.disableScissor();
+        if (infoOverflow > 0) {
+            int thumb = Math.max(8, room * room / (room + infoOverflow));
+            int at = y + (room - thumb) * infoScroll / infoOverflow;
+            int barX = x + CONTENT_WIDTH + 2;
+            graphics.fill(barX, y, barX + 2, bottom, 0x30000000);
+            graphics.fill(barX, at, barX + 2, at + thumb, 0xA0000000 | (FADED_COLOR & 0xFFFFFF));
+        }
     }
 
     /**
@@ -936,8 +1171,8 @@ public class CompendiumScreen extends Screen {
      * water in it. Found out the way everything else in the book is: by studying it, which eating it
      * does.
      */
-    private void drawNutrients(GuiGraphicsExtractor graphics, de.ipnats.hardwrought.core.registry.FoodNutritionDefinition food,
-                               boolean studied, int x, int y) {
+    private int drawNutrients(GuiGraphicsExtractor graphics, de.ipnats.hardwrought.core.registry.FoodNutritionDefinition food,
+                              boolean studied, int x, int y) {
         graphics.fill(x, y, x + CONTENT_WIDTH, y + 1, RULE_COLOR);
         y += 5;
         ink(graphics, Component.translatable("gui.hardwrought.compendium.nutrients"), x, y, TEXT_COLOR);
@@ -955,7 +1190,9 @@ public class CompendiumScreen extends Screen {
             String water = String.format(java.util.Locale.ROOT, "%+.0f", food.hydration());
             ink(graphics, Component.translatable("gui.hardwrought.compendium.water"), x + 4, y, FADED_COLOR);
             ink(graphics, Component.literal(water), x + CONTENT_WIDTH - font.width(water), y, 0xFF6FA8DC);
+            y += LINE_HEIGHT;
         }
+        return y + 2;
     }
 
     /** A line cut to fit with an ellipsis, for the rare text that would need more room than there is. */
@@ -1184,7 +1421,7 @@ public class CompendiumScreen extends Screen {
         int first = page * perPage;
         for (int index = 0; index < perPage && first + index < sources.size(); index++) {
             CompendiumPagePayload.Source source = sources.get(first + index);
-            int originX = foodPage() || index >= SOURCE_ROWS ? rightContentX() : leftContentX();
+            int originX = leftPageTaken() || index >= SOURCE_ROWS ? rightContentX() : leftContentX();
             int y = top + SOURCES_TOP + index % SOURCE_ROWS * SOURCE_HEIGHT;
             ItemStack icon = LootSourceLabels.icon(source);
             boolean known = source.kind() != LootSources.KIND_BLOCK || source.level() > 0;
@@ -1340,6 +1577,15 @@ public class CompendiumScreen extends Screen {
             minecraft.gui.setScreen(new CraftingTreeScreen(this, treeSubject()));
             return true;
         }
+        if (mode == CompendiumPagePayload.MODE_JOURNAL) {
+            // A chapter on the contents page, or one of the bookmarks over the book.
+            for (int[] row : chapterRows) {
+                if (!inside(event.x(), event.y(), row[0], row[1], row[2], row[3])) continue;
+                page = row[4];
+                journalScroll = 0;
+                return true;
+            }
+        }
         if (pageCount() > 1) {
             if (inside(event.x(), event.y(), rightContentX(), top + CONTROLS_Y, 22, 18)) {
                 turnPage(-1);
@@ -1408,6 +1654,12 @@ public class CompendiumScreen extends Screen {
             // A page of cards too tall for the paper scrolls first, and turns once it is at its end.
             boolean recipePage = mode == CompendiumPagePayload.MODE_RECIPES || mode == CompendiumPagePayload.MODE_USAGES;
             int step = (int) Math.signum(scrollY) * LINE_HEIGHT * 2;
+            // The lines about the subject, where they run past the left page, scroll under the pointer there.
+            if (recipePage && infoOverflow > 0 && mouseX < rightPageX()
+                    && ((step < 0 && infoScroll < infoOverflow) || (step > 0 && infoScroll > 0))) {
+                infoScroll = Math.clamp(infoScroll - step, 0, infoOverflow);
+                return true;
+            }
             if (recipePage && cardOverflow > 0 && mouseX >= rightContentX()
                     && ((step < 0 && cardScroll < cardOverflow) || (step > 0 && cardScroll > 0))) {
                 cardScroll = Math.clamp(cardScroll - step, 0, cardOverflow);

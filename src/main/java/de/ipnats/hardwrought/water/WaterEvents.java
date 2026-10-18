@@ -2,7 +2,6 @@ package de.ipnats.hardwrought.water;
 
 import de.ipnats.hardwrought.core.events.CoreLifecycle;
 import de.ipnats.hardwrought.core.registry.ModDataComponents;
-import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -73,7 +72,6 @@ public final class WaterEvents {
         UseItemCallback.EVENT.register(WaterEvents::dipBowl);
         UseItemCallback.EVENT.register(WaterEvents::useBucket);
         CauldronWater.initialize();
-        UseBlockCallback.EVENT.register(WaterEvents::drinkByHand);
     }
 
 
@@ -197,23 +195,20 @@ public final class WaterEvents {
      * worse drink than one from a skin — most of a handful runs out between the fingers — and it is
      * unboiled, so a river can still make the drinker ill. That is the trade, and it is the point.
      *
-     * <p>This hangs on the block callback rather than the item one because vanilla never sends a use
-     * packet for an empty hand unless a block was hit. Water is invisible to the aim ray, so the
-     * block hit is the river bed or the bank; the water itself is found with a second ray that does
-     * see fluids, and failing that, in the cell the player is standing in.
+     * <p>Vanilla sends nothing for an empty hand unless a block was hit, and water is no block to the aim:
+     * a river with nothing behind it in reach could not be drunk from. So the client asks for it itself
+     * ({@code DrinkByHandPayload}, sent from {@code MinecraftDrinkMixin} before the game tries the
+     * hands at all, which is also what keeps whatever is in the other hand from being set down), and the
+     * water is found here again: what is in sight, with a ray that sees fluids, or what the player stands in.
      */
-    private static InteractionResult drinkByHand(Player player, Level level, InteractionHand hand,
-                                                 BlockHitResult hit) {
-        if (hand != InteractionHand.MAIN_HAND || !player.isSecondaryUseActive()) {
-            return InteractionResult.PASS;
-        }
+    public static InteractionResult drinkByHand(ServerPlayer player) {
+        if (!player.isSecondaryUseActive()) return InteractionResult.PASS;
         // An empty hand only: sneaking with something in hand already means placing it or using it,
         // and a waterskin has its own answer to the same gesture.
-        if (!player.getItemInHand(hand).isEmpty()) return InteractionResult.PASS;
-        if (level.isClientSide() || !(player instanceof ServerPlayer serverPlayer)
-                || !(level instanceof ServerLevel serverLevel)) {
-            return InteractionResult.PASS;
-        }
+        if (!player.getMainHandItem().isEmpty()) return InteractionResult.PASS;
+        if (!(player.level() instanceof ServerLevel serverLevel)) return InteractionResult.PASS;
+        ServerPlayer serverPlayer = player;
+        Level level = serverLevel;
         BlockPos pos = drinkableWater(serverLevel, player);
         if (pos == null) return InteractionResult.PASS;
 
@@ -239,7 +234,7 @@ public final class WaterEvents {
      * The water this player can reach with their hands: what they are looking at, or failing that,
      * what they are standing in.
      */
-    private static BlockPos drinkableWater(ServerLevel level, Player player) {
+    public static BlockPos drinkableWater(Level level, Player player) {
         BlockPos looked = lookedAtWater(level, player);
         if (looked != null) return looked;
         BlockPos feet = player.blockPosition();

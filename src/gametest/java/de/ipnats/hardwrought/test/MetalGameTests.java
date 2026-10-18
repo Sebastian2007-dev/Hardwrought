@@ -2,10 +2,6 @@ package de.ipnats.hardwrought.test;
 
 import de.ipnats.hardwrought.Hardwrought;
 import de.ipnats.hardwrought.core.events.CoreLifecycle;
-import de.ipnats.hardwrought.geology.DrillTier;
-import de.ipnats.hardwrought.geology.DrillYield;
-import de.ipnats.hardwrought.geology.Geology;
-import de.ipnats.hardwrought.geology.RockProfile;
 import de.ipnats.hardwrought.geology.RockType;
 import de.ipnats.hardwrought.metallurgy.Metal;
 import de.ipnats.hardwrought.metallurgy.MetalWorldgen;
@@ -152,28 +148,32 @@ public final class MetalGameTests {
         for (Metal metal : Metal.values()) {
             RockType rock = RockType.byName(metal.rock().serializedName());
             helper.assertTrue(rock != null, metal.id() + " names a rock that exists");
-            RockProfile profile = profiles.get(rock.id());
-            helper.assertTrue(profile.deposits().stream().anyMatch(deposit ->
-                            deposit.ore().equals(Hardwrought.id(metal.oreId()))),
-                    metal.id() + " is carried by the rock its table names, so it can be prospected");
-            helper.assertTrue(profile.deposits().stream()
-                            .filter(deposit -> deposit.ore().equals(Hardwrought.id(metal.oreId())))
-                            .allMatch(deposit -> deposit.drillTier() == metal.drillTier()),
-                    metal.id() + " needs the same drill in the rock table as in its own");
+            boolean carried = profiles.values().stream().anyMatch(profile -> profile.deposits().stream()
+                    .anyMatch(deposit -> deposit.ore().equals(Hardwrought.id(metal.oreId()))));
+            // Adamantium is the Underworld's alone: no rock up here carries it, so nobody prospects for it.
+            helper.assertTrue(carried == metal.inOverworld(), metal.id()
+                    + (metal.inOverworld() ? " is carried by the rock its table names, so it can be prospected"
+                    : " is carried by no overworld rock"));
+            if (carried) {
+                helper.assertTrue(profiles.get(rock.id()).deposits().stream().anyMatch(deposit ->
+                                deposit.ore().equals(Hardwrought.id(metal.oreId()))),
+                        metal.id() + " lies in the very rock its table names");
+            }
         }
+        helper.succeed();
+    }
 
-        // An iron drill on sedimentary rock reaches tin somewhere, and nothing that needs a better frame.
-        int x = 0;
-        while (Geology.rockAt(4242L, x, 0) != RockType.SEDIMENTARY) x += Geology.REGION_SIZE_BLOCKS;
-        boolean tin = false;
-        for (int chunk = 0; chunk < 12; chunk++) {
-            DrillYield iron = DrillYield.forChunk(4242L, profiles, x + chunk * 16, 0, DrillTier.IRON);
-            List<Identifier> reachable = iron.entries().stream().map(DrillYield.Entry::ore).toList();
-            tin |= reachable.contains(Hardwrought.id("tin_ore"));
-            helper.assertFalse(reachable.contains(Hardwrought.id("aluminum_ore")),
-                    "An iron drill does not reach the metals that need a better machine");
-        }
-        helper.assertTrue(tin, "An iron drill brings up tin");
+    @GameTest
+    public void adamantiumLiesOnlyInTheStoneWastes(GameTestHelper helper) {
+        helper.assertFalse(MetalWorldgen.oreFeatures().contains(ResourceKey.create(Registries.PLACED_FEATURE,
+                        Hardwrought.id("ore_adamantium"))),
+                "The overworld is given no adamantium");
+        List<Identifier> ores = oreFeaturesOf(helper.getLevel().getBiome(helper.absolutePos(BlockPos.ZERO)).value());
+        helper.assertFalse(ores.contains(Hardwrought.id("ore_adamantium")), "and an overworld biome generates none");
+        var biomes = helper.getLevel().registryAccess().lookupOrThrow(Registries.BIOME);
+        Biome wastes = biomes.getValueOrThrow(ResourceKey.create(Registries.BIOME, Hardwrought.id("stone_wastes")));
+        helper.assertTrue(oreFeaturesOf(wastes).contains(Hardwrought.id("underworld/ore_adamantium")),
+                "The Stone Wastes of the Underworld carry it, open on their walls");
         helper.succeed();
     }
 

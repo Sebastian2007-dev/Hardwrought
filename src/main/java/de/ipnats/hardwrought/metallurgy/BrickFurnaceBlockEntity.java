@@ -15,7 +15,7 @@ import net.minecraft.world.level.block.state.BlockState;
 /**
  * The first furnace a player can build, and a poor one.
  *
- * <p>It exists to close a chain that was otherwise knotted: a crafting table needs an iron hatchet,
+ * <p>It exists to close a chain that was otherwise knotted: a crafting table needs an iron axe,
  * iron needs a furnace, and a vanilla furnace needs a three-by-three grid — which needs a crafting
  * table. Four fired bricks in the inventory square break that circle.
  *

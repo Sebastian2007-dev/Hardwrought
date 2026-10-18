@@ -124,6 +124,7 @@ public final class UnderworldGate {
     private UnderworldGate() { }
 
     public static void initialize() {
+        de.ipnats.hardwrought.knowledge.LootSources.inWorld(() -> ASCENT_SHAFT.asItem());
         for (Block block : List.of(SEAL_STONE, ASCENT_SHAFT)) {
             ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, BuiltInRegistries.BLOCK.getKey(block));
             BlockItem item = new BlockItem(block, new Item.Properties().setId(key).useBlockDescriptionPrefix());

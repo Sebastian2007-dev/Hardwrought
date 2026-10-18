@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "W": "hardwrought:copper_wire",
+    "P": "hardwrought:porcelain"
+  },
+  "pattern": [
+    "W",
+    "P",
+    "P"
+  ],
+  "result": {
+    "id": "hardwrought:porcelain_insulator",
+    "count": 2
+  }
+}

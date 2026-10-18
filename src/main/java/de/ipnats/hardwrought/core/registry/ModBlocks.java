@@ -70,35 +70,6 @@ public final class ModBlocks {
     public static final de.ipnats.hardwrought.machinery.StarterCrusherBlock STARTER_CRUSHER = register(
             "starter_crusher", de.ipnats.hardwrought.machinery.StarterCrusherBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.COBBLESTONE).noOcclusion());
-    /** The head of an ore drill; see {@code OreDrillBlockEntity}. */
-    public static final de.ipnats.hardwrought.machinery.OreDrillBlock ORE_DRILL = register("ore_drill",
-            de.ipnats.hardwrought.machinery.OreDrillBlock::new,
-            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(4.0f, 6.0f));
-    public static final de.ipnats.hardwrought.machinery.DrillFrameBlock DRILL_FRAME_BRONZE = register("drill_frame_bronze",
-            properties -> new de.ipnats.hardwrought.machinery.DrillFrameBlock(
-                    de.ipnats.hardwrought.geology.DrillTier.BRONZE, properties),
-            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BARS).strength(3.0f + 0, 6.0f)
-                    .requiresCorrectToolForDrops());
-    public static final de.ipnats.hardwrought.machinery.DrillFrameBlock DRILL_FRAME_IRON = register("drill_frame_iron",
-            properties -> new de.ipnats.hardwrought.machinery.DrillFrameBlock(
-                    de.ipnats.hardwrought.geology.DrillTier.IRON, properties),
-            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BARS).strength(3.0f + 1, 6.0f)
-                    .requiresCorrectToolForDrops());
-    public static final de.ipnats.hardwrought.machinery.DrillFrameBlock DRILL_FRAME_NICKEL = register("drill_frame_nickel",
-            properties -> new de.ipnats.hardwrought.machinery.DrillFrameBlock(
-                    de.ipnats.hardwrought.geology.DrillTier.NICKEL, properties),
-            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BARS).strength(3.0f + 2, 6.0f)
-                    .requiresCorrectToolForDrops());
-    public static final de.ipnats.hardwrought.machinery.DrillFrameBlock DRILL_FRAME_CHROMIUM = register("drill_frame_chromium",
-            properties -> new de.ipnats.hardwrought.machinery.DrillFrameBlock(
-                    de.ipnats.hardwrought.geology.DrillTier.CHROMIUM, properties),
-            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BARS).strength(3.0f + 3, 6.0f)
-                    .requiresCorrectToolForDrops());
-    public static final de.ipnats.hardwrought.machinery.DrillFrameBlock DRILL_FRAME_TITANIUM = register("drill_frame_titanium",
-            properties -> new de.ipnats.hardwrought.machinery.DrillFrameBlock(
-                    de.ipnats.hardwrought.geology.DrillTier.TITANIUM, properties),
-            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BARS).strength(3.0f + 4, 6.0f)
-                    .requiresCorrectToolForDrops());
     /** Carries items along, faster the better its metal; see {@code ItemPipeBlock}. */
     public static final de.ipnats.hardwrought.machinery.ItemPipeBlock ITEM_PIPE_BRONZE = register("item_pipe_bronze",
             properties -> new de.ipnats.hardwrought.machinery.ItemPipeBlock(
@@ -242,6 +213,16 @@ public final class ModBlocks {
     public static final de.ipnats.hardwrought.environment.BurntWallTorchBlock BURNT_WALL_TORCH = register("burnt_wall_torch",
             de.ipnats.hardwrought.environment.BurntWallTorchBlock::new,
             BlockBehaviour.Properties.of().overrideLootTable(BURNT_TORCH.getLootTable()).overrideDescription(BURNT_TORCH.getDescriptionId())
+                    .noCollision().instabreak().sound(net.minecraft.world.level.block.SoundType.WOOD)
+                    .pushReaction(net.minecraft.world.level.material.PushReaction.POPPED));
+    /** A torch set down unlit: it looks like a burnt one and is lit the same way, but gives back an unlit torch. */
+    public static final de.ipnats.hardwrought.environment.BurntTorchBlock UNLIT_TORCH = register("unlit_torch",
+            de.ipnats.hardwrought.environment.BurntTorchBlock::new,
+            BlockBehaviour.Properties.of().noCollision().instabreak().sound(net.minecraft.world.level.block.SoundType.WOOD)
+                    .pushReaction(net.minecraft.world.level.material.PushReaction.POPPED));
+    public static final de.ipnats.hardwrought.environment.BurntWallTorchBlock UNLIT_WALL_TORCH = register("unlit_wall_torch",
+            de.ipnats.hardwrought.environment.BurntWallTorchBlock::new,
+            BlockBehaviour.Properties.of().overrideLootTable(UNLIT_TORCH.getLootTable()).overrideDescription(UNLIT_TORCH.getDescriptionId())
                     .noCollision().instabreak().sound(net.minecraft.world.level.block.SoundType.WOOD)
                     .pushReaction(net.minecraft.world.level.material.PushReaction.POPPED));
     /** A lantern gone dark; which lantern it was is its variant. Lit again, it is that lantern once more. */

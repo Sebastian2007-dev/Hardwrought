@@ -58,7 +58,7 @@ The window shows the gauges, the slots, the progress arrow and the voltage. The 
 | Advanced circuit | basic circuit, microchip, 2 transistors, 2 capacitors |
 | Elite circuit | advanced circuit, 2 microchips, quartz oscillator, platinum rods |
 
-The elite circuit has no use yet; it is meant for the planned 240 V tier.
+The elite circuit goes into the Mk IV machines of the 240 V grid ([electricity.md](electricity.md)).
 
 ## Mk II and Mk III
 

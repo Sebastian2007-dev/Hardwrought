@@ -79,23 +79,39 @@ public final class Atlas {
 
     public static final Item ITEM = register("atlas", new Item.Properties().stacksTo(1));
 
+    /** The symbols a mark can be drawn with; see {@code AtlasIcons} on the client. */
+    public static final int ICONS = 8;
+
     /**
      * A marked place.
      *
      * @param kind 0 for a place the bearer marked, 1 for where they died
+     * @param icon which symbol it is drawn with, 0 to {@link #ICONS} − 1; a death is always a skull
      */
-    public record Marker(int x, int z, String name, int kind) {
+    public record Marker(int x, int z, String name, int kind, int icon) {
         public static final Codec<Marker> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.INT.fieldOf("x").forGetter(Marker::x),
                 Codec.INT.fieldOf("z").forGetter(Marker::z),
                 Codec.STRING.optionalFieldOf("name", "").forGetter(Marker::name),
-                Codec.INT.optionalFieldOf("kind", 0).forGetter(Marker::kind)
+                Codec.INT.optionalFieldOf("kind", 0).forGetter(Marker::kind),
+                Codec.INT.optionalFieldOf("icon", 0).forGetter(Marker::icon)
         ).apply(instance, Marker::new));
 
         public Marker {
             name = name == null ? "" : name.length() > MAX_NAME ? name.substring(0, MAX_NAME) : name;
+            icon = Math.floorMod(icon, ICONS);
+        }
+
+        public Marker(int x, int z, String name, int kind) {
+            this(x, z, name, kind, 0);
         }
     }
+
+    /** Another bearer, as one atlas shows them: who, where, and which way they face. */
+    public record Bearer(String name, int x, int z, float yaw) { }
+
+    /** How far another bearer can be and still be drawn in one's atlas, in blocks. */
+    public static final int BEARER_RANGE = 256;
 
     /** One player's atlas of one dimension: the chunks drawn in it, and the places marked. */
     public static final class Page {
@@ -176,7 +192,7 @@ public final class Atlas {
         ServerTickEvents.END_SERVER_TICK.register(Atlas::tick);
         ServerPlayNetworking.registerGlobalReceiver(AtlasPayloads.Request.TYPE, (payload, context) -> sendAll(context.player()));
         ServerPlayNetworking.registerGlobalReceiver(AtlasPayloads.Mark.TYPE,
-                (payload, context) -> mark(context.player(), payload.x(), payload.z(), payload.name(), 0));
+                (payload, context) -> mark(context.player(), payload.x(), payload.z(), payload.name(), 0, payload.icon()));
         ServerPlayNetworking.registerGlobalReceiver(AtlasPayloads.Unmark.TYPE,
                 (payload, context) -> unmark(context.player(), payload.index()));
         // Where the bearer of an atlas dies is marked in it: the one thing they will want to find again.
@@ -206,9 +222,31 @@ public final class Atlas {
 
     private static void tick(MinecraftServer server) {
         if (server.getTickCount() % RECORD_TICKS != 0) return;
+        List<ServerPlayer> bearers = new ArrayList<>();
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            if (!player.isSpectator() && carries(player)) record(player);
+            if (!player.isSpectator() && carries(player)) {
+                record(player);
+                bearers.add(player);
+            }
         }
+        // Bearers see one another in their atlases while they are near: two books kept side by side.
+        for (ServerPlayer player : bearers) {
+            if (!ServerPlayNetworking.canSend(player, AtlasPayloads.Bearers.TYPE)) continue;
+            ServerPlayNetworking.send(player, new AtlasPayloads.Bearers(dimension(player), others(player, bearers)));
+        }
+    }
+
+    /** The other bearers in the same dimension within {@link #BEARER_RANGE} blocks of this one. */
+    public static List<Bearer> others(ServerPlayer player, List<ServerPlayer> bearers) {
+        List<Bearer> near = new ArrayList<>();
+        for (ServerPlayer other : bearers) {
+            if (other == player || other.level() != player.level()) continue;
+            double dx = other.getX() - player.getX(), dz = other.getZ() - player.getZ();
+            if (dx * dx + dz * dz > (double) BEARER_RANGE * BEARER_RANGE) continue;
+            near.add(new Bearer(other.getGameProfile().name(), other.getBlockX(), other.getBlockZ(), other.getYRot()));
+            if (near.size() >= AtlasPayloads.MAX_BEARERS) break;
+        }
+        return near;
     }
 
     /** Draws in every chunk near the bearer that is not in their atlas yet, and tells their client. */
@@ -295,6 +333,10 @@ public final class Atlas {
 
     /** Marks a place in a player's atlas. The oldest death gives way to a newer one when the atlas is full of marks. */
     public static boolean mark(ServerPlayer player, int x, int z, String name, int kind) {
+        return mark(player, x, z, name, kind, 0);
+    }
+
+    public static boolean mark(ServerPlayer player, int x, int z, String name, int kind, int icon) {
         ServerLevel level = (ServerLevel) player.level();
         Data data = level.getDataStorage().computeIfAbsent(Data.TYPE);
         Page page = data.page(player.getUUID());
@@ -304,7 +346,7 @@ public final class Atlas {
             if (kind != 1 || oldestDeath < 0) return false;
             page.markers.remove(oldestDeath);
         }
-        page.markers.add(new Marker(x, z, name.strip(), kind));
+        page.markers.add(new Marker(x, z, name.strip(), kind, icon));
         data.setDirty();
         sendMarkers(player, page);
         return true;

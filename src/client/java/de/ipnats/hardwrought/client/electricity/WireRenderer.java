@@ -4,7 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.ipnats.hardwrought.electricity.ElectricBlockEntity;
 import de.ipnats.hardwrought.electricity.ElectricBlocks;
 import de.ipnats.hardwrought.electricity.Electricity;
-import de.ipnats.hardwrought.electricity.Gauge;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.block.MovingBlockRenderState;
@@ -28,8 +27,10 @@ import java.util.List;
  * one-block strand model stretched to length, the way a belt is drawn between two shafts.
  */
 public class WireRenderer<T extends ElectricBlockEntity> implements BlockEntityRenderer<T, WireRenderer.State> {
+    /** Two to each gauge, in the order of {@link de.ipnats.hardwrought.electricity.Gauge}: cold, then glowing. */
     private static final Block[] STRANDS = {ElectricBlocks.WIRE_STRAND, ElectricBlocks.WIRE_STRAND_HOT,
-            ElectricBlocks.CABLE_STRAND, ElectricBlocks.CABLE_STRAND_HOT};
+            ElectricBlocks.CABLE_STRAND, ElectricBlocks.CABLE_STRAND_HOT, ElectricBlocks.INSULATED_STRAND,
+            ElectricBlocks.INSULATED_STRAND_HOT};
 
     /** A wire from one point to another, measured from the drawing block's corner. */
     record Run(Vec3 from, Vec3 to, int strand) { }
@@ -69,7 +70,7 @@ public class WireRenderer<T extends ElectricBlockEntity> implements BlockEntityR
             if (pos.asLong() >= wire.other().asLong()) continue;
             Vec3 far = level.getBlockEntity(wire.other()) instanceof ElectricBlockEntity partner
                     ? partner.terminal() : Vec3.atCenterOf(wire.other());
-            int strand = (wire.gauge() == Gauge.CABLE ? 2 : 0) + (wire.hot() ? 1 : 0);
+            int strand = wire.gauge().ordinal() * 2 + (wire.hot() ? 1 : 0);
             state.runs.add(new Run(node.terminal().subtract(corner), far.subtract(corner), strand));
         }
         for (int i = 0; i < STRANDS.length; i++) {

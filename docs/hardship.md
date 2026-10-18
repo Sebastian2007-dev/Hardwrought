@@ -37,3 +37,9 @@ is noticed from twice as far.
 
 - `CoreGameTests.theWorldPushesBack`: the wound figures; the runes and overcharge on a piece, its wear
   over a thousand uses and how far its wearer is noticed from.
+
+## Not in a tree
+
+A player who first joins, or respawns at the world's spawn (no bed), standing on or in leaves or wood is
+set down on the nearest free ground within sixteen blocks, searched from their own height downwards
+(`GroundSpawn`). A bed is left alone. Test: `SpawnGameTests`.

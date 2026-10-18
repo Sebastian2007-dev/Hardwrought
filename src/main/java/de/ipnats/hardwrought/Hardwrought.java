@@ -47,6 +47,7 @@ public class Hardwrought implements ModInitializer {
 		WaterQualityStorage.initialize();
 		de.ipnats.hardwrought.water.FrozenWater.initialize();
 		de.ipnats.hardwrought.environment.LightBurn.initialize();
+		de.ipnats.hardwrought.environment.Torches.initialize();
 		de.ipnats.hardwrought.environment.GasIgnition.initialize();
 		de.ipnats.hardwrought.water.BucketMachinery.initialize();
 		de.ipnats.hardwrought.oil.ModFluids.initialize();
@@ -141,6 +142,7 @@ public class Hardwrought implements ModInitializer {
 		CombatSystem.initializeEvents();
 		WaterEvents.initialize();
 		de.ipnats.hardwrought.metallurgy.MetalWorldgen.initialize();
+		de.ipnats.hardwrought.geology.OreBodies.initialize();
 		de.ipnats.hardwrought.magic.VoidCrystal.initializeWorldgen();
 		GeologyEvents.initialize();
 		ProgressionEvents.initialize();

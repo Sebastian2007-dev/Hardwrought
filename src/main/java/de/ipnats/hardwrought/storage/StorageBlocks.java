@@ -2,8 +2,6 @@ package de.ipnats.hardwrought.storage;
 
 import de.ipnats.hardwrought.Hardwrought;
 import de.ipnats.hardwrought.electricity.ElectricBlocks;
-import de.ipnats.hardwrought.knowledge.WorldRecipes;
-import de.ipnats.hardwrought.smithing.MetalStock;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -65,17 +63,6 @@ public final class StorageBlocks {
     /** The small parts the store room is built of, for the parts tab. */
     public static List<Item> parts() {
         return List.of(FINE_GEAR, TUBE_SECTION, SORTING_MECHANISM);
-    }
-
-    /** What the two machines make, as the compendium shows it. */
-    public static List<WorldRecipes.WorldRecipe> worldRecipes() {
-        return List.of(
-                new WorldRecipes.WorldRecipe(Hardwrought.id("lathe/fine_gear"),
-                        WorldRecipes.one(new ItemStack(MetalStock.rod("steel"))), new ItemStack(FINE_GEAR),
-                        new ItemStack(ElectricBlocks.LATHE)),
-                new WorldRecipes.WorldRecipe(Hardwrought.id("tube_mill/tube_section"),
-                        WorldRecipes.one(new ItemStack(MetalStock.plate("bronze"))), new ItemStack(TUBE_SECTION),
-                        new ItemStack(ElectricBlocks.TUBE_MILL)));
     }
 
     private static <T extends Block> T block(String name, Function<BlockBehaviour.Properties, T> factory,

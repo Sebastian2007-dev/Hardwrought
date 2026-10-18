@@ -98,7 +98,7 @@ public final class ElectricityGameTests {
             helper.assertTrue(Electricity.refusal(level, dynamo.east(2), top, Gauge.WIRE) == Electricity.Refusal.TOO_FAR,
                     "Twenty-eight blocks is more than a thin wire spans");
             double[] drop = new double[2];
-            for (Gauge gauge : Gauge.values()) {
+            for (Gauge gauge : new Gauge[] {Gauge.WIRE, Gauge.CABLE}) {
                 Electricity.connect(level, dynamo, middle, gauge);
                 Electricity.connect(level, middle, top, gauge);
                 for (BlockPos lamp : lamps) Electricity.connect(level, top, lamp, gauge);

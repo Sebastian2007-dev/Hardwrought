@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "hardwrought:bad_air",
+    "hardwrought:carbon_monoxide",
+    "hardwrought:smoke",
+    "hardwrought:dehydration",
+    "hardwrought:exposure",
+    "hardwrought:illness"
+  ]
+}

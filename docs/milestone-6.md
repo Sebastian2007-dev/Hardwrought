@@ -29,7 +29,7 @@ has an ore for it:
 | Sedimentary | coal, copper, lapis | laid down in water, which is the only place coal comes from |
 
 Each entry states the ore, its weight, the depth band it can sit in, how large a body of it can be,
-the range its grade falls in and which drill can reach it — so what a region is worth is a design
+the range its grade falls in — so what a region is worth is a design
 decision in a datapack, not a constant in the code.
 
 ## Rich ground
@@ -74,23 +74,26 @@ bug rather than a rich seam.
 The processing chain of section 53 — crushing, screening, washing, concentration — is later
 technology. Grade is the number it will act on when it exists.
 
-## Drilling
+## Veins you can see
 
-A mine runs out; the rock does not. A drill works the whole thickness of ground under a chunk rather
-than a seam, so it keeps producing — slowly, and only what that rock actually holds. That is the
-endless supply the late game needs without turning a finite world into an infinite one: **the rate is
-the limit, not the amount.**
+A body used to be only a number: the ordinary veins that happened to lie in it dropped more. A tunnel
+through the richest core looked like a tunnel through bare rock. Now every body is threaded with veins
+of its own ore (`OreBodies`), laid during world generation:
 
-What comes up is the geology of the chunk read back, not a table invented for the machine:
+- A strand is where two smooth noise fields both pass near zero. Two curved sheets cross in a curved
+  line, which is how a real vein winds through its host rock, so a strand can be followed.
+- How near zero counts grows with the grade, so the strands thicken and crowd towards the core: about
+  one block in twenty is ore in the middle of a body, one in sixty-five at its rim.
+- Only stone and deepslate are replaced (the ore's deepslate form in deepslate), and only inside the
+  chunk being generated. Like the rest of the geology it is a pure function of the seed, so two chunks
+  agree on where a strand crosses between them.
 
-```text
-rock of the region      decides which ores are in the ground at all, and in what proportion
-a body under the chunk  weighs its own ore up fivefold, and the chunk works faster
-the drill's tier        decides how much of that it can reach
-```
+The grade still pays on top, so a block broken in the core of a body is worth more than the same ore
+anywhere else. That is the reward for strip mining in the right place: prospect, dig down to the body,
+and tunnel along its strands.
 
-Since then the drill has five tiers and a chunk-by-chunk mix of ores, and the machine exists; see
-[ore-drill.md](ore-drill.md).
+There is no machine that brings ore up for ever any more. The ore drill was taken out: ore comes from
+mining it.
 
 ## Prospecting
 
@@ -127,10 +130,8 @@ ORE | volcanic region | rich in minecraft:copper_ore, grade 21.8% here (core 24.
 
 ## Not in this milestone
 
-- **The drill machine.** Built later; see [ore-drill.md](ore-drill.md).
-- **Ore generation of our own.** Where ore blocks sit is vanilla's business again. If the rich ground
-  should one day also *look* different — larger clusters, surface indicators — that is a worldgen
-  change to make deliberately, and separately.
+- **Ore generation of our own** beyond the bodies. Ordinary veins are vanilla's, plus the metals of
+  Milestone 7; only the rich ground lays veins of its own (see *Veins you can see*).
 - **The processing chain** of section 53: crushing, screening, washing, concentration.
 - **The later prospecting methods** of section 54 — hammer, geological samples, drill cores, chemical
   tests, magnetic and seismic surveys.
@@ -143,12 +144,11 @@ ORE | volcanic region | rich in minecraft:copper_ore, grade 21.8% here (core 24.
 They cover the model, which is pure arithmetic over a seed: a region being one rock and repeating,
 bodies being few, large, inside their own region and true to the ore their rock carries, a grade that
 falls from the middle outward and is zero outside, finding a body from nothing but a coordinate, the
-shipped rock profiles loading and a bad depth band aborting the reload, the payout curve, and a first
-drill bringing up iron while the same rock keeps its emerald for a better machine.
+shipped rock profiles loading and a bad depth band aborting the reload, the payout curve, and the veins
+of a body being thick in its core, thin at its rim and never outside it.
 
 Two of them are about balance rather than correctness, because a model that is right and invisible is
-still wrong in play: how much of the ground is rich, and that a drill's table really changes when it
-stands over a body.
+still wrong in play: how much of the ground is rich, and how much of a body is ore.
 
 What the tests cannot show is how the rich ground reads when you are standing in it with a pickaxe.
 That wants an eye in a real world.

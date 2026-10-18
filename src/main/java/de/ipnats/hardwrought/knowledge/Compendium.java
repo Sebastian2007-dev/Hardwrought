@@ -162,7 +162,7 @@ public final class Compendium {
     /** Things one tree may reach down to; past this the rest are treated as found, not made. */
     private static final int MAX_TREE_NODES = 160;
     /** Recipes offered for one thing in a tree: enough to choose between, not a whole catalogue. */
-    private static final int MAX_TREE_CHOICES = 8;
+    private static final int MAX_TREE_CHOICES = 16;
 
     /**
      * Every recipe for the subject, and for each ingredient of those, and so on down to the things

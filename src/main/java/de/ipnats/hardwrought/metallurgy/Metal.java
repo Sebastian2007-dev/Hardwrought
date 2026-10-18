@@ -20,29 +20,30 @@ import java.util.Locale;
  * @param veinsPerChunk how often a vein is tried per chunk
  * @param veinSize    blocks in one vein
  * @param hardness    which pickaxe is hard enough to get anything out of it
- * @param drillTier   how good a drill has to be to bring it up (Milestone 6)
- * @param rock        the rock type that carries it, for prospecting and the drill
+ * @param firePit     whether a fire pit casts it: the metals the early game may reach
+ * @param overworld   whether it lies in the overworld at all; adamantium is the Underworld's alone
+ * @param rock        the rock type that carries it, for prospecting
  * @param placeholder the vanilla ore this borrows its look from until it has art of its own
  */
 public enum Metal {
-    TIN("tin", -40, 90, 6, 8, Hardness.STONE, 2, Rock.SEDIMENTARY, "copper"),
-    ZINC("zinc", -40, 80, 5, 8, Hardness.STONE, 2, Rock.SEDIMENTARY, "iron"),
-    LEAD("lead", -60, 60, 5, 8, Hardness.STONE, 2, Rock.SEDIMENTARY, "coal"),
-    MANGANESE("manganese", -50, 60, 4, 7, Hardness.STONE, 3, Rock.SEDIMENTARY, "coal"),
-    MAGNESIUM("magnesium", -30, 70, 4, 7, Hardness.STONE, 3, Rock.SEDIMENTARY, "lapis"),
-    ALUMINUM("aluminum", 20, 130, 5, 9, Hardness.STONE, 3, Rock.SEDIMENTARY, "iron"),
-    NICKEL("nickel", -80, 20, 3, 6, Hardness.IRON, 3, Rock.VOLCANIC, "iron"),
-    COBALT("cobalt", -100, 0, 3, 5, Hardness.IRON, 4, Rock.VOLCANIC, "lapis"),
-    CHROMIUM("chromium", -120, -20, 3, 5, Hardness.IRON, 4, Rock.VOLCANIC, "emerald"),
-    MERCURY("mercury", -120, 0, 2, 4, Hardness.IRON, 4, Rock.VOLCANIC, "redstone"),
-    TITANIUM("titanium", -140, -20, 2, 5, Hardness.IRON, 5, Rock.GRANITE, "iron"),
-    TUNGSTEN("tungsten", -200, -60, 2, 4, Hardness.DIAMOND, 5, Rock.GRANITE, "diamond"),
-    URANIUM("uranium", -200, -40, 2, 4, Hardness.IRON, 5, Rock.GRANITE, "emerald"),
-    THORIUM("thorium", -220, -80, 2, 4, Hardness.IRON, 5, Rock.GRANITE, "emerald"),
-    PLATINUM("platinum", -220, -100, 1, 3, Hardness.DIAMOND, 5, Rock.VOLCANIC, "gold"),
-    SILVER("silver", -80, 32, 3, 5, Hardness.IRON, 3, Rock.VOLCANIC, "gold"),
-    MITHRIL("mithril", -180, -64, 1, 3, Hardness.DIAMOND, 5, Rock.GRANITE, "diamond"),
-    ADAMANTIUM("adamantium", -240, -128, 1, 2, Hardness.DIAMOND, 5, Rock.VOLCANIC, "emerald");
+    TIN("tin", -40, 90, 9, 12, Hardness.STONE, true, true, Rock.SEDIMENTARY, "copper"),
+    ZINC("zinc", -40, 80, 8, 12, Hardness.STONE, true, true, Rock.SEDIMENTARY, "iron"),
+    LEAD("lead", -60, 60, 8, 12, Hardness.STONE, true, true, Rock.SEDIMENTARY, "coal"),
+    MANGANESE("manganese", -50, 60, 6, 10, Hardness.STONE, false, true, Rock.SEDIMENTARY, "coal"),
+    MAGNESIUM("magnesium", -30, 70, 6, 10, Hardness.STONE, false, true, Rock.SEDIMENTARY, "lapis"),
+    ALUMINUM("aluminum", 20, 130, 8, 13, Hardness.STONE, false, true, Rock.SEDIMENTARY, "iron"),
+    NICKEL("nickel", -80, 20, 5, 9, Hardness.IRON, false, true, Rock.VOLCANIC, "iron"),
+    COBALT("cobalt", -100, 0, 5, 8, Hardness.IRON, false, true, Rock.VOLCANIC, "lapis"),
+    CHROMIUM("chromium", -120, -20, 5, 8, Hardness.IRON, false, true, Rock.VOLCANIC, "emerald"),
+    MERCURY("mercury", -120, 0, 3, 6, Hardness.IRON, false, true, Rock.VOLCANIC, "redstone"),
+    TITANIUM("titanium", -140, -20, 3, 8, Hardness.IRON, false, true, Rock.GRANITE, "iron"),
+    TUNGSTEN("tungsten", -200, -60, 3, 6, Hardness.DIAMOND, false, true, Rock.GRANITE, "diamond"),
+    URANIUM("uranium", -200, -40, 3, 6, Hardness.IRON, false, true, Rock.GRANITE, "emerald"),
+    THORIUM("thorium", -220, -80, 3, 6, Hardness.IRON, false, true, Rock.GRANITE, "emerald"),
+    PLATINUM("platinum", -220, -100, 2, 5, Hardness.DIAMOND, false, true, Rock.VOLCANIC, "gold"),
+    SILVER("silver", -80, 32, 5, 8, Hardness.IRON, false, true, Rock.VOLCANIC, "gold"),
+    MITHRIL("mithril", -180, -64, 2, 5, Hardness.DIAMOND, false, true, Rock.GRANITE, "diamond"),
+    ADAMANTIUM("adamantium", -64, 64, 2, 4, Hardness.DIAMOND, false, false, Rock.VOLCANIC, "emerald");
 
     /** Which pickaxe is hard enough. Vanilla already owns these lines, so they are reused. */
     public enum Hardness {
@@ -77,19 +78,21 @@ public enum Metal {
     private final int veinsPerChunk;
     private final int veinSize;
     private final Hardness hardness;
-    private final int drillTier;
+    private final boolean firePit;
+    private final boolean overworld;
     private final Rock rock;
     private final String placeholder;
 
     Metal(String id, int minY, int maxY, int veinsPerChunk, int veinSize, Hardness hardness,
-          int drillTier, Rock rock, String placeholder) {
+          boolean firePit, boolean overworld, Rock rock, String placeholder) {
         this.id = id;
         this.minY = minY;
         this.maxY = maxY;
         this.veinsPerChunk = veinsPerChunk;
         this.veinSize = veinSize;
         this.hardness = hardness;
-        this.drillTier = drillTier;
+        this.firePit = firePit;
+        this.overworld = overworld;
         this.rock = rock;
         this.placeholder = placeholder;
     }
@@ -142,8 +145,9 @@ public enum Metal {
         return hardness;
     }
 
-    public int drillTier() {
-        return drillTier;
+    /** Whether it lies in the overworld. Adamantium does not: it is found in the Underworld's Stone Wastes. */
+    public boolean inOverworld() {
+        return overworld;
     }
 
     public Rock rock() {
@@ -156,7 +160,7 @@ public enum Metal {
 
     /** True where a fire pit is enough: the metals the early game is allowed to reach. */
     public boolean smeltsInAFirePit() {
-        return hardness == Hardness.STONE && drillTier <= 2;
+        return firePit;
     }
 
     public static Metal byId(String id) {

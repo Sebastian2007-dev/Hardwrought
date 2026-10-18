@@ -96,6 +96,20 @@ public final class Diseases {
         Appearance.SHOWN.identifier();
     }
 
+    /** How long a new or reborn body is proof against everything, in ticks: forty minutes. */
+    public static final int IMMUNITY_TICKS = 40 * 60 * 20;
+
+    /**
+     * Forty minutes in which nothing is caught and no wound turns, for a player who has just arrived or
+     * just come back from death — time to find clean water and lay in bandages before any of it counts.
+     * Not in Ultra, where the world gives no grace at all.
+     */
+    public static void grantImmunity(ServerPlayer player) {
+        if (de.ipnats.hardwrought.survival.Ultra.active(player.level().getServer())) return;
+        player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                de.ipnats.hardwrought.core.registry.ModEffects.IMMUNITY, IMMUNITY_TICKS, 0, false, false, true));
+    }
+
     public static Health health(Player player) {
         Health health = player.getAttached(HEALTH);
         return health == null ? Health.NONE : health;
@@ -124,6 +138,8 @@ public final class Diseases {
         // In a fight the blood is up: nothing takes hold while adrenaline runs (see Adrenaline). A wound
         // still open afterwards can still turn.
         if (player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.ADRENALINE)) return;
+        // A fresh start is not undone by the first bad drink: nothing takes hold, no wound turns.
+        if (player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.IMMUNITY)) return;
         Health health = health(player);
         if (health.immune(disease)) return;
         Health.Infection present = health.infection(disease);

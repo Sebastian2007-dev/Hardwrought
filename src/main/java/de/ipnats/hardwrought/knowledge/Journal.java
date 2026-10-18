@@ -12,8 +12,9 @@ import java.util.List;
  *
  * <p>The knowledge side answers questions a player already knows to ask — how is this made, what is
  * this for. It cannot tell anyone that a standing log can be hewn into a bench, because nobody looks
- * up a thing they have never heard of. That is what this chain is for: a handful of written notes
- * that say what the problem is and roughly where the answer lies, and stop there.
+ * up a thing they have never heard of. That is what this chain is for: written notes that say what the
+ * problem is and roughly where the answer lies, and stop there — from the first flint edge all the way
+ * to the ritual at the end of the game.
  *
  * <p>Every entry is deliberately short of an answer. It names the material, the place or the act,
  * never the grid. Finding the pattern is still the player's work, and the knowledge side is where
@@ -22,6 +23,9 @@ import java.util.List;
  * <p>An entry the player is not ready for is not hidden away; it is drawn as unreadable scrawl, the
  * same bargain the black shadows on the knowledge side strike. The shape of what is ahead stays
  * visible, its content does not.
+ *
+ * <p>The notes are gathered into chapters, each one a stage of the game, so that a player can see how
+ * far they have come and turn to where they are.
  */
 public final class Journal {
     /** Not yet thought: the player has seen nothing that would prompt it. */
@@ -31,89 +35,113 @@ public final class Journal {
     /** Readable, and the player has since held what it points at. */
     public static final int DONE = 2;
 
+    /** A stage of the game, and the thoughts that belong to it. Its title is {@code journal.hardwrought.chapter.<id>}. */
+    public record Chapter(Identifier id, List<JournalEntry> entries) {
+        public Chapter {
+            entries = List.copyOf(entries);
+        }
+    }
+
     /**
-     * The chain, in reading order. Each entry opens on something the previous one leads to, so a
-     * player who follows the book from the top is walked from bare hands to iron without ever being
-     * handed a recipe.
+     * The chain, chapter by chapter, in the order the game can actually be played: nothing is asked for
+     * before the bench that makes it can be had. Each entry opens the moment the one before it is followed,
+     * or earlier, once the player has come across something it lists in {@code after}, so a player who
+     * follows the book from the top is walked from bare hands to the ritual one step at a time.
      */
-    private static final List<JournalEntry> CHAIN = List.of(
-            // Ultra only: nobody hands the player a pack there, so carrying anything at all is the
-            // very first problem. Cord from leaves, a needle from a stick, cloth, and a pack of cloth.
-            new JournalEntry(Hardwrought.id("something_to_carry"),
-                    List.of(Hardwrought.id("starter_backpack")), List.of(), false, true),
-            new JournalEntry(Hardwrought.id("more_on_my_back"),
-                    List.of(Hardwrought.id("frame_backpack")), List.of(Hardwrought.id("starter_backpack")), false, true),
-            // Nothing is required: a player holding the book has already stripped leaves for it.
-            new JournalEntry(Hardwrought.id("first_edge"),
-                    List.of(Hardwrought.id("flint_hatchet"), Hardwrought.id("flint_pickaxe"),
-                            Hardwrought.id("flint_dagger"), Hardwrought.id("flint_shovel"),
-                            Hardwrought.id("flint_sword"), Hardwrought.id("flint_hoe")),
-                    List.of()),
-            new JournalEntry(Hardwrought.id("bench_from_the_trunk"),
-                    List.of(Hardwrought.id("hewn_workbench")),
-                    List.of(Hardwrought.id("flint_hatchet"), Hardwrought.id("flint_shard"))),
-            new JournalEntry(Hardwrought.id("firmer_than_flint"),
-                    List.of(Hardwrought.id("stone_hatchet"), Hardwrought.id("stone_pickaxe"),
-                            Hardwrought.id("cobblestone_piece")),
-                    List.of(vanilla("cobblestone"), Hardwrought.id("flint_pickaxe"))),
-            new JournalEntry(Hardwrought.id("heat_that_holds"),
-                    List.of(Hardwrought.id("brick_furnace"), vanilla("brick")),
-                    List.of(vanilla("clay_ball"), vanilla("clay"), Hardwrought.id("cobblestone_piece"))),
-            // Metal is worked hot, on something that takes a blow, by hands that can hold it: all three.
-            new JournalEntry(Hardwrought.id("at_the_anvil"),
-                    List.of(Hardwrought.id("smithing_gloves"), Hardwrought.id("wooden_anvil"),
-                            Hardwrought.id("hammer")),
-                    List.of(Hardwrought.id("brick_furnace"), vanilla("raw_iron")), true),
-            new JournalEntry(Hardwrought.id("rust_in_the_rock"),
-                    List.of(Hardwrought.id("iron_hatchet"), Hardwrought.id("iron_pickaxe")),
-                    List.of(vanilla("iron_ingot"))),
-            new JournalEntry(Hardwrought.id("fire_and_water"),
-                    List.of(Hardwrought.id("forge"), Hardwrought.id("forge_hood"), Hardwrought.id("gas_pipe"),
-                            Hardwrought.id("bellows")),
-                    List.of(Hardwrought.id("iron_pickaxe_head"), Hardwrought.id("iron_axe_head"),
-                            Hardwrought.id("iron_sword_blade"), Hardwrought.id("iron_pickaxe"),
-                            Hardwrought.id("iron_hatchet"))),
-            // Metals only mix once they are ground, and grinding is the first work done by a machine.
-            // The crusher, the crank that turns it and the shaft that carries the turning: all three,
-            // each shown on its own, because any one of them alone grinds nothing.
-            new JournalEntry(Hardwrought.id("breaking_it_finer"),
-                    List.of(Hardwrought.id("starter_crusher"), Hardwrought.id("hand_crank"),
-                            Hardwrought.id("shaft")),
-                    List.of(vanilla("raw_copper"), Hardwrought.id("raw_tin")), true),
-            new JournalEntry(Hardwrought.id("two_soft_metals"),
-                    List.of(Hardwrought.id("bronze_ingot"), Hardwrought.id("bronze_mixture"),
-                            Hardwrought.id("bronze_hatchet")),
-                    List.of(Hardwrought.id("copper_powder"), Hardwrought.id("tin_powder"))),
-            new JournalEntry(Hardwrought.id("nails_for_the_bench"),
-                    List.of(Hardwrought.id("nailed_workbench"), Hardwrought.id("bronze_nails"),
-                            Hardwrought.id("hammer")),
-                    List.of(Hardwrought.id("bronze_ingot"))),
-            // The ore drill: once there is a line to drive it and bronze to frame it.
-            new JournalEntry(Hardwrought.id("down_through_the_rock"),
-                    List.of(Hardwrought.id("ore_drill"), Hardwrought.id("drill_frame_bronze"),
-                            Hardwrought.id("drill_frame_iron")),
-                    List.of(Hardwrought.id("starter_crusher"), Hardwrought.id("nailed_workbench"))),
-            // A drill fills a chest nobody empties; a pipe from its chute takes the ore on by itself.
-            new JournalEntry(Hardwrought.id("moving_it_along"),
-                    List.of(Hardwrought.id("item_pipe_bronze"), Hardwrought.id("item_pipe_iron")),
-                    List.of(Hardwrought.id("ore_drill"))),
-            // A forge never melts anything; a bath of metal wants a fire shut in by refractory brick.
-            // Controller, drain and casting table together: any one alone casts nothing.
-            new JournalEntry(Hardwrought.id("a_bath_of_metal"),
-                    List.of(Hardwrought.id("smeltery_controller"), Hardwrought.id("smeltery_drain"),
-                            Hardwrought.id("casting_table")),
-                    List.of(Hardwrought.id("refractory_brick"), Hardwrought.id("forge")), true),
-            // Steel is only made in that bath: iron and coal powder, and hotter than iron melts.
-            new JournalEntry(Hardwrought.id("harder_than_iron"),
-                    List.of(Hardwrought.id("steel_pickaxe"), Hardwrought.id("steel_ingot")),
-                    List.of(Hardwrought.id("smeltery_controller"))),
-            // Milestone 11: once a line can be turned by water or wind, it is strong enough to bore
-            // with — and what is under the sedimentary rock is worth boring for.
-            new JournalEntry(Hardwrought.id("black_gold"),
-                    List.of(Hardwrought.id("drilling_rig"), Hardwrought.id("still"),
-                            Hardwrought.id("gas_canister")),
-                    List.of(Hardwrought.id("water_wheel"), Hardwrought.id("windmill")))
+    private static final List<Chapter> CHAPTERS = List.of(
+            // Everything here is made in the grid a player carries: there is no bench yet, and the first
+            // one wants an iron axe.
+            chapter("bare_hands",
+                    entry("first_edge", List.of(id("flint_hatchet"), id("flint_pickaxe"), id("flint_dagger"),
+                            id("flint_shovel"), id("flint_sword"), id("flint_hoe")), List.of()),
+                    // Ultra only: nobody hands the player a pack there, so carrying anything is the next problem.
+                    ultra("something_to_carry", List.of(id("starter_backpack")), List.of(id("green_fibre"))),
+                    allOf("fire_by_friction", List.of(vanilla("campfire"), id("lighting_sticks")), List.of(id("flint_hatchet"))),
+                    entry("fibre_and_cord", List.of(id("leaf_string")), List.of(id("green_fibre"))),
+                    entry("light_against_the_dark", List.of(id("unlit_torch"), vanilla("torch")),
+                            List.of(vanilla("coal"), vanilla("charcoal"))),
+                    entry("firmer_than_flint", List.of(id("stone_pickaxe"), id("stone_hatchet")),
+                            List.of(vanilla("cobblestone"), id("cobblestone_piece"))),
+                    entry("heat_that_holds", List.of(id("brick_furnace")), List.of(vanilla("clay_ball"), vanilla("brick")))),
+            // From the ore in the rock to the iron axe that hews the first bench.
+            chapter("first_iron",
+                    entry("rust_in_the_rock", List.of(vanilla("raw_iron")), List.of(id("stone_pickaxe"))),
+                    allOf("at_the_anvil", List.of(id("smithing_gloves"), id("wooden_anvil"), id("wooden_hammer")),
+                            List.of(vanilla("raw_iron"))),
+                    entry("the_first_bar", List.of(vanilla("iron_ingot")), List.of(id("wooden_anvil"))),
+                    entry("an_edge_of_iron", List.of(vanilla("iron_axe")), List.of(vanilla("iron_ingot"))),
+                    entry("bench_from_the_trunk", List.of(id("hewn_workbench")), List.of(vanilla("iron_axe")))),
+            // The hewn bench: three by three, but wood, stone and fibre only. Bronze nails make it a real one.
+            chapter("bench_and_bronze",
+                    ultra("more_on_my_back", List.of(id("frame_backpack")), List.of(id("hewn_workbench"))),
+                    entry("something_to_drink", List.of(id("water_bowl")), List.of(id("hewn_workbench"), vanilla("bowl"))),
+                    allOf("breaking_it_finer", List.of(id("starter_crusher"), id("hand_crank"), id("shaft")),
+                            List.of(id("hewn_workbench"))),
+                    entry("two_soft_metals", List.of(id("bronze_ingot")), List.of(id("copper_powder"), id("tin_powder"))),
+                    entry("nails_for_the_bench", List.of(id("nailed_workbench")), List.of(id("bronze_ingot"), id("bronze_nails")))),
+            // The nailed bench makes everything; what it is good for first.
+            chapter("the_workshop",
+                    entry("tending_wounds", List.of(id("bandage"), id("chamomile_tea"), id("willow_tea")),
+                            List.of(id("nailed_workbench"))),
+                    entry("reading_the_rock", List.of(id("atlas")), List.of(vanilla("compass"))),
+                    entry("clean_water", List.of(id("sand_filter")), List.of(id("nailed_workbench"))),
+                    // Sand only takes the river out of the water; fired clay is what makes it wholly safe.
+                    entry("pure_water", List.of(id("ceramic_filter")), List.of(id("sand_filter"))),
+                    entry("fire_and_water", List.of(id("forge")), List.of(id("nailed_workbench"))),
+                    entry("a_stronger_arm", List.of(id("water_wheel"), id("windmill")), List.of(id("forge")))),
+            // Steel is made only in a bath of molten metal, and the way to the Nether runs through steel.
+            chapter("smeltery_and_steel",
+                    allOf("a_bath_of_metal", List.of(id("smeltery_controller"), id("smeltery_drain"), id("casting_table")),
+                            List.of(id("refractory_brick"), id("fireclay"))),
+                    entry("harder_than_iron", List.of(id("steel_pickaxe")), List.of(id("steel_ingot")))),
+            // Magic is the only thing the Witch King cannot walk through, and a golden wand is an offering.
+            chapter("runes_and_wands",
+                    entry("marks_in_old_stone", List.of(id("wooden_wand")), List.of(id("rune_stone"), id("pointed_stick"))),
+                    entry("a_ring_of_light", List.of(id("iron_wand")), List.of(id("wooden_wand"))),
+                    entry("a_golden_wand", List.of(id("golden_wand")), List.of(vanilla("amethyst_shard"))),
+                    entry("runes_on_the_blade", List.of(id("lapis_lazuli_powder")),
+                            List.of(vanilla("enchanting_table"), vanilla("lapis_lazuli")))),
+            // An electric motor and a bucket of diesel lie on the altar at the end; this is where they come from.
+            chapter("oil_and_current",
+                    allOf("current_from_turning", List.of(id("dynamo"), id("copper_coil"), id("electric_lamp")),
+                            List.of(id("water_wheel"), id("windmill"))),
+                    entry("the_motor", List.of(id("electric_motor")), List.of(id("redstone_coil"))),
+                    entry("work_on_current", List.of(id("plate_press"), id("basic_crusher"), id("electric_furnace"), id("sawmill")),
+                            List.of(id("electric_motor"))),
+                    entry("moving_it_along", List.of(id("item_pipe_bronze"), id("item_pipe_iron")), List.of(id("basic_crusher"))),
+                    entry("black_gold", List.of(id("drilling_rig")), List.of(id("water_wheel"), id("windmill"))),
+                    allOf("the_column", List.of(id("refinery_base"), id("refinery_stage")), List.of(id("drilling_rig"))),
+                    entry("the_heavy_cut", List.of(id("diesel_bucket")), List.of(id("refinery_stage")))),
+            chapter("the_nether",
+                    entry("through_the_obsidian", List.of(vanilla("obsidian")), List.of(id("steel_pickaxe"), id("cast_obsidian"))),
+                    entry("the_red_country", List.of(vanilla("netherrack")), List.of(vanilla("obsidian"))),
+                    entry("the_ash_grove", List.of(id("ashcork_bark")), List.of(id("ashcork_log"))),
+                    entry("a_way_home", List.of(id("provisional_portal_stabilizer")), List.of(id("blackstone_piece"))),
+                    entry("a_steady_gate", List.of(id("portal_stabilizer")), List.of(vanilla("blaze_rod")))),
+            chapter("the_wither",
+                    entry("skulls_of_the_fortress", List.of(vanilla("wither_skeleton_skull")), List.of(vanilla("nether_brick"))),
+                    entry("souls_in_the_skull", List.of(vanilla("nether_star")), List.of(vanilla("wither_skeleton_skull")))),
+            chapter("the_underworld",
+                    entry("the_seal", List.of(id("seal_stone")), List.of(vanilla("nether_star"), vanilla("echo_shard"))),
+                    entry("pale_light", List.of(id("pale_shard")), List.of(id("seal_stone"))),
+                    entry("in_the_stone_wastes", List.of(id("adamantium_ingot")), List.of(id("raw_adamantium"))),
+                    entry("finer_than_netherite", List.of(id("mithril_upgrade_smithing_template"),
+                            id("adamant_upgrade_smithing_template")), List.of(vanilla("netherite_ingot"), id("mithril_ingot"))),
+                    entry("the_witch_king", List.of(id("witch_king_mantle")), List.of(id("pale_shard")))),
+            chapter("the_end",
+                    entry("into_the_void", List.of(vanilla("ender_eye")), List.of(id("witch_king_mantle"), vanilla("ender_pearl"))),
+                    entry("the_dragon", List.of(vanilla("dragon_egg")), List.of(vanilla("end_stone"))),
+                    entry("raised_again", List.of(id("dragon_heart")), List.of(vanilla("dragon_egg")))),
+            chapter("the_ritual",
+                    entry("crystal_of_the_void", List.of(id("void_crystal_block")), List.of(id("void_crystal_shard"))),
+                    entry("a_temple", List.of(id("ritual_altar")), List.of(id("dragon_heart"))),
+                    entry("eight_offerings", List.of(id("ritual_pedestal")), List.of(id("ritual_altar"))),
+                    allOf("the_last_night", List.of(id("ritual_altar"), id("ritual_pedestal"), id("dragon_heart")),
+                            List.of(id("ritual_pedestal"))))
     );
+
+    /** Every entry, chapter after chapter. */
+    private static final List<JournalEntry> CHAIN = CHAPTERS.stream().flatMap(chapter -> chapter.entries().stream()).toList();
 
     /** Whether the running world is an Ultra one; set when the server starts. */
     private static volatile boolean ultra;
@@ -130,6 +158,18 @@ public final class Journal {
         return CHAIN;
     }
 
+    public static List<Chapter> chapters() {
+        return CHAPTERS;
+    }
+
+    /** The chapter an entry belongs to. */
+    public static Chapter chapterOf(JournalEntry entry) {
+        for (Chapter chapter : CHAPTERS) {
+            if (chapter.entries().contains(entry)) return chapter;
+        }
+        return CHAPTERS.getFirst();
+    }
+
     /**
      * Where one player stands on one entry. An entry counts as followed the moment the player has
      * held any of the things it points at — or all of them, for an entry that needs all — however
@@ -137,15 +177,49 @@ public final class Journal {
      */
     public static int state(PlayerKnowledge knowledge, JournalEntry entry) {
         if (followed(knowledge, entry)) return DONE;
-        if (entry.after().isEmpty()) return OPEN;
+        JournalEntry previous = previous(entry);
+        // The first thought is there from the first page; every other one the moment the one before is followed.
+        if (previous == null || followed(knowledge, previous)) return OPEN;
         for (Identifier seen : entry.after()) {
             if (knowledge.level(seen).named()) return OPEN;
         }
         return HIDDEN;
     }
 
+    /**
+     * The thoughts this one item takes part in, as the running world reads the chain: what holding it for
+     * the first time may have just followed.
+     */
+    public static List<JournalEntry> about(Identifier item) {
+        List<JournalEntry> entries = new ArrayList<>();
+        for (JournalEntry entry : CHAIN) {
+            if ((!entry.ultraOnly() || ultra) && entry.teaches().contains(item)) entries.add(entry);
+        }
+        return entries;
+    }
+
+    /** The entry after this one as the running world reads the chain, or null for the last. */
+    public static JournalEntry next(JournalEntry entry) {
+        boolean found = false;
+        for (JournalEntry candidate : CHAIN) {
+            if (found && (!candidate.ultraOnly() || ultra)) return candidate;
+            if (candidate == entry) found = true;
+        }
+        return null;
+    }
+
+    /** The entry before this one as the running world reads the chain, or null for the first. */
+    private static JournalEntry previous(JournalEntry entry) {
+        JournalEntry previous = null;
+        for (JournalEntry candidate : CHAIN) {
+            if (candidate == entry) return previous;
+            if (!candidate.ultraOnly() || ultra) previous = candidate;
+        }
+        return null;
+    }
+
     /** Whether the player holds what the entry asks for: any one of it, or all of it. */
-    private static boolean followed(PlayerKnowledge knowledge, JournalEntry entry) {
+    public static boolean followed(PlayerKnowledge knowledge, JournalEntry entry) {
         if (entry.teaches().isEmpty()) return false;
         for (Identifier taught : entry.teaches()) {
             boolean held = knowledge.level(taught).named();
@@ -158,12 +232,14 @@ public final class Journal {
     /** The whole chain as this player reads it, hidden entries included. */
     public static List<CompendiumPagePayload.Note> page(PlayerKnowledge knowledge) {
         List<CompendiumPagePayload.Note> notes = new ArrayList<>(CHAIN.size());
-        for (JournalEntry entry : CHAIN) {
-            if (notes.size() >= CompendiumPagePayload.MAX_NOTES) break;
-            if (entry.ultraOnly() && !ultra) continue;
-            int state = state(knowledge, entry);
-            notes.add(new CompendiumPagePayload.Note(entry.id(), subject(knowledge, entry, state),
-                    state, parts(knowledge, entry, state)));
+        for (Chapter chapter : CHAPTERS) {
+            for (JournalEntry entry : chapter.entries()) {
+                if (notes.size() >= CompendiumPagePayload.MAX_NOTES) break;
+                if (entry.ultraOnly() && !ultra) continue;
+                int state = state(knowledge, entry);
+                notes.add(new CompendiumPagePayload.Note(entry.id(), subject(knowledge, entry, state),
+                        state, parts(knowledge, entry, state), chapter.id(), entry.needsAll()));
+            }
         }
         return List.copyOf(notes);
     }
@@ -194,17 +270,40 @@ public final class Journal {
     }
 
     /**
-     * Every piece of a thought that takes several things together, each with whether the player
-     * has held it. Nothing for an unread thought, for the same reason it has no icon.
+     * What the thought asks for, each piece with whether the player has held it: the task drawn under the
+     * note. Nothing for an unread thought, for the same reason it has no icon.
      */
     private static List<CompendiumPagePayload.Part> parts(PlayerKnowledge knowledge, JournalEntry entry,
                                                           int state) {
-        if (state == HIDDEN || !entry.needsAll()) return List.of();
+        if (state == HIDDEN) return List.of();
         List<CompendiumPagePayload.Part> parts = new ArrayList<>();
         for (Identifier taught : entry.teaches()) {
+            if (parts.size() >= CompendiumPagePayload.MAX_PARTS) break;
             parts.add(new CompendiumPagePayload.Part(taught, knowledge.level(taught).named()));
         }
         return parts;
+    }
+
+    private static Chapter chapter(String name, JournalEntry... entries) {
+        return new Chapter(id(name), List.of(entries));
+    }
+
+    /** A thought that belongs only to an Ultra world. */
+    private static JournalEntry ultra(String name, List<Identifier> teaches, List<Identifier> after) {
+        return new JournalEntry(id(name), teaches, after, false, true);
+    }
+
+    private static JournalEntry entry(String name, List<Identifier> teaches, List<Identifier> after) {
+        return new JournalEntry(id(name), teaches, after);
+    }
+
+    /** A thought followed only once every one of the things it points at has been held. */
+    private static JournalEntry allOf(String name, List<Identifier> teaches, List<Identifier> after) {
+        return new JournalEntry(id(name), teaches, after, true);
+    }
+
+    private static Identifier id(String path) {
+        return Hardwrought.id(path);
     }
 
     private static Identifier vanilla(String path) {

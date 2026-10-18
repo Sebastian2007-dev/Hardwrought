@@ -14,6 +14,5 @@ Both melt as their metal (`Smelting.materialOf`), take heat and glow while hot. 
 `tools/metal_stock_textures.py`, which takes each metal's shades from its ingot. Run
 `tools/glow_textures.py` after it.
 
-Drill frames are made of rods (see [ore-drill.md](ore-drill.md)).
 
 Test: `SmithingGameTests.everySolidMetalIsForgedIntoRodsAndPlates`.

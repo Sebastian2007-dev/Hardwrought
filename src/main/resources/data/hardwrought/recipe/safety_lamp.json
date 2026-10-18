@@ -4,7 +4,10 @@
   "key": {
     "I": "minecraft:iron_ingot",
     "G": "minecraft:glass_pane",
-    "T": "minecraft:torch"
+    "T": [
+      "hardwrought:unlit_torch",
+      "minecraft:torch"
+    ]
   },
   "pattern": [
     " I ",

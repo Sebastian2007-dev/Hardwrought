@@ -29,7 +29,7 @@ public final class LootSourceLabels {
                 yield type == null ? ItemStack.EMPTY : SpawnEggItem.byId(type)
                         .map(holder -> new ItemStack(holder.value())).orElse(ItemStack.EMPTY);
             }
-            case LootSources.KIND_BLOCK -> {
+            case LootSources.KIND_BLOCK, LootSources.KIND_WORLD -> {
                 Item item = BuiltInRegistries.ITEM.getValue(source.id());
                 yield item == null ? ItemStack.EMPTY : new ItemStack(item);
             }
@@ -51,6 +51,7 @@ public final class LootSourceLabels {
                         ? ShadowItem.UNKNOWN_NAME : new ItemStack(item).getHoverName();
                 yield Component.translatable("gui.hardwrought.compendium.broken_out_of", name);
             }
+            case LootSources.KIND_WORLD -> Component.translatable("gui.hardwrought.compendium.in_world");
             default -> Component.translatable("gui.hardwrought.compendium.found_in", readable(source));
         };
     }

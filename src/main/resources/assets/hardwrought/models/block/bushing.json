@@ -1,0 +1,9 @@
+{
+  "parent": "hardwrought:block/insulator",
+  "textures": {
+    "ceramic": "hardwrought:block/hardwrought/porcelain",
+    "iron": "hardwrought:block/hardwrought/dynamo_iron",
+    "copper": "hardwrought:block/hardwrought/wire_copper",
+    "particle": "hardwrought:block/hardwrought/porcelain"
+  }
+}

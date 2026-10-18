@@ -131,3 +131,17 @@ growing worse left in the cold; bad water and raw chicken upsetting the stomach,
 opening a wound that gets infected left open and not when bandaged, and a new bite tearing the bandage off;
 antiseptic and spirit cleaning an infection, antibiotics fighting a cold, fever pills, mash distilled to
 spirit and the reactor's three medicines; a tea drunk and working.
+
+## A grace period
+
+Outside Ultra a player is **immune for forty minutes** on first joining a world and after every death
+(`Diseases.grantImmunity`, the `hardwrought:immunity` effect): nothing is caught, and no wound, burn or
+scald turns into an infection. It is time to find clean water and lay in bandages. Ultra gives none.
+Test: `HealthGameTests.aNewArrivalIsImmuneForFortyMinutes`.
+
+## Harm from within pushes nobody
+
+Bad air, carbon monoxide, smoke, thirst, exposure and illness are not blows, so they give no knockback:
+they are in `minecraft:no_knockback` (`data/minecraft/tags/damage_type/no_knockback.json`). Cold and
+heat use vanilla's freeze and hot floor, hunger starve, a stinging cure magic, all of which vanilla
+already lists there. Test: `HealthGameTests.harmFromWithinPushesNobody`.

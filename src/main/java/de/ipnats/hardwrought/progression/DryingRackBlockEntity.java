@@ -54,6 +54,16 @@ public class DryingRackBlockEntity extends BlockEntity {
         return items;
     }
 
+    /** What the rack dries, as the book shows it: read off the table it dries by. */
+    public static java.util.List<de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe> worldRecipes() {
+        java.util.List<de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe> rows = new java.util.ArrayList<>();
+        DRIES_INTO.forEach((wet, dry) -> rows.add(new de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe(
+                de.ipnats.hardwrought.Hardwrought.id("drying_rack/" + net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(dry).getPath()),
+                de.ipnats.hardwrought.knowledge.WorldRecipes.one(new ItemStack(wet)), new ItemStack(dry), new ItemStack(ModItems.DRYING_RACK))));
+        rows.sort(java.util.Comparator.comparing(row -> row.id().toString()));
+        return rows;
+    }
+
     public static boolean dries(ItemStack stack) {
         return DRIES_INTO.containsKey(stack.getItem());
     }

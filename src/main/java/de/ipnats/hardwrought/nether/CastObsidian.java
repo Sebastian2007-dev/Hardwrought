@@ -43,6 +43,16 @@ public final class CastObsidian {
 
     private CastObsidian() { }
 
+    /** How it comes about, for the book: water reaching lava. */
+    public static java.util.List<de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe> worldRecipes() {
+        return java.util.List.of(new de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe(
+                de.ipnats.hardwrought.Hardwrought.id("cast_obsidian"),
+                de.ipnats.hardwrought.knowledge.WorldRecipes.one(
+                        de.ipnats.hardwrought.knowledge.FluidIcons.liquid(net.minecraft.world.level.material.Fluids.LAVA, 1000),
+                        de.ipnats.hardwrought.knowledge.FluidIcons.liquid(net.minecraft.world.level.material.Fluids.WATER, 1000)),
+                new ItemStack(ITEM), ItemStack.EMPTY));
+    }
+
     public static void initialize() {
         // Lighting a frame of it: the fire takes on top, but no portal will — and the frame says why.
         UseBlockCallback.EVENT.register((player, level, hand, hit) -> {

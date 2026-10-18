@@ -133,7 +133,7 @@ wood travels with the block** — a birch bench keeps birch bark, a crimson stem
 through breaking and placing it again.
 
 Which axe counts is worked out from the item, not looked up in a list: **any axe of iron tier or
-better**. The iron hatchet is the first one the progression reaches, and a player who has got as far
+better**. The iron axe is the first one the progression reaches, and a player who has got as far
 as an iron, bronze, diamond or netherite axe has plainly got past the point this gate exists for —
 including one from a mod Hardwrought has never heard of. A knapped flint edge, a stone hatchet and a
 golden axe are all refused.
@@ -188,7 +188,7 @@ is worth building the moment there is a workbench to build one on.
 leaves + gravel → flint hatchet (2×2)
     → worked logs → boards and sticks
     → fire pit (2×2) → first metal
-    → iron hatchet (2×2) → workbench → furnace, and everything after it
+    → iron axe (2×2) → workbench → furnace, and everything after it
 ```
 
 ## The metals
@@ -202,23 +202,30 @@ the blocks, the items, the models, the loot tables, the smelting recipes, the ta
 pickaxe bites, the ore generation and the rock that carries them. Adding a metal is one line and a
 texture.
 
-| Metal | Band | Veins × size | Pickaxe | Drill | Rock |
-| --- | --- | --- | --- | --- | --- |
-| tin | -40 … 90 | 6 × 8 | stone | 1 | sedimentary |
-| zinc | -40 … 80 | 5 × 8 | stone | 1 | sedimentary |
-| lead | -60 … 60 | 5 × 8 | stone | 1 | sedimentary |
-| manganese | -50 … 60 | 4 × 7 | stone | 2 | sedimentary |
-| magnesium | -30 … 70 | 4 × 7 | stone | 2 | sedimentary |
-| aluminum | 20 … 130 | 5 × 9 | stone | 2 | sedimentary |
-| nickel | -80 … 20 | 3 × 6 | iron | 2 | volcanic |
-| cobalt | -100 … 0 | 3 × 5 | iron | 2 | volcanic |
-| chromium | -120 … -20 | 3 × 5 | iron | 2 | volcanic |
-| mercury | -120 … 0 | 2 × 4 | iron | 3 | volcanic |
-| titanium | -140 … -20 | 2 × 5 | iron | 3 | granite |
-| tungsten | -200 … -60 | 2 × 4 | diamond | 3 | granite |
-| uranium | -200 … -40 | 2 × 4 | iron | 3 | granite |
-| thorium | -220 … -80 | 2 × 4 | iron | 3 | granite |
-| platinum | -220 … -100 | 1 × 3 | diamond | 3 | volcanic |
+| Metal | Band | Veins × size | Pickaxe | Rock |
+| --- | --- | --- | --- | --- |
+| tin | -40 … 90 | 9 × 12 | stone | sedimentary |
+| zinc | -40 … 80 | 8 × 12 | stone | sedimentary |
+| lead | -60 … 60 | 8 × 12 | stone | sedimentary |
+| manganese | -50 … 60 | 6 × 10 | stone | sedimentary |
+| magnesium | -30 … 70 | 6 × 10 | stone | sedimentary |
+| aluminum | 20 … 130 | 8 × 13 | stone | sedimentary |
+| nickel | -80 … 20 | 5 × 9 | iron | volcanic |
+| cobalt | -100 … 0 | 5 × 8 | iron | volcanic |
+| chromium | -120 … -20 | 5 × 8 | iron | volcanic |
+| mercury | -120 … 0 | 3 × 6 | iron | volcanic |
+| silver | -80 … 32 | 5 × 8 | iron | volcanic |
+| titanium | -140 … -20 | 3 × 8 | iron | granite |
+| tungsten | -200 … -60 | 3 × 6 | diamond | granite |
+| uranium | -200 … -40 | 3 × 6 | iron | granite |
+| thorium | -220 … -80 | 3 × 6 | iron | granite |
+| platinum | -220 … -100 | 2 × 5 | diamond | volcanic |
+| mithril | -180 … -64 | 2 × 5 | diamond | granite |
+| adamantium | Underworld, Stone Wastes only | 3 × 4 | diamond | — |
+
+The veins were made half again as frequent and as large when the ore drill was taken out, so that
+strip mining pays. Adamantium is not in the overworld at all: it lies in the Stone Wastes of the
+Underworld, below y 64, and no overworld rock carries it.
 
 The depth bands follow real geology as far as Minecraft leaves room for it: bauxite weathers near the
 surface, lead and zinc travel together through sedimentary rock, nickel and the platinum group sit in
@@ -236,7 +243,7 @@ Three things follow from the same table without being written twice:
 - **The fire pit.** Only the metals the early game may reach — the bronze-age ones — smelt over a
   campfire. Everything else waits for a furnace, which waits for a workbench.
 - **Geology.** Every metal is written into the rock profile of Milestone 6, so a prospector finds
-  rich ground for it and a drill of the right tier brings it up.
+  rich ground for it, and the rich ground is threaded with its veins.
 
 ## Copper, tin and bronze
 
@@ -300,7 +307,7 @@ Five cover the metals: every one of them having an ore, a raw material and an in
 bands really differing, so a stone pick takes tin and not nickel and iron does not touch tungsten;
 every ore feature loading and reaching an overworld biome **while vanilla's veins stay untouched**;
 the fire pit smelting only what the early game may reach; and the rock profiles carrying each metal
-at the drill tier its own table states.
+in the rock its own table names, and adamantium in none of them but the Stone Wastes of the Underworld.
 
 One more covers the stamina threshold: being worn out costs a player nothing until the last four
 drops of the bar are all that is left. A penalty that starts at the first missing point means every
@@ -319,7 +326,7 @@ touched, so a campfire that generates with a village is still burning when it is
 
 ### The chain that used to be knotted
 
-A crafting table needs an iron hatchet. Iron needs a furnace. A vanilla furnace needs eight
+A crafting table needs an iron axe. Iron needs a furnace. A vanilla furnace needs eight
 cobblestone in a three-by-three grid — which needs a crafting table. That circle is now cut:
 
 | Step | Where | What it needs |
@@ -327,7 +334,7 @@ cobblestone in a three-by-three grid — which needs a crafting table. That circ
 | Clay → brick | on a campfire | a lit campfire |
 | 4 bricks → **brick furnace** | the inventory square | nothing else |
 | Ore → ingot | the brick furnace | fuel |
-| Iron hatchet → crafting table | | |
+| Iron axe → crafting table | | |
 
 The brick furnace is deliberately poor. It smelts at **half the speed** of a stone furnace and gets
 **two thirds** of the work out of the same fuel, because it exists to be replaced. It is the first

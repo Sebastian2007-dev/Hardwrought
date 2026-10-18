@@ -5,8 +5,6 @@ import com.mojang.serialization.JsonOps;
 import de.ipnats.hardwrought.Hardwrought;
 import de.ipnats.hardwrought.core.events.CoreLifecycle;
 import de.ipnats.hardwrought.geology.DepositProfile;
-import de.ipnats.hardwrought.geology.DrillTier;
-import de.ipnats.hardwrought.geology.DrillYield;
 import de.ipnats.hardwrought.geology.Geology;
 import de.ipnats.hardwrought.geology.GeologyEvents;
 import de.ipnats.hardwrought.geology.OreDeposit;
@@ -215,64 +213,43 @@ public final class GeologyGameTests {
     }
 
     @GameTest
-    public void aDrillBringsUpWhatTheChunkHolds(GameTestHelper helper) {
+    public void richGroundIsThreadedWithRealVeins(GameTestHelper helper) {
         var profiles = CoreLifecycle.require(helper.getLevel().getServer()).rockProfiles();
-        int x = 0;
-        int z = 0;
-        while (Geology.rockAt(SEED, x, z) != RockType.GRANITE) x += Geology.REGION_SIZE_BLOCKS;
-
-        // Every chunk of the region, one after the other: the first tier only ever reaches coal and iron,
-        // the last reaches the rare ores too, and the chunks do not all hold the same mix.
-        java.util.Set<List<DrillYield.Entry>> mixes = new java.util.HashSet<>();
-        double iron = 0;
-        double emerald = 0;
-        int working = 0;
-        int chunks = 0;
-        for (int cx = 0; cx < Geology.REGION_SIZE_BLOCKS; cx += 16) {
-            for (int cz = 0; cz < Geology.REGION_SIZE_BLOCKS; cz += 16) {
-                int bx = Geology.regionX(x) * Geology.REGION_SIZE_BLOCKS + cx;
-                int bz = Geology.regionZ(z) * Geology.REGION_SIZE_BLOCKS + cz;
-                chunks++;
-                DrillYield first = DrillYield.forChunk(SEED, profiles, bx, bz, DrillTier.BRONZE);
-                for (DrillYield.Entry entry : first.entries()) {
-                    helper.assertTrue(entry.ore().getPath().equals("coal_ore") || entry.ore().getPath().equals("iron_ore"),
-                            "A bronze drill reaches coal and iron and nothing else, not " + entry.ore());
+        long core = 0, coreOre = 0, rim = 0, rimOre = 0;
+        int bodies = 0;
+        for (int region = 0; region < 12; region++) {
+            for (OreDeposit body : Geology.deposits(SEED, profiles, region, region)) {
+                bodies++;
+                var fields = de.ipnats.hardwrought.geology.OreBodies.fields(SEED, body.ore());
+                int r = body.horizontalRadius(), v = body.verticalRadius();
+                for (int dx = -r; dx <= r; dx += 2) {
+                    for (int dz = -r; dz <= r; dz += 2) {
+                        for (int dy = -v; dy <= v; dy++) {
+                            int x = body.centre().getX() + dx, y = body.centre().getY() + dy, z = body.centre().getZ() + dz;
+                            double reach = body.reach(x, y, z);
+                            boolean ore = de.ipnats.hardwrought.geology.OreBodies.veinAt(fields, body, x, y, z);
+                            if (reach < 0.35) {
+                                core++;
+                                if (ore) coreOre++;
+                            } else if (reach > 0.8 && reach <= 1.0) {
+                                rim++;
+                                if (ore) rimOre++;
+                            }
+                            if (reach > 1.0 && ore) throw new AssertionError("A vein never runs outside its body");
+                        }
+                    }
                 }
-                if (!first.barren()) working++;
-                DrillYield last = DrillYield.forChunk(SEED, profiles, bx, bz, DrillTier.TITANIUM);
-                mixes.add(last.entries());
-                iron += last.share(Identifier.withDefaultNamespace("iron_ore"));
-                emerald += last.share(Identifier.withDefaultNamespace("emerald_ore"));
-                helper.assertTrue(last.intervalTicks() < DrillTier.BRONZE.intervalTicks(),
-                        "A better drill also works faster");
             }
         }
-        helper.assertTrue(working > chunks * 0.7, "A first drill finds something in most of granite: " + working + "/" + chunks);
-        helper.assertTrue(mixes.size() > chunks / 2, "Chunks hold their own mixes of ore: " + mixes.size() + "/" + chunks);
-        helper.assertTrue(emerald > 0, "The last drill reaches the emerald in the rock");
-        helper.assertTrue(emerald < iron, "and it stays the rare one: reaching it is not the same as it being common");
-
-        // Standing on a real body is what makes a drill worth siting carefully.
-        OreDeposit found = null;
-        for (int region = 0; region < 24 && found == null; region++) {
-            List<OreDeposit> candidates = Geology.deposits(SEED, profiles, region, 0);
-            if (!candidates.isEmpty()) found = candidates.get(0);
-        }
-        helper.assertTrue(found != null, "There is a body for a drill to stand on");
-        final OreDeposit body = found;
-        DrillYield onBody = DrillYield.forChunk(SEED, profiles, body.centre().getX(),
-                body.centre().getZ(), DrillTier.TITANIUM);
-        helper.assertTrue(onBody.share(body.ore()) > 0.3, "The ore under the drill comes up far more often: "
-                + onBody.share(body.ore()));
-        helper.assertTrue(onBody.intervalTicks() < DrillTier.TITANIUM.intervalTicks(),
-                "and a chunk with a body in it works faster than bare rock");
-
-        expectFailure(() -> DrillYield.forChunk(SEED, profiles, 0, 0, null));
-        expectFailure(() -> new DrillYield.Entry(Identifier.withDefaultNamespace("iron_ore"), 0));
-        helper.assertTrue(DrillTier.byName("titanium") == DrillTier.TITANIUM
-                        && DrillTier.byLevel(1) == DrillTier.BRONZE && DrillTier.values().length == 5,
-                "Five tiers, round tripping by name and by level");
-        expectFailure(() -> DrillTier.byLevel(9));
+        double coreShare = coreOre / (double) core, rimShare = rimOre / (double) rim;
+        System.out.printf("[ore bodies] %d bodies, core %.4f, rim %.4f%n", bodies, coreShare, rimShare);
+        helper.assertTrue(coreShare > 0.03 && coreShare < 0.15,
+                "The core of a body is worth tunnelling into, without being solid ore: " + coreShare);
+        helper.assertTrue(rimShare < coreShare / 2 && rimShare > 0.002,
+                "and the strands thin out towards the rim: " + rimShare + " against " + coreShare);
+        var features = helper.getLevel().registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.PLACED_FEATURE);
+        helper.assertTrue(features.get(de.ipnats.hardwrought.geology.OreBodies.PLACED).isPresent(),
+                "The veins are part of world generation");
         helper.succeed();
     }
 
@@ -295,24 +272,5 @@ public final class GeologyGameTests {
             return;
         }
         throw new AssertionError("Expected operation to be rejected");
-    }
-
-    @GameTest
-    public void theOreScannerReadsTheChunkItIsUsedIn(GameTestHelper helper) {
-        @SuppressWarnings("removal")
-        var player = helper.makeMockServerPlayerInLevel();
-        var info = de.ipnats.hardwrought.geology.OreScannerItem.scan(player);
-        helper.assertTrue(info.scan() && info.chunkX() == (player.blockPosition().getX() >> 4),
-                "It reads the chunk the player stands in");
-        double total = 0;
-        for (var ore : info.ores()) {
-            total += ore.presence();
-            helper.assertTrue(ore.known() == de.ipnats.hardwrought.knowledge.KnowledgeLevel.STUDIED.ordinal(),
-                    "A creative tool names every ore, known or not");
-            helper.assertTrue(ore.needs() >= 1 && ore.needs() <= 5, "and says which drill tier reaches it");
-        }
-        helper.assertTrue(info.ores().isEmpty() || Math.abs(total - 1.0) < 0.01,
-                "The shares of the chunk add up to the whole of it: " + total);
-        helper.succeed();
     }
 }

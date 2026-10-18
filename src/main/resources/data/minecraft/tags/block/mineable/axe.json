@@ -1,5 +1,6 @@
 {
   "values": [
+    "hardwrought:high_voltage_mast",
     {
       "id": "hardwrought:hewn_workbench",
       "required": false

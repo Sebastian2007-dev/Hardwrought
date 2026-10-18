@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    "hardwrought:mast",
+    "hardwrought:porcelain_insulator"
+  ],
+  "result": {
+    "id": "hardwrought:high_voltage_mast"
+  }
+}

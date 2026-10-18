@@ -26,6 +26,9 @@ public final class Herbs {
     private Herbs() { }
 
     public static void initialize() {
+        // For the book: the bark an axe knocks off a birch (below).
+        de.ipnats.hardwrought.knowledge.LootSources.register(() -> ModItems.WILLOW_BARK,
+                de.ipnats.hardwrought.knowledge.LootSources.KIND_BLOCK, () -> net.minecraft.resources.Identifier.withDefaultNamespace("birch_log"));
         // Before the axe strips the log, so the bark comes off with it; the stripping itself is vanilla's.
         UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
             ItemStack held = player.getItemInHand(hand);

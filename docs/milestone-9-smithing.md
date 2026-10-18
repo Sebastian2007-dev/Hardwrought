@@ -85,7 +85,9 @@ The minigame (`ForgingScreen`) shows the piece at eight times size, one square p
 texture, with the shape it is to become faintly behind it. A click is a blow: every wrong square within
 one of it is put right — metal standing proud is driven in, a gap is filled. A blow that finds nothing
 wrong is wasted. Below working heat a blow does nothing at all and is not counted: cold iron does not
-move, and the piece has to go back to the fire. Each blow takes 6 °C out of the piece,
+move, and the piece has to go back to the fire. That holds for bars as much as for raw lumps: a bar
+begun on the anvil has to be at working heat too, and the screen does not even lift the hammer while it
+is cold. Each blow takes 6 °C out of the piece,
 costs a little stamina and now and then wears the hammer. Going back to the fire keeps the work.
 
 Where a piece can become several things (an ingot into any head), the screen asks first and shows
@@ -207,3 +209,11 @@ and a pick head under way.
 - Armour is still crafted.
 - The client supplies the two shapes. A modified client could send an easy pair; the server refuses
   anything under six squares of work, which stops the trivial case but not a determined one.
+
+## A piece in work, in its slot
+
+A piece on the anvil is drawn in every slot (inventory, hotbar, the off hand) as the shape it has been
+beaten into so far rather than as the bars it was begun from: metal already where the finished part has
+it in that part's colours, what still stands proud in shadow, tinted by its heat, with a bar along its
+foot for how far the work has got (`ForgingIcon`, `ForgingIconMixin`). The same picture the anvil's
+screen draws, one pixel to a square. `SmithingClientGameTest` photographs it half done.

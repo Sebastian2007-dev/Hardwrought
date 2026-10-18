@@ -87,17 +87,19 @@ public record CompendiumPagePayload(int mode, Identifier subject, List<Entry> en
      * @param subject what the entry points at, so the browser can draw it and jump to its recipe;
      *                null while the entry is still unreadable
      * @param state   one of {@code Journal.HIDDEN}, {@code OPEN} or {@code DONE}
-     * @param parts   for a thought that takes several things together, each of them and whether the
-     *                player has held it yet, so the book can show every piece on its own; empty for
-     *                any other thought, and always empty while a thought is unread
+     * @param parts   what the thought asks for, each piece with whether the player has held it yet: the
+     *                task drawn under the note; always empty while a thought is unread
+     * @param chapter the chapter of the journal the entry stands in; its title is the book's to look up
+     * @param needsAll whether every one of the parts is wanted, rather than any one of them
      */
-    public record Note(Identifier id, Identifier subject, int state, List<Part> parts) {
+    public record Note(Identifier id, Identifier subject, int state, List<Part> parts, Identifier chapter,
+                       boolean needsAll) {
         public Note {
             parts = parts == null ? List.of() : List.copyOf(parts);
         }
 
         public Note(Identifier id, Identifier subject, int state) {
-            this(id, subject, state, List.of());
+            this(id, subject, state, List.of(), null, false);
         }
     }
 
@@ -187,7 +189,8 @@ public record CompendiumPagePayload(int mode, Identifier subject, List<Entry> en
                 for (int part = 0; part < partCount; part++) {
                     parts.add(new Part(buffer.readIdentifier(), buffer.readBoolean()));
                 }
-                journal.add(new Note(note, points, state, parts));
+                Identifier chapter = buffer.readBoolean() ? buffer.readIdentifier() : null;
+                journal.add(new Note(note, points, state, parts, chapter, buffer.readBoolean()));
             }
             return new CompendiumPagePayload(mode, subject, entries, recipes, sources, journal);
         }
@@ -229,6 +232,9 @@ public record CompendiumPagePayload(int mode, Identifier subject, List<Entry> en
                     buffer.writeIdentifier(note.parts().get(part).id());
                     buffer.writeBoolean(note.parts().get(part).held());
                 }
+                buffer.writeBoolean(note.chapter() != null);
+                if (note.chapter() != null) buffer.writeIdentifier(note.chapter());
+                buffer.writeBoolean(note.needsAll());
             }
         }
 

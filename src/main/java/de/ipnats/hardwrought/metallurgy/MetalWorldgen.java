@@ -17,8 +17,9 @@ import java.util.List;
  * Puts the ores of {@link Metal} into the ground, and touches nothing that was already there.
  *
  * <p>Vanilla ore generation is deliberately left exactly as it is — an earlier attempt at replacing
- * it made a world that read as empty. These are additions: eighteen new ores in the depth bands their
- * table states, each of them scarce, and every vanilla vein still where it always was.
+ * it made a world that read as empty. These are additions: seventeen new ores in the depth bands their
+ * table states, in veins worth tunnelling along, and every vanilla vein still where it always was.
+ * Adamantium is not among them: it lies only in the Stone Wastes of the Underworld.
  */
 public final class MetalWorldgen {
     private static boolean initialized;
@@ -39,6 +40,7 @@ public final class MetalWorldgen {
     /** The placed features this mod adds, for tests and diagnostics. */
     public static List<ResourceKey<PlacedFeature>> oreFeatures() {
         return Arrays.stream(Metal.values())
+                .filter(Metal::inOverworld)
                 .map(metal -> ResourceKey.create(Registries.PLACED_FEATURE,
                         Hardwrought.id("ore_" + metal.id())))
                 .toList();

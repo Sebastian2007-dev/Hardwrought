@@ -18,7 +18,6 @@ public final class MachineryClient {
     private MachineryClient() { }
 
     public static void initialize() {
-        OreDrillScreen.initialize();
         BlockEntityRendererRegistry.register(ModBlockEntities.SHAFT, ShaftRenderer::new);
         BlockEntityRendererRegistry.register(ModBlockEntities.HAND_CRANK, HandCrankRenderer::new);
         BlockEntityRendererRegistry.register(ModBlockEntities.KINETIC, KineticPartRenderer.of(

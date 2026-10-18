@@ -18,13 +18,27 @@
     "#minecraft:planks",
     "minecraft:stick",
     "minecraft:string",
+    "minecraft:bundle",
     "minecraft:torch",
+    "hardwrought:unlit_torch",
     "minecraft:cobblestone",
     "minecraft:dirt",
     "hardwrought:wooden_hammer",
     "hardwrought:sewing_needle",
     "hardwrought:drying_rack",
     "minecraft:fishing_rod",
-    "hardwrought:wooden_anvil"
+    "hardwrought:wooden_anvil",
+    "minecraft:campfire",
+    "hardwrought:brick_furnace",
+    "hardwrought:stone_hatchet",
+    "hardwrought:stone_pickaxe",
+    "hardwrought:smithing_gloves",
+    "minecraft:iron_axe",
+    "minecraft:iron_pickaxe",
+    "minecraft:iron_shovel",
+    "minecraft:iron_hoe",
+    "minecraft:iron_sword",
+    "hardwrought:bronze_hatchet",
+    "hardwrought:bronze_pickaxe"
   ]
 }

@@ -36,14 +36,10 @@ public final class MeltingPointTooltip {
             } else {
                 double from = melting * de.ipnats.hardwrought.smithing.Smithing.WORKING_MIN;
                 double to = melting * de.ipnats.hardwrought.smithing.Smithing.WORKING_MAX;
-                if (de.ipnats.hardwrought.smithing.Smithing.isIngot(stack.getItem())) {
-                    lines.add(Component.translatable("gui.hardwrought.forging.optimal_max",
-                            String.format(Locale.ROOT, "%.0f", to)).withStyle(ChatFormatting.DARK_GRAY));
-                } else {
-                    lines.add(Component.translatable("gui.hardwrought.forging.workable",
-                            String.format(Locale.ROOT, "%.0f", from), String.format(Locale.ROOT, "%.0f", to))
-                            .withStyle(ChatFormatting.DARK_GRAY));
-                }
+                // Bars as much as lumps: cold metal does not move on the anvil.
+                lines.add(Component.translatable("gui.hardwrought.forging.workable",
+                        String.format(Locale.ROOT, "%.0f", from), String.format(Locale.ROOT, "%.0f", to))
+                        .withStyle(ChatFormatting.DARK_GRAY));
             }
         });
     }

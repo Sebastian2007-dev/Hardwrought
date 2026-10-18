@@ -4,7 +4,8 @@ Section 76 of the specification. First step: power is there and can be used — 
 driveline, bare copper strung between insulators, a lamp, and a meter to read it all with. Second
 step: masts to carry a line overhead, a battery to hold it up, and the first machine that runs on
 current, the basic crusher. Third step: the machines — electric furnace, sawmill and plate press
-beside the crusher, each with a screen. Transformers and motors come after.
+beside the crusher, each with a screen. Fourth: the grid at 240 V — transformers, porcelain,
+switchgear and insulated wire. Motors come after.
 
 ## The parts
 
@@ -125,10 +126,89 @@ One kind of block entity serves all of them; `Machine` says what each takes and 
   is shocked. Rain does the same more gently (150 Ω) to a dynamo or a lamp with open sky above it; a
   block over it is roof enough. Insulators are made for the weather.
 
+## The grid at 240 volts
+
+Stage E1 of the [roadmap](electricity-roadmap.md): power carried from where it is made to where it is
+used, and the parts that keep a line from burning the house down.
+
+| Part | What it is |
+|---|---|
+| **Transformer** | Two windings on a core of electrical steel, 1:4. Steps 60 V up to 240 V and, the other way round, down again. |
+| **Bushing** | A coil in a porcelain sleeve. Where a line at high voltage goes into a transformer. |
+| **Porcelain insulator** | The insulator for high voltage. |
+| **High-voltage mast** | A line mast with a porcelain insulator on its crossarm. |
+| **Insulated wire** | Thin wire in rubber: bites nobody, goes through walls, spans 12 blocks. |
+| **Knife switch** | Joins the coils set against it while closed. Thrown by hand, or follows a redstone signal. |
+| **Fuse box** | The same, with a 4 A cartridge that blows; a new cartridge mends it. |
+| **Breaker** | The same at 16 A, closed again by hand. |
+| **Coil winder** | A machine: eight lengths of enamelled wire make one winding. |
+| **Mk IV machines** | Crusher, furnace, sawmill and press wound for 240 V. |
+
+### The transformer
+
+The block itself is the low side and is joined to a line through coils on any face, as a machine is.
+The high side is the coil, or better the bushing, on its marked face — the face that pointed away from
+whoever set it down. Fed from the bushing, it steps down.
+
+It is worked out exactly with the rest of the network: an ideal 1:4 transformer with 1 Ω of winding on
+the high side. What stands on the low side stands four times over on the high side; what is drawn from
+the high side is drawn four times over from the low. So the same power crosses a line on a quarter of
+the current and loses a sixteenth as much on the way, and a thin wire at 240 V carries what a cable
+carries at 60.
+
+It is rated for 4 A out of its high side (16 A on the low). Above that it hums and smokes, and kept up,
+its windings char: it is burnt out and couples nothing until a new **winding** is used on it. Its tank is
+earthed and can be touched while it works.
+
+### High voltage and rain
+
+Glazed brick stands 150 V in the rain. Above that, rain on an insulator, a mast's head or a plain coil
+flashes over: it crackles and lets current to the ground through 20 Ω, as standing water does. Porcelain
+— the porcelain insulator, the bushing and the high-voltage mast — stands 1000 V. Under a roof nothing
+flashes over.
+
+240 V on bare wire bites for twelve half hearts twice a second. The meter shows the voltage before a hand
+touches anything.
+
+### Switchgear
+
+A switch, a fuse box and a breaker are blocks a line is led through: in on a coil on one face, out on a
+coil on another. Closed, they join their coils; open, the two sides are two networks, and the side without
+a source goes dark.
+
+- A **fuse** blows after half a second at half again its 4 A — sooner than the wire behind it burns
+  through, which is what it is for. It takes a new **fuse cartridge**.
+- A **breaker** trips at 16 A after a little longer and is closed again by hand; it can be opened by hand
+  too.
+- A **knife switch** is set down open, so that nothing goes live before it is wired.
+
+The meter says on each whether it is closed and how much of its rating runs through it.
+
+### The fourth marks
+
+Mk IV machines are wound for 240 V: below 120 V they only hum, and they strain only above 300. They are
+twice as fast as Mk III again. Their screen's voltmeter reads to 480 V. Built from the Mk III with the
+elite circuit, two windings, silicone gaskets and electrical steel.
+
+### Parts
+
+| Part | Made |
+|---|---|
+| Electrical steel (2) | arc furnace, small or large: 2 steel and raw silicon |
+| Electrical steel plate (2) | plate press: electrical steel |
+| Transformer core | 8 electrical steel plates in a ring |
+| Enamelled wire (4) | 4 copper wire and resin |
+| Winding | coil winder: 8 enamelled wire |
+| Porcelain blank (2) | fireclay, clay and quartz |
+| Porcelain | a porcelain blank fired in any furnace |
+| Fuse cartridge (4) | porcelain, copper wire, a glass pane |
+| Insulated wire (2) | 2 copper wire and rubber |
+
+The transformer itself: two windings, a core, a bushing and steel plates.
+
 ## Not yet
 
-Transformers (the answer to long lines: nothing can use the high voltage that would cross them
-cheaply), motors that turn a driveline, insulated wire, and the machines after the crusher.
+Motors that turn a driveline (stage E2 of the roadmap).
 
 ## Tests
 
@@ -141,4 +221,13 @@ on through them; a mast is one thing and carries a line overhead from its
 foot; the basic crusher breaks ore on current and takes none standing idle; every machine makes what
 it is for, and the furnace smelts the crusher's powder. `ElectricityClientGameTest` photographs a line by day and night, and a machine opened.
 
-The assets are written by `tools/electricity_assets.py`.
+`GridGameTests`: a transformer steps a line up to four times its voltage and a second steps it down
+for two lamps, with a quarter of the current on the line; an overloaded transformer burns out and couples
+nothing, and within its rating never does; a fuse blows before the wire it guards and leaves the far side
+dead, and a knife switch cuts a lamp off; insulated wire goes through a wall and does not bite a pig that
+bare wire bites; porcelain stands what glazed brick does not; a Mk IV only hums on 60 V; the coil winder
+waits for its eighth length of wire. Flashover in the rain is not tested in a game, since tests share
+the weather.
+
+The assets are written by `tools/electricity_assets.py`; those of the grid by `tools/GridAssets.java`
+(`java tools/GridAssets.java`).

@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    "hardwrought:copper_wire",
+    "hardwrought:copper_wire",
+    "hardwrought:copper_wire",
+    "hardwrought:copper_wire",
+    "minecraft:resin_clump"
+  ],
+  "result": {
+    "id": "hardwrought:enamelled_wire",
+    "count": 4
+  }
+}

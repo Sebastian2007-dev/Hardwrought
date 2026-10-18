@@ -283,10 +283,13 @@ cell like any other withdrawal, and it can be done once a second rather than hel
 The empty hand is what keeps the gesture out of everything else. Sneaking with something in hand
 already means placing it or using it, and a waterskin answers the same gesture by filling itself.
 
-One wrinkle worth recording: this hangs on the block-use callback rather than the item one, because
-vanilla never sends a use packet for an empty hand unless a block was hit. Water is invisible to the
-aim ray, so the block that was hit is the river bed or the bank; the water itself is found with a
-second ray that does see fluids, and failing that, in the cell the player is standing in.
+One wrinkle worth recording: vanilla never sends a use packet for an empty hand unless a block was
+hit, and water is invisible to the aim ray. Hanging this on the block-use callback, as it first was,
+meant a river with no bed in reach could not be drunk from, and the other hand went on to set down
+whatever it held. So the client asks for it itself (`MinecraftDrinkMixin` sends `DrinkByHandPayload`
+before the game tries either hand, and nothing else happens on that click), and the server finds the
+water again with a ray that does see fluids, and failing that, in the cell the player is standing in
+(`WaterEvents.drinkByHand`). `DrinkClientGameTest` plays it with real keys over water eight deep.
 
 ### Boiling
 

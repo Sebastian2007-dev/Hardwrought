@@ -162,10 +162,7 @@ public final class Weaving {
                 new WorldRecipes.WorldRecipe(de.ipnats.hardwrought.Hardwrought.id("woven"),
                         WorldRecipes.one(new ItemStack(ModItems.SEWING_NEEDLE),
                                 new ItemStack(ModItems.LEAF_STRING, CORD_PER_WEAVE)),
-                        new ItemStack(ModItems.WOVEN), ItemStack.EMPTY),
-                new WorldRecipes.WorldRecipe(de.ipnats.hardwrought.Hardwrought.id("drying_fibre"),
-                        WorldRecipes.one(new ItemStack(ModItems.GREEN_FIBRE)), new ItemStack(ModItems.LEAF_STRING),
-                        new ItemStack(ModItems.DRYING_RACK))));
+                        new ItemStack(ModItems.WOVEN), ItemStack.EMPTY)));
         if (de.ipnats.hardwrought.survival.Ultra.active()) {
             recipes.add(new WorldRecipes.WorldRecipe(de.ipnats.hardwrought.Hardwrought.id("woven_pack"),
                     WorldRecipes.one(new ItemStack(ModItems.SEWING_NEEDLE), new ItemStack(ModItems.WOVEN, CLOTH_PER_PACK)),

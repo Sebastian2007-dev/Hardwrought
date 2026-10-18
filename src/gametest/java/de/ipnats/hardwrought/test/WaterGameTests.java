@@ -341,10 +341,8 @@ public final class WaterGameTests {
     private static net.minecraft.world.InteractionResult drinkAt(net.minecraft.server.level.ServerPlayer player,
                                                                  net.minecraft.server.level.ServerLevel level,
                                                                  net.minecraft.core.BlockPos pos) {
-        var hit = new net.minecraft.world.phys.BlockHitResult(
-                net.minecraft.world.phys.Vec3.atCenterOf(pos), net.minecraft.core.Direction.UP, pos, false);
-        return net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.invoker()
-                .interact(player, level, net.minecraft.world.InteractionHand.MAIN_HAND, hit);
+        // What the client asks for when the player sneaks at water with an empty hand (MinecraftDrinkMixin).
+        return de.ipnats.hardwrought.water.WaterEvents.drinkByHand(player);
     }
 
     /**

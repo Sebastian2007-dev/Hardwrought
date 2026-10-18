@@ -1,7 +1,7 @@
 package de.ipnats.hardwrought.machinery;
 
 /**
- * How fast an item pipe carries: the same five metals a drill frame is built of, each one faster
+ * How fast an item pipe carries: five metals, each one faster
  * than the last.
  *
  * <p>A pipe holds one batch at a time and hands it on to the next block after a set number of

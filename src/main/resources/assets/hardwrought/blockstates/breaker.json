@@ -1,0 +1,64 @@
+{
+  "variants": {
+    "closed=false,facing=north,powered=false": {
+      "model": "hardwrought:block/breaker_open"
+    },
+    "closed=false,facing=north,powered=true": {
+      "model": "hardwrought:block/breaker_open"
+    },
+    "closed=true,facing=north,powered=false": {
+      "model": "hardwrought:block/breaker_closed"
+    },
+    "closed=true,facing=north,powered=true": {
+      "model": "hardwrought:block/breaker_closed"
+    },
+    "closed=false,facing=east,powered=false": {
+      "model": "hardwrought:block/breaker_open",
+      "y": 90
+    },
+    "closed=false,facing=east,powered=true": {
+      "model": "hardwrought:block/breaker_open",
+      "y": 90
+    },
+    "closed=true,facing=east,powered=false": {
+      "model": "hardwrought:block/breaker_closed",
+      "y": 90
+    },
+    "closed=true,facing=east,powered=true": {
+      "model": "hardwrought:block/breaker_closed",
+      "y": 90
+    },
+    "closed=false,facing=south,powered=false": {
+      "model": "hardwrought:block/breaker_open",
+      "y": 180
+    },
+    "closed=false,facing=south,powered=true": {
+      "model": "hardwrought:block/breaker_open",
+      "y": 180
+    },
+    "closed=true,facing=south,powered=false": {
+      "model": "hardwrought:block/breaker_closed",
+      "y": 180
+    },
+    "closed=true,facing=south,powered=true": {
+      "model": "hardwrought:block/breaker_closed",
+      "y": 180
+    },
+    "closed=false,facing=west,powered=false": {
+      "model": "hardwrought:block/breaker_open",
+      "y": 270
+    },
+    "closed=false,facing=west,powered=true": {
+      "model": "hardwrought:block/breaker_open",
+      "y": 270
+    },
+    "closed=true,facing=west,powered=false": {
+      "model": "hardwrought:block/breaker_closed",
+      "y": 270
+    },
+    "closed=true,facing=west,powered=true": {
+      "model": "hardwrought:block/breaker_closed",
+      "y": 270
+    }
+  }
+}

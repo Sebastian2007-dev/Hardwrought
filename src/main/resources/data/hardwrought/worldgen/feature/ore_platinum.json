@@ -1,7 +1,7 @@
 {
   "type": "minecraft:ore",
   "discard_chance_on_air_exposure": 0.0,
-  "size": 3,
+  "size": 5,
   "targets": [
     {
       "state": "hardwrought:platinum_ore",

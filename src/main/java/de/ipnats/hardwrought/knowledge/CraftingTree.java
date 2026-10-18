@@ -21,11 +21,11 @@ import java.util.function.Function;
  * each of those takes, and how many of everything, down to the things that are found rather than made.
  *
  * <p>Where a thing can be made more than one way, the player's choice is followed, and without one the
- * first recipe that neither goes round in a circle nor undoes another — an ingot is smelted, not
- * knocked out of a block that was made of ingots. Whatever a recipe makes beyond what was needed is
- * kept, and the next part of the tree that wants the same thing takes it from there first: four planks
- * made for one stick leave two for the next. With an inventory given, what the player carries is
- * taken before anything is made.
+ * recipe that really makes it rather than turning it back out of something made of it: an ingot is
+ * smelted, not knocked out of a block, waxed or not, that was made of ingots (see {@link #choiceFor}).
+ * Whatever a recipe makes beyond what was needed is kept, and the next part of the tree that wants the
+ * same thing takes it from there first: four planks made for one stick leave two for the next. With an
+ * inventory given, what the player carries is taken before anything is made.
  */
 public final class CraftingTree {
     /** Deeper than any real chain; past this a thing is treated as found. */
@@ -56,6 +56,11 @@ public final class CraftingTree {
         public int choices;
         /** The chosen recipe would lead back to something above it, so it is not followed. */
         public boolean loop;
+        /**
+         * It can be made — something comes into its ring from outside — yet no recipe for it is followed
+         * here, though the player chose none: the tree went round to it from above. A sound tree has none.
+         */
+        public boolean stuck;
         public final List<Node> children = new ArrayList<>();
         /** Where the browser laid it out, in tree units. */
         public int x;
@@ -105,12 +110,13 @@ public final class CraftingTree {
             Identifier key = Compendium.treeKey(Compendium.shownOption(recipe.result()).stack());
             if (key != null) recipes.computeIfAbsent(key, ignored -> new ArrayList<>()).add(recipe);
         }
+        findRings();
         int level = page.entries().isEmpty() ? 0 : page.entries().getFirst().level();
         CompendiumPagePayload.Known shown = new CompendiumPagePayload.Known(stackOf(page.subject()), level);
         boolean fluid = FluidIcons.of(shown.stack()) != null;
         if (amount <= 0) {
             List<CompendiumPagePayload.Recipe> own = recipes.getOrDefault(page.subject(), List.of());
-            int choice = choiceFor(page.subject(), own, Set.of(page.subject()));
+            int choice = choiceFor(page.subject(), own, Set.of(page.subject()), true);
             amount = choice < 0 ? 1 : Math.max(1, resultAmount(own.get(choice), fluid));
         }
         // The thing asked about is wanted made, not taken out of a pocket.
@@ -161,7 +167,8 @@ public final class CraftingTree {
         node.choices = own.size();
         Set<Identifier> inner = new HashSet<>(path);
         inner.add(key);
-        node.choice = choiceFor(key, own, inner);
+        node.choice = choiceFor(key, own, inner, depth == 0);
+        node.stuck = node.choice < 0 && !own.isEmpty() && entryDistance.containsKey(key) && chosen.apply(key) == null;
         if (node.choice >= 0) {
             CompendiumPagePayload.Recipe recipe = own.get(node.choice);
             if (loops(recipe, inner) || depth >= MAX_DEPTH || nodes >= MAX_NODES) node.loop = true;
@@ -189,41 +196,156 @@ public final class CraftingTree {
         return node;
     }
 
-    /** The player's choice where it still fits, else the best recipe there is by the rules above. */
-    private int choiceFor(Identifier key, List<CompendiumPagePayload.Recipe> own, Set<Identifier> path) {
+    /**
+     * The player's choice where it still fits, else the recipe the shape of the recipes calls for.
+     *
+     * <p>Things that can be turned into each other and back — ingots, the block of them, the waxed block
+     * that gives ingots again; raw copper and a block of raw copper — form a ring, and a recipe inside the
+     * ring only moves a thing round it. What really makes a thing is a recipe that comes into its ring from
+     * outside: ingots smelted from raw copper. So:
+     * <ol>
+     *   <li>a recipe that comes in from outside the ring is taken first;</li>
+     *   <li>failing that, the recipe inside the ring that leads soonest to a thing that has one — a block
+     *       is made of ingots, which are smelted;</li>
+     *   <li>a ring nothing comes into from outside is found, not made: raw copper is mined. Only the
+     *       thing the tree is about is still shown made, where a recipe packs it — the block of nine.</li>
+     * </ol>
+     * No rule names an item, so a new recipe of any kind falls into place by its shape alone.
+     */
+    private int choiceFor(Identifier key, List<CompendiumPagePayload.Recipe> own, Set<Identifier> path, boolean root) {
         Integer picked = chosen.apply(key);
         if (picked != null) return Math.clamp(picked, -1, own.size() - 1);
+        int ring = rings.getOrDefault(key, -1);
+        int best = -1;
+        int bestDistance = Integer.MAX_VALUE;
         int packing = -1;
-        int any = -1;
         for (int index = 0; index < own.size(); index++) {
             CompendiumPagePayload.Recipe recipe = own.get(index);
             if (loops(recipe, path)) continue;
-            if (any < 0) any = index;
-            if (reversible(key, recipe) == null) return index;
+            // How far inside the ring this recipe still is from a way in: none for one that comes in.
+            int distance = 0;
+            for (Input input : inputs(recipe)) {
+                if (rings.getOrDefault(input.key(), -2) == ring) {
+                    distance = Math.max(distance, 1 + entryDistance.getOrDefault(input.key(), UNREACHABLE));
+                }
+            }
+            if (distance < bestDistance) {
+                best = index;
+                bestDistance = distance;
+            }
             if (packing < 0 && packs(recipe)) packing = index;
         }
-        return packing >= 0 ? packing : any;
+        if (best >= 0 && bestDistance < UNREACHABLE) return best;
+        // A ring with no way in.
+        return root ? packing : -1;
+    }
+
+    /** Further than any way in: what a ring nothing comes into is from one. */
+    private static final int UNREACHABLE = 1 << 20;
+
+    /** Which ring each thing with a recipe belongs to: things that can be made out of each other share one. */
+    private final Map<Identifier, Integer> rings = new HashMap<>();
+    /** How many recipes inside its ring a thing is from one that comes in from outside; absent where none does. */
+    private final Map<Identifier, Integer> entryDistance = new HashMap<>();
+
+    /**
+     * Finds the rings — the strongly connected parts of the graph from each thing to what its recipes
+     * take — and how far each thing in one is from a recipe that comes in from outside it.
+     */
+    private void findRings() {
+        // Tarjan's algorithm, with an explicit stack so a long chain cannot overflow the real one.
+        Map<Identifier, Integer> order = new HashMap<>();
+        Map<Identifier, Integer> low = new HashMap<>();
+        java.util.ArrayDeque<Identifier> stack = new java.util.ArrayDeque<>();
+        Set<Identifier> onStack = new HashSet<>();
+        int[] counter = {0};
+        for (Identifier start : recipes.keySet()) {
+            if (order.containsKey(start)) continue;
+            java.util.ArrayDeque<java.util.Iterator<Identifier>> work = new java.util.ArrayDeque<>();
+            java.util.ArrayDeque<Identifier> visiting = new java.util.ArrayDeque<>();
+            visit(start, order, low, stack, onStack, counter);
+            visiting.push(start);
+            work.push(successors(start).iterator());
+            while (!work.isEmpty()) {
+                Identifier here = visiting.peek();
+                java.util.Iterator<Identifier> next = work.peek();
+                if (next.hasNext()) {
+                    Identifier there = next.next();
+                    if (!order.containsKey(there)) {
+                        visit(there, order, low, stack, onStack, counter);
+                        visiting.push(there);
+                        work.push(successors(there).iterator());
+                    } else if (onStack.contains(there)) {
+                        low.put(here, Math.min(low.get(here), order.get(there)));
+                    }
+                    continue;
+                }
+                work.pop();
+                visiting.pop();
+                if (!visiting.isEmpty()) low.put(visiting.peek(), Math.min(low.get(visiting.peek()), low.get(here)));
+                if (low.get(here).equals(order.get(here))) {
+                    int ring = rings.size();
+                    Identifier member;
+                    do {
+                        member = stack.pop();
+                        onStack.remove(member);
+                        rings.put(member, ring);
+                    } while (!member.equals(here));
+                }
+            }
+        }
+        // Ways in: a recipe all of whose parts lie outside the thing's ring. From there, inward, one
+        // recipe at a time, to everything in the ring a recipe can reach it from.
+        java.util.ArrayDeque<Identifier> frontier = new java.util.ArrayDeque<>();
+        for (Map.Entry<Identifier, List<CompendiumPagePayload.Recipe>> entry : recipes.entrySet()) {
+            int ring = rings.get(entry.getKey());
+            for (CompendiumPagePayload.Recipe recipe : entry.getValue()) {
+                if (inputs(recipe).stream().noneMatch(input -> rings.getOrDefault(input.key(), -1) == ring)) {
+                    entryDistance.put(entry.getKey(), 0);
+                    frontier.add(entry.getKey());
+                    break;
+                }
+            }
+        }
+        while (!frontier.isEmpty()) {
+            Identifier made = frontier.poll();
+            int ring = rings.get(made);
+            int distance = entryDistance.get(made);
+            for (Map.Entry<Identifier, List<CompendiumPagePayload.Recipe>> entry : recipes.entrySet()) {
+                Identifier key = entry.getKey();
+                if (rings.get(key) != ring || entryDistance.containsKey(key)) continue;
+                boolean takes = entry.getValue().stream()
+                        .anyMatch(recipe -> inputs(recipe).stream().anyMatch(input -> input.key().equals(made)));
+                if (takes) {
+                    entryDistance.put(key, distance + 1);
+                    frontier.add(key);
+                }
+            }
+        }
+    }
+
+    private static void visit(Identifier node, Map<Identifier, Integer> order, Map<Identifier, Integer> low,
+                              java.util.ArrayDeque<Identifier> stack, Set<Identifier> onStack, int[] counter) {
+        order.put(node, counter[0]);
+        low.put(node, counter[0]);
+        counter[0]++;
+        stack.push(node);
+        onStack.add(node);
+    }
+
+    /** What the recipes for a thing take, among the things that have recipes of their own. */
+    private List<Identifier> successors(Identifier key) {
+        List<Identifier> next = new ArrayList<>();
+        for (CompendiumPagePayload.Recipe recipe : recipes.getOrDefault(key, List.of())) {
+            for (Input input : inputs(recipe)) if (recipes.containsKey(input.key()) && !next.contains(input.key())) next.add(input.key());
+        }
+        return next;
     }
 
     /** Whether a recipe takes something above it in the tree, itself included. */
     private boolean loops(CompendiumPagePayload.Recipe recipe, Set<Identifier> path) {
         for (Input input : inputs(recipe)) if (path.contains(input.key())) return true;
         return false;
-    }
-
-    /**
-     * The one thing a recipe is made of, where another recipe makes that thing back out of what this
-     * one makes — a block of ingots and ingots out of a block; null for any other recipe.
-     */
-    private Identifier reversible(Identifier key, CompendiumPagePayload.Recipe recipe) {
-        List<Input> inputs = inputs(recipe);
-        if (inputs.size() != 1) return null;
-        Identifier from = inputs.getFirst().key();
-        for (CompendiumPagePayload.Recipe back : recipes.getOrDefault(from, List.of())) {
-            List<Input> backInputs = inputs(back);
-            if (backInputs.size() == 1 && backInputs.getFirst().key().equals(key)) return from;
-        }
-        return null;
     }
 
     /** Whether a recipe of one ingredient makes fewer than it takes: nuggets into an ingot, not the reverse. */

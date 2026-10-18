@@ -66,7 +66,11 @@ public class ArcFurnaceController extends ControllerBlock.Entity implements Worl
                             null, 0, null, 0, List.of(new ItemStack(Materials.RAW_SILICON, 2)), null, 0, 50),
                     new ChemMachine.Recipe("large_arc_furnace/steel",
                             List.of(new ItemStack(Items.IRON_INGOT, 2), new ItemStack(de.ipnats.hardwrought.smeltery.SmelteryBlocks.COKE)),
-                            null, 0, null, 0, List.of(new ItemStack(de.ipnats.hardwrought.metallurgy.Alloys.STEEL_INGOT, 2)), null, 0, 80));
+                            null, 0, null, 0, List.of(new ItemStack(de.ipnats.hardwrought.metallurgy.Alloys.STEEL_INGOT, 2)), null, 0, 80),
+                    // Steel melted with silicon: the soft-magnetic steel transformer and motor cores are stacked from.
+                    new ChemMachine.Recipe("large_arc_furnace/electrical_steel",
+                            List.of(new ItemStack(de.ipnats.hardwrought.metallurgy.Alloys.STEEL_INGOT, 2), new ItemStack(Materials.RAW_SILICON)),
+                            null, 0, null, 0, List.of(new ItemStack(de.ipnats.hardwrought.parts.Parts.ELECTRICAL_STEEL, 2)), null, 0, 60));
         }
         return recipes;
     }

@@ -23,6 +23,10 @@ import java.util.List;
  * the order they can be made: an etched circuit board, resistors and capacitors, transistors and
  * microchips cut from silicon, a quartz oscillator; and the three grades of circuit built from them,
  * which the faster machines need.
+ *
+ * <p>The grid: electrical steel, rolled thin and stacked into a transformer core; enamelled wire, wound
+ * eight lengths to a winding on the coil winder; porcelain, fired from a blank, for whatever stands high
+ * voltage; and the cartridge a fuse box takes.
  */
 public final class Parts {
     public static final Item REDSTONE_COIL = item("redstone_coil", 64);
@@ -44,6 +48,14 @@ public final class Parts {
     public static final Item BASIC_CIRCUIT = item("basic_circuit", 64);
     public static final Item ADVANCED_CIRCUIT = item("advanced_circuit", 64);
     public static final Item ELITE_CIRCUIT = item("elite_circuit", 64);
+    public static final Item ELECTRICAL_STEEL = item("electrical_steel", 64);
+    public static final Item ELECTRICAL_STEEL_PLATE = item("electrical_steel_plate", 64);
+    public static final Item TRANSFORMER_CORE = item("transformer_core", 16);
+    public static final Item ENAMELLED_WIRE = item("enamelled_wire", 64);
+    public static final Item WINDING = item("winding", 16);
+    public static final Item PORCELAIN_BLANK = item("porcelain_blank", 64);
+    public static final Item PORCELAIN = item("porcelain", 64);
+    public static final Item FUSE_CARTRIDGE = item("fuse_cartridge", 64);
 
     private Parts() { }
 
@@ -54,7 +66,8 @@ public final class Parts {
     public static List<Item> items() {
         return new ArrayList<>(List.of(REDSTONE_COIL, ELECTRIC_MOTOR, SPARK_PLUG, GLOW_PLUG, ENGINE_PISTON, CRANKSHAFT,
                 FUEL_INJECTOR, BEARING, RUBBER_GASKET, SILICONE_GASKET, CIRCUIT_BOARD, RESISTOR, CAPACITOR, TRANSISTOR,
-                MICROCHIP, QUARTZ_OSCILLATOR, BASIC_CIRCUIT, ADVANCED_CIRCUIT, ELITE_CIRCUIT));
+                MICROCHIP, QUARTZ_OSCILLATOR, BASIC_CIRCUIT, ADVANCED_CIRCUIT, ELITE_CIRCUIT, ELECTRICAL_STEEL,
+                ELECTRICAL_STEEL_PLATE, TRANSFORMER_CORE, ENAMELLED_WIRE, WINDING, PORCELAIN_BLANK, PORCELAIN, FUSE_CARTRIDGE));
     }
 
     private static Item item(String name, int stack) {

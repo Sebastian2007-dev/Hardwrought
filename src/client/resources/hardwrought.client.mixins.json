@@ -5,6 +5,9 @@
 	"client": [
 		"PlayerHoverMixin",
 		"AbstractContainerScreenMixin",
+		"BundlePeekMixin",
+		"ForgingIconMixin",
+		"MinecraftDrinkMixin",
 		"AvatarRendererMixin",
 		"PlayerModelBellyMixin",
 		"BiomeColorsMixin",

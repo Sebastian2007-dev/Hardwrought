@@ -11,8 +11,7 @@
       "min_radius": 36,
       "max_radius": 60,
       "min_grade": 0.05,
-      "max_grade": 0.24,
-      "drill_tier": 1
+      "max_grade": 0.24
     },
     {
       "ore": "minecraft:gold_ore",
@@ -22,8 +21,7 @@
       "min_radius": 20,
       "max_radius": 36,
       "min_grade": 0.02,
-      "max_grade": 0.12,
-      "drill_tier": 3
+      "max_grade": 0.12
     },
     {
       "ore": "minecraft:emerald_ore",
@@ -33,8 +31,7 @@
       "min_radius": 10,
       "max_radius": 20,
       "min_grade": 0.01,
-      "max_grade": 0.08,
-      "drill_tier": 4
+      "max_grade": 0.08
     },
     {
       "ore": "hardwrought:titanium_ore",
@@ -44,8 +41,7 @@
       "min_radius": 12,
       "max_radius": 28,
       "min_grade": 0.02,
-      "max_grade": 0.16,
-      "drill_tier": 5
+      "max_grade": 0.16
     },
     {
       "ore": "hardwrought:tungsten_ore",
@@ -55,8 +51,7 @@
       "min_radius": 12,
       "max_radius": 28,
       "min_grade": 0.02,
-      "max_grade": 0.16,
-      "drill_tier": 5
+      "max_grade": 0.16
     },
     {
       "ore": "hardwrought:uranium_ore",
@@ -66,8 +61,7 @@
       "min_radius": 12,
       "max_radius": 28,
       "min_grade": 0.02,
-      "max_grade": 0.16,
-      "drill_tier": 5
+      "max_grade": 0.16
     },
     {
       "ore": "hardwrought:thorium_ore",
@@ -77,8 +71,7 @@
       "min_radius": 12,
       "max_radius": 28,
       "min_grade": 0.02,
-      "max_grade": 0.16,
-      "drill_tier": 5
+      "max_grade": 0.16
     },
     {
       "ore": "hardwrought:mithril_ore",
@@ -88,8 +81,7 @@
       "min_radius": 10,
       "max_radius": 22,
       "min_grade": 0.01,
-      "max_grade": 0.1,
-      "drill_tier": 5
+      "max_grade": 0.1
     }
   ]
 }

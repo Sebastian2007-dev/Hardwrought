@@ -55,6 +55,7 @@ public final class Magic {
     private Magic() { }
 
     public static void initialize() {
+        de.ipnats.hardwrought.knowledge.LootSources.inWorld(() -> RUNE_STONE.asItem());
         RuneKnowledge.initialize();
         MagicTasks.initialize();
         MagicShields.initialize();

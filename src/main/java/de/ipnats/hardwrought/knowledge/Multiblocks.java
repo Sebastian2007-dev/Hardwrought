@@ -1,7 +1,6 @@
 package de.ipnats.hardwrought.knowledge;
 
 import de.ipnats.hardwrought.Hardwrought;
-import de.ipnats.hardwrought.machinery.OreDrillBlockEntity;
 import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
@@ -18,7 +17,7 @@ import java.util.Set;
  *
  * <p>Each layer is a grid seen from above, one string per row running north to south, one character
  * per block running west to east. A space is air. Every other character stands for one kind of block,
- * or for any of several that do the same job, like the five metals of a drill frame.
+ * or for any of several that do the same job.
  *
  * <p>The compendium offers the view on the page of any block of the structure, once the player has
  * studied a block of every kind in it: until then there are parts in it they would not recognise.
@@ -81,20 +80,6 @@ public final class Multiblocks {
         int part(int x, int y, int z);
     }
 
-    private static final Identifier ORE_DRILL = Hardwrought.id("ore_drill");
-
-    public static final Multiblock ORE_DRILL_RIG = new Multiblock(ORE_DRILL,
-            List.of(List.of("FFF", "FHF", "FFF"), List.of("FFF", "FFF", "FFF")),
-            legend('H', List.of(ORE_DRILL),
-                    'F', List.of(Hardwrought.id("drill_frame_bronze"), Hardwrought.id("drill_frame_iron"),
-                            Hardwrought.id("drill_frame_nickel"), Hardwrought.id("drill_frame_chromium"),
-                            Hardwrought.id("drill_frame_titanium"))),
-            Optional.of((x, y, z) -> {
-                // The same order OreDrillBlockEntity counts its frame in, with the head at 1, 0, 1.
-                var positions = OreDrillBlockEntity.framePositions(net.minecraft.core.BlockPos.ZERO);
-                return positions.indexOf(new net.minecraft.core.BlockPos(x - 1, y, z - 1)) + 1;
-            }));
-
     public static final Multiblock HOODED_FORGE = new Multiblock(Hardwrought.id("hooded_forge"),
             List.of(List.of("FFF", "FFF", "FFF"), List.of("   ", " H ", "   ")),
             legend('F', List.of(Hardwrought.id("forge")), 'H', List.of(Hardwrought.id("forge_hood"))),
@@ -145,7 +130,7 @@ public final class Multiblocks {
 
     /** Every structure: the machines, the seal, and the three temples of the end of the game. */
     public static final List<Multiblock> ALL = java.util.stream.Stream.concat(
-            java.util.stream.Stream.of(ORE_DRILL_RIG, HOODED_FORGE, SMELTERY, LARGE_ARC_FURNACE, LARGE_DIESEL, UNDERWORLD_SEAL),
+            java.util.stream.Stream.of(HOODED_FORGE, SMELTERY, LARGE_ARC_FURNACE, LARGE_DIESEL, UNDERWORLD_SEAL),
             de.ipnats.hardwrought.ritual.Temple.multiblocks().stream()).toList();
 
     private Multiblocks() { }

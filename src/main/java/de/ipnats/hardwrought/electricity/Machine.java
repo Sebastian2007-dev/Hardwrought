@@ -64,6 +64,10 @@ public enum Machine {
             if (input.is(de.ipnats.hardwrought.materials.Materials.PLASTIC_PELLETS)) {
                 return new ItemStack(de.ipnats.hardwrought.materials.Materials.PLASTIC_SHEET);
             }
+            // Electrical steel is rolled thin, for laminations: two plates to the ingot.
+            if (input.is(de.ipnats.hardwrought.parts.Parts.ELECTRICAL_STEEL)) {
+                return new ItemStack(de.ipnats.hardwrought.parts.Parts.ELECTRICAL_STEEL_PLATE, 2);
+            }
             for (MetalStock.StockMetal metal : MetalStock.metals()) {
                 if (input.is(metal.ingot().get())) return new ItemStack(MetalStock.plate(metal.material()));
             }
@@ -137,20 +141,77 @@ public enum Machine {
         public ItemStack result(ServerLevel level, ItemStack input) {
             return PRESS.result(level, input);
         }
+    },
+
+    // The fourth marks are wound for the 240-volt line, and on the 60-volt one barely turn: twice as fast
+    // as the third again, for two and a half times the power.
+    CRUSHER_MK4("basic_crusher_mk4", 120.0, 5, 240.0, SoundEvents.GRINDSTONE_USE, ParticleTypes.WHITE_ASH) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return CRUSHER_MK3.result(level, input);
+        }
+    },
+    FURNACE_MK4("electric_furnace_mk4", 96.0, 12, 240.0, SoundEvents.FURNACE_FIRE_CRACKLE, ParticleTypes.SMOKE) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return FURNACE.result(level, input);
+        }
+    },
+    SAWMILL_MK4("sawmill_mk4", 120.0, 8, 240.0, SoundEvents.WOOD_HIT, ParticleTypes.CRIT) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return SAWMILL.result(level, input);
+        }
+    },
+    PRESS_MK4("plate_press_mk4", 96.0, 10, 240.0, SoundEvents.ANVIL_LAND, ParticleTypes.CRIT) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return PRESS.result(level, input);
+        }
+    },
+
+    /** A spindle that lays enamelled wire turn on turn: eight lengths make one winding. */
+    COIL_WINDER("coil_winder", 60.0, 100, SoundEvents.CHAIN_PLACE, ParticleTypes.CRIT) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return input.is(de.ipnats.hardwrought.parts.Parts.ENAMELLED_WIRE)
+                    ? new ItemStack(de.ipnats.hardwrought.parts.Parts.WINDING) : ItemStack.EMPTY;
+        }
+
+        @Override
+        public int pieces(ItemStack input) {
+            return 8;
+        }
     };
 
     private final String id;
     private final double ohms;
     private final int ticks;
+    private final double ratedVolts;
     private final SoundEvent sound;
     private final SimpleParticleType particle;
 
     Machine(String id, double ohms, int ticks, SoundEvent sound, SimpleParticleType particle) {
+        this(id, ohms, ticks, MachineBlockEntity.RATED_VOLTS, sound, particle);
+    }
+
+    Machine(String id, double ohms, int ticks, double ratedVolts, SoundEvent sound, SimpleParticleType particle) {
         this.id = id;
         this.ohms = ohms;
         this.ticks = ticks;
+        this.ratedVolts = ratedVolts;
         this.sound = sound;
         this.particle = particle;
+    }
+
+    /** The voltage it is wound for: 60 for most, 240 for the fourth marks. */
+    public double ratedVolts() {
+        return ratedVolts;
+    }
+
+    /** How many of the input one piece of work takes. */
+    public int pieces(ItemStack input) {
+        return 1;
     }
 
     /** The name of its block. */
@@ -178,4 +239,47 @@ public enum Machine {
 
     /** What one piece of this becomes in the machine; empty where it takes no such thing. */
     public abstract ItemStack result(ServerLevel level, ItemStack input);
+
+    /**
+     * The machines whose work the book reads from the machine itself, with the name of the work, which
+     * names its instruction. The crusher's table is shown as the starter crusher's, and the furnace does
+     * what any furnace does; the later marks do what their first mark does.
+     */
+    private static final java.util.Map<Machine, String> SHOWN = new java.util.LinkedHashMap<>(java.util.Map.of(
+            PRESS, "pressing", SAWMILL, "sawing", LATHE, "lathe", TUBE_MILL, "tube_mill", COIL_WINDER, "coil_winder"));
+    private static List<de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe> shown;
+
+    /**
+     * Every piece of work of these machines, found by offering each of them every item there is. What
+     * the book shows is therefore what the machine does: a row added to {@link #result} is in the book
+     * with no line written for it. Worked out once; items do not change while the game runs.
+     */
+    public static List<de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe> worldRecipes() {
+        if (shown != null) return shown;
+        List<de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe> rows = new java.util.ArrayList<>();
+        for (var entry : SHOWN.entrySet()) {
+            Machine machine = entry.getKey();
+            ItemStack station = new ItemStack(net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(
+                    de.ipnats.hardwrought.Hardwrought.id(machine.id())));
+            for (Item item : net.minecraft.core.registries.BuiltInRegistries.ITEM) {
+                ItemStack input = new ItemStack(item);
+                ItemStack made;
+                try {
+                    // No world is to hand: a row that needs one to look a recipe up — boards out of a log —
+                    // is the crafting recipe's, and is shown as that.
+                    made = machine.result(null, input);
+                } catch (RuntimeException needsAWorld) {
+                    continue;
+                }
+                if (made == null || made.isEmpty()) continue;
+                input.setCount(machine.pieces(input));
+                rows.add(new de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe(
+                        de.ipnats.hardwrought.Hardwrought.id(entry.getValue() + "/"
+                                + net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(made.getItem()).getPath()),
+                        de.ipnats.hardwrought.knowledge.WorldRecipes.one(input), made.copy(), station));
+            }
+        }
+        shown = List.copyOf(rows);
+        return shown;
+    }
 }

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "C": "hardwrought:copper_plate",
+    "L": "minecraft:lever",
+    "P": "hardwrought:porcelain"
+  },
+  "pattern": [
+    "CLC",
+    "PPP"
+  ],
+  "result": {
+    "id": "hardwrought:knife_switch"
+  }
+}

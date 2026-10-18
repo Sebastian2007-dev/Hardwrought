@@ -94,3 +94,29 @@ flames and never go out.
 `CoreClientGameTest.verifyDarkness` sets a clear new-moon midnight, checks that the moon scales only
 the night sky, that the eyes are still mostly unadapted after 2 s and mostly adapted after 15 s, and
 that a torch in hand undoes the adaptation. It takes the screenshot `hardwrought-lighting-new-moon`.
+
+## Torches are lit, and burn in the hand
+
+A torch comes out of the grid **unlit** (`hardwrought:unlit_torch`; the vanilla recipe is overridden)
+and gives no light until it is lit (`Torches`, `UnlitTorchItem`):
+
+- **Lit at a flame**: use it on a lit campfire, fire, lava, a lit furnace or any burning light.
+- **Lit in hand**: use it with flint and steel, the lighting sticks, a fire charge or a burning torch in
+  the other hand. Flint and steel and the sticks wear by one.
+- One torch of a stack is lit at a time. The lit one takes the hand if the stack is used up, otherwise
+  it goes into the bag.
+
+A **lit torch** is the vanilla torch carrying wear: it burns for a day (1200 seconds) wherever it is, in
+the hand, the bag or the pack, one point a second, so its bar is the flame going down. It does not stack.
+Burnt down, it is a stick. A plain torch with no wear (loot, trades, old saves) turns into an unlit torch
+in a survival player's inventory. Set down, a lit torch burns on the wall for only what it had left
+(`TorchPlacingMixin`); taken down, it comes off burning with what it has left, or as a stick past its time
+(the torch loot table says unlit torch, and `Torches` swaps in the burning one where a flame is known).
+
+An **unlit torch can be set down** as it is, on the ground or a wall (`unlit_torch`, `unlit_wall_torch`),
+and lit where it stands with flint and steel, the lighting sticks, a fire charge or a burning torch, like a
+burnt-out one. Taken down unlit, it gives back an unlit torch.
+
+A burning torch held to a **laid campfire** lights it. Soul and copper torches are unchanged.
+
+Tests: `TorchGameTests`.

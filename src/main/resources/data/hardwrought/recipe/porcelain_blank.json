@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    "hardwrought:fireclay",
+    "minecraft:clay_ball",
+    "minecraft:quartz"
+  ],
+  "result": {
+    "id": "hardwrought:porcelain_blank",
+    "count": 2
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "I": "hardwrought:iron_plate",
+    "M": "hardwrought:electric_motor",
+    "R": "hardwrought:steel_rod",
+    "S": "hardwrought:shaft",
+    "C": "hardwrought:basic_circuit"
+  },
+  "pattern": [
+    "IMI",
+    "RSR",
+    "ICI"
+  ],
+  "result": {
+    "id": "hardwrought:coil_winder"
+  }
+}

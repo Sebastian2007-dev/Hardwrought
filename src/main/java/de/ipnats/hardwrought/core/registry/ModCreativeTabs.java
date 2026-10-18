@@ -32,6 +32,7 @@ public final class ModCreativeTabs {
                 output.accept(ModItems.COMPENDIUM);
                 output.accept(de.ipnats.hardwrought.atlas.Atlas.ITEM);
                 output.accept(ModItems.LIGHTING_STICKS);
+                output.accept(ModItems.UNLIT_TORCH);
                 output.accept(ModItems.FILLED_WATERSKIN);
                 output.accept(ModItems.WATER_BOWL);
                 de.ipnats.hardwrought.health.Herbs.items().forEach(output::accept);
@@ -59,8 +60,6 @@ public final class ModCreativeTabs {
                 output.accept(ModItems.BRONZE_HATCHET);
                 output.accept(ModItems.BRONZE_PICKAXE);
                 output.accept(ModItems.IRON_DAGGER);
-                output.accept(ModItems.IRON_HATCHET);
-                output.accept(ModItems.IRON_PICKAXE);
                 output.accept(ModItems.IRON_GREATSWORD);
                 output.accept(ModItems.IRON_HALBERD);
             });
@@ -112,7 +111,7 @@ public final class ModCreativeTabs {
                 }
             });
 
-    /** What turns and what runs on current: drivelines, drills, pipes, the electric machines and engines. */
+    /** What turns and what runs on current: drivelines, pipes, the electric machines and engines. */
     public static final CreativeModeTab MACHINES = tab(key("machines"), "itemGroup.hardwrought.machines",
             () -> new ItemStack(de.ipnats.hardwrought.electricity.ElectricBlocks.DYNAMO), output -> {
                 output.accept(ModItems.SHAFT);
@@ -125,13 +124,6 @@ public final class ModCreativeTabs {
                 output.accept(ModItems.WATER_WHEEL);
                 output.accept(ModItems.WINDMILL);
                 output.accept(ModItems.STARTER_CRUSHER);
-                output.accept(ModItems.ORE_DRILL);
-                output.accept(ModItems.ORE_SCANNER);
-                output.accept(ModItems.DRILL_FRAME_BRONZE);
-                output.accept(ModItems.DRILL_FRAME_IRON);
-                output.accept(ModItems.DRILL_FRAME_NICKEL);
-                output.accept(ModItems.DRILL_FRAME_CHROMIUM);
-                output.accept(ModItems.DRILL_FRAME_TITANIUM);
                 output.accept(ModItems.ITEM_PIPE_BRONZE);
                 output.accept(ModItems.ITEM_PIPE_IRON);
                 output.accept(ModItems.ITEM_PIPE_NICKEL);

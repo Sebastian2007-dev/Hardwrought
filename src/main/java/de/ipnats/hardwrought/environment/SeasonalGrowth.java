@@ -19,7 +19,7 @@ import net.minecraft.world.level.block.state.BlockState;
  *
  * <p>Which blocks this applies to is a tag, {@code hardwrought:seasonal_growth}, so a pack can add
  * its own and — more to the point — so that this never touches a block that merely happens to take
- * random ticks. Gas blocks, budding crystals and ore drills get their ticks whatever the month is.
+ * random ticks. Gas blocks and budding crystals get their ticks whatever the month is.
  */
 public final class SeasonalGrowth {
     public static final TagKey<Block> SEASONAL_GROWTH =

@@ -97,7 +97,7 @@ choose between, and they answer different questions:
 | Half | Answers | Drawn from |
 | --- | --- | --- |
 | **Knowledge** | how is this made, what is it used in, where is it found | the recipe and loot tables |
-| **Thoughts** | what is in my way, and roughly where the way around it lies | a written chain of six notes |
+| **Thoughts** | what is in my way, and roughly where the way around it lies | a written chain of quests in twelve chapters, down to the last night |
 
 The front page is the one thing in the browser the server is never asked about. It says the same to
 every player, and a round trip before the book so much as appears would be felt on a poor connection.
@@ -145,16 +145,48 @@ before they know a standing trunk can be hewn at all, and a mod whose first hour
 either explains itself or is played with a wiki open on a second monitor — which is the exact thing
 section 79 exists to abolish.
 
-So there is a second half: six notes, in order, written as though the player had written them.
+So there is a second half: a chain of notes, in order, written as though the player had written them.
 
-| Note | Points at | Opens once the player has held |
+It runs from the first flint to the night of the ritual, in twelve chapters, in the order the game can
+actually be played: nothing is asked for before the bench that makes it can be had.
+
+| Chapter | Where it is made | Leads from … to … |
 | --- | --- | --- |
-| Something with an edge | flint tools | — it is there from the first page |
-| A bench out of the trunk | the hewn workbench | a flint hatchet, or a flint shard |
-| Firmer than flint | stone tools | cobblestone, or a flint pickaxe |
-| Heat that stays put | the brick furnace | clay, or a cobblestone piece |
-| Rust in the rock | iron tools | the brick furnace, or raw iron |
-| Two soft metals | bronze | a copper ingot, or raw tin |
+| I. Bare Hands | the hand grid | flint hatchet — fire pit and lighting sticks — cord on the drying rack — torches — stone pick — brick furnace |
+| II. The First Iron | the hand grid | raw iron — anvil, mallet and gloves — the first bar — iron axe and pick (a forged head goes on its handle in the hand grid) — the hewn bench |
+| III. Bench and Bronze | the hewn bench | a bowl of boiled water — crusher, crank and shaft — bronze — the nailed bench |
+| IV. The Workshop | the nailed bench | bandages and teas — atlas — sand filter (fresh water) — ceramic filter (purified) — forge — water wheel or windmill |
+| V. Smeltery and Steel | | smeltery — steel pick |
+| VI. Runes and Wands | | rune stones and the wooden wand — shields and the iron wand — golden wand — lapis ink |
+| VII. Oil and Current | | dynamo, coil and lamp — electric motor — machines — pipes — drilling rig — refinery — diesel |
+| VIII. The Nether | | obsidian — the red country — the Ash Grove — provisional and electric stabilizers |
+| IX. The Wither | | wither skeleton skulls — the nether star |
+| X. The Underworld | | the seal — pale shards — adamantium — templates — the Witch King's mantle |
+| XI. The End | | eyes of ender — the dragon's egg — its heart |
+| XII. The Ritual | | void crystal — the temple's altar — eight offerings — the last night |
+
+`KnowledgeGameTests.everyThoughtAsksOnlyForWhatTheBenchThenCanMake` walks the chain and fails if a note
+before the hewn bench asks for something that does not come out of the hand grid, or one before the
+nailed bench for something the hewn bench cannot make. It found the chain locked: the hewn bench wants an
+iron axe, but the fire pit, the brick furnace, the stone pick, the gloves and the iron axe itself
+were tagged for the hewn bench or higher. They are in `tier0_products` now.
+
+**Quests.** A note opens the moment the one before it is followed (or earlier, once the player has
+come across something in its `after` list), so finishing one always shows the next. Under every note
+its task is spelt out: *To do, one of these* or *all of these*, each thing by name with a tick once held.
+Following one is told in a toast drawn like an advancement (`JournalToast`, `JournalNotePayload`): *Thought
+followed!* with the note's title and what was made, then in turn *Next thought:* and the one it opens.
+`KnowledgeSystem` compares the notes an item takes part in before and after it is learned and sends
+the newly followed ones with the knowledge toasts, once a tick.
+
+**Finding one's place.** The book opens on the first note that can be read and is not followed yet.
+Its first page is the contents, over both pages: every chapter with how many of its notes are followed;
+one none of whose notes has opened yet is scrawl. The chapters also stand as bookmarks out of the top of
+the book — the contents first — on every page of the written half: a click opens that chapter on its
+current note; a finished chapter's is green, an unknown one's faded. A note page is headed by its chapter.
+`Journal.CHAPTERS` holds the chapters; each `Note` carries its chapter, its task and whether all of it is
+wanted. The Ultra-only notes about packs sit where the problem arises: the first pack after the flint
+edge, the frame pack at the hewn bench.
 
 Every note names the material, the place or the act, and stops there. None of them names a grid. The
 note about the bench says to crouch against a standing trunk and keep working the same spot, because
@@ -210,6 +242,19 @@ seen — they will see the shape of it and nothing else. The one thing knowledge
 **search**: a name cannot be typed before it is real, or the search field would be a way to ask the
 server whether a given item exists.
 
+## What a thing is for
+
+Under its name, and under its melting point or nutrients where it has them, the left page of an entry
+says in a few lines what the thing is good for: what a forge does, that steel rusts, that a torch burns
+down. Like the numbers, the lines are what studying teaches; before that they are scrawl.
+
+They are written in the language files, not in code: `compendium.<namespace>.info.<path>` for one thing.
+Families share one line, `compendium.hardwrought.info.family.<name>`: every powder, rod, plate, raw ore,
+ore, ingot, tool part, armor part, cast, pipe, gas line, machine mark and the tools and
+armor of each alloy (`CompendiumInfo`). A bucket or a bottle reads the line of what it holds. A thing
+with neither has no lines and its page is as before. A page with lines keeps where the thing is found to
+the right page, as a food's does. Text too long for the page scrolls under the pointer.
+
 ## Tests
 
 `KnowledgeGameTests`, twelve tests:
@@ -237,6 +282,10 @@ server whether a given item exists.
   subject, and acting on a note marks it followed and opens the next one
 
 The client test additionally closes and reopens the world to prove the save survives a restart.
+
+`CompendiumInfoClientGameTest` checks which line a thing gets (its own, its family's, the one of what a
+bucket holds, or none) and photographs a page with its own lines, a family's, one only found, one not yet
+studied and one whose lines are long.
 
 ## Open
 

@@ -140,7 +140,7 @@ public final class FxClientGameTest implements FabricClientGameTest {
                             net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER));
             player.teleportTo(level, feet.getX() + 0.5, feet.getY(), feet.getZ() + 0.5, java.util.Set.of(), 180.0f, 20.0f, true);
             player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.OFFHAND,
-                    new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.TORCH));
+                    de.ipnats.hardwrought.environment.Torches.lit());
         });
         context.waitFor(client -> de.ipnats.hardwrought.client.environment.DynamicLight.ownLevel() > 0, 100);
         context.waitTicks(10);

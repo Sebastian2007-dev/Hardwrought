@@ -116,6 +116,16 @@ public final class Ashcork {
         });
     }
 
+    /** What the axe does to an ashcork log, for the book: the stripped log, and the bark. */
+    public static List<de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe> worldRecipes() {
+        var inputs = de.ipnats.hardwrought.knowledge.WorldRecipes.one(new ItemStack(LOG), new ItemStack(net.minecraft.world.item.Items.STONE_AXE));
+        return List.of(
+                new de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe(de.ipnats.hardwrought.Hardwrought.id("stripping/stripped_ashcork_log"),
+                        inputs, new ItemStack(STRIPPED_LOG), ItemStack.EMPTY),
+                new de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe(de.ipnats.hardwrought.Hardwrought.id("stripping/ashcork_bark"),
+                        inputs, new ItemStack(BARK, BARK_PER_LOG), ItemStack.EMPTY));
+    }
+
     /** Everything of the Nether start over — ores, ground, ashcork — for the creative tab. */
     public static List<Item> items() {
         List<Item> items = new java.util.ArrayList<>(PortalStabilizers.items());

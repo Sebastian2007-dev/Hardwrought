@@ -60,6 +60,7 @@ public final class WitchKingContent {
     private WitchKingContent() { }
 
     public static void initialize() {
+        de.ipnats.hardwrought.knowledge.LootSources.inWorld(() -> THRONE.asItem());
         FabricDefaultAttributeRegistry.register(WITCH_KING, WitchKing.createAttributes());
         WitchKingMantle.initialize();
         Citadel.initialize();

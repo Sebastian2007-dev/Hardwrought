@@ -13,8 +13,8 @@ import java.util.Locale;
 
 /**
  * A machine opened. Input, an arrow filling, output — and on the left a voltmeter: a column from
- * nought to 120 volts with the band the machine is made for marked on it, so that "why does it not
- * run" is answered by looking.
+ * nought to twice the voltage it is wound for, with the band the machine is made for marked on it,
+ * so that "why does it not run" is answered by looking.
  */
 public class MachineScreen extends AbstractContainerScreen<MachineMenu> {
     private static final Identifier ARROW = Identifier.withDefaultNamespace("container/furnace/burn_progress");
@@ -28,6 +28,7 @@ public class MachineScreen extends AbstractContainerScreen<MachineMenu> {
 
     /** The voltmeter: where it stands, and the voltage at its top. */
     private static final int GAUGE_X = 20, GAUGE_TOP = 18, GAUGE_HEIGHT = 52, GAUGE_WIDTH = 10;
+    /** The top of the glass for a 60-volt machine; one wound for more reads to twice its own voltage. */
     private static final float GAUGE_VOLTS = 120.0f;
 
     public MachineScreen(MachineMenu menu, Inventory inventory, Component title) {
@@ -62,11 +63,13 @@ public class MachineScreen extends AbstractContainerScreen<MachineMenu> {
         int left = x + GAUGE_X, top = y + GAUGE_TOP, bottom = top + GAUGE_HEIGHT;
         graphics.fill(left - 1, top - 1, left + GAUGE_WIDTH + 1, bottom + 1, SLOT_DARK);
         graphics.fill(left, top, left + GAUGE_WIDTH, bottom, 0xFF1C1C1C);
+        float scale = menu.ratedVolts() / (float) MachineBlockEntity.RATED_VOLTS;
         graphics.fill(left, at(bottom, (float) MachineBlockEntity.STRAIN_VOLTS), left + GAUGE_WIDTH,
                 at(bottom, (float) MachineBlockEntity.STALL_VOLTS), 0xFF24402A);
         float volts = menu.volts();
         if (volts > 0.5f) {
-            graphics.fill(left + 2, at(bottom, Math.min(volts, GAUGE_VOLTS)), left + GAUGE_WIDTH - 2, bottom, colour(volts));
+            graphics.fill(left + 2, at(bottom, Math.min(volts / scale, GAUGE_VOLTS)), left + GAUGE_WIDTH - 2, bottom,
+                    colour(volts / scale));
         }
         // A mark at the voltage it is made for.
         int rated = at(bottom, (float) MachineBlockEntity.RATED_VOLTS);
@@ -74,6 +77,7 @@ public class MachineScreen extends AbstractContainerScreen<MachineMenu> {
         graphics.fill(left + GAUGE_WIDTH, rated, left + GAUGE_WIDTH + 3, rated + 1, TEXT);
     }
 
+    /** Where on the glass this voltage stands, given as what it would be on a 60-volt machine. */
     private static int at(int bottom, float volts) {
         return bottom - Math.round(volts / GAUGE_VOLTS * GAUGE_HEIGHT);
     }

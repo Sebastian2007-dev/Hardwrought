@@ -130,18 +130,22 @@ public final class EquipmentGameTests {
         // bench makes anything at or below itself. Anything no tag has heard of wants the best one.
         for (ItemStack bare : List.of(new ItemStack(Items.STICK), new ItemStack(Items.TORCH),
                 new ItemStack(ModItems.LEAF_STRING), new ItemStack(ModItems.FLINT_HATCHET),
-                new ItemStack(ModItems.STARTER_BACKPACK))) {
+                new ItemStack(ModItems.STARTER_BACKPACK), new ItemStack(Items.CAMPFIRE),
+                new ItemStack(ModItems.STONE_PICKAXE), new ItemStack(de.ipnats.hardwrought.core.registry.ModBlocks.BRICK_FURNACE),
+                new ItemStack(ModItems.SMITHING_GLOVES), new ItemStack(Items.IRON_AXE),
+                new ItemStack(Items.IRON_PICKAXE), new ItemStack(ModItems.BRONZE_PICKAXE))) {
             helper.assertTrue(BenchTier.required(bare) == BenchTier.INVENTORY,
                     "A player's own hands are the bottom rung: " + bare.getHoverName().getString());
         }
-        // Without this the ladder has no first step: hewing a bench needs a tool, and the only tool
-        // available before there is a bench is one made in the grid the player carries.
-        helper.assertTrue(BenchTier.allows(BenchTier.INVENTORY, new ItemStack(ModItems.FLINT_HATCHET)),
+        // Without this the ladder has no first step: hewing a bench needs an iron axe, so the fire, the
+        // furnace, the stone pick that breaks iron ore, the gloves and the axe itself all come out of
+        // the grid the player carries.
+        helper.assertTrue(BenchTier.allows(BenchTier.INVENTORY, new ItemStack(Items.IRON_AXE)),
                 "Section 71: the hatchet that cuts the first bench has to come before the first bench");
 
-        for (ItemStack hewn : List.of(new ItemStack(Items.CHEST), new ItemStack(Items.CAMPFIRE),
+        for (ItemStack hewn : List.of(new ItemStack(Items.CHEST), new ItemStack(ModItems.SHAFT),
                 new ItemStack(Items.BOW), new ItemStack(ModItems.BASIC_BACKPACK),
-                new ItemStack(ModItems.STONE_PICKAXE))) {
+                new ItemStack(ModItems.STARTER_CRUSHER))) {
             helper.assertTrue(BenchTier.required(hewn) == BenchTier.HEWN,
                     "Wood, stone, flint and fibre want the hewn bench: "
                             + hewn.getHoverName().getString());
@@ -149,8 +153,8 @@ public final class EquipmentGameTests {
                     "and not the grid in a player's hands");
         }
 
-        for (ItemStack joined : List.of(new ItemStack(Items.IRON_PICKAXE),
-                new ItemStack(ModItems.IRON_HATCHET), new ItemStack(ModItems.BRONZE_INGOT),
+        for (ItemStack joined : List.of(new ItemStack(Items.IRON_CHESTPLATE),
+                new ItemStack(Items.IRON_HELMET), new ItemStack(ModItems.BRONZE_INGOT),
                 new ItemStack(Items.BUCKET), new ItemStack(Items.SHIELD),
                 new ItemStack(Items.DIAMOND_PICKAXE), new ItemStack(Items.PISTON))) {
             helper.assertTrue(BenchTier.required(joined) == BenchTier.JOINED,

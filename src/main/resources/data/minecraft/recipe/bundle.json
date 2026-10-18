@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "#": "minecraft:leather",
+    "-": [
+      "minecraft:string",
+      "hardwrought:leaf_string",
+      "hardwrought:green_fibre"
+    ]
+  },
+  "pattern": [
+    "-",
+    "#"
+  ],
+  "result": {
+    "id": "minecraft:bundle"
+  }
+}

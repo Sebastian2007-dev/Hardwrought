@@ -12,6 +12,19 @@ import net.minecraft.world.level.material.MapColor;
 /** The atlas: what it draws, that it draws a place only once, what it marks, and that it is kept. */
 public final class AtlasGameTests {
     @GameTest
+    public void bearersSeeOneAnotherOnlyWhileNear(GameTestHelper helper) {
+        @SuppressWarnings("removal") ServerPlayer one = helper.makeMockServerPlayerInLevel();
+        @SuppressWarnings("removal") ServerPlayer two = helper.makeMockServerPlayerInLevel();
+        two.teleportTo(one.getX() + 20, one.getY(), one.getZ());
+        var near = Atlas.others(one, java.util.List.of(one, two));
+        helper.assertTrue(near.size() == 1 && near.getFirst().name().equals(two.getGameProfile().name()),
+                "Another bearer twenty blocks off is in one's atlas, and oneself is not: " + near);
+        two.teleportTo(one.getX() + Atlas.BEARER_RANGE + 10, one.getY(), one.getZ());
+        helper.assertTrue(Atlas.others(one, java.util.List.of(one, two)).isEmpty(), "but not one far off");
+        helper.succeed();
+    }
+
+    @GameTest
     public void theAtlasDrawsWhatItsBearerWalksThroughAndKeepsIt(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         ServerPlayer bearer = helper.makeMockServerPlayerInLevel();
@@ -38,6 +51,10 @@ public final class AtlasGameTests {
         helper.assertTrue(marked.x() == 10 && marked.z() == -20 && marked.name().equals("Zuhause") && marked.kind() == 0,
                 "under its name, tidied: " + marked);
         helper.assertTrue(new Atlas.Marker(0, 0, "x".repeat(60), 0).name().length() == Atlas.MAX_NAME, "A name is cut to length");
+        helper.assertTrue(Atlas.mark(bearer, 4, 4, "Mine", 0, 2) && Atlas.page(bearer).markers().getLast().icon() == 2,
+                "A mark keeps the symbol it was made with");
+        helper.assertTrue(new Atlas.Marker(0, 0, "", 0, Atlas.ICONS + 1).icon() == 1, "and a symbol out of range comes round again");
+        Atlas.unmark(bearer, Atlas.page(bearer).markers().size() - 1);
 
         // Saved with the world and read back the same.
         var data = level.getDataStorage().computeIfAbsent(Atlas.Data.TYPE);

@@ -198,7 +198,7 @@ public final class RefineryGameTests {
         @SuppressWarnings("removal") ServerPlayer player = helper.makeMockServerPlayerInLevel();
         BlockPos absolute = helper.absolutePos(feet);
         player.snapTo(absolute.getX() + 0.5, absolute.getY(), absolute.getZ() + 0.5);
-        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.TORCH));
+        player.setItemInHand(InteractionHand.MAIN_HAND, de.ipnats.hardwrought.environment.Torches.lit());
         helper.succeedWhen(() -> {
             helper.assertTrue(Gases.units(helper.getBlockState(feet), Gas.METHANE) == 0
                     && Gases.units(helper.getBlockState(feet.above()), Gas.METHANE) == 0, "The methane has gone off");

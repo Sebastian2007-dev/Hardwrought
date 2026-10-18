@@ -78,4 +78,4 @@ generator shows its watts, the engine its spark plug and speed, the burner its g
 ## Next
 
 Materials, circuits, the Mk II and Mk III machines and the multiblocks are in [materials.md](materials.md).
-Still to come is the 240 V tier, which the elite circuit is made for.
+The 240 V grid, which the elite circuit is made for, is in [electricity.md](electricity.md).

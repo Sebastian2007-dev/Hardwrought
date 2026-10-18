@@ -233,7 +233,7 @@ public final class EnvironmentGameTests {
         helper.assertTrue(weapons.get(Hardwrought.id("flint_sword")) != null
                         && weapons.get(Hardwrought.id("flint_hatchet")) != null
                         && weapons.get(Hardwrought.id("stone_hatchet")) != null
-                        && weapons.get(Hardwrought.id("iron_hatchet")) != null,
+                        && weapons.get(net.minecraft.resources.Identifier.withDefaultNamespace("iron_axe")) != null,
                 "The new sword and hatchets use the combat profiles matching their shapes");
         helper.assertTrue(dagger.staminaCost() < greatsword.staminaCost(),
                 "Section 30: a dagger costs very little stamina, a two-hander a lot");

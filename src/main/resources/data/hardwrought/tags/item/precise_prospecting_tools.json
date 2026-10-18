@@ -1,10 +1,6 @@
 {
   "values": [
     {
-      "id": "hardwrought:iron_pickaxe",
-      "required": false
-    },
-    {
       "id": "minecraft:iron_pickaxe",
       "required": false
     },

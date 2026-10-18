@@ -95,6 +95,19 @@ public final class SmithingClientGameTest implements FabricClientGameTest {
             });
             context.waitTicks(10);
             context.takeScreenshot("hardwrought-smithing-work");
+            // Half way there, the piece shows in its slot as the shape it has been beaten into.
+            context.runOnClient(client -> {
+                for (int cell = 0; cell < 14; cell++) {
+                    net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                            new de.ipnats.hardwrought.core.networking.ForgingPayloads.Strike(anvil[0], 2 + cell % 7 * 2, 3 + cell / 7 * 6));
+                }
+            });
+            context.waitTicks(10);
+            context.runOnClient(client -> client.gui.setScreen(
+                    new net.minecraft.client.gui.screens.inventory.InventoryScreen(client.player)));
+            context.getInput().setCursorPos(2, 2);
+            context.waitTicks(5);
+            context.takeScreenshot("hardwrought-smithing-piece-in-slot");
             context.runOnClient(client -> client.gui.setScreen(null));
 
             // The joined forges: a burning 2x2 on the left, a cold 3x3 under a hood on the right.

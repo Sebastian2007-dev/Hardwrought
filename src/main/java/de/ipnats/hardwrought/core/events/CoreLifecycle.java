@@ -40,6 +40,9 @@ public final class CoreLifecycle {
                     if (runtime == null) return;
                     runtime.equipment().respawned(newPlayer);
                     runtime.survival().respawned(newPlayer, alive);
+                    if (!alive) de.ipnats.hardwrought.health.Diseases.grantImmunity(newPlayer);
+                    // Back at the world's spawn, not in the crown of a tree.
+                    if (!alive && newPlayer.getRespawnConfig() == null) de.ipnats.hardwrought.survival.GroundSpawn.settle(newPlayer);
                 });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             // The weight table lives in a datapack, so the client is told it once rather than
@@ -70,6 +73,8 @@ public final class CoreLifecycle {
             if (handler.player.getStats().getValue(net.minecraft.stats.Stats.CUSTOM
                     .get(net.minecraft.stats.Stats.PLAY_TIME)) == 0) {
                 runtime.equipment().welcome(handler.player);
+                de.ipnats.hardwrought.health.Diseases.grantImmunity(handler.player);
+                de.ipnats.hardwrought.survival.GroundSpawn.settle(handler.player);
             } else {
                 runtime.equipment().ensureBackpack(handler.player);
             }

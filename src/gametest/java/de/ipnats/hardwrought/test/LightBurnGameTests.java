@@ -74,7 +74,7 @@ public final class LightBurnGameTests {
         helper.assertTrue(burnt.is(ModBlocks.BURNT_WALL_TORCH) && burnt.getValue(WallTorchBlock.FACING) == Direction.SOUTH,
                 "and hangs on its wall burnt out");
         // A burning torch held to it lights it.
-        use(helper, torch, new ItemStack(Items.TORCH));
+        use(helper, torch, de.ipnats.hardwrought.environment.Torches.lit());
         BlockState lit = helper.getBlockState(torch);
         helper.assertTrue(lit.is(Blocks.SOUL_WALL_TORCH) && lit.getValue(WallTorchBlock.FACING) == Direction.SOUTH,
                 "Lit again it is the soul torch it was, facing as it did; was " + lit);

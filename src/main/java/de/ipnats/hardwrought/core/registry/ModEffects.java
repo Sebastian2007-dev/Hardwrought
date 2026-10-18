@@ -98,6 +98,13 @@ public final class ModEffects {
     public static final Holder<MobEffect> HEAT_RESISTANCE = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
             Hardwrought.id("heat_resistance"), new de.ipnats.hardwrought.survival.ThirstEffect(MobEffectCategory.BENEFICIAL, 0x7FD4E8));
 
+    /**
+     * Forty minutes proof against every disease, and no wound turns, on a first arrival and after every
+     * death outside Ultra (see {@code Diseases.grantImmunity}). A marker: catching a disease reads it.
+     */
+    public static final Holder<MobEffect> IMMUNITY = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("immunity"), new de.ipnats.hardwrought.survival.ThirstEffect(MobEffectCategory.BENEFICIAL, 0x9FE07A));
+
     /** Tired, exhausted, overtired: fatigue run high, its level the stage (see {@code Tiredness}). */
     public static final Holder<MobEffect> TIRED = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
             Hardwrought.id("tired"), new de.ipnats.hardwrought.survival.Tiredness.Tired(MobEffectCategory.HARMFUL, 0x4A4A6A));

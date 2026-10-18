@@ -99,7 +99,7 @@ public final class FirecraftGameTests {
                 "Two sticks make the means of lighting it");
 
         // The whole point: both fit in the inventory square, so neither needs a crafting table —
-        // which needs an iron hatchet, which needs iron, which needs a furnace.
+        // which needs an iron axe, which needs iron, which needs a furnace.
         helper.assertTrue(fitsInInventoryGrid(helper, "hardwrought:brick_furnace"),
                 "Section 56: the first furnace is buildable without a crafting table");
         helper.assertTrue(fitsInInventoryGrid(helper, "hardwrought:lighting_sticks"),

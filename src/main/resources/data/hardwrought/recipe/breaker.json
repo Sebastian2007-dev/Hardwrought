@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "I": "hardwrought:iron_plate",
+    "L": "minecraft:lever",
+    "S": "hardwrought:silver_plate",
+    "R": "hardwrought:redstone_coil"
+  },
+  "pattern": [
+    "ILI",
+    "SRS",
+    "III"
+  ],
+  "result": {
+    "id": "hardwrought:breaker"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    "hardwrought:copper_wire",
+    "hardwrought:copper_wire",
+    "hardwrought:rubber"
+  ],
+  "result": {
+    "id": "hardwrought:insulated_wire",
+    "count": 2
+  }
+}

@@ -486,6 +486,106 @@ public final class KnowledgeGameTests {
         helper.assertTrue(ingots.recipe == null || ingots.children.stream().noneMatch(child ->
                         child.key.equals(BuiltInRegistries.ITEM.getKey(Items.IRON_BLOCK))),
                 "An ingot is not made from the block it is going into");
+
+        // Nor from a waxed block, which only turns ingots back into ingots; and raw copper is not knocked
+        // out of a block of raw copper.
+        CompendiumPagePayload copper = knowledge.compendium().answer(player, knowledge, new CompendiumRequestPayload(
+                CompendiumPagePayload.MODE_TREE, BuiltInRegistries.ITEM.getKey(Items.COPPER_INGOT), ""));
+        CraftingTree ingot = new CraftingTree(copper, 1, thing -> null, null);
+        helper.assertTrue(ingot.root.recipe != null, "A copper ingot is made");
+        helper.assertTrue(ingot.root.children.stream().noneMatch(child -> child.key.equals(Identifier.withDefaultNamespace("waxed_copper_block"))
+                        || child.key.equals(Identifier.withDefaultNamespace("copper_block"))),
+                "and not out of a block of copper, waxed or not: " + ingot.root.recipe.id());
+        CompendiumPagePayload rawBlock = knowledge.compendium().answer(player, knowledge, new CompendiumRequestPayload(
+                CompendiumPagePayload.MODE_TREE, BuiltInRegistries.ITEM.getKey(Items.RAW_COPPER_BLOCK), ""));
+        CraftingTree raw = new CraftingTree(rawBlock, 1, thing -> null, null);
+        CraftingTree.Node rawCopper = raw.root.children.isEmpty() ? null : raw.root.children.getFirst();
+        helper.assertTrue(raw.root.recipe != null && raw.root.children.size() == 1 && rawCopper.needed == 9
+                        && rawCopper.children.stream().noneMatch(child -> child.key.equals(raw.root.key)),
+                "A block of raw copper is nine raw copper, not knocked out of a block of it: " + (raw.root.recipe == null ? "none"
+                        : raw.root.recipe.id() + " " + raw.root.children.stream().map(child -> child.key + " x" + child.needed
+                        + " by " + (child.recipe == null ? "found" : child.recipe.id())).toList()));
+        knowledge.forget(player.getUUID());
+        helper.succeed();
+    }
+
+    /** Items that exist only to be drawn: a liquid's icon, the metal standing in a cast. Nobody holds them. */
+    private static final java.util.Set<String> NEVER_HELD = java.util.Set.of("fluid_icon", "casting_fill");
+
+    /**
+     * Things that exist but have no way into a survival world yet: content still to be written, not a gap
+     * in the book. Each is a decision to make; the test fails as soon as one of them gets a way, so that
+     * it is taken off this list.
+     */
+    private static final java.util.Set<String> NOT_YET_OBTAINABLE = java.util.Set.of(
+            // Powders the crusher does not make: no row in Crushing for diamond, emerald, quartz, nether gold, debris.
+            "diamond_powder", "emerald_powder", "nether_quartz_powder", "nether_gold_powder", "ancient_debris_powder",
+            // No recipe at all.
+            "crank_box",
+            // Handed to a new player outside Ultra; woven only in Ultra (Weaving).
+            "starter_backpack");
+
+    /**
+     * The guard on every "how is it made" page: for each thing of the mod a player can hold, the book
+     * knows at least one way to come by it — a recipe, work done in the world or by a machine, or a
+     * place it is found. A thing a machine makes that nobody wrote into the book fails here, by name.
+     */
+    @GameTest
+    public void everyThingOfTheModHasAWayToComeByIt(GameTestHelper helper) {
+        KnowledgeSystem knowledge = CoreLifecycle.require(helper.getLevel().getServer()).knowledge();
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        knowledge.forget(player.getUUID());
+        List<String> unknown = new java.util.ArrayList<>();
+        for (Identifier id : BuiltInRegistries.ITEM.keySet()) {
+            if (!id.getNamespace().equals("hardwrought") || NEVER_HELD.contains(id.getPath())) continue;
+            // A spawn egg is a creative tool, not a thing of the world.
+            if (BuiltInRegistries.ITEM.getValue(id) instanceof net.minecraft.world.item.SpawnEggItem) continue;
+            CompendiumPagePayload page = knowledge.compendium().answer(player, knowledge,
+                    new CompendiumRequestPayload(CompendiumPagePayload.MODE_RECIPES, id, ""));
+            if (page.recipes().isEmpty() && page.sources().isEmpty()) unknown.add(id.getPath());
+        }
+        java.util.Collections.sort(unknown);
+        List<String> gaps = unknown.stream().filter(path -> !NOT_YET_OBTAINABLE.contains(path)).toList();
+        helper.assertTrue(gaps.isEmpty(), gaps.size() + " things have no way to come by them in the book: " + String.join(", ", gaps));
+        List<String> settled = NOT_YET_OBTAINABLE.stream().filter(path -> !unknown.contains(path)).sorted().toList();
+        helper.assertTrue(settled.isEmpty(), "These now have a way and come off the list of things not yet obtainable: "
+                + String.join(", ", settled));
+        knowledge.forget(player.getUUID());
+        helper.succeed();
+    }
+
+    /**
+     * The guard on every tree in the book: for each thing of the mod, nothing in its tree that can be made
+     * is left standing as found because the tree went round to it from above. A new recipe that would
+     * send the book round in a circle fails here, by name.
+     */
+    @GameTest
+    public void noCraftingTreeOfTheModGoesRoundInACircle(GameTestHelper helper) {
+        KnowledgeSystem knowledge = CoreLifecycle.require(helper.getLevel().getServer()).knowledge();
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        knowledge.forget(player.getUUID());
+        List<String> stuck = new java.util.ArrayList<>();
+        int trees = 0;
+        for (Identifier id : BuiltInRegistries.ITEM.keySet()) {
+            if (!id.getNamespace().equals("hardwrought")) continue;
+            CompendiumPagePayload page = knowledge.compendium().answer(player, knowledge,
+                    new CompendiumRequestPayload(CompendiumPagePayload.MODE_TREE, id, ""));
+            if (page.recipes().isEmpty()) continue;
+            trees++;
+            java.util.ArrayDeque<CraftingTree.Node> nodes = new java.util.ArrayDeque<>();
+            nodes.add(new CraftingTree(page, 0, thing -> null, null).root);
+            while (!nodes.isEmpty()) {
+                CraftingTree.Node node = nodes.poll();
+                if (node.stuck) {
+                    stuck.add(id.getPath() + " → " + node.key.getPath());
+                    break;
+                }
+                nodes.addAll(node.children);
+            }
+        }
+        helper.assertTrue(trees > 100, "The mod's things have trees: " + trees);
+        helper.assertTrue(stuck.isEmpty(), stuck.size() + " trees go round in a circle: "
+                + String.join(", ", stuck.subList(0, Math.min(25, stuck.size()))));
         knowledge.forget(player.getUUID());
         helper.succeed();
     }
@@ -563,8 +663,9 @@ public final class KnowledgeGameTests {
         JournalEntry grinding = Journal.chain().stream()
                 .filter(entry -> entry.id().equals(Hardwrought.id("breaking_it_finer"))).findFirst().orElseThrow();
         PlayerKnowledge knowledge = PlayerKnowledge.empty();
-        knowledge.discover(BuiltInRegistries.ITEM.getKey(Items.RAW_COPPER));
-        helper.assertTrue(Journal.state(knowledge, grinding) == Journal.OPEN, "Raw copper brings the thought up");
+        helper.assertTrue(Journal.state(knowledge, grinding) == Journal.HIDDEN, "Not before there is a bench to make it at");
+        knowledge.discover(Hardwrought.id("hewn_workbench"));
+        helper.assertTrue(Journal.state(knowledge, grinding) == Journal.OPEN, "The hewn bench brings the thought up");
 
         knowledge.discover(Hardwrought.id("starter_crusher"));
         helper.assertTrue(Journal.state(knowledge, grinding) == Journal.OPEN,
@@ -803,8 +904,8 @@ public final class KnowledgeGameTests {
                 "Every thought is on the page, read or not; the Ultra ones only in an Ultra world");
         Journal.setUltra(true);
         try {
-            helper.assertTrue(journal(knowledge, player).getFirst().id().equals(Hardwrought.id("something_to_carry")),
-                    "In Ultra the first problem is carrying anything at all");
+            helper.assertTrue(journal(knowledge, player).get(1).id().equals(Hardwrought.id("something_to_carry")),
+                    "In Ultra, right after the first edge, the problem is carrying anything at all");
         } finally {
             Journal.setUltra(de.ipnats.hardwrought.survival.Ultra.active(helper.getLevel().getServer()));
         }
@@ -825,9 +926,107 @@ public final class KnowledgeGameTests {
                 "And it shows the one of its options the player actually holds");
         helper.assertTrue(after.get(1).state() == Journal.OPEN,
                 "The next thought follows from it");
-        helper.assertTrue(after.get(2).state() == Journal.HIDDEN,
-                "The one after that still does not");
+        helper.assertTrue(after.getLast().state() == Journal.HIDDEN,
+                "The far end of the road still does not");
+        helper.assertTrue(after.getLast().id().equals(Hardwrought.id("the_last_night")),
+                "And the road ends at the ritual");
+        helper.assertTrue(after.stream().allMatch(note -> note.chapter() != null),
+                "Every thought stands in a chapter");
+        helper.assertTrue(after.stream().map(CompendiumPagePayload.Note::chapter).distinct().count()
+                        == Journal.chapters().size(),
+                "And every chapter has a thought on the page");
         knowledge.forget(player.getUUID());
+        helper.succeed();
+    }
+
+    /**
+     * The book never asks for something the player cannot make yet. Up to the hewn bench everything a
+     * thought asks for comes out of the grid in the player's hands, and up to the nailed bench out of the
+     * hewn one — otherwise the chain, and the game with it, is locked shut: the hewn bench wants an iron
+     * axe, and the iron axe wants an anvil, a mallet and a furnace.
+     */
+    @GameTest
+    public void everyThoughtAsksOnlyForWhatTheBenchThenCanMake(GameTestHelper helper) {
+        var recipes = helper.getLevel().recipeAccess();
+        int bench = de.ipnats.hardwrought.progression.BenchTier.INVENTORY;
+        for (JournalEntry entry : Journal.chain()) {
+            for (Identifier taught : entry.teaches()) {
+                Item item = BuiltInRegistries.ITEM.getValue(taught);
+                var recipe = recipes.byKey(net.minecraft.resources.ResourceKey.create(
+                        net.minecraft.core.registries.Registries.RECIPE, taught));
+                // Only what is crafted: ore, anvil work, campfire cooking and loot are not made at a bench.
+                if (recipe.isEmpty() || !(recipe.get().value() instanceof net.minecraft.world.item.crafting.CraftingRecipe)) continue;
+                // Nor is a storage block broken back down: raw iron is mined, not unpacked.
+                if (recipe.get().value().display().stream().anyMatch(display ->
+                        display instanceof net.minecraft.world.item.crafting.display.ShapelessCraftingRecipeDisplay shapeless
+                                && shapeless.ingredients().size() == 1)) continue;
+                int needed = de.ipnats.hardwrought.progression.BenchTier.required(new ItemStack(item));
+                helper.assertTrue(needed <= bench, "'" + entry.id().getPath() + "' asks for " + taught
+                        + ", which wants bench tier " + needed + " where only tier " + bench + " can be had");
+                if (bench == de.ipnats.hardwrought.progression.BenchTier.INVENTORY) {
+                    for (var display : recipe.get().value().display()) {
+                        if (display instanceof net.minecraft.world.item.crafting.display.ShapedCraftingRecipeDisplay shaped) {
+                            helper.assertTrue(shaped.width() <= 2 && shaped.height() <= 2,
+                                    taught + " is asked for before any bench, so it must fit in the hand grid");
+                        }
+                    }
+                }
+            }
+            if (entry.teaches().contains(Hardwrought.id("hewn_workbench"))) {
+                bench = de.ipnats.hardwrought.progression.BenchTier.HEWN;
+            }
+            if (entry.teaches().contains(Hardwrought.id("nailed_workbench"))) {
+                bench = de.ipnats.hardwrought.progression.BenchTier.JOINED;
+            }
+        }
+        // The first iron in particular: the hatchet that hews the first bench is made in the hand grid.
+        for (Item early : List.of(Items.IRON_AXE, ModBlocks.BRICK_FURNACE.asItem(), Items.CAMPFIRE,
+                ModItems.STONE_PICKAXE, ModItems.SMITHING_GLOVES, ModItems.WOODEN_HAMMER)) {
+            helper.assertTrue(de.ipnats.hardwrought.progression.BenchTier.required(new ItemStack(early))
+                            == de.ipnats.hardwrought.progression.BenchTier.INVENTORY,
+                    early + " is made before there is any bench");
+        }
+        helper.succeed();
+    }
+
+    /** Following a thought is told in a toast, together with the thought it opens. */
+    @GameTest
+    public void followingAThoughtIsToldWithWhatComesNext(GameTestHelper helper) {
+        KnowledgeSystem knowledge = CoreLifecycle.require(helper.getLevel().getServer()).knowledge();
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        knowledge.forget(player.getUUID());
+        knowledge.study(player, Items.STICK);
+        helper.assertTrue(knowledge.pendingJournal(player.getUUID()).isEmpty(),
+                "Learning something no thought asks for follows nothing");
+
+        knowledge.study(player, ModItems.FLINT_PICKAXE);
+        var lines = knowledge.pendingJournal(player.getUUID());
+        helper.assertTrue(lines.size() == 2, "One thought followed and the one it opens, not " + lines);
+        helper.assertTrue(lines.get(0).followed() && lines.get(0).note().equals(Hardwrought.id("first_edge"))
+                        && lines.get(0).icon().equals(Hardwrought.id("flint_pickaxe")),
+                "The first edge is followed, shown with what was actually made");
+        helper.assertTrue(!lines.get(1).followed() && lines.get(1).note().equals(Hardwrought.id("fire_by_friction")),
+                "and the next thought, the fire, is named straight after it");
+
+        knowledge.study(player, ModItems.FLINT_HATCHET);
+        helper.assertTrue(knowledge.pendingJournal(player.getUUID()).size() == 2,
+                "A second flint tool follows nothing new");
+        knowledge.forget(player.getUUID());
+        helper.succeed();
+    }
+
+    /** Finishing one thought always opens the next, so the player always knows what to do. */
+    @GameTest
+    public void followingAThoughtOpensTheNext(GameTestHelper helper) {
+        PlayerKnowledge knowledge = PlayerKnowledge.empty();
+        List<JournalEntry> chain = Journal.chain().stream().filter(entry -> !entry.ultraOnly()).toList();
+        for (int index = 0; index < chain.size() - 1; index++) {
+            for (Identifier taught : chain.get(index).teaches()) knowledge.discover(taught);
+            helper.assertTrue(Journal.state(knowledge, chain.get(index)) == Journal.DONE,
+                    chain.get(index).id() + " is followed by holding what it asks for");
+            helper.assertTrue(Journal.state(knowledge, chain.get(index + 1)) != Journal.HIDDEN,
+                    chain.get(index + 1).id() + " opens once " + chain.get(index).id() + " is followed");
+        }
         helper.succeed();
     }
 

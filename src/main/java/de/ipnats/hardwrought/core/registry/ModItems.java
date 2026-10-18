@@ -116,6 +116,10 @@ public final class ModItems {
     public static final Item LIGHTING_STICKS = register("lighting_sticks",
             de.ipnats.hardwrought.progression.LightingSticksItem::new,
             new Item.Properties().durability(16));
+    /** A torch as it comes out of the grid: it has to be lit. See {@code Torches}. */
+    public static final Item UNLIT_TORCH = register("unlit_torch",
+            properties -> new de.ipnats.hardwrought.environment.UnlitTorchItem(ModBlocks.UNLIT_TORCH, ModBlocks.UNLIT_WALL_TORCH, properties),
+            new Item.Properties());
     public static final Item BRICK_FURNACE = register("brick_furnace",
             properties -> new BlockItem(ModBlocks.BRICK_FURNACE, properties),
             new Item.Properties().useBlockDescriptionPrefix());
@@ -177,10 +181,6 @@ public final class ModItems {
             new Item.Properties().axe(ToolMaterial.STONE, 6.0F, -3.2F));
     public static final Item STONE_PICKAXE = register("stone_pickaxe", Item::new,
             new Item.Properties().pickaxe(ToolMaterial.STONE, 1.0F, -2.8F));
-    public static final Item IRON_HATCHET = register("iron_hatchet", Item::new,
-            new Item.Properties().axe(ToolMaterial.IRON, 6.0F, -3.1F));
-    public static final Item IRON_PICKAXE = register("iron_pickaxe", Item::new,
-            new Item.Properties().pickaxe(ToolMaterial.IRON, 1.0F, -2.8F));
     public static final Item IRON_DAGGER = register("iron_dagger", Item::new,
             new Item.Properties().sword(ToolMaterial.IRON, 1.0F, -1.5F));
     public static final Item IRON_GREATSWORD = register("iron_greatsword", Item::new,
@@ -228,24 +228,6 @@ public final class ModItems {
     public static final Item WINDMILL = register("windmill",
             properties -> new BlockItem(ModBlocks.WINDMILL, properties),
             new Item.Properties().useBlockDescriptionPrefix());
-    public static final Item ORE_DRILL = register("ore_drill",
-            properties -> new BlockItem(ModBlocks.ORE_DRILL, properties),
-            new Item.Properties().useBlockDescriptionPrefix());
-    public static final Item DRILL_FRAME_BRONZE = register("drill_frame_bronze",
-            properties -> new BlockItem(ModBlocks.DRILL_FRAME_BRONZE, properties),
-            new Item.Properties().useBlockDescriptionPrefix());
-    public static final Item DRILL_FRAME_IRON = register("drill_frame_iron",
-            properties -> new BlockItem(ModBlocks.DRILL_FRAME_IRON, properties),
-            new Item.Properties().useBlockDescriptionPrefix());
-    public static final Item DRILL_FRAME_NICKEL = register("drill_frame_nickel",
-            properties -> new BlockItem(ModBlocks.DRILL_FRAME_NICKEL, properties),
-            new Item.Properties().useBlockDescriptionPrefix());
-    public static final Item DRILL_FRAME_CHROMIUM = register("drill_frame_chromium",
-            properties -> new BlockItem(ModBlocks.DRILL_FRAME_CHROMIUM, properties),
-            new Item.Properties().useBlockDescriptionPrefix());
-    public static final Item DRILL_FRAME_TITANIUM = register("drill_frame_titanium",
-            properties -> new BlockItem(ModBlocks.DRILL_FRAME_TITANIUM, properties),
-            new Item.Properties().useBlockDescriptionPrefix());
     public static final Item ITEM_PIPE_BRONZE = register("item_pipe_bronze",
             properties -> new BlockItem(ModBlocks.ITEM_PIPE_BRONZE, properties),
             new Item.Properties().useBlockDescriptionPrefix());
@@ -268,9 +250,6 @@ public final class ModItems {
     public static final Item STILL = register("still",
             properties -> new BlockItem(ModBlocks.STILL, properties),
             new Item.Properties().useBlockDescriptionPrefix());
-    /** Creative only: shows every ore in the chunk the player stands in. */
-    public static final Item ORE_SCANNER = register("ore_scanner", de.ipnats.hardwrought.geology.OreScannerItem::new,
-            new Item.Properties().stacksTo(1).rarity(net.minecraft.world.item.Rarity.EPIC));
     /** A bucket of crude oil off a rig. It goes into a still, or is poured out as oil. */
     public static final Item CRUDE_OIL_BUCKET = register("crude_oil_bucket",
             properties -> new net.minecraft.world.item.BucketItem(de.ipnats.hardwrought.oil.ModFluids.CRUDE_OIL, properties),

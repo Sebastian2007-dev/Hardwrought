@@ -100,7 +100,11 @@ public final class WorldRecipes {
         register(de.ipnats.hardwrought.refining.RefiningRecipes::worldRecipes);
         register(de.ipnats.hardwrought.materials.MaterialRecipes::worldRecipes);
         register(WorldRecipes::fireAndWater);
-        register(de.ipnats.hardwrought.storage.StorageBlocks::worldRecipes);
+        register(de.ipnats.hardwrought.electricity.Machine::worldRecipes);
+        register(de.ipnats.hardwrought.progression.DryingRackBlockEntity::worldRecipes);
+        register(de.ipnats.hardwrought.smeltery.Casts::worldRecipes);
+        register(de.ipnats.hardwrought.nether.CastObsidian::worldRecipes);
+        register(de.ipnats.hardwrought.nether.Ashcork::worldRecipes);
     }
 
     /** The uses of a fire and of water that are acts rather than cooking: boiling a skin or a bowl clean. */

@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "burnt=false,facing=north": {
+      "model": "hardwrought:block/transformer"
+    },
+    "burnt=true,facing=north": {
+      "model": "hardwrought:block/transformer_burnt"
+    },
+    "burnt=false,facing=east": {
+      "model": "hardwrought:block/transformer",
+      "y": 90
+    },
+    "burnt=true,facing=east": {
+      "model": "hardwrought:block/transformer_burnt",
+      "y": 90
+    },
+    "burnt=false,facing=south": {
+      "model": "hardwrought:block/transformer",
+      "y": 180
+    },
+    "burnt=true,facing=south": {
+      "model": "hardwrought:block/transformer_burnt",
+      "y": 180
+    },
+    "burnt=false,facing=west": {
+      "model": "hardwrought:block/transformer",
+      "y": 270
+    },
+    "burnt=true,facing=west": {
+      "model": "hardwrought:block/transformer_burnt",
+      "y": 270
+    }
+  }
+}

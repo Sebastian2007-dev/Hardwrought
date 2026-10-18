@@ -49,15 +49,37 @@ public final class ElectricBlocks {
     public static final MachineBlock SAWMILL_MK3 = machine(Machine.SAWMILL_MK3);
     public static final MachineBlock PLATE_PRESS_MK2 = machine(Machine.PRESS_MK2);
     public static final MachineBlock PLATE_PRESS_MK3 = machine(Machine.PRESS_MK3);
+    public static final MachineBlock BASIC_CRUSHER_MK4 = machine(Machine.CRUSHER_MK4);
+    public static final MachineBlock ELECTRIC_FURNACE_MK4 = machine(Machine.FURNACE_MK4);
+    public static final MachineBlock SAWMILL_MK4 = machine(Machine.SAWMILL_MK4);
+    public static final MachineBlock PLATE_PRESS_MK4 = machine(Machine.PRESS_MK4);
+    public static final MachineBlock COIL_WINDER = machine(Machine.COIL_WINDER);
+
+    // The grid: transformers for long lines, porcelain where the voltage is high, and switchgear.
+    public static final TransformerBlock TRANSFORMER = block("transformer", TransformerBlock::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(3.5f).noOcclusion());
+    public static final InsulatorBlock PORCELAIN_INSULATOR = block("porcelain_insulator", InsulatorBlock::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS).strength(1.0f).noOcclusion().forceSolidOn());
+    /** A coil in a porcelain sleeve: where a line at high voltage goes into a transformer or a machine. */
+    public static final CoilBlock BUSHING = block("bushing", CoilBlock::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS).strength(1.0f).noOcclusion().forceSolidOn());
+    public static final MastBlock HIGH_VOLTAGE_MAST = block("high_voltage_mast", MastBlock::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.SPRUCE_PLANKS).noOcclusion().forceSolidOn());
+    public static final SwitchgearBlock KNIFE_SWITCH = switchgear("knife_switch", SwitchgearBlock.Kind.SWITCH);
+    public static final SwitchgearBlock FUSE_BOX = switchgear("fuse_box", SwitchgearBlock.Kind.FUSE);
+    public static final SwitchgearBlock BREAKER = switchgear("breaker", SwitchgearBlock.Kind.BREAKER);
 
     // Never placed: the look of a strung wire, drawn piece by piece along its sag.
     public static final Block WIRE_STRAND = strand("wire_strand", 0);
     public static final Block WIRE_STRAND_HOT = strand("wire_strand_hot", 9);
     public static final Block CABLE_STRAND = strand("cable_strand", 0);
     public static final Block CABLE_STRAND_HOT = strand("cable_strand_hot", 9);
+    public static final Block INSULATED_STRAND = strand("insulated_strand", 0);
+    public static final Block INSULATED_STRAND_HOT = strand("insulated_strand_hot", 9);
 
     public static final Item COPPER_WIRE = item("copper_wire", properties -> new WireItem(Gauge.WIRE, properties));
     public static final Item COPPER_CABLE = item("copper_cable", properties -> new WireItem(Gauge.CABLE, properties));
+    public static final Item INSULATED_WIRE = item("insulated_wire", properties -> new WireItem(Gauge.INSULATED, properties));
     public static final Item METER = item("voltmeter", properties -> new MeterItem(properties.stacksTo(1)));
 
     /** The point a coil in hand was first held to, waiting for the second. */
@@ -67,7 +89,7 @@ public final class ElectricBlocks {
 
     public static final BlockEntityType<ElectricBlockEntity> INSULATOR_ENTITY = entity("insulator",
             new BlockEntityType<>((pos, state) -> new ElectricBlockEntity(ElectricBlocks.INSULATOR_ENTITY, pos, state),
-                    Set.of(INSULATOR)));
+                    Set.of(INSULATOR, PORCELAIN_INSULATOR)));
     public static final BlockEntityType<LampBlockEntity> LAMP_ENTITY = entity("electric_lamp",
             new BlockEntityType<>(LampBlockEntity::new, Set.of(ELECTRIC_LAMP)));
     public static final BlockEntityType<DynamoBlockEntity> DYNAMO_ENTITY = entity("dynamo",
@@ -75,17 +97,22 @@ public final class ElectricBlocks {
 
     public static final BlockEntityType<ElectricBlockEntity> COIL_ENTITY = entity("copper_coil",
             new BlockEntityType<>((pos, state) -> new ElectricBlockEntity(ElectricBlocks.COIL_ENTITY, pos, state),
-                    Set.of(COPPER_COIL)));
+                    Set.of(COPPER_COIL, BUSHING)));
     public static final BlockEntityType<ElectricBlockEntity> MAST_ENTITY = entity("mast",
             new BlockEntityType<>((pos, state) -> new ElectricBlockEntity(ElectricBlocks.MAST_ENTITY, pos, state),
-                    Set.of(MAST)));
+                    Set.of(MAST, HIGH_VOLTAGE_MAST)));
+    public static final BlockEntityType<TransformerBlockEntity> TRANSFORMER_ENTITY = entity("transformer",
+            new BlockEntityType<>(TransformerBlockEntity::new, Set.of(TRANSFORMER)));
+    public static final BlockEntityType<SwitchgearBlockEntity> SWITCHGEAR_ENTITY = entity("switchgear",
+            new BlockEntityType<>(SwitchgearBlockEntity::new, Set.of(KNIFE_SWITCH, FUSE_BOX, BREAKER)));
     public static final BlockEntityType<BatteryBlockEntity> BATTERY_ENTITY = entity("battery",
             new BlockEntityType<>(BatteryBlockEntity::new, Set.of(BATTERY)));
     /** One kind of entity for every machine: which machine it is, its block says. */
     public static final BlockEntityType<MachineBlockEntity> MACHINE_ENTITY = entity("basic_crusher",
             new BlockEntityType<>(MachineBlockEntity::new, Set.of(BASIC_CRUSHER, ELECTRIC_FURNACE, SAWMILL, PLATE_PRESS,
                     BASIC_CRUSHER_MK2, BASIC_CRUSHER_MK3, ELECTRIC_FURNACE_MK2, ELECTRIC_FURNACE_MK3, SAWMILL_MK2, SAWMILL_MK3,
-                    PLATE_PRESS_MK2, PLATE_PRESS_MK3, LATHE, TUBE_MILL)));
+                    PLATE_PRESS_MK2, PLATE_PRESS_MK3, LATHE, TUBE_MILL, BASIC_CRUSHER_MK4, ELECTRIC_FURNACE_MK4,
+                    SAWMILL_MK4, PLATE_PRESS_MK4, COIL_WINDER)));
 
     private ElectricBlocks() { }
 
@@ -100,7 +127,20 @@ public final class ElectricBlocks {
                 BASIC_CRUSHER.asItem(), ELECTRIC_FURNACE.asItem(), SAWMILL.asItem(), PLATE_PRESS.asItem(),
                 BASIC_CRUSHER_MK2.asItem(), BASIC_CRUSHER_MK3.asItem(), ELECTRIC_FURNACE_MK2.asItem(), ELECTRIC_FURNACE_MK3.asItem(),
                 SAWMILL_MK2.asItem(), SAWMILL_MK3.asItem(), PLATE_PRESS_MK2.asItem(), PLATE_PRESS_MK3.asItem(),
-                COPPER_WIRE, COPPER_CABLE, METER);
+                BASIC_CRUSHER_MK4.asItem(), ELECTRIC_FURNACE_MK4.asItem(), SAWMILL_MK4.asItem(), PLATE_PRESS_MK4.asItem(),
+                COIL_WINDER.asItem(), TRANSFORMER.asItem(), BUSHING.asItem(), PORCELAIN_INSULATOR.asItem(),
+                HIGH_VOLTAGE_MAST.asItem(), KNIFE_SWITCH.asItem(), FUSE_BOX.asItem(), BREAKER.asItem(),
+                COPPER_WIRE, COPPER_CABLE, INSULATED_WIRE, METER);
+    }
+
+    /** Whether this is a support of porcelain, which stands high voltage in the rain. */
+    public static boolean porcelain(net.minecraft.world.level.block.state.BlockState state) {
+        return state.is(PORCELAIN_INSULATOR) || state.is(BUSHING) || state.is(HIGH_VOLTAGE_MAST);
+    }
+
+    private static SwitchgearBlock switchgear(String name, SwitchgearBlock.Kind kind) {
+        return block(name, properties -> new SwitchgearBlock(kind, properties),
+                BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(2.0f).noOcclusion());
     }
 
     private static MachineBlock machine(Machine machine) {

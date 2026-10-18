@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "R": "hardwrought:copper_rod",
+    "P": "hardwrought:porcelain"
+  },
+  "pattern": [
+    "R",
+    "P",
+    "P"
+  ],
+  "result": {
+    "id": "hardwrought:bushing"
+  }
+}

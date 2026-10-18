@@ -170,6 +170,22 @@ public class ElectricBlockEntity extends BlockEntity {
     }
 
     /**
+     * Up to what voltage rain on it does no harm. Above it the wet surface flashes over and current
+     * runs to the ground as through standing water. Porcelain stands far more than glazed brick.
+     */
+    public double insulationVolts() {
+        return ElectricBlocks.porcelain(getBlockState()) ? Electricity.PORCELAIN_VOLTS : Electricity.FLASHOVER_VOLTS;
+    }
+
+    /**
+     * Whether the coils set against it are joined through it. Open switchgear says no, and what is on
+     * either side of it is cut off from the other.
+     */
+    public boolean joins() {
+        return true;
+    }
+
+    /**
      * Told what the network worked out.
      *
      * @param seconds how much time this answer stands for; 0 where the network was only looked at again

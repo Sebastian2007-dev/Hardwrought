@@ -29,7 +29,7 @@ a batch came from. New:
 - A **drawing** side takes a batch out of the block there whenever the pipe is empty, at its metal's pace,
   taking the drawing sides in turn.
 - A block the run draws from is never filled by it.
-- Hoppers, drills and anything else that pushes items still put them in on any side.
+- Hoppers and anything else that pushes items still put them in on any side.
 
 ## Fluid pipes
 

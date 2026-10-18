@@ -34,6 +34,7 @@
 		"BlockStateBurnMixin",
 		"BlockStateGrowthMixin",
 		"BlockItemStructureMixin",
+		"TorchPlacingMixin",
 		"FallingBlockEntityStructureMixin",
 		"LevelChunkStructureMixin",
 		"AbstractFurnaceBlockEntityAccessor",

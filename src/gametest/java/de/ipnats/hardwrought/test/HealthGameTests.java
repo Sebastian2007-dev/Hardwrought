@@ -20,6 +20,8 @@ public final class HealthGameTests {
     @SuppressWarnings("removal")
     private static ServerPlayer patient(GameTestHelper helper) {
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        // A new arrival is immune for forty minutes; these tests are about what comes after.
+        player.removeEffect(ModEffects.IMMUNITY);
         Diseases.set(player, Health.NONE);
         return player;
     }
@@ -32,6 +34,50 @@ public final class HealthGameTests {
     private static double load(ServerPlayer player, Disease disease) {
         Health.Infection infection = Diseases.health(player).infection(disease);
         return infection == null ? 0 : infection.load();
+    }
+
+    @GameTest
+    public void harmFromWithinPushesNobody(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var types = level.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.DAMAGE_TYPE);
+        // Bad air, smoke, thirst, cold and heat, illness: none of it is a blow, and none of it throws a body about.
+        for (String name : new String[] {"bad_air", "carbon_monoxide", "smoke", "dehydration", "exposure", "illness"}) {
+            var key = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DAMAGE_TYPE,
+                    de.ipnats.hardwrought.Hardwrought.id(name));
+            helper.assertTrue(types.getOrThrow(key).is(net.minecraft.tags.DamageTypeTags.NO_KNOCKBACK),
+                    name + " is harm from within and gives no knockback");
+        }
+        for (var vanilla : java.util.List.of(level.damageSources().freeze(), level.damageSources().hotFloor(),
+                level.damageSources().starve(), level.damageSources().magic())) {
+            helper.assertTrue(vanilla.is(net.minecraft.tags.DamageTypeTags.NO_KNOCKBACK),
+                    vanilla.getMsgId() + ", which the body's own harm uses, gives no knockback");
+        }
+        @SuppressWarnings("removal") ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+        player.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+        player.hurtServer(level, new net.minecraft.world.damagesource.DamageSource(types.getOrThrow(
+                de.ipnats.hardwrought.core.registry.ModDamageTypes.BAD_AIR)), 1.0f);
+        helper.assertTrue(player.getDeltaMovement().horizontalDistanceSqr() == 0,
+                "A lungful of bad air hurts without pushing: " + player.getDeltaMovement());
+        helper.succeed();
+    }
+
+    @GameTest
+    public void aNewArrivalIsImmuneForFortyMinutes(GameTestHelper helper) {
+        ServerPlayer player = patient(helper);
+        Diseases.grantImmunity(player);
+        MobEffectInstance immunity = player.getEffect(ModEffects.IMMUNITY);
+        helper.assertTrue(immunity != null && immunity.getDuration() == 40 * 60 * 20,
+                "Outside Ultra a new or reborn body is immune for forty minutes");
+        Diseases.drankBad(player, 20);
+        Diseases.wounded(player, 20);
+        helper.assertTrue(Diseases.health(player).infection(Disease.GASTRO) == null
+                        && Diseases.health(player).infection(Disease.WOUND) == null,
+                "Nothing is caught and no wound turns while it lasts");
+        player.removeEffect(ModEffects.IMMUNITY);
+        Diseases.drankBad(player, 20);
+        helper.assertTrue(Diseases.health(player).infection(Disease.GASTRO) != null, "and once it is over, a bad drink counts");
+        helper.succeed();
     }
 
     @GameTest

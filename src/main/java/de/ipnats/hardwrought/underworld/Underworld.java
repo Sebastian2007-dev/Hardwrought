@@ -60,6 +60,7 @@ public final class Underworld {
     private Underworld() { }
 
     public static void initialize() {
+        de.ipnats.hardwrought.knowledge.LootSources.inWorld(() -> PALE_SHARD_CLUSTER.asItem());
         ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, Hardwrought.id("pale_shard_cluster"));
         BlockItem cluster = new BlockItem(PALE_SHARD_CLUSTER, new Item.Properties().setId(key).useBlockDescriptionPrefix());
         cluster.registerBlocks(Item.BY_BLOCK, cluster);

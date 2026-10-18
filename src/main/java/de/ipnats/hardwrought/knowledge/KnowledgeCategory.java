@@ -141,7 +141,10 @@ public enum KnowledgeCategory {
                 || path.contains("dynamo") || path.contains("insulator") || path.contains("electric")
                 || path.contains("voltmeter") || path.contains("copper_cable") || path.equals("mast")
                 || path.equals("battery") || path.equals("basic_crusher") || path.equals("sawmill")
-                || path.equals("plate_press") || path.equals("copper_coil");
+                || path.equals("plate_press") || path.equals("copper_coil")
+                || path.contains("transformer") || path.contains("bushing") || path.contains("porcelain")
+                || path.contains("switch") || path.contains("fuse") || path.equals("breaker") || path.contains("winding")
+                || path.equals("coil_winder") || path.equals("high_voltage_mast") || path.startsWith("electrical_steel");
     }
 
     private static boolean isLiving(Item item) {

@@ -19,12 +19,9 @@ import net.minecraft.resources.Identifier;
  * @param maxRadius  largest horizontal radius in blocks
  * @param minGrade   poorest this ore ever assays, as a fraction of metal in the rock
  * @param maxGrade   richest it ever assays
- * @param drillTier  how good a drill has to be to bring this ore up out of bare rock. The early
- *                   ores are tier 1; the ones a world should not hand out freely are higher.
  */
 public record DepositProfile(Identifier ore, int weight, int minY, int maxY,
-                             int minRadius, int maxRadius, double minGrade, double maxGrade,
-                             int drillTier) {
+                             int minRadius, int maxRadius, double minGrade, double maxGrade) {
     public static final Codec<DepositProfile> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Identifier.CODEC.fieldOf("ore").forGetter(DepositProfile::ore),
             Codec.intRange(1, 100).optionalFieldOf("weight", 1).forGetter(DepositProfile::weight),
@@ -33,8 +30,7 @@ public record DepositProfile(Identifier ore, int weight, int minY, int maxY,
             Codec.intRange(4, 128).optionalFieldOf("min_radius", 20).forGetter(DepositProfile::minRadius),
             Codec.intRange(4, 128).optionalFieldOf("max_radius", 44).forGetter(DepositProfile::maxRadius),
             Codec.doubleRange(0.0, 1.0).optionalFieldOf("min_grade", 0.03).forGetter(DepositProfile::minGrade),
-            Codec.doubleRange(0.0, 1.0).optionalFieldOf("max_grade", 0.20).forGetter(DepositProfile::maxGrade),
-            Codec.intRange(1, 5).optionalFieldOf("drill_tier", 1).forGetter(DepositProfile::drillTier)
+            Codec.doubleRange(0.0, 1.0).optionalFieldOf("max_grade", 0.20).forGetter(DepositProfile::maxGrade)
     ).apply(instance, DepositProfile::new));
 
     public DepositProfile {
@@ -42,9 +38,6 @@ public record DepositProfile(Identifier ore, int weight, int minY, int maxY,
         if (maxY < minY) throw new IllegalArgumentException("Deposit " + ore + " has an inverted depth band");
         if (maxRadius < minRadius) throw new IllegalArgumentException("Deposit " + ore + " has an inverted size");
         if (maxGrade < minGrade) throw new IllegalArgumentException("Deposit " + ore + " has an inverted grade");
-        if (drillTier < 1 || drillTier > DrillTier.values().length) {
-            throw new IllegalArgumentException("Deposit " + ore + " wants a drill that does not exist");
-        }
     }
 
     /** How thick the band this ore can sit in is. */

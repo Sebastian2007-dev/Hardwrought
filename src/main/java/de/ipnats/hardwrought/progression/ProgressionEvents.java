@@ -40,6 +40,9 @@ public final class ProgressionEvents {
     private ProgressionEvents() { }
 
     public static void initialize() {
+        // For the book: leaves pulled apart by hand give the fibre (below).
+        de.ipnats.hardwrought.knowledge.LootSources.register(() -> ModItems.GREEN_FIBRE,
+                de.ipnats.hardwrought.knowledge.LootSources.KIND_BLOCK, () -> net.minecraft.resources.Identifier.withDefaultNamespace("oak_leaves"));
         if (initialized) return;
         initialized = true;
         AttackBlockCallback.EVENT.register((player, level, hand, pos, direction) -> {

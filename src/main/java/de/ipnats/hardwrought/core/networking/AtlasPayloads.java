@@ -17,6 +17,8 @@ import java.util.List;
 public final class AtlasPayloads {
     /** The most chunks one message carries. */
     public static final int MAX_CHUNKS = 512;
+    /** The most other bearers one message carries. */
+    public static final int MAX_BEARERS = 32;
 
     private AtlasPayloads() { }
 
@@ -56,7 +58,7 @@ public final class AtlasPayloads {
 
     /** Server to client: every place marked in the atlas of this dimension. */
     public record Markers(Identifier dimension, List<Atlas.Marker> markers) implements CustomPacketPayload {
-        public static final Type<Markers> TYPE = new Type<>(Hardwrought.id("atlas_markers_v1"));
+        public static final Type<Markers> TYPE = new Type<>(Hardwrought.id("atlas_markers_v2"));
         public static final StreamCodec<RegistryFriendlyByteBuf, Markers> CODEC = StreamCodec.of(
                 (buffer, markers) -> {
                     buffer.writeIdentifier(markers.dimension);
@@ -66,6 +68,7 @@ public final class AtlasPayloads {
                         buffer.writeInt(marker.z());
                         buffer.writeUtf(marker.name(), Atlas.MAX_NAME);
                         buffer.writeByte(marker.kind());
+                        buffer.writeByte(marker.icon());
                     }
                 },
                 buffer -> {
@@ -73,13 +76,48 @@ public final class AtlasPayloads {
                     int count = Math.min(buffer.readVarInt(), Atlas.MAX_MARKERS);
                     List<Atlas.Marker> markers = new ArrayList<>(count);
                     for (int i = 0; i < count; i++) {
-                        markers.add(new Atlas.Marker(buffer.readInt(), buffer.readInt(), buffer.readUtf(Atlas.MAX_NAME), buffer.readByte()));
+                        markers.add(new Atlas.Marker(buffer.readInt(), buffer.readInt(), buffer.readUtf(Atlas.MAX_NAME), buffer.readByte(),
+                                buffer.readByte()));
                     }
                     return new Markers(dimension, markers);
                 });
 
         public Markers {
             markers = List.copyOf(markers);
+        }
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    /** Server to client, once a second while the atlas is carried: the other bearers near this one. */
+    public record Bearers(Identifier dimension, List<Atlas.Bearer> bearers) implements CustomPacketPayload {
+        public static final Type<Bearers> TYPE = new Type<>(Hardwrought.id("atlas_bearers_v1"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, Bearers> CODEC = StreamCodec.of(
+                (buffer, bearers) -> {
+                    buffer.writeIdentifier(bearers.dimension);
+                    buffer.writeVarInt(bearers.bearers.size());
+                    for (Atlas.Bearer bearer : bearers.bearers) {
+                        buffer.writeUtf(bearer.name(), 16);
+                        buffer.writeInt(bearer.x());
+                        buffer.writeInt(bearer.z());
+                        buffer.writeFloat(bearer.yaw());
+                    }
+                },
+                buffer -> {
+                    Identifier dimension = buffer.readIdentifier();
+                    int count = Math.min(buffer.readVarInt(), MAX_BEARERS);
+                    List<Atlas.Bearer> bearers = new ArrayList<>(count);
+                    for (int i = 0; i < count; i++) {
+                        bearers.add(new Atlas.Bearer(buffer.readUtf(16), buffer.readInt(), buffer.readInt(), buffer.readFloat()));
+                    }
+                    return new Bearers(dimension, bearers);
+                });
+
+        public Bearers {
+            bearers = List.copyOf(bearers);
         }
 
         @Override
@@ -99,16 +137,17 @@ public final class AtlasPayloads {
         }
     }
 
-    /** Client to server: mark this place, under this name. */
-    public record Mark(int x, int z, String name) implements CustomPacketPayload {
-        public static final Type<Mark> TYPE = new Type<>(Hardwrought.id("atlas_mark_v1"));
+    /** Client to server: mark this place, under this name, with this symbol. */
+    public record Mark(int x, int z, String name, int icon) implements CustomPacketPayload {
+        public static final Type<Mark> TYPE = new Type<>(Hardwrought.id("atlas_mark_v2"));
         public static final StreamCodec<RegistryFriendlyByteBuf, Mark> CODEC = StreamCodec.of(
                 (buffer, mark) -> {
                     buffer.writeInt(mark.x);
                     buffer.writeInt(mark.z);
                     buffer.writeUtf(mark.name, Atlas.MAX_NAME);
+                    buffer.writeByte(mark.icon);
                 },
-                buffer -> new Mark(buffer.readInt(), buffer.readInt(), buffer.readUtf(Atlas.MAX_NAME)));
+                buffer -> new Mark(buffer.readInt(), buffer.readInt(), buffer.readUtf(Atlas.MAX_NAME), buffer.readByte()));
 
         @Override
         public Type<? extends CustomPacketPayload> type() {

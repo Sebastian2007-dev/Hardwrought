@@ -88,7 +88,11 @@ public enum ChemMachine {
                                 List.of(new ItemStack(ModItems.ANTIBIOTICS, 2)), null, 0, 160));
                 case ARC_FURNACE -> List.of(new Recipe("arc_furnace/silicon",
                         List.of(new ItemStack(Items.QUARTZ, 2), new ItemStack(de.ipnats.hardwrought.smeltery.SmelteryBlocks.COKE)),
-                        null, 0, null, 0, List.of(new ItemStack(Materials.RAW_SILICON)), null, 0, 160));
+                        null, 0, null, 0, List.of(new ItemStack(Materials.RAW_SILICON)), null, 0, 160),
+                        // Steel melted with silicon, for transformer and motor cores.
+                        new Recipe("arc_furnace/electrical_steel", List.of(new ItemStack(de.ipnats.hardwrought.metallurgy.Alloys.STEEL_INGOT, 2),
+                                new ItemStack(Materials.RAW_SILICON)), null, 0, null, 0,
+                                List.of(new ItemStack(de.ipnats.hardwrought.parts.Parts.ELECTRICAL_STEEL, 2)), null, 0, 160));
             };
         }
         return recipes;

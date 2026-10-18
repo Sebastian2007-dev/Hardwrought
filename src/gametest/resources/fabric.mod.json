@@ -54,7 +54,11 @@
       "de.ipnats.hardwrought.test.AtlasGameTests",
       "de.ipnats.hardwrought.test.WorldgenGameTests",
       "de.ipnats.hardwrought.test.ElectricityGameTests",
-      "de.ipnats.hardwrought.test.StorageGameTests"
+      "de.ipnats.hardwrought.test.GridGameTests",
+      "de.ipnats.hardwrought.test.StorageGameTests",
+      "de.ipnats.hardwrought.test.TorchGameTests",
+      "de.ipnats.hardwrought.test.SpawnGameTests",
+      "de.ipnats.hardwrought.test.BundleGameTests"
     ],
     "fabric-client-gametest": [
       "de.ipnats.hardwrought.test.FxClientGameTest",
@@ -66,9 +70,13 @@
       "de.ipnats.hardwrought.test.SmelteryClientGameTest",
       "de.ipnats.hardwrought.test.EnchantingClientGameTest",
       "de.ipnats.hardwrought.test.AtlasClientGameTest",
+      "de.ipnats.hardwrought.test.BundleClientGameTest",
+      "de.ipnats.hardwrought.test.DrinkClientGameTest",
       "de.ipnats.hardwrought.test.ElectricityClientGameTest",
       "de.ipnats.hardwrought.test.StorageClientGameTest",
       "de.ipnats.hardwrought.test.BookmarkClientGameTest",
+      "de.ipnats.hardwrought.test.CompendiumInfoClientGameTest",
+      "de.ipnats.hardwrought.test.JournalChaptersClientGameTest",
       "de.ipnats.hardwrought.test.MultiblockClientGameTest",
       "de.ipnats.hardwrought.test.UnderworldClientGameTest",
       "de.ipnats.hardwrought.test.WitchKingClientGameTest",

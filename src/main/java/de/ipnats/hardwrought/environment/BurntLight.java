@@ -15,7 +15,8 @@ import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * A light that has burnt out: a torch gone to charcoal, a lantern gone dark. It gives no light, burns
- * nothing, and can be lit again — with flint and steel, a fire charge, or a burning torch held to it —
+ * nothing, and can be lit again — with flint and steel, the lighting sticks, a fire charge, or a burning
+ * torch held to it —
  * which brings back exactly the light it was. See {@link LightBurn}.
  */
 public interface BurntLight {
@@ -24,7 +25,8 @@ public interface BurntLight {
 
     /** Lights a burnt-out light again with what the player holds, if that can light anything. */
     static InteractionResult light(ItemStack stack, BlockState burnt, Level level, BlockPos pos, Player player, InteractionHand hand) {
-        boolean flint = stack.is(Items.FLINT_AND_STEEL), charge = stack.is(Items.FIRE_CHARGE);
+        boolean flint = stack.is(Items.FLINT_AND_STEEL) || stack.is(de.ipnats.hardwrought.core.registry.ModItems.LIGHTING_STICKS);
+        boolean charge = stack.is(Items.FIRE_CHARGE);
         boolean flame = stack.is(Items.TORCH) || stack.is(Items.SOUL_TORCH) || stack.is(Items.COPPER_TORCH);
         if (!flint && !charge && !flame) return InteractionResult.TRY_WITH_EMPTY_HAND;
         if (!(level instanceof ServerLevel server)) return InteractionResult.SUCCESS;

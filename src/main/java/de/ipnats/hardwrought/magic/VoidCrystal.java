@@ -47,6 +47,8 @@ public final class VoidCrystal {
     private VoidCrystal() { }
 
     public static void initialize() {
+        for (Block grown : java.util.List.of(BUDDING, SMALL_BUD, MEDIUM_BUD, LARGE_BUD, CLUSTER))
+            de.ipnats.hardwrought.knowledge.LootSources.inWorld(grown::asItem);
         // Loading this class performs registration in declaration order.
     }
 
