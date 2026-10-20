@@ -14,15 +14,18 @@ final class Allies {
 
     /**
      * Whether a living thing is on the caster's side: the caster, their tamed animals, the peaceful
-     * creatures of the world, and other players only when both stand in the same team. Monsters never
-     * are. Until there are parties, a stranger is not a friend.
+     * creatures of the world, and other players when both are in the same party or stand in the same
+     * team. Monsters never are. A stranger is not a friend.
      */
     static boolean ally(LivingEntity caster, LivingEntity target) {
         if (target == caster) return true;
         if (target instanceof Enemy) return false;
         if (caster == null) return true;
         if (target instanceof OwnableEntity owned && owned.getOwner() != null) return ally(caster, owned.getOwner());
-        if (target instanceof Player) return caster.getTeam() != null && caster.isAlliedTo(target);
+        if (target instanceof Player player) {
+            if (caster instanceof Player own && de.ipnats.hardwrought.party.Parties.together(own, player)) return true;
+            return caster.getTeam() != null && caster.isAlliedTo(target);
+        }
         return true;
     }
 }

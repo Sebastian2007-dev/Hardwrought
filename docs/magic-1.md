@@ -138,7 +138,7 @@ declared in one place, `Combos`, one line each: the **form** (from the auxiliary
 Dark struck through, cast at anyone, also tears a veil.
 
 **Who counts as a friend** (`Allies`): the caster, their tamed animals, peaceful creatures, and other players
-only when both are in the same team (until there is a party system). Monsters never.
+when both are in the same party or the same team. Monsters never.
 
 **Status effects** with HUD icons: `hardwrought:veiled` and `hardwrought:ember_skin`. The veil is told to every
 client through a synced attachment (`Veil.VEILED`), and `EntityRenderDispatcherVeilMixin` skips drawing such a body

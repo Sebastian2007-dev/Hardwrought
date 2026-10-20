@@ -58,7 +58,9 @@
       "de.ipnats.hardwrought.test.StorageGameTests",
       "de.ipnats.hardwrought.test.TorchGameTests",
       "de.ipnats.hardwrought.test.SpawnGameTests",
-      "de.ipnats.hardwrought.test.BundleGameTests"
+      "de.ipnats.hardwrought.test.BundleGameTests",
+      "de.ipnats.hardwrought.test.PartyGameTests",
+      "de.ipnats.hardwrought.test.EncounterGameTests"
     ],
     "fabric-client-gametest": [
       "de.ipnats.hardwrought.test.FxClientGameTest",

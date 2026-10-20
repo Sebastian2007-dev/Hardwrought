@@ -1,6 +1,9 @@
 package de.ipnats.hardwrought.witchking;
 
 import de.ipnats.hardwrought.core.registry.ModDamageTypes;
+import de.ipnats.hardwrought.encounter.Brand;
+import de.ipnats.hardwrought.encounter.Encounter;
+import de.ipnats.hardwrought.encounter.Encounters;
 import de.ipnats.hardwrought.fx.Fx;
 import de.ipnats.hardwrought.fx.FxEffect;
 import de.ipnats.hardwrought.underworld.GraveUndead;
@@ -66,6 +69,14 @@ import java.util.function.Consumer;
  *
  * And again and again in every phase after the first he gathers a curse over the whole hall and lets it
  * fall: only a magic shield stands between it and the one it falls on. That is what makes him a boss of magic.
+ *
+ * <p>Fought by several ({@link Encounter}), he is no harder to wound, but there is more of him. His dead
+ * rise in greater numbers and his souls go out in more; his swords look for others than the nearest,
+ * a second lance follows the first, and his rifts put him behind whoever stands furthest back. Twice
+ * more he asks something of a group alone: he brands one of them ({@link Brand}), who has to walk
+ * away from the rest before it bursts; and his crystals hold each other up — once one breaks, the
+ * next has to fall within {@link #chainWindow} or a broken one rises again, so the group has to split
+ * over the hall to bring the ward down.
  *
  * <p>What he does next is not on a timetable: whenever he is free to, he chooses among what he can do,
  * by how far away his enemy is and how the fight goes, never the same twice in a row. Everything he aims
@@ -144,6 +155,22 @@ public class WitchKing extends Monster {
     // A blow being wound up: where it lands, ticks left, blows still to come after it.
     private Vec3 slamAt;
     private int slam, combo;
+    /** His fight, and who is in it. */
+    private Encounter fight;
+    /** In company: the tick by which the next crystal has to fall, or 0 while none is due. */
+    private int relightAt;
+    /** How many fighters his bar last named. */
+    private int named = 1;
+
+    /** How long, fought by this many, the next crystal may stand after one has fallen, in ticks. */
+    public static int chainWindow(int fighters) {
+        return fighters >= 3 ? 300 : 400;
+    }
+
+    /** Ticks between his brands, in company. */
+    static final int BRAND_EVERY = 340;
+    /** What a brand does to whoever is caught with its bearer. */
+    static final float BRAND_DAMAGE = 14;
 
     public WitchKing(EntityType<? extends WitchKing> type, Level level) {
         super(type, level);
@@ -252,6 +279,7 @@ public class WitchKing extends Monster {
     @Override
     protected void customServerAiStep(ServerLevel level) {
         super.customServerAiStep(level);
+        fight = Encounters.of(this, this::homeVec, 48, 0);
         if (tickCount % 10 == 0) updateBossBar(level);
         boss.setProgress(getHealth() / getMaxHealth());
         if (casting() > 0) entityData.set(CAST, casting() - 1);
@@ -270,6 +298,7 @@ public class WitchKing extends Monster {
             return;
         }
         if (phase() == 2 && watchCrystals(level)) return;
+        if (phase() == 2 && relightAt > 0 && tickCount >= relightAt) relight(level);
         if (leap > 0) {
             leaping(level);
             return;
@@ -293,6 +322,9 @@ public class WitchKing extends Monster {
             if (charge() == 0) release(level, target);
             hover(target);
             return;
+        }
+        if (phase() > 1 && fight.active().size() >= 2 && fight.crowded() && !fight.running(Brand.class) && fight.ready("brand", BRAND_EVERY)) {
+            brand(level, fight.another(random, null));
         }
         if (phase() > 1 && --doomTimer <= 0) {
             doomTimer = (phase() == 2 ? 420 : 520) - (enraged() ? 140 : 0);
@@ -345,6 +377,53 @@ public class WitchKing extends Monster {
             if (player.distanceToSqr(homeVec()) < 56 * 56) boss.addPlayer(player);
             else boss.removePlayer(player);
         }
+        // His bar says how many he is fighting, once it is more than one.
+        int fighters = fight == null ? 1 : fight.fighters();
+        if (fighters != named) {
+            named = fighters;
+            Component name = hasCustomName() ? getDisplayName() : Component.translatable("entity.hardwrought.witch_king");
+            boss.setName(fighters < 2 ? name : name.copy().append(Component.translatable("message.hardwrought.encounter.bar", fighters)));
+        }
+    }
+
+    /** One of them branded: it bursts out of them in a while, tearing whoever still stands with them. */
+    private void brand(ServerLevel level, ServerPlayer bearer) {
+        if (bearer == null) return;
+        cast(20);
+        level.broadcastEntityEvent(this, EV_RAIN);
+        fight.add(new Brand(bearer, this, ModDamageTypes.HEX, BRAND_DAMAGE,
+                at -> Fx.play(level, FxEffect.HEX_ERUPTION, at, at, BLOOD, (float) Brand.RADIUS, null)));
+    }
+
+    /** The next crystal did not fall in time: a broken one rises again. */
+    private void relight(ServerLevel level) {
+        relightAt = 0;
+        for (BlockPos spot : CRYSTAL_SPOTS) {
+            BlockPos at = home().offset(spot);
+            if (level.getBlockState(at).is(WitchKingContent.CRYSTAL)) continue;
+            level.setBlockAndUpdate(at, WitchKingContent.CRYSTAL.defaultBlockState());
+            level.sendParticles(ParticleTypes.REVERSE_PORTAL, at.getX() + 0.5, at.getY() + 0.5, at.getZ() + 0.5, 40, 0.3, 0.6, 0.3, 0.3);
+            level.playSound(null, at, SoundEvents.BEACON_POWER_SELECT, SoundSource.HOSTILE, 2.5f, 0.7f);
+            entityData.set(CRYSTALS, crystals() + 1);
+            for (Player foe : foes(level)) {
+                if (foe instanceof ServerPlayer player) {
+                    player.sendOverlayMessage(Component.translatable("message.hardwrought.encounter.crystal_relit").withStyle(ChatFormatting.LIGHT_PURPLE));
+                }
+            }
+            return;
+        }
+    }
+
+    /** Someone other than this target to turn on, now and then, when there are others; else the target. */
+    private LivingEntity spread(LivingEntity target) {
+        if (fight == null || !fight.crowded() || random.nextInt(5) >= 2) return target;
+        ServerPlayer other = fight.another(random, target);
+        return other != null && foes((ServerLevel) level()).contains(other) ? other : target;
+    }
+
+    /** One more for every fighter beyond the first: what he sends out grows with the fight. */
+    private int extra() {
+        return fight == null ? 0 : fight.fighters() - 1;
     }
 
     @Override
@@ -472,11 +551,11 @@ public class WitchKing extends Monster {
                 rest(80);
             }
             case FAN -> {
-                fan(level, target, hurt ? 7 : 5);
+                fan(level, spread(target), hurt ? 7 : 5);
                 rest(65);
             }
             case RING -> {
-                ring(level, target, hurt ? 8 : 6);
+                ring(level, spread(target), hurt ? 8 : 6);
                 rest(80);
             }
             default -> {
@@ -524,6 +603,17 @@ public class WitchKing extends Monster {
                 Player breaker = level.getNearestPlayer(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, 6, false);
                 if (breaker != null && !breaker.isCreative()) eruptionRing(level, breaker.position(), 3.5, 7, 4);
             }
+            // In company the crystals hold each other up: the next has to fall soon, or one comes back.
+            if (fight != null && fight.crowded() && fight.active().size() >= 2) {
+                int window = chainWindow(fight.fighters());
+                relightAt = tickCount + window;
+                for (Player foe : foes(level)) {
+                    if (foe instanceof ServerPlayer player) {
+                        player.sendOverlayMessage(Component.translatable("message.hardwrought.encounter.crystal_chain", window / 20)
+                                .withStyle(ChatFormatting.AQUA));
+                    }
+                }
+            }
             return false;
         }
         startPhaseThree(level);
@@ -538,14 +628,14 @@ public class WitchKing extends Monster {
         int undead = level.getEntitiesOfClass(Mob.class, new AABB(home()).inflate(ARENA + 2, 8, ARENA + 2),
                 mob -> mob instanceof GraveUndead.GraveWalker || mob instanceof GraveUndead.GraveSkeleton).size();
         Move move = choose(new Move[] {Move.RAIN, Move.SOULS, Move.RAISE, Move.LANCE, Move.SPOKES},
-                new int[] {3, 2, undead >= 4 ? 0 : 1, 3, 3});
+                new int[] {3, 2, undead >= 4 + 2 * extra() ? 0 : 1, 3, 3});
         switch (move) {
             case RAIN -> {
                 swordRain(level);
                 rest(90);
             }
             case SOULS -> {
-                souls(level, late ? 5 : 3);
+                souls(level, (late ? 5 : 3) + extra());
                 rest(80);
             }
             case RAISE -> {
@@ -554,6 +644,13 @@ public class WitchKing extends Monster {
             }
             case LANCE -> {
                 lance(level, target);
+                // Three and more: a second lance, at someone else.
+                if (fight != null && fight.fighters() >= 3) {
+                    ServerPlayer other = fight.another(random, target);
+                    if (other != null && other != target) later(12, l -> {
+                        if (isAlive() && other.isAlive()) lance(l, other);
+                    });
+                }
                 if (late) later(LANCE_CHARGE + 10, l -> {
                     if (getTarget() != null && isAlive()) lance(l, getTarget());
                 });
@@ -570,6 +667,7 @@ public class WitchKing extends Monster {
 
     private void startPhaseThree(ServerLevel level) {
         entityData.set(PHASE, 3);
+        relightAt = 0;
         growth = GROWTH_TICKS;
         boss.setColor(BossEvent.BossBarColor.RED);
         level.broadcastEntityEvent(this, EV_PHASE_THREE);
@@ -632,9 +730,17 @@ public class WitchKing extends Monster {
                 rest(60);
             }
             default -> {
-                if (teleportCooldown <= 0 && teleport(level, target.position(), 0, 0, true)) {
+                // In company, the rift opens behind whoever hangs back furthest.
+                if (fight != null && fight.crowded()) {
+                    LivingEntity furthest = target;
+                    for (ServerPlayer player : fight.active()) {
+                        if (foes(level).contains(player) && player.distanceToSqr(this) > furthest.distanceToSqr(this)) furthest = player;
+                    }
+                    setTarget(furthest);
+                }
+                if (teleportCooldown <= 0 && teleport(level, getTarget().position(), 0, 0, true)) {
                     combo = enraged() ? 1 : 0;
-                    windUp(level, target);
+                    windUp(level, getTarget());
                 }
                 rest(70);
             }
@@ -783,11 +889,12 @@ public class WitchKing extends Monster {
     private void raiseDead(ServerLevel level) {
         AABB hall = new AABB(home()).inflate(ARENA + 2, 8, ARENA + 2);
         int alive = level.getEntitiesOfClass(Mob.class, hall, mob -> mob instanceof GraveUndead.GraveWalker || mob instanceof GraveUndead.GraveSkeleton).size();
-        if (alive >= 5) return;
+        if (alive >= 5 + 2 * extra()) return;
         level.broadcastEntityEvent(this, EV_SUMMON);
         cast(30);
         level.playSound(null, getX(), getY(), getZ(), SoundEvents.EVOKER_PREPARE_SUMMON, SoundSource.HOSTILE, 2.5f, 0.6f);
-        for (int i = 0; i < 2 + random.nextInt(2); i++) {
+        int count = 2 + random.nextInt(2) + extra();
+        for (int i = 0; i < count; i++) {
             double angle = random.nextDouble() * Math.PI * 2, distance = 5 + random.nextDouble() * 9;
             Vec3 at = homeVec().add(Math.cos(angle) * distance, 0, Math.sin(angle) * distance);
             Mob dead = random.nextBoolean() ? GraveUndead.GRAVE_WALKER.create(level, EntitySpawnReason.MOB_SUMMONED)

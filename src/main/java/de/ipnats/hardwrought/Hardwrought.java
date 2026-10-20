@@ -160,6 +160,10 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.survival.Crawling.initialize();
 		de.ipnats.hardwrought.survival.Ultra.initialize();
 		CoreLifecycle.initialize();
+		de.ipnats.hardwrought.party.Parties.initialize();
+		de.ipnats.hardwrought.server.Afk.initialize();
+		de.ipnats.hardwrought.server.ServerCommands.initialize();
+		de.ipnats.hardwrought.encounter.Encounters.initialize();
 		DebugCommands.initialize();
 		LOGGER.info("Hardwrought initialized (debug logging: {}).", config.debugLogging());
 	}

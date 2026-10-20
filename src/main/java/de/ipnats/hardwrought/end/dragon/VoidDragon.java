@@ -43,6 +43,11 @@ import java.util.List;
  * Raised again it is stronger ({@link #RISEN}): more of it, harder hitting, quicker, and with one move
  * more — and only then does it leave its heart behind.
  *
+ * <p>Fought by several ({@code Encounter}) it is no tougher, but it turns from one to another more often, sends
+ * every other bolt at someone else, calls more endermen and lets more skyfall, and from the hunt on binds two of
+ * them with a thread of the void that they have to pull apart before it strikes ({@code Tether}). Deserted for
+ * {@code DragonHunt.RESET_TICKS} it is whole again.
+ *
  * <p>Its harm is made for adamant and runes: bites and dives are blows armour holds only half of, the
  * void it breathes is magic armour does not hold at all; protective runes hold half against either; and
  * whatever it hits is thrown out of its hover.

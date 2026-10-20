@@ -2,6 +2,10 @@ package de.ipnats.hardwrought.wither;
 
 import de.ipnats.hardwrought.Hardwrought;
 import de.ipnats.hardwrought.core.registry.ModEffects;
+import de.ipnats.hardwrought.encounter.Encounter;
+import de.ipnats.hardwrought.encounter.Encounters;
+import de.ipnats.hardwrought.encounter.SharedBurden;
+import net.minecraft.world.damagesource.DamageTypes;
 import de.ipnats.hardwrought.health.Ailments;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -42,6 +46,8 @@ import java.util.List;
  *       is walled in by what it cannot break. A Wither trapped under bedrock is not a Wither beaten.
  *   <li><b>Soul storm</b>: below a quarter of its health, everyone near it is drained (the
  *       {@linkplain ModEffects#DRAIN drain}), worse the longer they stay.
+ *   <li><b>In company</b> ({@code Encounter}): now and then a soul burden on one of its enemies, which falls
+ *       on everyone standing with them, shared out ({@link SharedBurden}): the group has to close up.
  *   <li><b>Its death</b> is a last great blast, and then its souls: they come back out of the air from all
  *       around and gather into the nether star, which hangs where it died. Wither essence falls with it.
  * </ul>
@@ -57,7 +63,21 @@ public final class WitherPowers {
     /** How long the souls take to gather into the star. */
     static final int GATHER_TICKS = 80;
 
+    /** How far round it its fight reaches, and how long it waits, deserted, before it is whole again. */
+    static final double FIGHT_REACH = 40;
+    static final int RESET_TICKS = 3600;
+    /** Ticks between its soul burdens, in company. */
+    static final int BURDEN_EVERY = 500;
+
     public static final Item ESSENCE = item("wither_essence");
+
+    /**
+     * How much a soul burden weighs, all told: more with more fighters, but not as fast as there are
+     * more shoulders for it — two standing together take ten each, four take eight.
+     */
+    public static float burden(int fighters) {
+        return 8 + 6 * Math.max(1, fighters);
+    }
 
     private record Pending(long at, Runnable action) { }
 
@@ -75,6 +95,12 @@ public final class WitherPowers {
     /** One tick of a Wither's own powers; called from its server tick once it is awake. */
     public static void tick(WitherBoss wither, ServerLevel level) {
         if (wither.getInvulnerableTicks() > 0 || !wither.isAlive()) return;
+        Encounter fight = Encounters.of(wither, wither::position, FIGHT_REACH, RESET_TICKS);
+        // In company, its souls bear down on one of them, and the rest have to stand with them.
+        if (fight.crowded() && fight.active().size() >= 2 && !fight.running(SharedBurden.class) && fight.ready("burden", BURDEN_EVERY)) {
+            ServerPlayer bearer = fight.another(wither.getRandom(), null);
+            if (bearer != null) fight.add(new SharedBurden(bearer, wither, DamageTypes.INDIRECT_MAGIC, burden(fight.fighters())));
+        }
         if (wither.tickCount % 20 == 0) {
             if (trapped(wither, level)) teleport(wither, level, wither.getTarget());
             if (wither.getHealth() <= wither.getMaxHealth() * STORM_BELOW) storm(wither, level);

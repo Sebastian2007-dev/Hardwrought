@@ -1,5 +1,8 @@
 package de.ipnats.hardwrought.end.dragon;
 
+import de.ipnats.hardwrought.encounter.Encounter;
+import de.ipnats.hardwrought.encounter.Encounters;
+import de.ipnats.hardwrought.encounter.Tether;
 import de.ipnats.hardwrought.end.BrokenIsland;
 import de.ipnats.hardwrought.fx.Fx;
 import de.ipnats.hardwrought.fx.FxEffect;
@@ -92,6 +95,12 @@ public class DragonHunt extends AbstractDragonPhaseInstance {
     // Raging, and the rest.
     private int crumbleTimer = 100, pullTimer = 80, summonCooldown = 300;
     private final Set<Integer> crumbled = new HashSet<>();
+    /** Its fight, and who is in it. */
+    private Encounter fight;
+    /** How long it waits, deserted, before it is whole again: five minutes, time to come back from a death and a long way. */
+    static final int RESET_TICKS = 6000;
+    /** Ticks between its threads of the void, in company. */
+    static final int TETHER_EVERY = 520;
 
     public DragonHunt(EnderDragon dragon) {
         super(dragon);
@@ -149,8 +158,13 @@ public class DragonHunt extends AbstractDragonPhaseInstance {
             var fight = dragon.getDragonFight();
             if (fight != null && fight.hasPreviouslyKilledDragon()) VoidDragon.rise(dragon);
         }
+        fight = Encounters.of(dragon, () -> VoidDragon.middle(dragon), VoidDragon.REACH, RESET_TICKS);
         crystals = crystals(level);
         int stage = VoidDragon.stage(dragon, crystals);
+        // In company, from the hunt on: a thread of the void between two of them, to be pulled apart.
+        if (stage >= 2 && fight.crowded() && fight.active().size() >= 2 && !fight.running(Tether.class) && fight.ready("tether", TETHER_EVERY)) {
+            tether(level);
+        }
         if (landCooldown > 0) landCooldown--;
         if (summonCooldown > 0) summonCooldown--;
         prey = choosePrey(level);
@@ -244,7 +258,9 @@ public class DragonHunt extends AbstractDragonPhaseInstance {
 
     private ServerPlayer choosePrey(ServerLevel level) {
         List<ServerPlayer> foes = VoidDragon.foes(level, dragon);
-        if (prey != null && foes.contains(prey) && random.nextInt(400) != 0) return prey;
+        // With more of them it turns from one to another more often.
+        int keep = 400 / (fight == null ? 1 : fight.fighters());
+        if (prey != null && foes.contains(prey) && random.nextInt(keep) != 0) return prey;
         ServerPlayer best = null;
         double nearest = Double.MAX_VALUE;
         for (ServerPlayer foe : foes) {
@@ -295,8 +311,14 @@ public class DragonHunt extends AbstractDragonPhaseInstance {
         Vec3 side = toward.lengthSqr() < 1 ? new Vec3(1, 0, 0) : new Vec3(-toward.z, 0, toward.x).normalize();
         fly(p.add(side.scale(24)).add(0, 12, 0), CHASE_SPEED);
         if (--boltCooldown <= 0 && dragon.distanceTo(prey) < 70 && head().distanceToSqr(p) < dragon.position().distanceToSqr(p)) {
-            Vec3 lead = p.add(prey.getDeltaMovement().scale(8));
-            VoidBolt.loose(level, dragon, head(), lead, prey, VoidBolt.SPEED * (VoidDragon.risen(dragon) ? 1.2 : 1));
+            // In company every other bolt goes to someone else.
+            ServerPlayer aim = prey;
+            if (fight != null && fight.crowded() && boltsLeft % 2 == 0) {
+                ServerPlayer other = fight.another(random, prey);
+                if (other != null) aim = other;
+            }
+            Vec3 lead = aim.getEyePosition().add(aim.getDeltaMovement().scale(8));
+            VoidBolt.loose(level, dragon, head(), lead, aim, VoidBolt.SPEED * (VoidDragon.risen(dragon) ? 1.2 : 1));
             level.playSound(null, head().x, head().y, head().z, SoundEvents.ENDER_DRAGON_SHOOT, SoundSource.HOSTILE, 3.0f, 0.7f);
             boltCooldown = stage == 4 ? 6 : 9;
             boltsLeft--;
@@ -410,7 +432,8 @@ public class DragonHunt extends AbstractDragonPhaseInstance {
             for (BrokenIsland.Fragment f : BrokenIsland.fragments(level.getSeed(), net.minecraft.world.level.levelgen.feature.EndSpikeFeature.getSpikesForLevel(level))) {
                 if (f.radius() >= 3 && Math.hypot(f.x() - prey.getX(), f.z() - prey.getZ()) < 45) near.add(f);
             }
-            for (int i = 0; i < 3 && there < MOST_ENDERMEN && !near.isEmpty(); i++) {
+            int extra = fight == null ? 0 : fight.fighters() - 1;
+            for (int i = 0; i < 3 + extra && there < MOST_ENDERMEN + 2 * extra && !near.isEmpty(); i++) {
                 BrokenIsland.Fragment f = near.get(random.nextInt(near.size()));
                 double a = random.nextDouble() * Math.PI * 2, d = random.nextDouble() * f.radius() * 0.5;
                 BlockPos at = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
@@ -432,9 +455,9 @@ public class DragonHunt extends AbstractDragonPhaseInstance {
         patrolNearPrey();
         if (moveTicks == 1) {
             level.playSound(null, head().x, head().y, head().z, SoundEvents.ENDER_DRAGON_GROWL, SoundSource.HOSTILE, 6.0f, 0.4f);
-            int foes = 0;
+            int foes = 0, most = 3 + (fight == null ? 0 : fight.fighters() - 1);
             for (ServerPlayer foe : VoidDragon.foes(level, dragon)) {
-                if (foes++ >= 3) break;
+                if (foes++ >= most) break;
                 for (int i = 0; i < 6; i++) {
                     double a = random.nextDouble() * Math.PI * 2, d = 1 + random.nextDouble() * 6;
                     Vec3 spot = foe.position().add(Math.cos(a) * d, 0.5 + random.nextDouble() * 2, Math.sin(a) * d);
@@ -579,6 +602,17 @@ public class DragonHunt extends AbstractDragonPhaseInstance {
                 foe.needsSync = true;
             }
         }
+    }
+
+    /** Two of them bound by a thread of the void; if it holds, both are torn and thrown down. */
+    private void tether(ServerLevel level) {
+        ServerPlayer a = fight.another(random, null);
+        ServerPlayer b = fight.another(random, a);
+        if (a == null || b == null || a == b) return;
+        fight.add(new Tether(a, b, dragon, (l, foe) -> {
+            Fx.play(l, FxEffect.VOID_PULL, foe.position(), foe.position(), 0, 1, foe);
+            if (VoidDragon.voidHarm(l, dragon, dragon, foe, VoidDragon.BOLT)) VoidDragon.hurl(foe, foe.position().add(0, 2, 0), 0.4, 1.0);
+        }));
     }
 
     // ------------------------------------------------------------------------------------ for tests

@@ -18,6 +18,7 @@ public final class CoreLifecycle {
 
     public static void initialize() {
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+            de.ipnats.hardwrought.server.ServerConfig.load();
             CoreRuntime runtime = new CoreRuntime(server);
             RUNTIMES.put(server, runtime);
             CoreEvents.SERVER_READY.invoker().onReady(runtime);

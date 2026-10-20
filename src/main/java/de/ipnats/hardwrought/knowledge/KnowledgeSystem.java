@@ -61,6 +61,11 @@ public final class KnowledgeSystem {
     private final Map<UUID, List<JournalNotePayload.Line>> journalPending = new HashMap<>();
     /** What each player is currently turning over in their hand, and for how long. */
     private final Map<UUID, Examination> examinations = new HashMap<>();
+    /**
+     * Who learns along with a player: everyone in their party while knowledge is shared, else only
+     * themselves. Set by the party system; until then every player learns alone.
+     */
+    private java.util.function.Function<UUID, java.util.Collection<UUID>> circle = List::of;
 
     public KnowledgeSystem(MinecraftServer server, CoreSaveData save, SimulationScheduler scheduler) {
         this.server = server;
@@ -90,6 +95,7 @@ public final class KnowledgeSystem {
         save.setKnowledge(player.getUUID(), knowledge);
         note(player.getUUID(), id, KnowledgeLevel.DISCOVERED);
         noteFollowed(player.getUUID(), knowledge, open, id);
+        share(player.getUUID(), id, false, true);
         return true;
     }
 
@@ -106,6 +112,7 @@ public final class KnowledgeSystem {
         save.setKnowledge(player.getUUID(), knowledge);
         note(player.getUUID(), id, KnowledgeLevel.STUDIED);
         noteFollowed(player.getUUID(), knowledge, open, id);
+        share(player.getUUID(), id, true, true);
         return true;
     }
 
@@ -141,17 +148,77 @@ public final class KnowledgeSystem {
      */
     public boolean meet(ServerPlayer player, net.minecraft.world.entity.EntityType<?> type) {
         PlayerKnowledge knowledge = knowledge(player);
-        if (!knowledge.discover(entityKey(net.minecraft.world.entity.EntityType.getKey(type)))) return false;
+        Identifier key = entityKey(net.minecraft.world.entity.EntityType.getKey(type));
+        if (!knowledge.discover(key)) return false;
         save.setKnowledge(player.getUUID(), knowledge);
+        share(player.getUUID(), key, false, false);
         return true;
     }
 
     /** Killing a creature is what studies it. Returns true where that was news. */
     public boolean slay(ServerPlayer player, net.minecraft.world.entity.EntityType<?> type) {
         PlayerKnowledge knowledge = knowledge(player);
-        if (!knowledge.study(entityKey(net.minecraft.world.entity.EntityType.getKey(type)))) return false;
+        Identifier key = entityKey(net.minecraft.world.entity.EntityType.getKey(type));
+        if (!knowledge.study(key)) return false;
         save.setKnowledge(player.getUUID(), knowledge);
+        share(player.getUUID(), key, true, false);
         return true;
+    }
+
+    // ---------------------------------------------------------------- learning together
+
+    /** Who learns along with whom; see {@link #circle}. Null puts every player back on their own. */
+    public void setCircle(java.util.function.Function<UUID, java.util.Collection<UUID>> circle) {
+        this.circle = circle == null ? List::of : circle;
+    }
+
+    /**
+     * Hands one thing a player has just learned to everyone who learns along with them. Announced
+     * the way the player's own learning was: an act shows the others a toast too — a partner
+     * working out what an ore is for is news at the far end of the mine as well — while what is
+     * picked up in passing stays as silent for them as it was for the one who carried it.
+     */
+    private void share(UUID from, Identifier id, boolean study, boolean announce) {
+        for (UUID other : circle.apply(from)) {
+            if (other.equals(from)) continue;
+            PlayerKnowledge knowledge = save.knowledge(other);
+            List<JournalEntry> open = announce ? unfollowed(knowledge, id) : List.of();
+            boolean news = study ? knowledge.study(id) : knowledge.discover(id);
+            if (!news) continue;
+            save.setKnowledge(other, knowledge);
+            if (!announce) continue;
+            note(other, id, study ? KnowledgeLevel.STUDIED : KnowledgeLevel.DISCOVERED);
+            noteFollowed(other, knowledge, open, id);
+        }
+    }
+
+    /**
+     * Lays what a group of players knows side by side, so that afterwards each of them knows all of
+     * it: what is the moment of joining a party. Silent, like {@link #studyAll}: a newcomer handed a
+     * book's worth of entries is told how many in one line, not shown a toast for each. Bookmarks
+     * stay where they are; they are where one reader left off, not something learned.
+     *
+     * @return how many entries each player gained, by player
+     */
+    public Map<UUID, Integer> pool(java.util.Collection<UUID> players) {
+        java.util.Set<Identifier> discovered = new java.util.LinkedHashSet<>();
+        java.util.Set<Identifier> studied = new java.util.LinkedHashSet<>();
+        for (UUID player : players) {
+            PlayerKnowledge knowledge = save.knowledge(player);
+            discovered.addAll(knowledge.discovered());
+            studied.addAll(knowledge.studied());
+        }
+        Map<UUID, Integer> gained = new HashMap<>();
+        for (UUID player : players) {
+            PlayerKnowledge knowledge = save.knowledge(player);
+            int before = knowledge.discovered().size() + knowledge.studied().size();
+            for (Identifier id : studied) knowledge.study(id);
+            for (Identifier id : discovered) knowledge.discover(id);
+            int news = knowledge.discovered().size() + knowledge.studied().size() - before;
+            gained.put(player, news);
+            if (news > 0) save.setKnowledge(player, knowledge);
+        }
+        return gained;
     }
 
     /** Answers the overlay that names what a player is looking at. */
@@ -276,17 +343,20 @@ public final class KnowledgeSystem {
     public boolean carry(ServerPlayer player) {
         if (player == null || player.isSpectator()) return false;
         PlayerKnowledge knowledge = knowledge(player);
-        boolean news = false;
+        // What this pass taught, and to what level, for handing on to the party afterwards.
+        Map<Identifier, Boolean> learned = new java.util.LinkedHashMap<>();
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
             ItemStack stack = player.getInventory().getItem(slot);
             if (stack.isEmpty()) continue;
             Identifier id = idOf(stack.getItem());
             if (id == null) continue;
-            news |= knowledge.level(id) == KnowledgeLevel.UNKNOWN
-                    ? knowledge.discover(id) : knowledge.study(id);
+            boolean study = knowledge.level(id) != KnowledgeLevel.UNKNOWN;
+            if (study ? knowledge.study(id) : knowledge.discover(id)) learned.put(id, study);
         }
-        if (news) save.setKnowledge(player.getUUID(), knowledge);
-        return news;
+        if (learned.isEmpty()) return false;
+        save.setKnowledge(player.getUUID(), knowledge);
+        learned.forEach((id, study) -> share(player.getUUID(), id, study, false));
+        return true;
     }
 
     /**

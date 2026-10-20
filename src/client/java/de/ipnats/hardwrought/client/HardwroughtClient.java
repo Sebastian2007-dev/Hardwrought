@@ -15,6 +15,7 @@ public class HardwroughtClient implements ClientModInitializer {
 		de.ipnats.hardwrought.client.oil.OilClient.initialize();
 		de.ipnats.hardwrought.client.smithing.SmithingClient.initialize();
 		de.ipnats.hardwrought.client.combat.CombatHud.initialize();
+		de.ipnats.hardwrought.client.party.PartyHud.initialize();
 		de.ipnats.hardwrought.client.environment.EnvironmentHud.initialize();
 		de.ipnats.hardwrought.client.environment.DynamicLight.initialize();
 		de.ipnats.hardwrought.client.environment.PlacedLights.initialize();

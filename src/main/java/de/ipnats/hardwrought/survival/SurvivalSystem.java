@@ -878,7 +878,10 @@ public final class SurvivalSystem {
                 acceleratingSleep = true;
                 normalTickRate = current;
             }
-            int online = Math.max(1, server.getPlayerList().getPlayerCount());
+            // Section 11: the share of sleepers sets the pace. Spectators and players away from the
+            // keyboard are not waiting for the night to pass, so they do not hold it back.
+            int online = Math.max(1, Math.max(sleepQuality.size(),
+                    de.ipnats.hardwrought.server.Afk.present(server).size()));
             double fraction = Math.min(1.0, sleepQuality.size() / (double) online);
             float desired = (float) (normalTickRate + (100.0 - normalTickRate) * fraction);
             if (Math.abs(current - desired) > 0.01f) server.tickRateManager().setTickRate(desired);
