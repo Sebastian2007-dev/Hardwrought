@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "T": "hardwrought:titanium_plate",
+    "A": "hardwrought:aluminum_rod"
+  },
+  "pattern": [
+    "T T",
+    "TAT",
+    "T T"
+  ],
+  "result": {
+    "id": "hardwrought:exo_frame"
+  }
+}

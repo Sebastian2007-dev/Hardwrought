@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "S": "hardwrought:iron_plate",
+    "B": "hardwrought:light_bulb",
+    "W": "hardwrought:insulated_wire",
+    "I": "hardwrought:iron_plate"
+  },
+  "pattern": [
+    " S ",
+    " B ",
+    "WIW"
+  ],
+  "result": {
+    "id": "hardwrought:electric_light"
+  }
+}

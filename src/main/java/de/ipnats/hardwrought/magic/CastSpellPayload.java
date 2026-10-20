@@ -15,8 +15,15 @@ import java.util.List;
  * @param strokes every rune, in order
  * @param size the side of the surface it was drawn on, which an arrow's length is measured against
  * @param action whether it was drawn in action casting (section 11) rather than on the surface
+ * @param mode where it was drawn and what for: {@link #HAND}, {@link #TABLE}, or {@link #BIND} to a scroll
  */
-public record CastSpellPayload(List<Stroke> strokes, float size, boolean action) implements CustomPacketPayload {
+public record CastSpellPayload(List<Stroke> strokes, float size, boolean action, int mode) implements CustomPacketPayload {
+    public static final int HAND = 0, TABLE = 1, BIND = 2;
+
+    public CastSpellPayload(List<Stroke> strokes, float size, boolean action) {
+        this(strokes, size, action, HAND);
+    }
+
     /** No stroke carries more points than this; the recognizer resamples anyway. */
     public static final int MAX_POINTS = 256;
 
@@ -37,7 +44,7 @@ public record CastSpellPayload(List<Stroke> strokes, float size, boolean action)
                 }
                 strokes.add(new Stroke(xs, ys, buffer.readVarInt()));
             }
-            return new CastSpellPayload(strokes, buffer.readFloat(), buffer.readBoolean());
+            return new CastSpellPayload(strokes, buffer.readFloat(), buffer.readBoolean(), Math.clamp(buffer.readVarInt(), HAND, BIND));
         }
 
         @Override
@@ -56,6 +63,7 @@ public record CastSpellPayload(List<Stroke> strokes, float size, boolean action)
             }
             buffer.writeFloat(payload.size());
             buffer.writeBoolean(payload.action());
+            buffer.writeVarInt(payload.mode());
         }
     };
 

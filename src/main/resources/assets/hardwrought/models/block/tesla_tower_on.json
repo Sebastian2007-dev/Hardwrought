@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "hardwrought:block/hardwrought/tesla_tower_front_on",
+    "side": "hardwrought:block/hardwrought/appliance_casing",
+    "top": "hardwrought:block/hardwrought/resonant_coil_end",
+    "particle": "hardwrought:block/hardwrought/appliance_casing"
+  }
+}

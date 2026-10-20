@@ -1,0 +1,43 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "iron": "hardwrought:block/hardwrought/dynamo_iron_mk2",
+    "front": "hardwrought:block/hardwrought/coil_winder_front",
+    "jaw": "hardwrought:block/hardwrought/coil_winder_top",
+    "particle": "hardwrought:block/hardwrought/dynamo_iron_mk2"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#front"
+        },
+        "south": {
+          "texture": "#iron"
+        },
+        "west": {
+          "texture": "#iron"
+        },
+        "east": {
+          "texture": "#iron"
+        },
+        "up": {
+          "texture": "#jaw"
+        },
+        "down": {
+          "texture": "#iron"
+        }
+      }
+    }
+  ]
+}

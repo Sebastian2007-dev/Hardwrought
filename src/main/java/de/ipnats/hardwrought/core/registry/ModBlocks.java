@@ -35,6 +35,10 @@ public final class ModBlocks {
     public static final NailedWorkbenchBlock NAILED_WORKBENCH = register("nailed_workbench",
             NailedWorkbenchBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.CRAFTING_TABLE));
+    /** Tier three: bound in steel, and the bench of a storage desk it is set against. */
+    public static final de.ipnats.hardwrought.progression.WorkshopBenchBlock WORKSHOP_BENCH = register("workshop_bench",
+            de.ipnats.hardwrought.progression.WorkshopBenchBlock::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.CRAFTING_TABLE).strength(3.0f));
 
     /**
      * Section 56: the first furnace, and a poor one. Four fired bricks in the inventory square, so

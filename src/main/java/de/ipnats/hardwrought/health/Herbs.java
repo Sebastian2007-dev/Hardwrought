@@ -49,7 +49,7 @@ public final class Herbs {
     public static List<Item> items() {
         return List.of(ModItems.DRIED_CHAMOMILE, ModItems.WILLOW_BARK, ModItems.CHAMOMILE_INFUSION,
                 ModItems.WILLOW_INFUSION, ModItems.CHAMOMILE_TEA, ModItems.WILLOW_TEA, ModItems.ELECTROLYTE_DRINK,
-                ModItems.BANDAGE, ModItems.DISINFECTED_BANDAGE, ModItems.MASH, ModItems.SPIRIT, ModItems.ANTISEPTIC,
+                ModItems.BANDAGE, ModItems.DISINFECTED_BANDAGE, ModItems.STERILE_DRESSING, ModItems.MASH, ModItems.SPIRIT, ModItems.ANTISEPTIC,
                 ModItems.FEVER_PILLS, ModItems.ANTIBIOTICS);
     }
 }

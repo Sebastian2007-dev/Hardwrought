@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "L": "hardwrought:light_bulb",
+    "S": "hardwrought:lamp_socket",
+    "M": "hardwrought:motion_sensor",
+    "R": "hardwrought:relay",
+    "P": "hardwrought:iron_plate"
+  },
+  "pattern": [
+    " L ",
+    "SMR",
+    " P "
+  ],
+  "result": {
+    "id": "hardwrought:motion_lamp"
+  }
+}

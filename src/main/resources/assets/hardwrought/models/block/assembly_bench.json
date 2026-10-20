@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "up": "hardwrought:block/hardwrought/assembly_bench_top",
+    "down": "hardwrought:block/hardwrought/assembly_bench_side",
+    "north": "hardwrought:block/hardwrought/assembly_bench_side",
+    "south": "hardwrought:block/hardwrought/assembly_bench_side",
+    "east": "hardwrought:block/hardwrought/assembly_bench_side",
+    "west": "hardwrought:block/hardwrought/assembly_bench_side",
+    "particle": "hardwrought:block/hardwrought/assembly_bench_side"
+  }
+}

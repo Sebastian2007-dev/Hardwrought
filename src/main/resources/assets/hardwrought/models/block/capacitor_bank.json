@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "hardwrought:block/hardwrought/capacitor_bank"
+  }
+}

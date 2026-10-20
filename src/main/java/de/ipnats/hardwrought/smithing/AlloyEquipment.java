@@ -79,13 +79,13 @@ public final class AlloyEquipment {
     /** The four metals above iron. */
     public enum Tier {
         STEEL("steel", ToolParts.SmithMetal.STEEL, BlockTags.INCORRECT_FOR_DIAMOND_TOOL, 900, 7.5f, 3.0f, 12,
-                22, new int[] {2, 5, 7, 2}, 1.0f, 0.0f, true),
+                22, new int[] {2, 7, 5, 2}, 1.0f, 0.0f, true),
         STAINLESS_STEEL("stainless_steel", ToolParts.SmithMetal.STAINLESS_STEEL, BlockTags.INCORRECT_FOR_DIAMOND_TOOL,
-                1300, 7.5f, 3.0f, 14, 28, new int[] {2, 6, 7, 2}, 1.5f, 0.0f, false),
+                1300, 7.5f, 3.0f, 14, 28, new int[] {2, 7, 6, 2}, 1.5f, 0.0f, false),
         TITANIUM("titanium", ToolParts.SmithMetal.TITANIUM, BlockTags.INCORRECT_FOR_NETHERITE_TOOL, 1700, 8.5f, 3.5f, 15,
-                32, new int[] {3, 6, 8, 3}, 2.5f, 0.0f, false),
+                32, new int[] {3, 8, 6, 3}, 2.5f, 0.0f, false),
         TUNGSTEN_STEEL("tungsten_steel", ToolParts.SmithMetal.TUNGSTEN_STEEL, BlockTags.INCORRECT_FOR_NETHERITE_TOOL,
-                2600, 10.0f, 4.5f, 16, 40, new int[] {3, 7, 9, 3}, 3.5f, 0.1f, false);
+                2600, 10.0f, 4.5f, 16, 40, new int[] {3, 9, 7, 3}, 3.5f, 0.1f, false);
 
         private final String id;
         private final ToolParts.SmithMetal metal;

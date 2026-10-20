@@ -34,6 +34,12 @@ import java.util.Locale;
  *
  * <p>A container with two slots, opened like a furnace ({@link MachineMenu}); hoppers feed it from the
  * top and sides and draw from the bottom.
+ *
+ * <p><b>Wear</b> (section 78, stage E5 of the electricity roadmap): its bearings and gaskets wear while it
+ * works, {@link #WEAR_HOURS} hours of work to wear through oiled and a sixth of that dry. Oil lasts
+ * {@link #OIL_HOURS} hours of work; a bottle of machine oil fills it again. Worn, it works slower — at
+ * worst half as fast — and runs hot; worn through, it seizes and does nothing until a service kit puts
+ * new bearings and gaskets in it.
  */
 public class MachineBlockEntity extends ElectricBlockEntity implements WorldlyContainer, net.minecraft.world.MenuProvider {
     public static final int INPUT = 0;
@@ -50,6 +56,13 @@ public class MachineBlockEntity extends ElectricBlockEntity implements WorldlyCo
     private final NonNullList<ItemStack> items = NonNullList.withSize(2, ItemStack.EMPTY);
     private float progress;
     private float strain;
+    /** How worn its bearings and gaskets are, 0 to 1; at 1 it seizes. */
+    private float wear;
+    /** How much oil is left in it, 0 to 1. A new machine comes oiled. */
+    private float oil = 1.0f;
+    public static final double WEAR_HOURS = 10.0, OIL_HOURS = 2.0;
+    /** How much faster it wears dry. */
+    public static final double DRY_WEAR = 6.0;
     /** Whether it asked for current when the network was last worked out. */
     private boolean asking;
 
@@ -121,7 +134,7 @@ public class MachineBlockEntity extends ElectricBlockEntity implements WorldlyCo
 
     @Override
     public double conductance() {
-        return !broken() && canWork() ? 1.0 / machine().ohms() : 0.0;
+        return !broken() && !seized() && canWork() ? 1.0 / machine().ohms() : 0.0;
     }
 
     @Override
@@ -149,6 +162,7 @@ public class MachineBlockEntity extends ElectricBlockEntity implements WorldlyCo
     @Override
     public Component note() {
         if (broken()) return Component.translatable("message.hardwrought.meter.motor_burnt");
+        if (seized()) return Component.translatable("message.hardwrought.meter.machine.seized");
         if (!canWork()) return Component.translatable("message.hardwrought.meter.motor_idle");
         double rate = rate(volts(), machine().ratedVolts());
         return rate <= 0.0 ? Component.translatable("message.hardwrought.meter.motor_stalled",
@@ -194,7 +208,8 @@ public class MachineBlockEntity extends ElectricBlockEntity implements WorldlyCo
         boolean working = rate > 0.0;
         if (working) {
             int before = (int) machine.progress;
-            machine.progress += (float) rate;
+            machine.progress += (float) (rate * machine.condition());
+            machine.wearOne(server);
             if (machine.progress >= machine.machine().ticks()) {
                 machine.workOne();
                 machine.progress = 0;
@@ -212,6 +227,64 @@ public class MachineBlockEntity extends ElectricBlockEntity implements WorldlyCo
         if (state.getValue(MachineBlock.RUNNING) != working) {
             level.setBlock(pos, state.setValue(MachineBlock.RUNNING, working), Block.UPDATE_CLIENTS);
         }
+    }
+
+    /** Whether its bearings have seized. */
+    public boolean seized() {
+        return wear >= 1.0f;
+    }
+
+    public float wear() {
+        return wear;
+    }
+
+    public float oil() {
+        return oil;
+    }
+
+    /** How much of its speed wear leaves it: all of it new, half worn through. */
+    public double condition() {
+        return 1.0 - 0.5 * Math.min(1.0, wear);
+    }
+
+    /** One tick of work: the oil goes, and the bearings wear, much faster dry. */
+    private void wearOne(ServerLevel level) {
+        double ticksPerHour = 72000.0;
+        oil = (float) Math.max(0.0, oil - 1.0 / (OIL_HOURS * ticksPerHour));
+        wear += (float) ((oil > 0.0f ? 1.0 : DRY_WEAR) / (WEAR_HOURS * ticksPerHour));
+        if (wear > 0.75f && level.getRandom().nextInt(40) == 0) {
+            level.sendParticles(ParticleTypes.SMOKE, worldPosition.getX() + 0.5, worldPosition.getY() + 1.0, worldPosition.getZ() + 0.5,
+                    2, 0.2, 0.05, 0.2, 0.0);
+        }
+        if (seized()) {
+            level.playSound(null, worldPosition, SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.5f, 0.6f);
+            Electricity.update(level, worldPosition);
+        }
+    }
+
+    /** A bottle of machine oil: full again. False where it was full already. */
+    public boolean oiled() {
+        if (oil >= 0.95f) return false;
+        oil = 1.0f;
+        setChanged();
+        return true;
+    }
+
+    /** A service kit: new bearings and gaskets. False where it was hardly worn. */
+    public boolean serviced(ServerLevel level) {
+        if (wear < 0.25f) return false;
+        boolean was = seized();
+        wear = 0.0f;
+        setChanged();
+        if (was) Electricity.update(level, worldPosition);
+        return true;
+    }
+
+    /** Wears it as this many hours of work would, oiled. For tests too. */
+    public void age(double hours, boolean dry) {
+        wear = (float) Math.min(1.0, wear + hours / WEAR_HOURS * (dry ? DRY_WEAR : 1.0));
+        if (dry) oil = 0.0f;
+        setChanged();
     }
 
     private boolean canWork() {
@@ -259,6 +332,8 @@ public class MachineBlockEntity extends ElectricBlockEntity implements WorldlyCo
         items.clear();
         ContainerHelper.loadAllItems(input, items);
         progress = input.getFloatOr("progress", 0.0f);
+        wear = input.getFloatOr("wear", 0.0f);
+        oil = input.getFloatOr("oil", 1.0f);
     }
 
     @Override
@@ -266,6 +341,8 @@ public class MachineBlockEntity extends ElectricBlockEntity implements WorldlyCo
         super.saveAdditional(output);
         ContainerHelper.saveAllItems(output, items);
         output.putFloat("progress", progress);
+        output.putFloat("wear", wear);
+        output.putFloat("oil", oil);
     }
 
     // ---------------------------------------------------------------- container

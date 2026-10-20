@@ -43,9 +43,14 @@ public final class DynamicLight {
     static final int LAMP = 0xFFD890;
 
     /** One carried light: who carries it, how bright it is and its colour. */
-    public record Carried(LivingEntity carrier, int level, int color, boolean flame) {
-        /** Where the light is at this moment: in the carrier's hand, between the last tick and this one. */
+    public record Carried(LivingEntity carrier, int level, int color, boolean flame, boolean head) {
+        public Carried(LivingEntity carrier, int level, int color, boolean flame) {
+            this(carrier, level, color, flame, false);
+        }
+
+        /** Where the light is at this moment: in the carrier's hand, or on their brow, between the last tick and this one. */
         public Vec3 position(float partial) {
+            if (head) return carrier.getEyePosition(partial).add(carrier.getViewVector(partial).scale(0.35)).add(0, 0.15, 0);
             Vec3 feet = carrier.getPosition(partial);
             float yaw = carrier.getPreciseBodyRotation(partial) * ((float) Math.PI / 180f);
             boolean right = handOf(carrier) == HumanoidArm.RIGHT;
@@ -92,6 +97,14 @@ public final class DynamicLight {
             if (carried.size() >= MAX_LIGHTS) break;
             ItemStack held = brighter(carrier.getMainHandItem(), carrier.getOffhandItem());
             int light = lightOf(held);
+            // A lit headlamp (stage E4) where it is brighter than what is in the hands.
+            if (de.ipnats.hardwrought.carried.CarriedPower.headlampLit(carrier)
+                    && de.ipnats.hardwrought.carried.CarriedPower.HEADLAMP_LIGHT > light) {
+                light = de.ipnats.hardwrought.carried.CarriedPower.HEADLAMP_LIGHT;
+                carried.add(new Carried(carrier, light, LAMP, false, true));
+                if (carrier == player) ownLevel = light;
+                continue;
+            }
             if (light <= 0) continue;
             carried.add(new Carried(carrier, light, colorOf(held), flickers(held)));
             if (carrier == player) ownLevel = light;

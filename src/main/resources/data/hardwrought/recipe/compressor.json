@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "S": "hardwrought:steel_plate",
+    "G": "hardwrought:rubber_gasket",
+    "P": "hardwrought:engine_piston",
+    "M": "hardwrought:electric_motor"
+  },
+  "pattern": [
+    "SGS",
+    "PMP",
+    "SGS"
+  ],
+  "result": {
+    "id": "hardwrought:compressor"
+  }
+}

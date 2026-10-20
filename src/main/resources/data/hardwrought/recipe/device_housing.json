@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "A": "hardwrought:aluminum_plate",
+    "P": "hardwrought:plastic_sheet"
+  },
+  "pattern": [
+    "APA",
+    "A A"
+  ],
+  "result": {
+    "id": "hardwrought:device_housing"
+  }
+}

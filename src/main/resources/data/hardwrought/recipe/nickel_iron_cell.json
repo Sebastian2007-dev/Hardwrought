@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "N": "hardwrought:nickel_plate",
+    "P": "hardwrought:potash",
+    "I": "hardwrought:iron_plate",
+    "C": "hardwrought:cell_case"
+  },
+  "pattern": [
+    "NPI",
+    "NCI"
+  ],
+  "result": {
+    "id": "hardwrought:nickel_iron_cell"
+  }
+}

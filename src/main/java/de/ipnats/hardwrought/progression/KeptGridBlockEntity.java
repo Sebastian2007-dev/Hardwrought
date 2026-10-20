@@ -70,7 +70,7 @@ public class KeptGridBlockEntity extends BlockEntity {
     private boolean stillWorking(ServerPlayer asking) {
         if (asking.level().getServer() == null) return false;
         ServerPlayer other = asking.level().getServer().getPlayerList().getPlayer(worker);
-        return other != null && other.containerMenu instanceof KeptCraftingMenu menu && menu.isAt(this);
+        return other != null && other.containerMenu instanceof KeptGridUser menu && menu.isAt(this);
     }
 
     @Override

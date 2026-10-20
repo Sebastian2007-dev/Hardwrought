@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "P": "#minecraft:planks",
+    "N": "hardwrought:insulated_panel"
+  },
+  "pattern": [
+    "PNP",
+    "N N",
+    "PNP"
+  ],
+  "result": {
+    "id": "hardwrought:ice_box"
+  }
+}

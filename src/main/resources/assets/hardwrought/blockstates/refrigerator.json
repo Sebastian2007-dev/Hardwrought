@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "facing=north,on=false": {
+      "model": "hardwrought:block/refrigerator"
+    },
+    "facing=north,on=true": {
+      "model": "hardwrought:block/refrigerator"
+    },
+    "facing=east,on=false": {
+      "model": "hardwrought:block/refrigerator",
+      "y": 90
+    },
+    "facing=east,on=true": {
+      "model": "hardwrought:block/refrigerator",
+      "y": 90
+    },
+    "facing=south,on=false": {
+      "model": "hardwrought:block/refrigerator",
+      "y": 180
+    },
+    "facing=south,on=true": {
+      "model": "hardwrought:block/refrigerator",
+      "y": 180
+    },
+    "facing=west,on=false": {
+      "model": "hardwrought:block/refrigerator",
+      "y": 270
+    },
+    "facing=west,on=true": {
+      "model": "hardwrought:block/refrigerator",
+      "y": 270
+    }
+  }
+}

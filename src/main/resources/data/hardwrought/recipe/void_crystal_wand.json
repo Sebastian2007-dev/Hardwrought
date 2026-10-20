@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "hardwrought:mithril_wand",
+    "hardwrought:void_crystal_shard",
+    "hardwrought:void_crystal_shard",
+    "minecraft:echo_shard"
+  ],
+  "result": {
+    "id": "hardwrought:void_crystal_wand"
+  }
+}

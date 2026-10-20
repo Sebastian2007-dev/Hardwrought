@@ -323,6 +323,8 @@ public final class Compendium {
                 case de.ipnats.hardwrought.progression.BenchTier.INVENTORY -> CompendiumPagePayload.Slot.EMPTY;
                 case de.ipnats.hardwrought.progression.BenchTier.HEWN ->
                         slot(List.of(new ItemStack(de.ipnats.hardwrought.core.registry.ModBlocks.HEWN_WORKBENCH)), known);
+                case de.ipnats.hardwrought.progression.BenchTier.ASSEMBLY ->
+                        slot(List.of(new ItemStack(de.ipnats.hardwrought.carried.CarriedItems.ASSEMBLY_BENCH)), known);
                 default -> slot(List.of(new ItemStack(de.ipnats.hardwrought.core.registry.ModBlocks.NAILED_WORKBENCH)), known);
             };
         }

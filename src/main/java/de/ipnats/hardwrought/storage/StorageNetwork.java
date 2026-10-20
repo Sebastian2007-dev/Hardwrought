@@ -62,13 +62,87 @@ public final class StorageNetwork {
     }
 
     private final List<Store> stores = new ArrayList<>();
+    private final List<Maker> makers = new ArrayList<>();
+
+    /** A block that joins the network without being a tube, a port or a desk — an assembler. */
+    public interface Member {
+        boolean joinsStorage(BlockState state);
+    }
+
+    /**
+     * Something on the network that makes a thing (stage E5 of the electricity roadmap): a desk asked for
+     * what the network has none of orders it here, and it puts what it makes back into the network.
+     */
+    public interface Maker {
+        /** What it makes; empty for nothing. */
+        ItemStack makes();
+
+        /** Asked to make this many for the desk at this position. False where it cannot. */
+        boolean order(BlockPos desk, int count);
+    }
 
     private StorageNetwork() { }
 
-    /** Whether this block carries the network on: a tube, a port or a desk. */
+    /** Whether this block carries the network on: a tube, a port, a desk or a member such as an assembler. */
     public static boolean isPart(BlockState state) {
         return state.getBlock() instanceof StorageTubeBlock || state.getBlock() instanceof StoragePortBlock
-                || state.getBlock() instanceof StorageDeskBlock;
+                || state.getBlock() instanceof StorageDeskBlock
+                || state.getBlock() instanceof Member member && member.joinsStorage(state);
+    }
+
+    /** The makers on the network. */
+    public List<Maker> makers() {
+        return List.copyOf(makers);
+    }
+
+    /** A maker on the network that makes this kind of thing, or null. */
+    public Maker maker(ItemStack like) {
+        for (Maker maker : makers) if (ItemStack.isSameItemSameComponents(maker.makes(), like.copyWithCount(maker.makes().getCount()))) return maker;
+        return null;
+    }
+
+    /**
+     * Every tube, port, desk and member joined with this block along the tubes, itself first. The
+     * current a desk runs on is carried along the tubes this way: a copper coil set on any tube or port
+     * feeds every desk the tubes reach (see {@code Electricity.joints}).
+     */
+    public static List<BlockPos> parts(Level level, BlockPos start) {
+        List<BlockPos> parts = new ArrayList<>();
+        if (!isPart(level.getBlockState(start))) return parts;
+        Set<BlockPos> seen = new HashSet<>();
+        ArrayDeque<BlockPos> queue = new ArrayDeque<>();
+        seen.add(start.immutable());
+        queue.add(start.immutable());
+        while (!queue.isEmpty()) {
+            BlockPos pos = queue.poll();
+            parts.add(pos);
+            for (Direction direction : Direction.values()) {
+                BlockPos next = pos.relative(direction);
+                if (seen.size() >= MAX_PARTS || seen.contains(next) || !level.isLoaded(next)) continue;
+                if (!isPart(level.getBlockState(next))) continue;
+                seen.add(next);
+                queue.add(next);
+            }
+        }
+        return parts;
+    }
+
+    /** Whether current is carried along this block to the desks on its tubes: a tube or a port. */
+    public static boolean carriesCurrent(BlockState state) {
+        return state.getBlock() instanceof StorageTubeBlock || state.getBlock() instanceof StoragePortBlock;
+    }
+
+    /** A tube or port set down or taken away: the desks on either side of it work out their current again. */
+    public static void rewire(net.minecraft.server.level.ServerLevel level, BlockPos pos) {
+        Set<BlockPos> done = new HashSet<>();
+        for (Direction side : Direction.values()) {
+            for (BlockPos part : parts(level, pos.relative(side))) {
+                if (!done.add(part)) continue;
+                if (level.getBlockState(part).getBlock() instanceof StorageDeskBlock) {
+                    de.ipnats.hardwrought.electricity.Electricity.update(level, part);
+                }
+            }
+        }
     }
 
     /** Follows the tubes out from a desk and gathers what its ports stand against, nearest first. */
@@ -83,6 +157,9 @@ public final class StorageNetwork {
         while (!queue.isEmpty()) {
             BlockPos pos = queue.poll();
             BlockState state = level.getBlockState(pos);
+            if (state.getBlock() instanceof Member && level.getBlockEntity(pos) instanceof Maker maker && !maker.makes().isEmpty()) {
+                network.makers.add(maker);
+            }
             if (state.getBlock() instanceof StoragePortBlock && network.stores.size() < MAX_STORES) {
                 Direction facing = state.getValue(StoragePortBlock.FACING);
                 network.attach(level, pos.relative(facing), facing.getOpposite(), claimed);

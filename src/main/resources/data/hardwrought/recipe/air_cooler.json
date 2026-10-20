@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "P": "hardwrought:steel_plate",
+    "T": "hardwrought:thermostat",
+    "K": "hardwrought:compressor",
+    "C": "hardwrought:cooling_coil",
+    "F": "hardwrought:fan_blades",
+    "R": "hardwrought:refrigerant"
+  },
+  "pattern": [
+    "PTP",
+    "KCF",
+    "PRP"
+  ],
+  "result": {
+    "id": "hardwrought:air_cooler"
+  }
+}

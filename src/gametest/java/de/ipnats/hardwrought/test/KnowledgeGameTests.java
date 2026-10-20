@@ -657,6 +657,37 @@ public final class KnowledgeGameTests {
         helper.succeed();
     }
 
+    /** Every chapter has deeper looks, and each of them is written out in both languages. */
+    @GameTest
+    public void everyChapterHasItsDeeperLooksWrittenOut(GameTestHelper helper) {
+        java.util.Map<String, com.google.gson.JsonObject> languages = new java.util.HashMap<>();
+        for (String language : List.of("de_de", "en_us")) {
+            try (var in = Journal.class.getResourceAsStream("/assets/hardwrought/lang/" + language + ".json")) {
+                helper.assertTrue(in != null, language + " is there");
+                languages.put(language, com.google.gson.JsonParser.parseReader(
+                        new java.io.InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8)).getAsJsonObject());
+            } catch (java.io.IOException failed) {
+                throw new IllegalStateException(failed);
+            }
+        }
+        java.util.Set<Identifier> seen = new java.util.HashSet<>();
+        for (Journal.Chapter chapter : Journal.chapters()) {
+            List<Identifier> lore = Journal.lore(chapter.id());
+            helper.assertTrue(!lore.isEmpty(), chapter.id() + " has deeper looks");
+            for (Identifier look : lore) {
+                helper.assertTrue(seen.add(look), look + " belongs to one chapter only");
+                for (var language : languages.entrySet()) {
+                    for (String part : List.of("title", "text")) {
+                        String key = "journal.hardwrought.lore." + look.getPath() + "." + part;
+                        helper.assertTrue(language.getValue().has(key) && !language.getValue().get(key).getAsString().isBlank(),
+                                key + " is written in " + language.getKey());
+                    }
+                }
+            }
+        }
+        helper.succeed();
+    }
+
     /** Grinding takes the crusher, a crank and a shaft; any of them alone is not the thought followed. */
     @GameTest
     public void grindingIsFollowedOnlyWithCrusherCrankAndShaft(GameTestHelper helper) {

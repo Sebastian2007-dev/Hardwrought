@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "S": "hardwrought:silver_plate",
+    "P": "minecraft:paper",
+    "Z": "hardwrought:zinc_plate",
+    "C": "hardwrought:cell_case"
+  },
+  "pattern": [
+    "SPZ",
+    "SCZ"
+  ],
+  "result": {
+    "id": "hardwrought:silver_zinc_cell"
+  }
+}

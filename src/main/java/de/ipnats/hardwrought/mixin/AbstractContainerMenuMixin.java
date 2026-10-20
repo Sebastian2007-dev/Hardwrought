@@ -144,8 +144,9 @@ public abstract class AbstractContainerMenuMixin implements CarriedInventoryMenu
         // one of the twenty-seven the container slot 0, so the whole grid mirrored the first belt
         // slot and anything put there appeared twenty-seven times.
         int row = (slot.getContainerSlot() - BackpackTier.COLUMNS) / BackpackTier.COLUMNS;
+        // Closed, a square still takes a pack, and gives one back, while the own grid is shown.
         return addSlot(new CarriedSlot(slot.container, slot.getContainerSlot(), slot.x, slot.y,
-                () -> hardwrought$page() == 0 && hardwrought$mainUnlocked(row)));
+                () -> hardwrought$page() == 0 && hardwrought$mainUnlocked(row), () -> hardwrought$page() == 0));
     }
 
     /** Keeps the client's copy of what is worn in step, the same way any other menu value travels. */

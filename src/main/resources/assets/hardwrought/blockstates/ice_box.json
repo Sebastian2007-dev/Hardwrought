@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "hardwrought:block/ice_box"
+    },
+    "facing=east": {
+      "model": "hardwrought:block/ice_box",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "hardwrought:block/ice_box",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "hardwrought:block/ice_box",
+      "y": 270
+    }
+  }
+}

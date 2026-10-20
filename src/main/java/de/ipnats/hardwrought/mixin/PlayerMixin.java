@@ -82,6 +82,11 @@ public abstract class PlayerMixin implements de.ipnats.hardwrought.survival.Craw
         if (player.isCreative()) return;
         BreakingVerdict verdict = BlockBreaking.verdict(player.getMainHandItem(), state);
         if (verdict == BreakingVerdict.LOOSE) return;
+        // A motor does the work of a powered drill or saw: the labour of the stroke is not the player's.
+        if (verdict == BreakingVerdict.PROPER && player.getMainHandItem().getItem() instanceof de.ipnats.hardwrought.carried.PoweredItem
+                && vanilla > 1.0f) {
+            return;
+        }
         double factor = verdict == BreakingVerdict.PROPER
                 ? BlockBreaking.laborFactor(state) : verdict.speedFactor();
         if (factor >= 1.0) return;

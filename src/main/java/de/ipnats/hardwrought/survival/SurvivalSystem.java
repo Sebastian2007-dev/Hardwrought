@@ -598,6 +598,8 @@ public final class SurvivalSystem {
             if (player.hasEffect(de.ipnats.hardwrought.core.registry.ModEffects.HEAT_RESISTANCE)) {
                 feltAmbient = Math.min(feltAmbient, Thermal.comfort(immersed));
             }
+            // Stage E4: a heated or cooled lining in the chestplate, at its cell's expense.
+            feltAmbient = de.ipnats.hardwrought.carried.CarriedPower.lined(player, feltAmbient, immersed);
             double insulation = Thermal.wornInsulation(
                     ArmorCoverage.of(player, server.getOrThrow(ArmorProfiles.KEY)).insulation(), wetness);
             double targetBody = Thermal.targetBody(feltAmbient, immersed, insulation, armorMass,
@@ -742,7 +744,8 @@ public final class SurvivalSystem {
         updateModifier(player.getAttribute(Attributes.BLOCK_BREAK_SPEED), MINING_MODIFIER, miningPenalty);
         // A hurt body does less (see Hardship): slower on its feet and at its work, the worse the wounds.
         double wound = Hardship.wound(player.getHealth(), player.getMaxHealth());
-        updateModifier(player.getAttribute(Attributes.MOVEMENT_SPEED), WOUND_SPEED_MODIFIER, -Hardship.WOUND_SPEED * wound);
+        updateModifier(player.getAttribute(Attributes.MOVEMENT_SPEED), WOUND_SPEED_MODIFIER,
+                -Hardship.WOUND_SPEED * wound * de.ipnats.hardwrought.carried.CarriedPower.woundFactor(player));
         updateModifier(player.getAttribute(Attributes.BLOCK_BREAK_SPEED), WOUND_MINING_MODIFIER, -Hardship.WOUND_MINING * wound);
         updateModifier(player.getAttribute(Attributes.JUMP_STRENGTH), WOUND_JUMP_MODIFIER, -Hardship.WOUND_JUMP * wound);
         applyDiet(player, v.nutrition());
@@ -901,7 +904,9 @@ public final class SurvivalSystem {
      */
     public double capacity(ServerPlayer player) {
         var runtime = de.ipnats.hardwrought.core.events.CoreLifecycle.find(server);
-        return runtime == null ? CarryWeight.BASE_CAPACITY_KG : runtime.equipment().capacityKg(player);
+        double capacity = runtime == null ? CarryWeight.BASE_CAPACITY_KG : runtime.equipment().capacityKg(player);
+        // Stage E4: an exoskeleton takes the weight while it has charge, and is weight itself when flat.
+        return capacity * de.ipnats.hardwrought.carried.CarriedPower.carryFactor(player);
     }
 
     private void recordWork(ServerPlayer player, double energy, double water) {

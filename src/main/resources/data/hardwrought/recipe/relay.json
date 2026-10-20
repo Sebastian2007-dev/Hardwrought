@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "S": "hardwrought:silver_plate",
+    "R": "hardwrought:redstone_coil",
+    "I": "hardwrought:iron_plate"
+  },
+  "pattern": [
+    "S",
+    "R",
+    "I"
+  ],
+  "result": {
+    "id": "hardwrought:relay",
+    "count": 2
+  }
+}

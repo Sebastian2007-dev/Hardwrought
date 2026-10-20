@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "P": "hardwrought:pulse_coil",
+    "C": "hardwrought:advanced_circuit",
+    "H": "hardwrought:device_housing",
+    "T": "hardwrought:toggle_switch"
+  },
+  "pattern": [
+    "PCP",
+    "HTH"
+  ],
+  "result": {
+    "id": "hardwrought:ore_scanner"
+  }
+}

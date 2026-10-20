@@ -133,6 +133,20 @@ public final class MagicShields {
         level.playSound(null, caster.getX(), caster.getY(), caster.getZ(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.8f, 1.6f);
     }
 
+    /** An endermite this close to a standing shield harms it (docs/magic-roadmap.md, M6); called once a second. */
+    static void unsettle(ServerLevel level, Vec3 at, double reach) {
+        for (Field field : FIELDS) {
+            if (field.level != level || field.anchor == null) continue;
+            if (at.distanceTo(field.anchor) <= field.radius + reach) weaken(field, 1);
+        }
+    }
+
+    /** What strength a player's fixed shield has left, or -1; for tests. */
+    public static double fixedStrength(ServerPlayer player) {
+        return FIELDS.stream().filter(field -> field.owner == player && field.anchor != null).mapToDouble(field -> field.strength)
+                .findFirst().orElse(-1);
+    }
+
     /** Whether a player stands in a shield of their own; for tests. */
     public static boolean shielded(ServerPlayer player) {
         return FIELDS.stream().anyMatch(field -> field.owner == player && field.anchor == null);
@@ -156,6 +170,14 @@ public final class MagicShields {
             if (d >= r) continue;
             Vec3 out = d < 1e-3 ? new Vec3(1, 0, 0) : at.subtract(from).scale(1 / d);
             SpellEffects.push(entity, out.multiply(1, 0.2, 1).scale(0.35));
+        }
+        // An evoker's fangs rising in the shield break it (mob specification §34).
+        for (net.minecraft.world.entity.projectile.EvokerFangs fangs : field.level.getEntitiesOfClass(
+                net.minecraft.world.entity.projectile.EvokerFangs.class, box, Entity::isAlive)) {
+            if (fangs.position().distanceTo(center) <= r + 0.5) {
+                weaken(field, field.strength);
+                return;
+            }
         }
         // Anything flying across the surface, in or out, stops there.
         for (Projectile projectile : field.level.getEntitiesOfClass(Projectile.class, box, Entity::isAlive)) {

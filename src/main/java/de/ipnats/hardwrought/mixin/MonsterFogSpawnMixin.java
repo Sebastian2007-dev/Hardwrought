@@ -21,6 +21,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * <p>Only the light rule gives way. Everything else a spawn has to satisfy — the block beneath,
  * the room to stand, the caps, the distance from a player — is untouched, so this makes the fog
  * dangerous rather than making it a flood.
+ *
+ * <p>An arc floodlight is stronger than the fog: within its reach nothing monstrous spawns at all
+ * (docs/electricity-roadmap.md, stage E3).
  */
 @Mixin(Monster.class)
 public abstract class MonsterFogSpawnMixin {
@@ -28,6 +31,10 @@ public abstract class MonsterFogSpawnMixin {
     private static void hardwrought$fogIsDarkEnough(ServerLevelAccessor level, BlockPos pos,
                                                     RandomSource random,
                                                     CallbackInfoReturnable<Boolean> callback) {
+        if (de.ipnats.hardwrought.haven.Floodlights.spawnBarred(level.getLevel(), pos)) {
+            callback.setReturnValue(false);
+            return;
+        }
         if (SeasonFogRules.darkEnoughForMonsters()) callback.setReturnValue(true);
     }
 }

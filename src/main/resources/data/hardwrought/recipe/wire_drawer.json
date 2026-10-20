@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "I": "hardwrought:iron_plate",
+    "M": "hardwrought:electric_motor",
+    "D": "hardwrought:tungsten_steel_plate",
+    "S": "hardwrought:shaft",
+    "C": "hardwrought:basic_circuit"
+  },
+  "pattern": [
+    "IMI",
+    "DSD",
+    "ICI"
+  ],
+  "result": {
+    "id": "hardwrought:wire_drawer"
+  }
+}

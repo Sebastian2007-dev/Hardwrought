@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "P": "hardwrought:porcelain",
+    "E": "hardwrought:enamelled_wire",
+    "W": "hardwrought:winding"
+  },
+  "pattern": [
+    "PEP",
+    "EWE",
+    "PEP"
+  ],
+  "result": {
+    "id": "hardwrought:resonant_coil"
+  }
+}

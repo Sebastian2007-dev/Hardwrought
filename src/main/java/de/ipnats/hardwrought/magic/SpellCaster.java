@@ -63,21 +63,17 @@ public final class SpellCaster {
      * @param action whether it was drawn in action casting, where one stroke may hold two things
      */
     public static Result cast(ServerPlayer player, List<CastSpellPayload.Stroke> strokes, float size, boolean action) {
-        ItemStack wand = WandItem.held(player);
-        if (wand == null || strokes.isEmpty() || player.isSpectator()) return null;
-        if (player.getCooldowns().isOnCooldown(wand)) {
-            // Not silently: a spell that is not cast should say why.
-            player.sendOverlayMessage(Component.translatable("magic.hardwrought.wand_not_ready").withStyle(ChatFormatting.GRAY));
-            return null;
-        }
-        ServerLevel level = player.level();
-        WandTier tier = ((WandItem) wand.getItem()).tier();
+        return cast(player, strokes, size, action, CastSpellPayload.HAND);
+    }
+
+    /** What a drawing reads as: its parts, the spells it holds, and each spell's runes as judged. */
+    record Parsed(List<SketchReader.Part> parts, List<List<SketchReader.Part>> groups, List<List<CastQuality.Drawn>> drawn,
+                  List<Spell> spells) { }
+
+    /** Reads a drawing into its spells, for this caster's knowledge. */
+    static Parsed parse(ServerPlayer player, List<CastSpellPayload.Stroke> strokes, float size, boolean action) {
         List<float[]> xs = strokes.stream().map(CastSpellPayload.Stroke::xs).toList();
         List<float[]> ys = strokes.stream().map(CastSpellPayload.Stroke::ys).toList();
-        // Two circles one inside the other are no spell: they are a sigil, and are laid on the ground.
-        SigilDesign sigil = SketchReader.readSigil(xs, ys, Math.max(1, size), action);
-        if (sigil != null) return Sigils.inscribe(player, wand, tier, sigil);
-
         List<SketchReader.Part> parts = SketchReader.read(xs, ys, Math.max(1, size), action);
         List<List<SketchReader.Part>> groups = new ArrayList<>();
         List<List<CastQuality.Drawn>> drawn = new ArrayList<>();
@@ -106,6 +102,49 @@ public final class SpellCaster {
             drawn.add(judged);
             spells.add(spell);
         }
+        return new Parsed(parts, groups, drawn, spells);
+    }
+
+    /**
+     * Casts a drawing — or, at a Mage Table, binds it to a scroll (docs/magic-roadmap.md, stage M3).
+     *
+     * @param mode {@link CastSpellPayload#HAND}, {@link CastSpellPayload#TABLE} or {@link CastSpellPayload#BIND}
+     */
+    public static Result cast(ServerPlayer player, List<CastSpellPayload.Stroke> strokes, float size, boolean action, int mode) {
+        ItemStack wand = WandItem.held(player);
+        if (wand == null || strokes.isEmpty() || player.isSpectator()) return null;
+        // The table's help is only for whoever stands at one; a claim to it from anywhere else counts for nothing.
+        boolean atTable = mode != CastSpellPayload.HAND && !action && MagicTableBlock.near(player);
+        // Metal on the body, a shield, a two-handed weapon and an evoker nearby all shake the hand (M6).
+        CastQuality.Bench bench = (atTable ? CastQuality.Bench.TABLE : CastQuality.Bench.HAND)
+                .disturbed(MagicWorld.interference(player) + MagicWorld.evokers(player.level(), player.position()));
+        boolean binding = atTable && mode == CastSpellPayload.BIND;
+        if (mode == CastSpellPayload.BIND && !binding) {
+            player.sendOverlayMessage(Component.translatable("magic.hardwrought.scroll.need_table").withStyle(ChatFormatting.GRAY));
+            return null;
+        }
+        if (binding && !Scrolls.hasMaterials(player)) {
+            player.sendOverlayMessage(Component.translatable("magic.hardwrought.scroll.need_materials").withStyle(ChatFormatting.GRAY));
+            return null;
+        }
+        if (player.getCooldowns().isOnCooldown(wand)) {
+            // Not silently: a spell that is not cast should say why.
+            player.sendOverlayMessage(Component.translatable("magic.hardwrought.wand_not_ready").withStyle(ChatFormatting.GRAY));
+            return null;
+        }
+        ServerLevel level = player.level();
+        WandTier tier = ((WandItem) wand.getItem()).tier();
+        List<float[]> xs = strokes.stream().map(CastSpellPayload.Stroke::xs).toList();
+        List<float[]> ys = strokes.stream().map(CastSpellPayload.Stroke::ys).toList();
+        // Two circles one inside the other are no spell: they are a sigil, and are laid on the ground.
+        SigilDesign sigil = binding ? null : SketchReader.readSigil(xs, ys, Math.max(1, size), action);
+        if (sigil != null) return Sigils.inscribe(player, wand, tier, sigil);
+
+        Parsed parsed = parse(player, strokes, size, action);
+        List<SketchReader.Part> parts = parsed.parts();
+        List<List<SketchReader.Part>> groups = parsed.groups();
+        List<List<CastQuality.Drawn>> drawn = parsed.drawn();
+        List<Spell> spells = parsed.spells();
 
         // Nothing that could be a spell: the magic fizzles.
         if (spells.isEmpty()) {
@@ -126,7 +165,9 @@ public final class SpellCaster {
         List<CastQuality.Outcome> outcomes = new ArrayList<>();
         for (int i = 0; i < spells.size(); i++) {
             Spell spell = spells.get(i);
-            CastQuality q = CastQuality.judge(drawn.get(i), spell, tier, surroundings(level, spell.core()), load - spell.tier());
+            // A spell bound to a scroll is judged as it is drawn; the place it is read in counts when it is read.
+            double around = binding ? 1 : surroundings(level, player.getEyePosition(), spell.core());
+            CastQuality q = CastQuality.judge(drawn.get(i), spell, tier, around, load - spell.tier(), bench);
             qualities.add(q);
             outcomes.add(q.outcome());
         }
@@ -134,7 +175,7 @@ public final class SpellCaster {
         // The load passes through the wand whatever comes of the spells (sections 18 and 19).
         boolean broke = false;
         if (outcomes.stream().anyMatch(o -> o != CastQuality.Outcome.FIZZLE)) {
-            int overload = Math.max(0, load - tier.tier());
+            int overload = Math.max(0, load - tier.tier() - bench.capacity());
             int wear = WandTier.wear(overload);
             broke = overload >= WandTier.SHATTER || wand.getDamageValue() + wear >= wand.getMaxDamage();
             InteractionHand hand = player.getMainHandItem() == wand ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
@@ -152,7 +193,21 @@ public final class SpellCaster {
         }
         player.getCooldowns().addCooldown(wand, 6 + 4 * parts.size());
 
-        for (int i = 0; i < spells.size(); i++) perform(level, player, spells.get(i), qualities.get(i), outcomes.get(i), groups.get(i));
+        // Bound to a scroll if it held together; a binding that went wrong is spent on the spot, as a cast would be.
+        boolean bound = binding && outcomes.stream().allMatch(o -> o == CastQuality.Outcome.SUCCESS || o == CastQuality.Outcome.WEAKENED);
+        if (bound) {
+            List<CastQuality> kept = new ArrayList<>();
+            for (int i = 0; i < qualities.size(); i++) {
+                CastQuality q = qualities.get(i);
+                kept.add(new CastQuality(q.accuracy(), q.stability(), q.power(), outcomes.get(i), q.worst()));
+            }
+            List<Component> names = new ArrayList<>();
+            for (Spell spell : spells) names.add(name(player, spell));
+            Scrolls.give(player, strokes, size, kept, names);
+        } else {
+            for (int i = 0; i < spells.size(); i++) perform(level, player, spells.get(i), qualities.get(i), outcomes.get(i), groups.get(i));
+        }
+        if (binding) Scrolls.useMaterials(player);
 
         List<Glyph> learned = new ArrayList<>();
         for (int g = 0; g < groups.size(); g++) {
@@ -172,13 +227,31 @@ public final class SpellCaster {
         }
         Result result = new Result(spells.getFirst(), final_.getFirst(), learned, broke, null, spells, final_);
         tell(player, result);
+        if (bound) player.sendSystemMessage(Component.translatable("magic.hardwrought.scroll.bound", name(player, spells.getFirst()))
+                .withStyle(ChatFormatting.AQUA));
         return result;
     }
 
-    /** What the place does to a spell's core (section 22): water magic is weak in the Nether. */
-    static double surroundings(ServerLevel level, Rune core) {
-        if (core == Rune.WATER && level.dimension() == Level.NETHER) return 0.5;
-        return 1;
+    /**
+     * Reads a scroll: the drawing on it is cast at once, with the quality it was bound with. What the place
+     * does to its elements counts now, where it is read. No wand is needed and nothing is learned.
+     */
+    public static boolean read(ServerPlayer player, List<CastSpellPayload.Stroke> strokes, float size, List<CastQuality> qualities) {
+        Parsed parsed = parse(player, strokes, size, false);
+        if (parsed.spells().isEmpty()) return false;
+        ServerLevel level = player.level();
+        for (int i = 0; i < parsed.spells().size(); i++) {
+            Spell spell = parsed.spells().get(i);
+            CastQuality q = i < qualities.size() ? qualities.get(i) : qualities.getLast();
+            CastQuality here = new CastQuality(q.accuracy(), q.stability(), q.power() * surroundings(level, player.getEyePosition(), spell.core()), q.outcome(), q.worst());
+            perform(level, player, spell, here, here.outcome(), parsed.groups().get(i));
+        }
+        return true;
+    }
+
+    /** What the place does to a spell's core (section 22); see {@link MagicWorld#surroundings}. */
+    static double surroundings(ServerLevel level, Vec3 at, Rune core) {
+        return MagicWorld.surroundings(level, at, core);
     }
 
     private static void perform(ServerLevel level, ServerPlayer player, Spell spell, CastQuality quality,

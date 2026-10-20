@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "W": "hardwrought:copper_wire",
+    "S": "hardwrought:shaft"
+  },
+  "pattern": [
+    " P ",
+    "WSW",
+    " P "
+  ],
+  "result": {
+    "id": "hardwrought:rotor"
+  }
+}

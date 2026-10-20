@@ -24,6 +24,16 @@ import java.util.List;
  * microchips cut from silicon, a quartz oscillator; and the three grades of circuit built from them,
  * which the faster machines need.
  *
+ * <p>The motor, taken apart: a stator (the field), a rotor on its shaft, a commutator turned from copper,
+ * graphite brushes turned from an electrode, which wear in a drive and are changed, and a housing. A
+ * motor controller — a circuit and a bank of resistors — starts a drive gently and sets its speed.
+ *
+ * <p>The safe haven's parts (stage E3): tungsten filament and nichrome wire drawn on the wire drawer,
+ * glass bulbs blown in the glass kiln, and what the devices are put together from: a bulb in its socket,
+ * a reflector and a ballast for the arc lamp, a sensor and a relay, a heating element and a thermostat,
+ * fan blades, a compressor with its ammonia charge and cooling coil, insulated panels for a cold store,
+ * and a pressure vessel and gauge for the autoclave.
+ *
  * <p>The grid: electrical steel, rolled thin and stacked into a transformer core; enamelled wire, wound
  * eight lengths to a winding on the coil winder; porcelain, fired from a blank, for whatever stands high
  * voltage; and the cartridge a fuse box takes.
@@ -56,6 +66,33 @@ public final class Parts {
     public static final Item PORCELAIN_BLANK = item("porcelain_blank", 64);
     public static final Item PORCELAIN = item("porcelain", 64);
     public static final Item FUSE_CARTRIDGE = item("fuse_cartridge", 64);
+    public static final Item STATOR = item("stator", 16);
+    public static final Item ROTOR = item("rotor", 16);
+    public static final Item COMMUTATOR = item("commutator", 16);
+    public static final Item GRAPHITE_BRUSH = item("graphite_brush", 64);
+    public static final Item MOTOR_HOUSING = item("motor_housing", 16);
+    public static final Item MOTOR_CONTROLLER = item("motor_controller", 16);
+    public static final Item TUNGSTEN_FILAMENT = item("tungsten_filament", 64);
+    public static final Item NICHROME_WIRE = item("nichrome_wire", 64);
+    public static final Item GLASS_BULB = item("glass_bulb", 64);
+    public static final Item GLASS_TUBE = item("glass_tube", 64);
+    public static final Item LAMP_SOCKET = item("lamp_socket", 64);
+    public static final Item LIGHT_BULB = item("light_bulb", 16);
+    public static final Item REFLECTOR = item("reflector", 16);
+    public static final Item BALLAST = item("ballast", 16);
+    public static final Item ARC_ELECTRODE = item("arc_electrode", 16);
+    public static final Item MOTION_SENSOR = item("motion_sensor", 16);
+    public static final Item RELAY = item("relay", 64);
+    public static final Item HEATING_ELEMENT = item("heating_element", 16);
+    public static final Item BIMETAL_STRIP = item("bimetal_strip", 64);
+    public static final Item THERMOSTAT = item("thermostat", 16);
+    public static final Item FAN_BLADES = item("fan_blades", 16);
+    public static final Item COMPRESSOR = item("compressor", 16);
+    public static final Item REFRIGERANT = item("refrigerant", 16);
+    public static final Item COOLING_COIL = item("cooling_coil", 16);
+    public static final Item INSULATED_PANEL = item("insulated_panel", 64);
+    public static final Item PRESSURE_VESSEL = item("pressure_vessel", 16);
+    public static final Item PRESSURE_GAUGE = item("pressure_gauge", 16);
 
     private Parts() { }
 
@@ -67,7 +104,11 @@ public final class Parts {
         return new ArrayList<>(List.of(REDSTONE_COIL, ELECTRIC_MOTOR, SPARK_PLUG, GLOW_PLUG, ENGINE_PISTON, CRANKSHAFT,
                 FUEL_INJECTOR, BEARING, RUBBER_GASKET, SILICONE_GASKET, CIRCUIT_BOARD, RESISTOR, CAPACITOR, TRANSISTOR,
                 MICROCHIP, QUARTZ_OSCILLATOR, BASIC_CIRCUIT, ADVANCED_CIRCUIT, ELITE_CIRCUIT, ELECTRICAL_STEEL,
-                ELECTRICAL_STEEL_PLATE, TRANSFORMER_CORE, ENAMELLED_WIRE, WINDING, PORCELAIN_BLANK, PORCELAIN, FUSE_CARTRIDGE));
+                ELECTRICAL_STEEL_PLATE, TRANSFORMER_CORE, ENAMELLED_WIRE, WINDING, PORCELAIN_BLANK, PORCELAIN, FUSE_CARTRIDGE,
+                STATOR, ROTOR, COMMUTATOR, GRAPHITE_BRUSH, MOTOR_HOUSING, MOTOR_CONTROLLER,
+                TUNGSTEN_FILAMENT, NICHROME_WIRE, GLASS_BULB, GLASS_TUBE, LAMP_SOCKET, LIGHT_BULB, REFLECTOR, BALLAST, ARC_ELECTRODE,
+                MOTION_SENSOR, RELAY, HEATING_ELEMENT, BIMETAL_STRIP, THERMOSTAT, FAN_BLADES, COMPRESSOR, REFRIGERANT,
+                COOLING_COIL, INSULATED_PANEL, PRESSURE_VESSEL, PRESSURE_GAUGE));
     }
 
     private static Item item(String name, int stack) {

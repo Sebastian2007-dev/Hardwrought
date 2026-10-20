@@ -945,4 +945,23 @@ public final class ProgressionGameTests {
         helper.assertFalse(de.ipnats.hardwrought.survival.Ultra.active(), "and switches off again");
         helper.succeed();
     }
+
+    /** Ultra: nothing breaks at a touch — three seconds by hand even for a flower, half one with the right tool. */
+    @GameTest
+    public void inUltraNothingBreaksAtATouch(GameTestHelper helper) {
+        var player = helper.makeMockServerPlayerInLevel();
+        player.getInventory().clearContent();
+        player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+        var flower = net.minecraft.world.level.block.Blocks.POPPY.defaultBlockState();
+        float vanilla = flower.getDestroyProgress(player, helper.getLevel(), BlockPos.ZERO);
+        helper.assertTrue(vanilla >= 1.0f, "A flower breaks at once outside Ultra: " + vanilla);
+        float hand = de.ipnats.hardwrought.survival.Ultra.slowBreaking(vanilla, flower, net.minecraft.world.item.ItemStack.EMPTY);
+        helper.assertTrue(Math.abs(hand - 1.0f / de.ipnats.hardwrought.survival.Ultra.HAND_TICKS) < 1e-6,
+                "In Ultra a hand takes three seconds over it: " + hand);
+        var stone = net.minecraft.world.level.block.Blocks.STONE.defaultBlockState();
+        float slow = stone.getDestroyProgress(player, helper.getLevel(), BlockPos.ZERO);
+        helper.assertTrue(de.ipnats.hardwrought.survival.Ultra.slowBreaking(slow, stone, net.minecraft.world.item.ItemStack.EMPTY) == slow,
+                "What takes longer than that already is left as it is");
+        helper.succeed();
+    }
 }

@@ -1,0 +1,15 @@
+{
+  "values": [
+    "hardwrought:lead_acid_pack",
+    "hardwrought:nickel_iron_cell",
+    "hardwrought:silver_zinc_cell",
+    "hardwrought:headlamp",
+    "hardwrought:night_vision_goggles",
+    "hardwrought:exoskeleton",
+    "hardwrought:electric_drill",
+    "hardwrought:chainsaw",
+    "hardwrought:ore_scanner",
+    "hardwrought:heated_lining",
+    "hardwrought:cooled_lining"
+  ]
+}

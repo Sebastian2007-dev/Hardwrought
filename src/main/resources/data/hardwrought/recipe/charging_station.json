@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "W": "hardwrought:winding",
+    "R": "hardwrought:relay",
+    "C": "hardwrought:basic_circuit"
+  },
+  "pattern": [
+    "PWP",
+    "RCR",
+    "PPP"
+  ],
+  "result": {
+    "id": "hardwrought:charging_station"
+  }
+}

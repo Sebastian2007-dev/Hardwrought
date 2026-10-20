@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "R": "hardwrought:reflector",
+    "B": "hardwrought:light_bulb",
+    "S": "hardwrought:steel_rod",
+    "P": "hardwrought:iron_plate",
+    "W": "hardwrought:insulated_wire"
+  },
+  "pattern": [
+    "RBR",
+    " S ",
+    "PWP"
+  ],
+  "result": {
+    "id": "hardwrought:heat_lamp"
+  }
+}

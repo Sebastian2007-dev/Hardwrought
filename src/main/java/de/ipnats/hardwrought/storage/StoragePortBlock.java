@@ -44,4 +44,18 @@ public class StoragePortBlock extends Block {
     protected BlockState mirror(BlockState state, Mirror mirror) {
         return state.rotate(mirror.getRotation(state.getValue(FACING)));
     }
+
+    /** Set down, it may join a desk to a coil on the tubes: the desks work out their current again. */
+    @Override
+    protected void onPlace(BlockState state, net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos, BlockState previous, boolean moving) {
+        super.onPlace(state, level, pos, previous, moving);
+        if (level instanceof net.minecraft.server.level.ServerLevel server && !previous.is(this)) StorageNetwork.rewire(server, pos);
+    }
+
+    /** Taken away, it may cut a desk off from its coil. */
+    @Override
+    protected void affectNeighborsAfterRemoval(BlockState state, net.minecraft.server.level.ServerLevel level, net.minecraft.core.BlockPos pos, boolean moving) {
+        super.affectNeighborsAfterRemoval(state, level, pos, moving);
+        StorageNetwork.rewire(level, pos);
+    }
 }

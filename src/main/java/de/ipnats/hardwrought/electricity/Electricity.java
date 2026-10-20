@@ -238,6 +238,14 @@ public final class Electricity {
         BlockState state = node.getBlockState();
         if (state.getBlock() instanceof CoilBlock) {
             BlockPos seat = CoilBlock.seat(pos, state);
+            // A coil on a storage tube or port feeds every desk along the tubes.
+            if (level.isLoaded(seat) && de.ipnats.hardwrought.storage.StorageNetwork.carriesCurrent(level.getBlockState(seat))) {
+                List<ElectricBlockEntity> desks = new ArrayList<>();
+                for (BlockPos part : de.ipnats.hardwrought.storage.StorageNetwork.parts(level, seat)) {
+                    if (level.getBlockEntity(part) instanceof de.ipnats.hardwrought.storage.StorageDeskBlockEntity desk) desks.add(desk);
+                }
+                return desks;
+            }
             // The coil on a transformer's high face is coupled to it, not joined.
             return level.isLoaded(seat) && level.getBlockEntity(seat) instanceof ElectricBlockEntity fed && !fed.takesWires()
                     && fed.joins() && !(fed instanceof TransformerBlockEntity transformer && transformer.highFace() == state.getValue(CoilBlock.FACING))
@@ -253,6 +261,19 @@ public final class Electricity {
             BlockState there = level.getBlockState(beside);
             if (there.getBlock() instanceof CoilBlock && there.getValue(CoilBlock.FACING) == side
                     && level.getBlockEntity(beside) instanceof ElectricBlockEntity coil) coils.add(coil);
+        }
+        // A desk also takes its current from every coil set on a tube or port of its store room.
+        if (node instanceof de.ipnats.hardwrought.storage.StorageDeskBlockEntity) {
+            for (BlockPos part : de.ipnats.hardwrought.storage.StorageNetwork.parts(level, pos)) {
+                if (!de.ipnats.hardwrought.storage.StorageNetwork.carriesCurrent(level.getBlockState(part))) continue;
+                for (Direction side : Direction.values()) {
+                    BlockPos beside = part.relative(side);
+                    if (!level.isLoaded(beside)) continue;
+                    BlockState there = level.getBlockState(beside);
+                    if (there.getBlock() instanceof CoilBlock && there.getValue(CoilBlock.FACING) == side
+                            && level.getBlockEntity(beside) instanceof ElectricBlockEntity coil && !coils.contains(coil)) coils.add(coil);
+                }
+            }
         }
         return coils;
     }

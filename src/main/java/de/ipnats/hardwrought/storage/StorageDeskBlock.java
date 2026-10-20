@@ -31,7 +31,8 @@ import net.minecraft.world.phys.Vec3;
  * nothing of its own and remembers nothing; opening it follows the tubes to the chests that are
  * there now. A room may have as many desks as it likes. See {@link StorageNetwork}.
  *
- * <p>It runs on current, taken through a copper coil set against it as a machine takes it; without
+ * <p>It runs on current, taken through a copper coil set against it as a machine takes it, or set on
+ * any tube or port of its store room; without
  * current the desk opens and has nothing to show. See {@link StorageDeskBlockEntity}.
  */
 public class StorageDeskBlock extends ElectricNodeBlock {

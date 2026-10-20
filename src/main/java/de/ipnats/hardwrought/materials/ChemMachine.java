@@ -74,6 +74,13 @@ public enum ChemMachine {
                         new Recipe("chemical_reactor/silicone", List.of(new ItemStack(Materials.RAW_SILICON)),
                                 RefineryProduct.NAPHTHA.source(), 100, GasKind.CHLORINE, 4,
                                 List.of(new ItemStack(Materials.SILICONE, 2)), null, 0, 120),
+                        // Oil of vitriol: sulfur burnt and its fume taken up, bottled for a lead-acid pack.
+                        new Recipe("chemical_reactor/battery_acid", List.of(new ItemStack(ModItems.SULFUR, 2), new ItemStack(Items.GLASS_BOTTLE)),
+                                null, 0, null, 0, List.of(new ItemStack(de.ipnats.hardwrought.carried.CarriedItems.BATTERY_ACID)), null, 0, 100),
+                        // Spirit of hartshorn: ammonia driven out of bone, pressed into a steel charge for a compressor.
+                        new Recipe("chemical_reactor/refrigerant", List.of(new ItemStack(Items.BONE_MEAL, 4),
+                                new ItemStack(de.ipnats.hardwrought.smithing.MetalStock.plate("steel"))), null, 0, null, 0,
+                                List.of(new ItemStack(de.ipnats.hardwrought.parts.Parts.REFRIGERANT)), null, 0, 120),
                         // Medicine. Chlorine through caustic soda is bleach: antiseptic, bottled.
                         new Recipe("chemical_reactor/antiseptic", List.of(new ItemStack(Materials.CAUSTIC_SODA),
                                 new ItemStack(Items.GLASS_BOTTLE)), null, 0, GasKind.CHLORINE, 2,

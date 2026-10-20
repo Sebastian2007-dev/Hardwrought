@@ -41,6 +41,15 @@ public class SigilBlock extends Block implements EntityBlock {
         return SHAPE;
     }
 
+    /** An explosion damages a sigil rather than wiping it away, unless it is too weak to hold (sigil §50). */
+    @Override
+    protected void onExplosionHit(BlockState state, net.minecraft.server.level.ServerLevel level, BlockPos pos,
+                                  net.minecraft.world.level.Explosion explosion,
+                                  java.util.function.BiConsumer<net.minecraft.world.item.ItemStack, BlockPos> onHit) {
+        if (level.getBlockEntity(pos) instanceof SigilBlockEntity sigil && sigil.damaged()) return;
+        super.onExplosionHit(state, level, pos, explosion, onHit);
+    }
+
     @Override
     protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return Shapes.empty();

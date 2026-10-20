@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "hardwrought:image_tube",
+    "S": "hardwrought:strap",
+    "O": "hardwrought:quartz_oscillator",
+    "H": "hardwrought:device_housing",
+    "T": "hardwrought:toggle_switch"
+  },
+  "pattern": [
+    "I I",
+    "SOS",
+    "HTH"
+  ],
+  "result": {
+    "id": "hardwrought:night_vision_goggles"
+  }
+}

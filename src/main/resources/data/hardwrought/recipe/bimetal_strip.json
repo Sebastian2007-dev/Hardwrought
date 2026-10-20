@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    "hardwrought:copper_plate",
+    "hardwrought:iron_plate"
+  ],
+  "result": {
+    "id": "hardwrought:bimetal_strip",
+    "count": 2
+  }
+}

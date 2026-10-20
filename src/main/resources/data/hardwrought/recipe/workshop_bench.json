@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:steel_plate",
+    "N": "hardwrought:nailed_workbench",
+    "R": "hardwrought:steel_rod",
+    "T": "hardwrought:tube_section"
+  },
+  "pattern": [
+    "PTP",
+    "RNR",
+    "R R"
+  ],
+  "result": {
+    "id": "hardwrought:workshop_bench",
+    "count": 1
+  }
+}

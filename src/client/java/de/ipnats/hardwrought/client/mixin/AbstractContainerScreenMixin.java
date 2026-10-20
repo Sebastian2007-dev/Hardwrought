@@ -141,9 +141,10 @@ public abstract class AbstractContainerScreenMixin extends Screen {
         java.util.Set<Long> open = new java.util.HashSet<>();
         java.util.Set<Long> shut = new java.util.HashSet<>();
         for (Slot slot : menu.slots) {
-            if (!(slot instanceof CarriedSlot)) continue;
+            if (!(slot instanceof CarriedSlot carried)) continue;
             long position = (long) slot.x << 32 | (slot.y & 0xFFFFFFFFL);
-            (slot.isActive() ? open : shut).add(position);
+            // A closed square that a pack may still pass through is drawn closed all the same.
+            (carried.isActive() && !carried.shut() ? open : shut).add(position);
         }
         shut.removeAll(open);
         for (Slot slot : menu.slots) {

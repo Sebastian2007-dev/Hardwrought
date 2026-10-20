@@ -1,0 +1,23 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "fan": "hardwrought:block/hardwrought/fan_face",
+    "enamel": "hardwrought:block/hardwrought/appliance_enamel",
+    "casing": "hardwrought:block/hardwrought/appliance_casing",
+    "particle": "hardwrought:block/hardwrought/appliance_casing"
+  },
+  "elements": [
+{
+  "from": [0, 0, 0],
+  "to": [16, 16, 16],
+  "faces": {
+    "north": {"texture": "#fan"},
+    "south": {"texture": "#casing"},
+    "east": {"texture": "#casing"},
+    "west": {"texture": "#casing"},
+    "up": {"texture": "#casing"},
+    "down": {"texture": "#casing"}
+  }
+}
+  ]
+}

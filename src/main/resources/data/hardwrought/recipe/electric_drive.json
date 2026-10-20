@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "S": "hardwrought:shaft",
+    "M": "hardwrought:electric_motor"
+  },
+  "pattern": [
+    "PPP",
+    "SMS",
+    "PPP"
+  ],
+  "result": {
+    "id": "hardwrought:electric_drive"
+  }
+}

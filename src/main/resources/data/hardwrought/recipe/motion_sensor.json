@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "G": "minecraft:glass_pane",
+    "Q": "hardwrought:quartz_oscillator",
+    "C": "hardwrought:basic_circuit",
+    "W": "hardwrought:copper_wire"
+  },
+  "pattern": [
+    " G ",
+    "QCQ",
+    "W W"
+  ],
+  "result": {
+    "id": "hardwrought:motion_sensor"
+  }
+}

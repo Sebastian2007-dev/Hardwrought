@@ -1,0 +1,48 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "screen": "hardwrought:block/hardwrought/monitor_screen_on",
+    
+    "enamel": "hardwrought:block/hardwrought/appliance_enamel",
+    "casing": "hardwrought:block/hardwrought/appliance_casing",
+    "particle": "hardwrought:block/hardwrought/appliance_casing"
+  },
+  "elements": [
+{
+  "from": [3, 0, 4],
+  "to": [13, 2, 12],
+  "faces": {
+    "north": {"texture": "#casing"},
+    "south": {"texture": "#casing"},
+    "east": {"texture": "#casing"},
+    "west": {"texture": "#casing"},
+    "up": {"texture": "#casing"},
+    "down": {"texture": "#casing"}
+  }
+},
+{
+  "from": [7, 2, 7],
+  "to": [9, 4, 9],
+  "faces": {
+    "north": {"texture": "#casing"},
+    "south": {"texture": "#casing"},
+    "east": {"texture": "#casing"},
+    "west": {"texture": "#casing"},
+    "up": {"texture": "#casing"},
+    "down": {"texture": "#casing"}
+  }
+},
+{
+  "from": [3, 4, 5],
+  "to": [13, 12, 11],
+  "faces": {
+    "north": {"texture": "#screen"},
+    "south": {"texture": "#casing"},
+    "east": {"texture": "#casing"},
+    "west": {"texture": "#casing"},
+    "up": {"texture": "#casing"},
+    "down": {"texture": "#casing"}
+  }
+}
+  ]
+}

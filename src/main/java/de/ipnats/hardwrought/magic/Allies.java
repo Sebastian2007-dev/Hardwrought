@@ -17,7 +17,7 @@ final class Allies {
      * creatures of the world, and other players when both are in the same party or stand in the same
      * team. Monsters never are. A stranger is not a friend.
      */
-    static boolean ally(LivingEntity caster, LivingEntity target) {
+    public static boolean ally(LivingEntity caster, LivingEntity target) {
         if (target == caster) return true;
         if (target instanceof Enemy) return false;
         if (caster == null) return true;

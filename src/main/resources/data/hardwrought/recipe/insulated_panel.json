@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "S": "hardwrought:steel_plate",
+    "W": "#minecraft:wool"
+  },
+  "pattern": [
+    "SSS",
+    "WWW",
+    "SSS"
+  ],
+  "result": {
+    "id": "hardwrought:insulated_panel",
+    "count": 4
+  }
+}

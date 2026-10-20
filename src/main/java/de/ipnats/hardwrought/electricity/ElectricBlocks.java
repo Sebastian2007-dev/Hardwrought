@@ -28,6 +28,9 @@ public final class ElectricBlocks {
                     .lightLevel(state -> state.getValue(ElectricLampBlock.LIGHT)));
     public static final DynamoBlock DYNAMO = block("dynamo", DynamoBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(3.0f).noOcclusion());
+    /** The dynamo the other way round: current in, turns out. */
+    public static final ElectricDriveBlock ELECTRIC_DRIVE = block("electric_drive", ElectricDriveBlock::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(3.0f).noOcclusion());
 
     public static final CoilBlock COPPER_COIL = block("copper_coil", CoilBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(1.0f).noOcclusion().forceSolidOn());
@@ -54,6 +57,12 @@ public final class ElectricBlocks {
     public static final MachineBlock SAWMILL_MK4 = machine(Machine.SAWMILL_MK4);
     public static final MachineBlock PLATE_PRESS_MK4 = machine(Machine.PRESS_MK4);
     public static final MachineBlock COIL_WINDER = machine(Machine.COIL_WINDER);
+    public static final MachineBlock WIRE_DRAWER = machine(Machine.WIRE_DRAWER);
+    public static final MachineBlock GLASS_KILN = machine(Machine.GLASS_KILN);
+    public static final MachineBlock AUTOCLAVE = machine(Machine.AUTOCLAVE);
+    public static final MachineBlock COIL_WINDER_MK2 = machine(Machine.COIL_WINDER_MK2);
+    public static final MachineBlock WIRE_DRAWER_MK2 = machine(Machine.WIRE_DRAWER_MK2);
+    public static final MachineBlock GLASS_KILN_MK2 = machine(Machine.GLASS_KILN_MK2);
 
     // The grid: transformers for long lines, porcelain where the voltage is high, and switchgear.
     public static final TransformerBlock TRANSFORMER = block("transformer", TransformerBlock::new,
@@ -94,6 +103,8 @@ public final class ElectricBlocks {
             new BlockEntityType<>(LampBlockEntity::new, Set.of(ELECTRIC_LAMP)));
     public static final BlockEntityType<DynamoBlockEntity> DYNAMO_ENTITY = entity("dynamo",
             new BlockEntityType<>(DynamoBlockEntity::new, Set.of(DYNAMO)));
+    public static final BlockEntityType<ElectricDriveBlockEntity> ELECTRIC_DRIVE_ENTITY = entity("electric_drive",
+            new BlockEntityType<>(ElectricDriveBlockEntity::new, Set.of(ELECTRIC_DRIVE)));
 
     public static final BlockEntityType<ElectricBlockEntity> COIL_ENTITY = entity("copper_coil",
             new BlockEntityType<>((pos, state) -> new ElectricBlockEntity(ElectricBlocks.COIL_ENTITY, pos, state),
@@ -112,7 +123,8 @@ public final class ElectricBlocks {
             new BlockEntityType<>(MachineBlockEntity::new, Set.of(BASIC_CRUSHER, ELECTRIC_FURNACE, SAWMILL, PLATE_PRESS,
                     BASIC_CRUSHER_MK2, BASIC_CRUSHER_MK3, ELECTRIC_FURNACE_MK2, ELECTRIC_FURNACE_MK3, SAWMILL_MK2, SAWMILL_MK3,
                     PLATE_PRESS_MK2, PLATE_PRESS_MK3, LATHE, TUBE_MILL, BASIC_CRUSHER_MK4, ELECTRIC_FURNACE_MK4,
-                    SAWMILL_MK4, PLATE_PRESS_MK4, COIL_WINDER)));
+                    SAWMILL_MK4, PLATE_PRESS_MK4, COIL_WINDER, WIRE_DRAWER, GLASS_KILN, AUTOCLAVE,
+                    COIL_WINDER_MK2, WIRE_DRAWER_MK2, GLASS_KILN_MK2)));
 
     private ElectricBlocks() { }
 
@@ -123,12 +135,13 @@ public final class ElectricBlocks {
 
     /** Everything a player can hold, for the creative tab. */
     public static List<Item> items() {
-        return List.of(DYNAMO.asItem(), COPPER_COIL.asItem(), INSULATOR.asItem(), MAST.asItem(), BATTERY.asItem(), ELECTRIC_LAMP.asItem(),
+        return List.of(DYNAMO.asItem(), ELECTRIC_DRIVE.asItem(), COPPER_COIL.asItem(), INSULATOR.asItem(), MAST.asItem(), BATTERY.asItem(), ELECTRIC_LAMP.asItem(),
                 BASIC_CRUSHER.asItem(), ELECTRIC_FURNACE.asItem(), SAWMILL.asItem(), PLATE_PRESS.asItem(),
                 BASIC_CRUSHER_MK2.asItem(), BASIC_CRUSHER_MK3.asItem(), ELECTRIC_FURNACE_MK2.asItem(), ELECTRIC_FURNACE_MK3.asItem(),
                 SAWMILL_MK2.asItem(), SAWMILL_MK3.asItem(), PLATE_PRESS_MK2.asItem(), PLATE_PRESS_MK3.asItem(),
                 BASIC_CRUSHER_MK4.asItem(), ELECTRIC_FURNACE_MK4.asItem(), SAWMILL_MK4.asItem(), PLATE_PRESS_MK4.asItem(),
-                COIL_WINDER.asItem(), TRANSFORMER.asItem(), BUSHING.asItem(), PORCELAIN_INSULATOR.asItem(),
+                COIL_WINDER.asItem(), WIRE_DRAWER.asItem(), GLASS_KILN.asItem(), AUTOCLAVE.asItem(),
+                COIL_WINDER_MK2.asItem(), WIRE_DRAWER_MK2.asItem(), GLASS_KILN_MK2.asItem(), TRANSFORMER.asItem(), BUSHING.asItem(), PORCELAIN_INSULATOR.asItem(),
                 HIGH_VOLTAGE_MAST.asItem(), KNIFE_SWITCH.asItem(), FUSE_BOX.asItem(), BREAKER.asItem(),
                 COPPER_WIRE, COPPER_CABLE, INSULATED_WIRE, METER);
     }

@@ -6,8 +6,8 @@ Fabric-Grundgeruest fuer die Hardcore-Total-Conversion aus
 ## Entwicklungsumgebung
 
 Vorhandene Versionen: Minecraft **26.3**, Fabric Loader **0.19.5**,
-Fabric API **0.160.7+26.3**, Gradle **9.5.1**. Loom verwendet weiterhin
-**1.17-SNAPSHOT**; vor einer Veroeffentlichung eine stabile Version festlegen.
+Fabric API **0.160.7+26.3**, Gradle **9.5.1**. Loom ist auf die stabile Version
+**1.17.21** festgelegt.
 Benötigt wird ein **JDK ab Version 25**, Zielbytecode ist Java 25.
 
 In IntelliJ diesen Ordner als Gradle-Projekt oeffnen. Unter
@@ -454,4 +454,4 @@ Im aktuellen Ordner ist noch kein Git-Repository initialisiert.
 
 ## Lizenz
 
-Die vorhandene Projektlizenz ist CC0-1.0; siehe [LICENSE](LICENSE).
+Hardwrought steht unter CC BY-NC-SA 4.0 (Namensnennung, nicht kommerziell, Weitergabe unter gleichen Bedingungen); siehe [LICENSE](LICENSE).

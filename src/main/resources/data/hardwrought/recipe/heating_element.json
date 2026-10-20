@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "N": "hardwrought:nichrome_wire",
+    "P": "hardwrought:porcelain"
+  },
+  "pattern": [
+    "NNN",
+    "PPP",
+    "NNN"
+  ],
+  "result": {
+    "id": "hardwrought:heating_element"
+  }
+}

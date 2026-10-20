@@ -18,7 +18,8 @@ uniform sampler2D DepthSampler;
 layout(std140) uniform FxComposite {
     // x: bloom strength, y: chromatic aberration across the whole view, z: saturation boost, w: unused.
     vec4 Params;
-    // x: how torn the void is (0 none, 1 fully), y: seconds, z/w: where the fog starts and ends, in blocks.
+    // x: how torn the void is (0 none, 1 fully), y: seconds, z/w: from and to how far away terrain fades
+    // into the tear, in blocks: the last of the fog, so nothing near and solid is torn.
     vec4 Tear;
     // From the screen to a direction in the world, the camera's rotation only.
     mat4 InvViewProj;

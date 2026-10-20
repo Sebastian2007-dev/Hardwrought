@@ -32,6 +32,38 @@ import java.util.List;
  * where it was laid (sections 49 and 50).
  */
 public final class Sigils {
+    /** The sigil a wand was first held to, waiting for the second to link it to. */
+    public static final net.minecraft.core.component.DataComponentType<net.minecraft.core.BlockPos> LINK_FROM =
+            net.minecraft.core.Registry.register(net.minecraft.core.registries.BuiltInRegistries.DATA_COMPONENT_TYPE,
+                    de.ipnats.hardwrought.Hardwrought.id("sigil_link"), net.minecraft.core.component.DataComponentType.<net.minecraft.core.BlockPos>builder()
+                            .persistent(net.minecraft.core.BlockPos.CODEC).networkSynchronized(net.minecraft.core.BlockPos.STREAM_CODEC).build());
+    /** How far apart two linked sigils may lie. */
+    public static final double LINK_REACH = 24;
+
+    /**
+     * A wand held to a sigil while sneaking: the first one chosen, then the one it signals. Held to the
+     * same pair again, it unlinks them.
+     */
+    static void link(net.minecraft.server.level.ServerLevel level, ServerPlayer player, net.minecraft.world.item.ItemStack wand,
+                     net.minecraft.core.BlockPos at) {
+        if (!(level.getBlockEntity(at) instanceof SigilBlockEntity here)) return;
+        net.minecraft.core.BlockPos from = wand.get(LINK_FROM);
+        if (from == null || from.equals(at) || !(level.getBlockEntity(from) instanceof SigilBlockEntity source)) {
+            wand.set(LINK_FROM, at.immutable());
+            player.sendOverlayMessage(Component.translatable("magic.hardwrought.sigil.link_from"));
+            return;
+        }
+        wand.remove(LINK_FROM);
+        if (from.distSqr(at) > LINK_REACH * LINK_REACH) {
+            player.sendOverlayMessage(Component.translatable("magic.hardwrought.sigil.link_far"));
+            return;
+        }
+        boolean linked = source.toggleLink(level, here);
+        player.sendOverlayMessage(Component.translatable(linked ? "magic.hardwrought.sigil.linked" : "magic.hardwrought.sigil.unlinked"));
+        level.playSound(null, at, net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME, net.minecraft.sounds.SoundSource.PLAYERS, 1.0f,
+                linked ? 1.4f : 0.7f);
+    }
+
     /** How far a sigil can be laid from the one inscribing it, in blocks. */
     static final double REACH = 6;
 
@@ -48,7 +80,8 @@ public final class Sigils {
         // Judged as a spell is: accuracy, wand, overload, and what the caster knows.
         double accuracy = design.accuracy();
         int overload = Math.max(0, design.tier() - tier.tier());
-        double stability = accuracy + tier.steadiness() - 0.15 * overload - 0.25 * design.overflow() - 0.08 * design.noise();
+        double stability = accuracy + tier.steadiness() - tier.overloadCost() * overload - 0.25 * design.overflow() - 0.08 * design.noise()
+                - MagicWorld.interference(player) - MagicWorld.evokers(level, player.position());
         List<Glyph> unknown = new ArrayList<>();
         for (Glyph glyph : design.glyphs()) if (!RuneKnowledge.knows(player, glyph)) unknown.add(glyph);
         stability *= Math.pow(0.8, unknown.size());
@@ -56,6 +89,7 @@ public final class Sigils {
         if (design.corners() < 3) stability *= 0.5;
         stability = Math.max(0, Math.min(1, stability));
         double power = (0.4 + 0.63 * accuracy) * (1 + 0.35 * design.strength());
+        if (design.element() != null) power *= MagicWorld.surroundings(level, Vec3.atCenterOf(at), design.element());
         CastQuality.Outcome outcome;
         if (design.element() == null) outcome = CastQuality.Outcome.FIZZLE;
         else if (stability >= CastQuality.SUCCESS) outcome = CastQuality.Outcome.SUCCESS;

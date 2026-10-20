@@ -11,6 +11,30 @@
     {
       "id": "minecraft:netherite_pickaxe",
       "required": false
+    },
+    {
+      "id": "hardwrought:steel_pickaxe",
+      "required": false
+    },
+    {
+      "id": "hardwrought:stainless_steel_pickaxe",
+      "required": false
+    },
+    {
+      "id": "hardwrought:titanium_pickaxe",
+      "required": false
+    },
+    {
+      "id": "hardwrought:tungsten_steel_pickaxe",
+      "required": false
+    },
+    {
+      "id": "hardwrought:mithril_pickaxe",
+      "required": false
+    },
+    {
+      "id": "hardwrought:adamant_pickaxe",
+      "required": false
     }
   ]
 }

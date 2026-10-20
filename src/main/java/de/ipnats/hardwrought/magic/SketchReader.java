@@ -1120,6 +1120,87 @@ public final class SketchReader {
             arrowShapes.add(shape);
         }
         if (arrows > 0) glyphs.add(Glyph.ARROW);
+
+        // Runes in the ring are instructions, runes outside the frame conditions (docs/magic-roadmap.md, M4
+        // and M5); each keeps the meaning it has amplifying a spell. A line across one turns it around.
+        int range = 0, grow = 0, duration = 0, delay = 0;
+        SigilDesign.Target target = SigilDesign.Target.ANYONE;
+        List<SigilDesign.Condition> conditions = new ArrayList<>();
+        List<Shape> marks = new ArrayList<>();
+        List<Rune> markRunes = new ArrayList<>();
+        for (Shape shape : shapes) {
+            if (shape.consumed || shape.closed || shape.kind == Kind.SPIRAL || shape.kind == Kind.ARROW) continue;
+            boolean outside = Math.hypot(shape.cx - outer.cx, shape.cy - outer.cy) > big;
+            // In the ring a plain stroke is strength; only outside can Fire, read as a stroke, be a condition.
+            if (shape.kind == Kind.LINE && !outside) continue;
+            RuneRecognizer.Reading reading = RuneRecognizer.read(shape.xs, shape.ys);
+            if (!reading.recognized()) continue;
+            Rune rune = reading.rune();
+            boolean usable = outside
+                    ? rune == Rune.DARK || rune == Rune.FIRE || rune == Rune.LIGHTNING || rune == Rune.WATER
+                    : rune == Rune.WIND || rune == Rune.WATER || rune == Rune.EARTH || rune == Rune.DARK || rune == Rune.LIGHTNING;
+            if (!usable) continue;
+            marks.add(shape);
+            markRunes.add(rune);
+        }
+        // Of two lines crossing outside the frame, the one better read as Fire is the rune, the other its strike.
+        boolean[] struck = new boolean[marks.size()];
+        for (Shape line : shapes) {
+            if (line.consumed || line.kind != Kind.LINE || marks.contains(line)) continue;
+            for (int m = 0; m < marks.size(); m++) {
+                if (crosses(line, marks.get(m))) {
+                    struck[m] = true;
+                    line.consumed = true;
+                    glyphs.add(Glyph.STRIKE);
+                    accuracies.add(line.accuracy);
+                    break;
+                }
+            }
+        }
+        for (int m = 0; m < marks.size(); m++) {
+            Shape shape = marks.get(m);
+            if (shape.consumed) continue;
+            shape.consumed = true;
+            Rune rune = markRunes.get(m);
+            boolean outside = Math.hypot(shape.cx - outer.cx, shape.cy - outer.cy) > big;
+            glyphs.add(Glyph.of(rune));
+            accuracies.add(RuneRecognizer.read(shape.xs, shape.ys).accuracy());
+            if (outside) {
+                SigilDesign.Condition condition = switch (rune) {
+                    case DARK -> struck[m] ? SigilDesign.Condition.LIGHT : SigilDesign.Condition.DARK;
+                    case FIRE -> struck[m] ? SigilDesign.Condition.COLD : SigilDesign.Condition.HOT;
+                    case LIGHTNING -> SigilDesign.Condition.HOSTILE_NEAR;
+                    default -> SigilDesign.Condition.RAIN;
+                };
+                if (!conditions.contains(condition)) conditions.add(condition);
+                cost += 2;
+                continue;
+            }
+            switch (rune) {
+                case WIND -> {
+                    range++;
+                    cost++;
+                }
+                case WATER -> {
+                    grow++;
+                    cost++;
+                }
+                case EARTH -> {
+                    duration++;
+                    cost++;
+                }
+                case DARK -> {
+                    target = struck[m] ? SigilDesign.Target.FRIENDLY : SigilDesign.Target.HOSTILE;
+                    cost += 2;
+                }
+                default -> {
+                    delay++;
+                    cost += 2;
+                }
+            }
+        }
+
+        int circles = 0, triangles = 0, squares = 0;
         for (Shape shape : shapes) {
             if (shape.consumed) continue;
             shape.consumed = true;
@@ -1143,12 +1224,15 @@ public final class SketchReader {
                 if (n < 3 && round(shape)) {
                     effect = SigilDesign.Shape.SPHERE;
                     glyphs.add(Glyph.CIRCLE);
+                    circles++;
                 } else if (n == 3) {
                     effect = SigilDesign.Shape.BURST;
                     glyphs.add(Glyph.TRIANGLE);
+                    triangles++;
                 } else if (n == 4) {
                     presence = true;
                     glyphs.add(Glyph.SQUARE);
+                    squares++;
                 } else {
                     noise++;
                     continue;
@@ -1174,9 +1258,12 @@ public final class SketchReader {
             }
             lines.add(line);
         }
+        // A small circle with a small triangle is a ring round the sigil; two small squares wait for a foot on it.
+        if (circles > 0 && triangles > 0) effect = SigilDesign.Shape.RING;
+        SigilDesign.Program program = new SigilDesign.Program(range, grow, duration, target, delay, squares >= 2, conditions);
         return new SigilDesign(element == null ? null : element.rune(), inverted, corners,
                 arrows == 0 ? 0 : (float) (sumX / arrows), arrows == 0 ? 0 : (float) (sumY / arrows), arrows, effect,
-                presence, pulse, strength, cost, glyphs, accuracies, noise, lines);
+                presence, pulse, strength, cost, glyphs, accuracies, noise, lines, program);
     }
 
     /** A closed, round stroke without corners: a circle of any size. */

@@ -1,5 +1,8 @@
 # Electricity – Roadmap
 
+**All six stages are built**: [electricity.md](electricity.md) (E1, E2), [haven.md](haven.md) (E3),
+[carried-power.md](carried-power.md) (E4), [automation.md](automation.md) (E5) and [tesla.md](tesla.md) (E6).
+
 What [electricity.md](electricity.md), [power.md](power.md) and [materials.md](materials.md) built is a
 working grid: dynamos and diesel, wire solved exactly, batteries, four machines in three marks, the
 chemistry line and the first circuits. What it does not have yet is a reason. Power today makes
@@ -107,6 +110,12 @@ wire behind it.
 
 ## E2 – Motors that turn the driveline
 
+**Status: done** — see [electricity.md](electricity.md#motors-on-the-driveline). Where it differs from
+the plan: the controller is a part fitted to the drive, not a block of its own, and sets the speed in
+quarters; it is the controller that limits a stalled drive's current, so the inrush and the stall are
+what trip a breaker. The stator is wound on iron with redstone coils, since electrical steel comes much
+later than the first motor.
+
 **Gives the player:** every mechanical machine already built runs off the grid, anywhere — the ore
 pump in the deep mine, the crusher in the cellar — without a river or a wind over it.
 
@@ -123,6 +132,11 @@ pump in the deep mine, the crusher in the cellar — without a river or a wind o
 trips the breaker; the crusher runs on a motor.
 
 ## E3 – The safe haven
+
+**Status: done** — see [haven.md](haven.md). Where it differs from the plan: food spoilage did not
+exist yet and was built with the cold stores; the sickbed is any bed beside a bedside monitor; the
+water heater is left out, since the electric purifier already makes bad water clean; refrigerant is
+ammonia only, and a cooler does not leak; the wire drawer and glass kiln are plain machines.
 
 **Gives the player:** the base stops being a place where the world's rules still apply. Each device
 answers one hardship that already exists in the code.
@@ -156,6 +170,11 @@ clears CO from a room; a refrigerator slows spoilage and a freezer stops it; the
 faster than a bed; a floodlit area keeps monsters from spawning and makes them keep away.
 
 ## E4 – Carried power
+
+**Status: done** — see [carried-power.md](carried-power.md). Where it differs from the plan: the assembly
+bench is a rung of the bench ladder with shaped recipes rather than a layout of its own; a lining goes
+into a chestplate; the headlamp and goggles are worn in the head slot; the ore scanner marks ores with
+particles for its holder rather than on the atlas.
 
 **Gives the player:** the haven on their body. Light, warmth, speed at work, and in the end an
 exoskeleton that takes the weight off.
@@ -202,6 +221,11 @@ carry-weight penalty only while charged.
 
 ## E5 – Automation: parts make themselves
 
+**Status: done** — see [automation.md](automation.md). Where it differs from the plan: a drawing is
+drawn of what the player has studied rather than strictly crafted; the stations' Mk II are the automated
+stations, since the first marks were machines already; machine wear applies to the electric machines,
+with the drives' brushes from E2.
+
 **Gives the player:** relief from the micro-crafting they spent E1 to E4 doing. This is the payoff of
 the part design: everything the player has made by hand can now be made by a line they designed.
 
@@ -222,6 +246,10 @@ the part design: everything the player has made by hand can now be made by a lin
 desk orders a missing part and receives it; a machine without lubrication wears faster and seizes.
 
 ## E6 – The Tesla tower (capstone)
+
+**Status: done** — see [tesla.md](tesla.md). Where it differs from the plan: the tower is five blocks
+stacked and a capacitor bank beside them, checked by its foot; its power is 900 W, what two transformers
+carry; the defence strikes three monsters a second at most.
 
 **Gives the player:** power without wire, around the home, and a guard that never sleeps.
 

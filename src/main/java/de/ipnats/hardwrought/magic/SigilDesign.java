@@ -35,10 +35,63 @@ import java.util.List;
  * @param accuracies how well each part was drawn: circles, figure, element, instructions
  * @param noise how many strokes made no sense in the sigil
  * @param lines the drawing itself, scaled so the outer circle has radius 1, for showing it on the ground
+ * @param program the instructions of stage S2 and S3 (docs/magic-roadmap.md, M4 and M5)
  */
 public record SigilDesign(Rune element, boolean inverted, int corners, float dirX, float dirY, int arrows,
                           Shape shape, boolean presence, boolean pulse, int strength, int cost, List<Glyph> glyphs,
-                          List<Double> accuracies, int noise, List<float[]> lines) {
+                          List<Double> accuracies, int noise, List<float[]> lines, Program program) {
+    /** Whom a sigil acts on (sigil specification §20, §38). */
+    public enum Target {
+        /** Anyone but its maker. */
+        ANYONE,
+        /** Monsters only: Dark in the ring. */
+        HOSTILE,
+        /** Only its maker's side: Dark struck through in the ring. */
+        FRIENDLY
+    }
+
+    /** What has to hold for a sigil to act (sigil specification §39): a rune drawn outside its outer circle. */
+    public enum Condition {
+        /** Dark outside: the light where it lies is 7 or less. */
+        DARK,
+        /** Dark struck through: the light is 8 or more. */
+        LIGHT,
+        /** Fire outside: the air is 25 °C or warmer. */
+        HOT,
+        /** Fire struck through: the air is 5 °C or colder. */
+        COLD,
+        /** Lightning outside: a monster is within 8 blocks. */
+        HOSTILE_NEAR,
+        /** Water outside: it is raining on it. */
+        RAIN
+    }
+
+    /**
+     * The further instructions (docs/magic-roadmap.md, stages M4 and M5), read from runes in the ring
+     * and outside it, with the meaning they have as amplifiers of a spell (sigil specification §9).
+     *
+     * @param range Wind runes in the ring: a directed sigil reaches × 1.5 for each
+     * @param size Water runes in the ring: its sphere, burst or ring × 1.4 for each
+     * @param duration Earth runes in the ring: it lasts twice as long for each
+     * @param target whom it acts on
+     * @param delay Lightning runes in the ring: 1.5 s between trigger and effect for each
+     * @param contact two small squares: it waits for someone to stand on it, not merely near
+     * @param conditions what must hold for it to act
+     */
+    public record Program(int range, int size, int duration, Target target, int delay, boolean contact, List<Condition> conditions) {
+        public static final Program NONE = new Program(0, 0, 0, Target.ANYONE, 0, false, List.of());
+
+        public Program {
+            conditions = List.copyOf(conditions);
+        }
+    }
+
+    public SigilDesign(Rune element, boolean inverted, int corners, float dirX, float dirY, int arrows,
+                       Shape shape, boolean presence, boolean pulse, int strength, int cost, List<Glyph> glyphs,
+                       List<Double> accuracies, int noise, List<float[]> lines) {
+        this(element, inverted, corners, dirX, dirY, arrows, shape, presence, pulse, strength, cost, glyphs, accuracies, noise, lines,
+                Program.NONE);
+    }
     /** How the effect is shaped. */
     public enum Shape {
         /** A small, single effect: a flame, a spark, a mote. */
@@ -46,7 +99,9 @@ public record SigilDesign(Rune element, boolean inverted, int corners, float dir
         /** A sphere: the effect reaches all round. */
         SPHERE,
         /** A burst outward where it acts. */
-        BURST
+        BURST,
+        /** A ring round the sigil (sigil specification §16): a small circle and a small triangle in the ring. */
+        RING
     }
 
     /** The most stabilisation a figure may carry: an octagon. */
@@ -65,7 +120,9 @@ public record SigilDesign(Rune element, boolean inverted, int corners, float dir
 
     /** Instructions beyond what the figure carries. */
     public int overflow() {
-        return Math.max(0, cost - capacity());
+        // A sigil that lasts beyond an hour wants at least a hexagon to hold it so long.
+        int lasting = program.duration() >= 2 && corners < 6 ? 1 : 0;
+        return Math.max(0, cost - capacity()) + lasting;
     }
 
     /** Whether its arrows point somewhere, rather than cancelling out. */

@@ -1,0 +1,36 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "grille": "hardwrought:block/hardwrought/heater_grille",
+    
+    "enamel": "hardwrought:block/hardwrought/appliance_enamel",
+    "casing": "hardwrought:block/hardwrought/appliance_casing",
+    "particle": "hardwrought:block/hardwrought/appliance_casing"
+  },
+  "elements": [
+{
+  "from": [1, 0, 4],
+  "to": [15, 1, 12],
+  "faces": {
+    "north": {"texture": "#casing"},
+    "south": {"texture": "#casing"},
+    "east": {"texture": "#casing"},
+    "west": {"texture": "#casing"},
+    "up": {"texture": "#casing"},
+    "down": {"texture": "#casing"}
+  }
+},
+{
+  "from": [2, 1, 5],
+  "to": [14, 14, 11],
+  "faces": {
+    "north": {"texture": "#grille"},
+    "south": {"texture": "#casing"},
+    "east": {"texture": "#casing"},
+    "west": {"texture": "#casing"},
+    "up": {"texture": "#casing"},
+    "down": {"texture": "#casing"}
+  }
+}
+  ]
+}

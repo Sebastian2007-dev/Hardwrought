@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "T": "hardwrought:thermostat",
+    "H": "hardwrought:heating_element",
+    "W": "hardwrought:insulated_wire"
+  },
+  "pattern": [
+    "PTP",
+    "HHH",
+    "PWP"
+  ],
+  "result": {
+    "id": "hardwrought:electric_heater"
+  }
+}

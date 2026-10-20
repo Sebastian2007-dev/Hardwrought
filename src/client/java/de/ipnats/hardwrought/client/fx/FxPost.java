@@ -244,12 +244,14 @@ public final class FxPost {
         Matrix4f invViewProj = new Matrix4f(projection).mul(rotation).invert();
         Matrix4f invProj = new Matrix4f(projection).invert();
         var fog = camera.fogData;
-        float fogStart = fog == null ? 64 : Math.min(fog.environmentalStart, fog.renderDistanceStart);
-        float fogEnd = fog == null ? 128 : Math.max(fogStart + 1, Math.min(fog.environmentalEnd, fog.renderDistanceEnd));
+        // The tear shows on terrain only where the fog has all but swallowed it: in the last fifth of the
+        // fog, not from where it begins, which in the End is close enough to put cracks on the pillars.
+        float fogEnd = fog == null ? 128 : Math.max(1, Math.min(fog.environmentalEnd, fog.renderDistanceEnd));
+        float fogStart = fogEnd * 0.8f;
         float seconds = (System.currentTimeMillis() % 3_600_000L) / 1000f;
         try (MemoryStack stack = MemoryStack.stackPush()) {
             ByteBuffer data = Std140Builder.onStack(stack, COMPOSITE_SIZE).putVec4(BLOOM_STRENGTH, aberration, saturation, 0)
-                    .putVec4(tear, seconds, fogStart * 0.6f, fogEnd).putMat4f(invViewProj).putMat4f(invProj).get();
+                    .putVec4(tear, seconds, fogStart, fogEnd).putMat4f(invViewProj).putMat4f(invProj).get();
             encoder.writeToBuffer(compositeUniform.slice(), data);
         }
     }

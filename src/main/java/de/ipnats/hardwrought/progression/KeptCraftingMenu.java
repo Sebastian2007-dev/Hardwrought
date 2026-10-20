@@ -18,7 +18,7 @@ import java.util.List;
  * so a crash with the menu open loses nothing — and left where it is on closing, instead of being
  * handed back to the player the way a vanilla table does.
  */
-public class KeptCraftingMenu extends CraftingMenu {
+public class KeptCraftingMenu extends CraftingMenu implements KeptGridUser {
     private final KeptGridBlockEntity bench;
     /** Set while the grid is being filled from the bench, when writing it back would be pointless. */
     private boolean loading;
@@ -36,6 +36,7 @@ public class KeptCraftingMenu extends CraftingMenu {
         slotsChanged(craftSlots);
     }
 
+    @Override
     public boolean isAt(KeptGridBlockEntity other) {
         return bench == other;
     }

@@ -8,7 +8,7 @@ and the small parts that machines are now built from.
 | Part | Recipe | Goes into |
 | --- | --- | --- |
 | Redstone coil (2) | copper wire, redstone, iron rod | motor, furnace heating, injector |
-| Electric motor | iron plates, copper wire, 2 redstone coils, shaft | crusher, sawmill, press, electric pump |
+| Electric motor | housing, stator, rotor, commutator, 2 graphite brushes, 2 bearings ([electricity.md](electricity.md#motors-on-the-driveline)) | crusher, sawmill, press, electric pump, electric drive |
 | Spark plug (2) | copper rod, fireclay, steel plate | gasoline engine (wears), gas burner |
 | Glow plug (2) | redstone, fireclay, steel plate | diesel generator |
 | Engine piston (2) | 3 steel plates, 2 steel rods | engines |
@@ -30,7 +30,7 @@ copper coil, as a dynamo is. It runs whenever it has fuel, and a redstone signal
 
 **Fuel.** It takes diesel, the still's fuel or kerosene, by pipe or bucket (4 buckets). Diesel goes
 furthest, kerosene gives 90 % and the still's fuel 75 %. It burns 0.25 mB a second idling plus
-1 mB per kJ given, so a bucket runs a 500 W load for about half an hour.
+1 mB per kJ given, so a bucket runs a 500 W load for a little over twenty minutes (0.25 mB/s idle plus 0.5 mB/s for the load).
 
 **Exhaust.** For every 20 mB burnt it gives off a unit of CO₂ and now and then one of CO. The exhaust
 comes out over the generator, or out of the open end of a flue pipe set on it.

@@ -16,6 +16,8 @@ public final class Alloys {
     public static final Item STEEL_INGOT = register("steel_ingot");
     public static final Item STAINLESS_STEEL_INGOT = register("stainless_steel_ingot");
     public static final Item TUNGSTEN_STEEL_INGOT = register("tungsten_steel_ingot");
+    /** Four parts nickel to one of chromium: the wire every heating element is wound from. */
+    public static final Item NICHROME_INGOT = register("nichrome_ingot");
 
     private Alloys() { }
 

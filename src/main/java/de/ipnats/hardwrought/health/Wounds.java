@@ -69,6 +69,7 @@ public final class Wounds {
                 && !source.is(DamageTypeTags.IS_DROWNING) && !source.is(DamageTypes.MAGIC)
                 && !source.is(DamageTypes.INDIRECT_MAGIC) && !source.is(DamageTypes.WITHER)
                 && !source.is(de.ipnats.hardwrought.core.registry.ModDamageTypes.HEX)
+                && !source.is(de.ipnats.hardwrought.core.registry.ModDamageTypes.ELECTROCUTION)
                 && !source.is(de.ipnats.hardwrought.core.registry.ModDamageTypes.VOID);
     }
 
@@ -100,8 +101,13 @@ public final class Wounds {
 
     /** Bound up: the wound is closed against dirt for as long as the bandage holds. */
     public static void bandage(ServerPlayer player) {
+        bandage(player, BANDAGE_TICKS);
+    }
+
+    /** Bound for this long: a sterile dressing holds twice as long as a plain bandage. */
+    public static void bandage(ServerPlayer player, int ticks) {
         player.removeEffect(ModEffects.OPEN_WOUND);
-        player.addEffect(new MobEffectInstance(ModEffects.BANDAGED, BANDAGE_TICKS, 0));
+        player.addEffect(new MobEffectInstance(ModEffects.BANDAGED, ticks, 0));
     }
 
     /** Cleaned: the wound is closed, and this much of an infection already in it is gone. */

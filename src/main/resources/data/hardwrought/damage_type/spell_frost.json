@@ -1,0 +1,6 @@
+{
+  "message_id": "hardwrought.spell_frost",
+  "scaling": "when_caused_by_living_non_player",
+  "exhaustion": 0.1,
+  "effects": "freezing"
+}

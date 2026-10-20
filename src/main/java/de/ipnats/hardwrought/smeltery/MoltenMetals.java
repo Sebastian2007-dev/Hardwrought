@@ -37,7 +37,7 @@ public final class MoltenMetals {
     public static final List<String> ORDER = List.of("iron", "gold", "copper", "bronze", "steel", "stainless_steel",
             "tungsten_steel", "titanium", "tungsten", "tin", "zinc", "lead", "manganese", "magnesium", "aluminum",
             "nickel", "cobalt", "chromium", "uranium", "thorium", "platinum", "silver", "mithril",
-            "adamantium", "netherite", CARBON, "lava");
+            "adamantium", "netherite", CARBON, "lava", "nichrome");
 
     /** What one item gives: which material, how much of it. */
     public record Melt(String material, int amount) { }
@@ -50,7 +50,8 @@ public final class MoltenMetals {
             new Alloy(ratios("iron", 4, CARBON, 1), "steel", 4, 1540),
             new Alloy(ratios("steel", 3, "chromium", 1, "nickel", 1), "stainless_steel", 5, 1550),
             new Alloy(ratios("steel", 3, "tungsten", 1), "tungsten_steel", 4, 3422),
-            new Alloy(ratios("copper", 3, "tin", 1), "bronze", 4, 1085));
+            new Alloy(ratios("copper", 3, "tin", 1), "bronze", 4, 1085),
+            new Alloy(ratios("nickel", 4, "chromium", 1), "nichrome", 5, 1400));
 
     private static final Map<Item, Melt> MELTS = new HashMap<>();
     private static final Map<String, Item> INGOTS = new HashMap<>();

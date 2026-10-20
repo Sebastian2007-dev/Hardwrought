@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "G": "hardwrought:fine_gear",
+    "S": "hardwrought:steel_plate"
+  },
+  "pattern": [
+    "GSG"
+  ],
+  "result": {
+    "id": "hardwrought:reduction_gear"
+  }
+}

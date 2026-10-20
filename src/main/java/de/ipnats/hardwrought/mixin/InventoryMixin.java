@@ -25,14 +25,41 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * <p>Only the server is gated. The client runs the same code to predict a pickup, but it is not told
  * what the player is wearing, and a prediction that disagrees for one tick is corrected by the very
  * next inventory packet — whereas guessing here would be a rule the client could be wrong about.
+ *
+ * <p>A pack is the exception: it may go into an empty square behind the belt (see {@code CarriedSlot}),
+ * so a pack just made is not left lying on the ground for want of room.
  */
 @Mixin(Inventory.class)
 public abstract class InventoryMixin {
     @Shadow @Final public net.minecraft.world.entity.player.Player player;
+    /** Set while a pack is being put into the inventory: it may take a closed square that is empty. */
+    @Unique private boolean hardwrought$addingPack;
+
+    @Inject(method = "add(ILnet/minecraft/world/item/ItemStack;)Z", at = @At("HEAD"))
+    private void hardwrought$packMayGoBehindTheBelt(int slot, ItemStack stack, CallbackInfoReturnable<Boolean> info) {
+        hardwrought$addingPack = stack.getItem() instanceof de.ipnats.hardwrought.equipment.BackpackItem;
+    }
+
+    @Inject(method = "add(ILnet/minecraft/world/item/ItemStack;)Z", at = @At("RETURN"))
+    private void hardwrought$packAdded(int slot, ItemStack stack, CallbackInfoReturnable<Boolean> info) {
+        hardwrought$addingPack = false;
+    }
+
+    @Inject(method = "placeItemBackInInventory(Lnet/minecraft/world/item/ItemStack;ZLnet/minecraft/util/Prediction;)V", at = @At("HEAD"))
+    private void hardwrought$packMayGoBackBehindTheBelt(ItemStack stack, boolean send, net.minecraft.util.Prediction prediction,
+                                                         org.spongepowered.asm.mixin.injection.callback.CallbackInfo info) {
+        hardwrought$addingPack = stack.getItem() instanceof de.ipnats.hardwrought.equipment.BackpackItem;
+    }
+
+    @Inject(method = "placeItemBackInInventory(Lnet/minecraft/world/item/ItemStack;ZLnet/minecraft/util/Prediction;)V", at = @At("RETURN"))
+    private void hardwrought$packPutBack(ItemStack stack, boolean send, net.minecraft.util.Prediction prediction,
+                                         org.spongepowered.asm.mixin.injection.callback.CallbackInfo info) {
+        hardwrought$addingPack = false;
+    }
 
     @Inject(method = "getFreeSlot", at = @At("RETURN"), cancellable = true)
     private void hardwrought$noFreeSlotBehindTheBelt(CallbackInfoReturnable<Integer> info) {
-        if (hardwrought$closed(info.getReturnValue())) info.setReturnValue(-1);
+        if (!hardwrought$addingPack && hardwrought$closed(info.getReturnValue())) info.setReturnValue(-1);
     }
 
     @Inject(method = "getSlotWithRemainingSpace", at = @At("RETURN"), cancellable = true)

@@ -1,0 +1,15 @@
+{
+  "weights": {
+    "hardwrought:lead_acid_pack": 2.5,
+    "hardwrought:nickel_iron_cell": 2.0,
+    "hardwrought:silver_zinc_cell": 0.6,
+    "hardwrought:headlamp": 0.4,
+    "hardwrought:night_vision_goggles": 0.9,
+    "hardwrought:exoskeleton": 9.0,
+    "hardwrought:electric_drill": 3.0,
+    "hardwrought:chainsaw": 5.0,
+    "hardwrought:ore_scanner": 1.5,
+    "hardwrought:heated_lining": 0.8,
+    "hardwrought:cooled_lining": 0.9
+  }
+}

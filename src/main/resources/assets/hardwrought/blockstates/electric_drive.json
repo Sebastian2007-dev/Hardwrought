@@ -1,0 +1,32 @@
+{
+  "variants": {
+    "controlled=false,facing=north": {
+      "model": "hardwrought:block/electric_drive"
+    },
+    "controlled=true,facing=north": {
+      "model": "hardwrought:block/electric_drive_controlled"
+    },
+    "controlled=false,facing=south": {
+      "model": "hardwrought:block/electric_drive"
+    },
+    "controlled=true,facing=south": {
+      "model": "hardwrought:block/electric_drive_controlled"
+    },
+    "controlled=false,facing=east": {
+      "model": "hardwrought:block/electric_drive",
+      "y": 90
+    },
+    "controlled=true,facing=east": {
+      "model": "hardwrought:block/electric_drive_controlled",
+      "y": 90
+    },
+    "controlled=false,facing=west": {
+      "model": "hardwrought:block/electric_drive",
+      "y": 90
+    },
+    "controlled=true,facing=west": {
+      "model": "hardwrought:block/electric_drive_controlled",
+      "y": 90
+    }
+  }
+}

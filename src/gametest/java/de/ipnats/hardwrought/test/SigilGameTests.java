@@ -88,8 +88,13 @@ public final class SigilGameTests {
 
     /** A mage on a floor, looking down at the ground two blocks ahead (east). */
     static ServerPlayer mageOnFloor(GameTestHelper helper, Glyph... known) {
+        return mageOnFloor(helper, 0, known);
+    }
+
+    /** The same, with the floor raised this many blocks above the ground of the test. */
+    static ServerPlayer mageOnFloor(GameTestHelper helper, int raised, Glyph... known) {
         ServerPlayer player = mage(helper, known);
-        BlockPos from = helper.absolutePos(new BlockPos(1, 1, 1));
+        BlockPos from = helper.absolutePos(new BlockPos(1, 1 + raised, 1));
         floor(helper, from.offset(-1, -1, -1), from.offset(10, -1, 2));
         player.teleportTo(from.getX() + 0.5, from.getY(), from.getZ() + 0.5);
         player.lookAt(EntityAnchorArgument.Anchor.EYES, Vec3.atBottomCenterOf(from.east(2)).add(0, 0.01, 0));
@@ -206,5 +211,94 @@ public final class SigilGameTests {
         // Lightning on its own acts just in front: reach further with an arrow.
         SpellCaster.cast(player, List.of(rune(Rune.LIGHTNING, 80, 150), MagicGameTests.arrow(220, 280, 220, 60)), 300);
         helper.succeedWhen(() -> helper.assertTrue(second.getHealth() < full, "Lightning leaps on to the husk beside the first"));
+    }
+
+    /** Magic roadmap M4: runes in the ring are instructions, runes outside the frame conditions. */
+    @GameTest
+    public void ringRunesAreInstructionsAndRunesOutsideConditions(GameTestHelper helper) {
+        List<CastSpellPayload.Stroke> strokes = base(8, Rune.FIRE);
+        strokes.add(rune(Rune.WIND, 150, 62, 0.05f, 0, 0, false));
+        strokes.add(rune(Rune.WATER, 238, 150, 0.05f, 0, 0, false));
+        strokes.add(rune(Rune.EARTH, 62, 150, 0.05f, 0, 0, false));
+        strokes.add(rune(Rune.DARK, 150, 238, 0.05f, 0, 0, false));
+        strokes.add(rune(Rune.LIGHTNING, 292, 40, 0.04f, 0, 0, false));
+        SigilDesign design = read(strokes);
+        helper.assertTrue(design != null, "It is still a sigil");
+        SigilDesign.Program program = design.program();
+        helper.assertTrue(program.range() == 1 && program.size() == 1 && program.duration() == 1,
+                "Wind reaches further, Water grows it, Earth makes it last: " + program);
+        helper.assertTrue(program.target() == SigilDesign.Target.HOSTILE, "Dark in the ring: monsters only: " + program);
+        helper.assertTrue(program.conditions().contains(SigilDesign.Condition.HOSTILE_NEAR),
+                "Lightning outside the frame: only when a monster is near: " + program);
+        helper.assertTrue(design.cost() >= 7 && design.overflow() == 0, "and an octagon carries it all: " + design.cost());
+        List<CastSpellPayload.Stroke> shaped = base(6, Rune.LIGHT);
+        shaped.add(circle(60, 240, 14));
+        shaped.add(figure(240, 240, 14, 3));
+        shaped.add(figure(240, 70, 14, 4));
+        shaped.add(figure(60, 70, 14, 4));
+        SigilDesign ring = read(shaped);
+        helper.assertTrue(ring.shape() == SigilDesign.Shape.RING, "A small circle and a small triangle: a ring: " + ring.shape());
+        helper.assertTrue(ring.presence() && ring.program().contact(), "two small squares: it waits for a foot on it");
+        helper.succeed();
+    }
+
+    /**
+     * How far above the ground of the test the condition is tried. A sigil looks eight blocks round
+     * for a monster, which on the ground reaches past the test into the gaps and the tests beside
+     * it: a zombie flung out of the test next door, or one left wandering by another, answered for
+     * the monster this test had not yet brought. Up here none of them can be near. It is not the
+     * height the firestorm in {@link ComboGameTests} is cast at, so its zombies are not near either.
+     */
+    private static final int RAISED = 28;
+
+    /** Magic roadmap M5: a condition holds a sigil back until it holds. */
+    @GameTest(maxTicks = 100)
+    public void aConditionHoldsASigilBack(GameTestHelper helper) {
+        ServerPlayer player = mageOnFloor(helper, RAISED, Glyph.values());
+        List<CastSpellPayload.Stroke> strokes = base(4, Rune.LIGHT);
+        strokes.add(rune(Rune.LIGHTNING, 292, 40, 0.04f, 0, 0, false));
+        SpellCaster.cast(player, strokes, 300);
+        var sigil = (SigilBlockEntity) helper.getLevel().getBlockEntity(helper.absolutePos(new BlockPos(3, 1 + RAISED, 1)));
+        helper.assertTrue(sigil != null && sigil.program().conditions().contains(SigilDesign.Condition.HOSTILE_NEAR), "inscribed with its condition");
+        helper.assertTrue(!sigil.conditionsHold(helper.getLevel()), "With no monster near, it holds back");
+        Husk husk = helper.spawn(EntityTypes.HUSK, new BlockPos(8, 1 + RAISED, 1));
+        husk.setNoAi(true);
+        helper.assertTrue(sigil.conditionsHold(helper.getLevel()), "and with one near it acts");
+        husk.discard();
+        helper.succeed();
+    }
+
+    /** Magic roadmap M5: a sigil linked into another drives it; the driven one acts only when signalled. */
+    @GameTest(maxTicks = 300)
+    public void aLinkedSigilActsOnlyWhenSignalled(GameTestHelper helper) {
+        ServerPlayer player = mageOnFloor(helper, Glyph.values());
+        // First the driven one: a fire hovering where the mage looks.
+        SpellCaster.cast(player, base(4, Rune.FIRE), 300);
+        BlockPos fire = helper.absolutePos(new BlockPos(3, 1, 1));
+        var driven = (SigilBlockEntity) helper.getLevel().getBlockEntity(fire);
+        helper.assertTrue(driven != null, "The fire sigil lies");
+        // Then the one that drives it, further on: a light that waits for a foot on it (two squares), through
+        // another wand, since a mock player's cooldowns never run down.
+        BlockPos light = helper.absolutePos(new BlockPos(5, 1, 1));
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new net.minecraft.world.item.ItemStack(Magic.IRON_WAND));
+        player.lookAt(EntityAnchorArgument.Anchor.EYES, Vec3.atBottomCenterOf(light).add(0, 0.01, 0));
+        List<CastSpellPayload.Stroke> waiting = base(4, Rune.LIGHT);
+        waiting.add(figure(240, 70, 14, 4));
+        waiting.add(figure(60, 70, 14, 4));
+        var second = SpellCaster.cast(player, waiting, 300);
+        helper.assertTrue(second != null && second.sigil() != null, "The second sigil is inscribed");
+        var driver = (SigilBlockEntity) helper.getLevel().getBlockEntity(light);
+        helper.assertTrue(driver != null && driver.waiting() && driver.program().contact(), "and waits for a foot on it");
+        helper.assertTrue(driver.toggleLink(helper.getLevel(), driven) && driven.driven(), "Linked, the fire is driven by it");
+        Husk husk = helper.spawn(EntityTypes.HUSK, new BlockPos(3, 1, 1));
+        husk.setNoAi(true);
+        float full = husk.getHealth();
+        helper.runAfterDelay(60, () -> {
+            helper.assertTrue(husk.getHealth() == full && !husk.isOnFire(), "Driven and not signalled, the fire waits");
+            Husk walker = helper.spawn(EntityTypes.HUSK, new BlockPos(5, 1, 1));
+            walker.setNoAi(true);
+            helper.succeedWhen(() -> helper.assertTrue(husk.getHealth() < full || husk.isOnFire(),
+                    "Someone on the waiting sigil: it signals the fire, which burns"));
+        });
     }
 }

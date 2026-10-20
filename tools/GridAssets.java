@@ -123,34 +123,8 @@ public final class GridAssets {
         }
         write(mk4, ASSETS.resolve("textures/block/hardwrought/dynamo_iron_mk4.png"));
 
-        // Items: most are an existing picture in another colour.
-        Path items = ASSETS.resolve("textures/item");
-        write(tint(read(items.resolve("steel_ingot.png")), 0x7E8EA8), items.resolve("electrical_steel.png"));
-        write(tint(read(items.resolve("steel_plate.png")), 0x8494AE), items.resolve("electrical_steel_plate.png"));
-        write(tint(read(items.resolve("copper_wire.png")), 0x8A2E1E), items.resolve("enamelled_wire.png"));
-        write(tint(read(items.resolve("copper_wire.png")), 0x34343C), items.resolve("insulated_wire.png"));
-        write(tint(read(items.resolve("fireclay.png")), 0xC8C2B4), items.resolve("porcelain_blank.png"));
-        write(tint(read(items.resolve("fireclay.png")), 0xFFFCF4), items.resolve("porcelain.png"));
-        BufferedImage core = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
-        for (int x = 2; x < 14; x++) for (int y = 2; y < 14; y++) {
-            boolean ring = x < 5 || x > 10 || y < 5 || y > 10;
-            if (ring) core.setRGB(x, y, shade(0x7E8EA8, (x + y) % 2 == 0 ? 10 : -14));
-        }
-        write(core, items.resolve("transformer_core.png"));
-        BufferedImage winding = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
-        for (int x = 3; x < 13; x++) {
-            fill(winding, x, 2, x, 3, 0x6A6A70);
-            fill(winding, x, 12, x, 13, 0x6A6A70);
-            for (int y = 4; y < 12; y++) winding.setRGB(x, y, shade(0x9A4A26, y % 2 == 0 ? -18 : 10));
-        }
-        write(winding, items.resolve("winding.png"));
-        BufferedImage fuse = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
-        for (int i = 0; i < 10; i++) {
-            int x = 3 + i, y = 12 - i;
-            int colour = i < 2 || i > 7 ? 0xB0B4BA : 0xF2EFE6;
-            fill(fuse, x, y - 1, x + 1, y, colour);
-        }
-        write(fuse, items.resolve("fuse_cartridge.png"));
+        // Item PNGs are maintained by vanilla_style_items.py. This generator
+        // still writes their models and recipes in items().
     }
 
     private interface Paint {
@@ -417,6 +391,10 @@ public final class GridAssets {
 
         String insulator = Files.readString(states.resolve("insulator.json"));
         text(states.resolve("porcelain_insulator.json"), insulator.replace("hardwrought:block/insulator", "hardwrought:block/porcelain_insulator"));
+        String strand = Files.readString(states.resolve("wire_strand.json"));
+        for (String hot : List.of("", "_hot")) {
+            text(states.resolve("insulated_strand" + hot + ".json"), strand.replace("hardwrought:block/wire_strand", "hardwrought:block/insulated_strand" + hot));
+        }
         String coil = Files.readString(states.resolve("copper_coil.json"));
         text(states.resolve("bushing.json"), coil.replace("hardwrought:block/copper_coil", "hardwrought:block/bushing"));
         String mast = Files.readString(states.resolve("mast.json"));

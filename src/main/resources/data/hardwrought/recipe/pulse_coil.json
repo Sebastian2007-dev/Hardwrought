@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "P": "hardwrought:electrical_steel_plate",
+    "W": "hardwrought:winding",
+    "C": "hardwrought:capacitor"
+  },
+  "pattern": [
+    "PWP",
+    " C "
+  ],
+  "result": {
+    "id": "hardwrought:pulse_coil"
+  }
+}

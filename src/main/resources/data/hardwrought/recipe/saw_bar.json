@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "S": "hardwrought:steel_plate"
+  },
+  "pattern": [
+    "  S",
+    " S ",
+    "S  "
+  ],
+  "result": {
+    "id": "hardwrought:saw_bar"
+  }
+}

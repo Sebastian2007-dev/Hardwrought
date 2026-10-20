@@ -83,6 +83,11 @@ public class RuneCanvasScreen extends Screen {
             lore = !lore;
             rebuildWidgets();
         }).bounds(controlsLeft + (buttonWidth + 4) * 3, controlsY, buttonWidth, 18).build());
+        // At the table a drawing can be bound to a scroll instead of cast (docs/magic-roadmap.md, stage M3).
+        if (tableMounted) {
+            addRenderableWidget(Button.builder(Component.translatable("gui.hardwrought.rune_canvas.bind"), b -> send(CastSpellPayload.BIND))
+                    .bounds(controlsLeft, controlsY + 22, controlsWidth, 18).build());
+        }
     }
 
     @Override
@@ -365,10 +370,15 @@ public class RuneCanvasScreen extends Screen {
 
     /** Sends the drawing to be cast and closes the parchment. An empty sheet is simply put away. */
     private void cast() {
+        send(tableMounted ? CastSpellPayload.TABLE : CastSpellPayload.HAND);
+    }
+
+    /** Sends the drawing, to be cast or bound, and closes the sheet. An empty sheet is simply put away. */
+    private void send(int mode) {
         if (!strokes.isEmpty()) {
             List<CastSpellPayload.Stroke> payload = new ArrayList<>(strokes.size());
             for (InkStroke stroke : strokes) payload.add(stroke.toPayload());
-            ClientPlayNetworking.send(new CastSpellPayload(payload, size, false));
+            ClientPlayNetworking.send(new CastSpellPayload(payload, size, false, mode));
         }
         onClose();
     }

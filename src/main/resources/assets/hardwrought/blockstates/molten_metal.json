@@ -80,6 +80,9 @@
     },
     "metal=26": {
       "model": "hardwrought:block/molten/lava"
+    },
+    "metal=27": {
+      "model": "hardwrought:block/molten/nichrome"
     }
   }
 }

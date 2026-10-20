@@ -70,6 +70,8 @@ public final class MobTraits {
 
         // § 2: a hostile mob with nothing to chase goes to look where it heard something.
         if (mob instanceof Monster monster) goals.addGoal(4, new InvestigateNoiseGoal(monster));
+        // Stage E3: monsters keep out of a floodlight's light.
+        if (mob instanceof Monster monster) goals.addGoal(1, new AvoidFloodlightGoal(monster));
 
         if (mob instanceof Zombie zombie) {
             // § 5.1: a zombie breaks through with its tool, and without one only through what a bare

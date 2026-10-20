@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "C": "hardwrought:advanced_circuit",
+    "G": "hardwrought:silicone_gasket",
+    "M": "hardwrought:glass_kiln",
+    "E": "hardwrought:electric_motor"
+  },
+  "pattern": [
+    " C ",
+    "GMG",
+    " E "
+  ],
+  "result": {
+    "id": "hardwrought:glass_kiln_mk2"
+  }
+}

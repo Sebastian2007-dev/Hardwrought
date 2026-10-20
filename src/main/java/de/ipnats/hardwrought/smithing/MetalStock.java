@@ -65,6 +65,7 @@ public final class MetalStock {
             add("steel", () -> de.ipnats.hardwrought.metallurgy.Alloys.STEEL_INGOT);
             add("stainless_steel", () -> de.ipnats.hardwrought.metallurgy.Alloys.STAINLESS_STEEL_INGOT);
             add("tungsten_steel", () -> de.ipnats.hardwrought.metallurgy.Alloys.TUNGSTEN_STEEL_INGOT);
+            add("nichrome", () -> de.ipnats.hardwrought.metallurgy.Alloys.NICHROME_INGOT);
             for (Metal metal : Metal.values()) {
                 // Liquid at room temperature: there is nothing to hammer.
                 if (metal == Metal.MERCURY) continue;

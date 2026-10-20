@@ -3,11 +3,11 @@
 	"id": "hardwrought",
 	"version": "${version}",
 	"name": "Hardwrought",
-	"description": "Hardcore survival, material progression and technology. Foundation for the Hardwrought total conversion.",
+	"description": "Hardcore survival from bare hands to the end of the game: smithing, metallurgy, magic, electricity and a reworked Nether, Underworld and End, guided by an in-game compendium. With an optional Ultra mode.",
 	"authors": [
 		"ipnats"
 	],
-	"license": "CC0-1.0",
+	"license": "CC-BY-NC-SA-4.0",
 	"icon": "assets/hardwrought/icon.png",
 	"environment": "*",
 	"entrypoints": {
@@ -37,5 +37,8 @@
 		"minecraft": "~26.3",
 		"java": ">=25",
 		"fabric-api": "*"
+	},
+	"suggests": {
+		"sodium": "*"
 	}
 }

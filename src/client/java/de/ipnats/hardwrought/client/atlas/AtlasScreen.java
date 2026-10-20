@@ -325,7 +325,8 @@ public class AtlasScreen extends Screen {
             paintedFor = Long.MIN_VALUE;
         }
         if (wanted != paintedFor) {
-            painter.paint(pixels, width, height, worldX0(), worldZ0(), bpp(), tiles);
+            painter.paint(pixels, width, height, worldX0(), worldZ0(), bpp(), tiles,
+                    minecraft.level != null && minecraft.level.dimensionType().hasCeiling());
             var image = texture.getPixels();
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) image.setPixel(x, y, pixels[y * width + x]);

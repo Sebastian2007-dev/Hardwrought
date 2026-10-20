@@ -1,0 +1,23 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "door": "hardwrought:block/hardwrought/freezer_door",
+    "enamel": "hardwrought:block/hardwrought/appliance_enamel",
+    "casing": "hardwrought:block/hardwrought/appliance_casing",
+    "particle": "hardwrought:block/hardwrought/appliance_casing"
+  },
+  "elements": [
+{
+  "from": [1, 0, 1],
+  "to": [15, 16, 15],
+  "faces": {
+    "north": {"texture": "#door"},
+    "south": {"texture": "#enamel"},
+    "east": {"texture": "#enamel"},
+    "west": {"texture": "#enamel"},
+    "up": {"texture": "#enamel"},
+    "down": {"texture": "#enamel"}
+  }
+}
+  ]
+}

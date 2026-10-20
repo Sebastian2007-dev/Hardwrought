@@ -1,0 +1,48 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "glass": "hardwrought:block/hardwrought/lamp_glass_off",
+    "eye": "hardwrought:block/hardwrought/motion_eye",
+    "enamel": "hardwrought:block/hardwrought/appliance_enamel",
+    "casing": "hardwrought:block/hardwrought/appliance_casing",
+    "particle": "hardwrought:block/hardwrought/appliance_casing"
+  },
+  "elements": [
+{
+  "from": [4, 0, 4],
+  "to": [12, 1, 12],
+  "faces": {
+    "north": {"texture": "#casing"},
+    "south": {"texture": "#casing"},
+    "east": {"texture": "#casing"},
+    "west": {"texture": "#casing"},
+    "up": {"texture": "#casing"},
+    "down": {"texture": "#casing"}
+  }
+},
+{
+  "from": [4, 1, 4],
+  "to": [12, 8, 12],
+  "faces": {
+    "north": {"texture": "#eye"},
+    "south": {"texture": "#enamel"},
+    "east": {"texture": "#enamel"},
+    "west": {"texture": "#enamel"},
+    "up": {"texture": "#enamel"},
+    "down": {"texture": "#enamel"}
+  }
+},
+{
+  "from": [5, 8, 5],
+  "to": [11, 10, 11],
+  "faces": {
+    "north": {"texture": "#glass"},
+    "south": {"texture": "#glass"},
+    "east": {"texture": "#glass"},
+    "west": {"texture": "#glass"},
+    "up": {"texture": "#glass"},
+    "down": {"texture": "#glass"}
+  }
+}
+  ]
+}

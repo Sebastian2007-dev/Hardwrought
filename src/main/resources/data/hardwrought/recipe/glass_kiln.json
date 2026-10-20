@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "B": "minecraft:bricks",
+    "H": "hardwrought:redstone_coil",
+    "C": "hardwrought:basic_circuit"
+  },
+  "pattern": [
+    "BBB",
+    "BHB",
+    "BCB"
+  ],
+  "result": {
+    "id": "hardwrought:glass_kiln"
+  }
+}

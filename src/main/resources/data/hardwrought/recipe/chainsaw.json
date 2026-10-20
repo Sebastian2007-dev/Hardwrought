@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "B": "hardwrought:saw_bar",
+    "M": "hardwrought:electric_motor",
+    "H": "hardwrought:device_housing",
+    "G": "hardwrought:reduction_gear",
+    "T": "hardwrought:toggle_switch"
+  },
+  "pattern": [
+    "BMH",
+    "GTH"
+  ],
+  "result": {
+    "id": "hardwrought:chainsaw"
+  }
+}

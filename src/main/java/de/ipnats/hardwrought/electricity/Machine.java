@@ -74,10 +74,19 @@ public enum Machine {
             return ItemStack.EMPTY;
         }
     },
-    /** A spindle and a cutter: a steel rod turned into the fine gears a sorting mechanism counts with. */
+    /**
+     * A spindle and a cutter: a steel rod turned into the fine gears a sorting mechanism counts with, a
+     * copper rod into a motor's commutator, and a graphite electrode into brushes for it.
+     */
     LATHE("lathe", 35.0, 120, SoundEvents.GRINDSTONE_USE, ParticleTypes.CRIT) {
         @Override
         public ItemStack result(ServerLevel level, ItemStack input) {
+            if (input.is(MetalStock.rod("copper"))) return new ItemStack(de.ipnats.hardwrought.parts.Parts.COMMUTATOR);
+            // Tungsten turned to a point: an arc lamp's electrodes burn away from their tips.
+            if (input.is(MetalStock.rod("tungsten"))) return new ItemStack(de.ipnats.hardwrought.parts.Parts.ARC_ELECTRODE, 2);
+            if (input.is(de.ipnats.hardwrought.multiblock.BigMachines.GRAPHITE_ELECTRODE.asItem())) {
+                return new ItemStack(de.ipnats.hardwrought.parts.Parts.GRAPHITE_BRUSH, 8);
+            }
             return input.is(MetalStock.rod("steel"))
                     ? new ItemStack(de.ipnats.hardwrought.storage.StorageBlocks.FINE_GEAR) : ItemStack.EMPTY;
         }
@@ -182,6 +191,59 @@ public enum Machine {
         public int pieces(ItemStack input) {
             return 8;
         }
+    },
+
+    // The safe haven's stations (stage E3).
+    /** Dies of falling size: a rod pulled through them, finer and finer, into wire. */
+    WIRE_DRAWER("wire_drawer", 40.0, 80, SoundEvents.CHAIN_PLACE, ParticleTypes.CRIT) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            if (input.is(MetalStock.rod("tungsten"))) return new ItemStack(de.ipnats.hardwrought.parts.Parts.TUNGSTEN_FILAMENT, 4);
+            if (input.is(MetalStock.rod("nichrome"))) return new ItemStack(de.ipnats.hardwrought.parts.Parts.NICHROME_WIRE, 4);
+            if (input.is(MetalStock.rod("copper"))) return new ItemStack(ElectricBlocks.COPPER_WIRE, 3);
+            return ItemStack.EMPTY;
+        }
+    },
+    /** A small electric kiln and a blowpipe: glass blown into bulbs, a pane drawn into tubes. */
+    GLASS_KILN("glass_kiln", 15.0, 120, SoundEvents.FURNACE_FIRE_CRACKLE, ParticleTypes.SMOKE) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            if (input.is(net.minecraft.world.item.Items.GLASS)) return new ItemStack(de.ipnats.hardwrought.parts.Parts.GLASS_BULB, 4);
+            if (input.is(net.minecraft.world.item.Items.GLASS_PANE)) return new ItemStack(de.ipnats.hardwrought.parts.Parts.GLASS_TUBE, 2);
+            return ItemStack.EMPTY;
+        }
+    },
+    // Stage E5: the stations' second marks, with a circuit and a better motor: twice as fast, and more current.
+    COIL_WINDER_MK2("coil_winder_mk2", 35.0, 50, SoundEvents.CHAIN_PLACE, ParticleTypes.CRIT) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return COIL_WINDER.result(level, input);
+        }
+
+        @Override
+        public int pieces(ItemStack input) {
+            return COIL_WINDER.pieces(input);
+        }
+    },
+    WIRE_DRAWER_MK2("wire_drawer_mk2", 25.0, 40, SoundEvents.CHAIN_PLACE, ParticleTypes.CRIT) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return WIRE_DRAWER.result(level, input);
+        }
+    },
+    GLASS_KILN_MK2("glass_kiln_mk2", 10.0, 60, SoundEvents.FURNACE_FIRE_CRACKLE, ParticleTypes.SMOKE) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return GLASS_KILN.result(level, input);
+        }
+    },
+    /** Steam under pressure: a bandage comes out sterile. */
+    AUTOCLAVE("autoclave", 30.0, 200, SoundEvents.FIRE_EXTINGUISH, ParticleTypes.CLOUD) {
+        @Override
+        public ItemStack result(ServerLevel level, ItemStack input) {
+            return input.is(de.ipnats.hardwrought.core.registry.ModItems.BANDAGE)
+                    ? new ItemStack(de.ipnats.hardwrought.core.registry.ModItems.STERILE_DRESSING) : ItemStack.EMPTY;
+        }
     };
 
     private final String id;
@@ -246,7 +308,8 @@ public enum Machine {
      * what any furnace does; the later marks do what their first mark does.
      */
     private static final java.util.Map<Machine, String> SHOWN = new java.util.LinkedHashMap<>(java.util.Map.of(
-            PRESS, "pressing", SAWMILL, "sawing", LATHE, "lathe", TUBE_MILL, "tube_mill", COIL_WINDER, "coil_winder"));
+            PRESS, "pressing", SAWMILL, "sawing", LATHE, "lathe", TUBE_MILL, "tube_mill", COIL_WINDER, "coil_winder",
+            WIRE_DRAWER, "wire_drawer", GLASS_KILN, "glass_kiln", AUTOCLAVE, "autoclave"));
     private static List<de.ipnats.hardwrought.knowledge.WorldRecipes.WorldRecipe> shown;
 
     /**

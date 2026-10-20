@@ -39,6 +39,11 @@ import java.util.function.Consumer;
  * again. With a square it waits for someone to come near, and only so many times.
  *
  * <p>The drawing itself is kept too, so the clients can lay it on the ground as it was drawn.
+ *
+ * <p>Stages S2 and S3 (docs/magic-roadmap.md, M4 and M5): its reach, size and life follow the Wind, Water
+ * and Earth in its ring; Dark there chooses whom it acts on, Lightning delays it; two squares make it
+ * wait for a foot on it; runes outside its frame are conditions. Linked to other sigils it sends them a
+ * signal whenever it acts, and a sigil with a link into it acts only when signalled.
  */
 public class SigilBlockEntity extends BlockEntity {
     /** On the outer circle's scale: how far the drawing reaches from the middle of the block. */
@@ -54,6 +59,15 @@ public class SigilBlockEntity extends BlockEntity {
     static final double NEAR = 2.5;
 
     private static final Codec<List<List<Float>>> LINES = Codec.list(Codec.list(Codec.FLOAT));
+    private static final Codec<SigilDesign.Program> PROGRAM = com.mojang.serialization.codecs.RecordCodecBuilder.create(instance -> instance.group(
+            Codec.INT.optionalFieldOf("range", 0).forGetter(SigilDesign.Program::range),
+            Codec.INT.optionalFieldOf("size", 0).forGetter(SigilDesign.Program::size),
+            Codec.INT.optionalFieldOf("duration", 0).forGetter(SigilDesign.Program::duration),
+            Codec.STRING.optionalFieldOf("target", "ANYONE").xmap(SigilDesign.Target::valueOf, Enum::name).forGetter(SigilDesign.Program::target),
+            Codec.INT.optionalFieldOf("delay", 0).forGetter(SigilDesign.Program::delay),
+            Codec.BOOL.optionalFieldOf("contact", false).forGetter(SigilDesign.Program::contact),
+            Codec.STRING.xmap(SigilDesign.Condition::valueOf, Enum::name).listOf().optionalFieldOf("conditions", List.of())
+                    .forGetter(SigilDesign.Program::conditions)).apply(instance, SigilDesign.Program::new));
 
     /** Set by the client: keeps the sigil's look up to date, and takes it away. */
     public static Consumer<SigilBlockEntity> clientTicker = sigil -> { };
@@ -76,8 +90,20 @@ public class SigilBlockEntity extends BlockEntity {
     /** When an unstable sigil gives way, or -1. */
     long unstableAt = -1;
     List<float[]> lines = List.of();
+    SigilDesign.Program program = SigilDesign.Program.NONE;
+    /** The sigils it signals, and those that signal it. */
+    final List<BlockPos> links = new ArrayList<>();
+    final List<BlockPos> sources = new ArrayList<>();
+    private boolean signalled;
     private long nextAction;
     private boolean wasNear;
+
+    /** How many sigils one may signal. */
+    public static final int MAX_LINKS = 4;
+    /** Ticks of delay for every Lightning in the ring. */
+    public static final int DELAY_TICKS = 30;
+    /** How far a directed sigil reaches without Wind. */
+    public static final double REACH = 16;
 
     public SigilBlockEntity(BlockPos pos, BlockState state) {
         super(Magic.SIGIL_ENTITY, pos, state);
@@ -103,6 +129,29 @@ public class SigilBlockEntity extends BlockEntity {
 
     public SigilDesign.Shape shape() {
         return shape;
+    }
+
+    public SigilDesign.Program program() {
+        return program;
+    }
+
+    public List<BlockPos> links() {
+        return List.copyOf(links);
+    }
+
+    /** Whether something signals it, so that it acts only when signalled. */
+    public boolean driven() {
+        return !sources.isEmpty();
+    }
+
+    /** How far its element goes, directed. */
+    public double reach() {
+        return REACH * Math.pow(1.5, program.range());
+    }
+
+    /** A signal arrives: it acts once, at its next turn. */
+    public void signal() {
+        signalled = true;
     }
 
     public float forwardX() {
@@ -144,10 +193,30 @@ public class SigilBlockEntity extends BlockEntity {
             server.removeBlock(pos, false);
             return;
         }
+        if (now % 40 == 0) sigil.showLinks(server);
         if (now < sigil.nextAction) return;
+        // Driven by another sigil: it waits for the signal, and acts on it once.
+        sigil.sources.removeIf(source -> server.isLoaded(source) && !(server.getBlockEntity(source) instanceof SigilBlockEntity));
+        if (sigil.driven()) {
+            if (!sigil.signalled) {
+                sigil.nextAction = now + 2;
+                return;
+            }
+            sigil.signalled = false;
+            if (sigil.conditionsHold(server)) sigil.fire(server);
+            sigil.nextAction = now + 10;
+            return;
+        }
+        if (!sigil.conditionsHold(server)) {
+            sigil.wasNear = false;
+            sigil.nextAction = now + 20;
+            return;
+        }
         if (sigil.presence) {
-            boolean near = !server.getEntitiesOfClass(LivingEntity.class, new AABB(pos).inflate(NEAR, 1.5, NEAR),
-                    entity -> entity.isAlive() && !entity.isSpectator() && !entity.getUUID().equals(sigil.owner)).isEmpty();
+            // Two squares wait for a foot on the sigil itself; one for anyone coming near.
+            AABB watch = sigil.program.contact() ? new AABB(pos).inflate(0.2, 1.0, 0.2) : new AABB(pos).inflate(NEAR, 1.5, NEAR);
+            boolean near = !server.getEntitiesOfClass(LivingEntity.class, watch,
+                    entity -> entity.isAlive() && !entity.isSpectator() && sigil.targets(server, entity)).isEmpty();
             if (!near) {
                 sigil.wasNear = false;
                 sigil.nextAction = now + 5;
@@ -163,16 +232,109 @@ public class SigilBlockEntity extends BlockEntity {
                 sigil.setChanged();
             }
         }
-        sigil.act(server);
+        sigil.fire(server);
         int interval = sigil.directed() ? 30 : 20;
         sigil.nextAction = now + (sigil.pulse ? interval / 2 : interval);
+    }
+
+    /** Acts — after its delay, if it has one — and signals the sigils it is linked to. */
+    private void fire(ServerLevel level) {
+        if (program.delay() > 0) MagicTasks.later(level, program.delay() * DELAY_TICKS, () -> {
+            if (!isRemoved()) act(level);
+        });
+        else act(level);
+        for (BlockPos link : links) {
+            if (level.isLoaded(link) && level.getBlockEntity(link) instanceof SigilBlockEntity other) other.signal();
+        }
+    }
+
+    /** Whether everything drawn outside its frame holds now. */
+    public boolean conditionsHold(ServerLevel level) {
+        BlockPos above = worldPosition.above();
+        for (SigilDesign.Condition condition : program.conditions()) {
+            boolean holds = switch (condition) {
+                case DARK -> level.getMaxLocalRawBrightness(above) <= 7;
+                case LIGHT -> level.getMaxLocalRawBrightness(above) >= 8;
+                case HOT -> temperature(level) >= 25;
+                case COLD -> temperature(level) <= 5;
+                case HOSTILE_NEAR -> !level.getEntitiesOfClass(net.minecraft.world.entity.monster.Monster.class,
+                        new AABB(worldPosition).inflate(8), LivingEntity::isAlive).isEmpty();
+                case RAIN -> level.isRainingAt(above);
+            };
+            if (!holds) return false;
+        }
+        return true;
+    }
+
+    private double temperature(ServerLevel level) {
+        var runtime = de.ipnats.hardwrought.core.events.CoreLifecycle.find(level.getServer());
+        return runtime == null ? 15 : runtime.environment().outdoorTemperature(level, worldPosition);
+    }
+
+    /** Whether it acts on this one: anyone but its maker, or only monsters, or only its maker's side. */
+    boolean targets(ServerLevel level, LivingEntity entity) {
+        ServerPlayer maker = owner == null ? null : level.getServer().getPlayerList().getPlayer(owner);
+        return switch (program.target()) {
+            case ANYONE -> !entity.getUUID().equals(owner);
+            case HOSTILE -> entity instanceof net.minecraft.world.entity.monster.Enemy;
+            case FRIENDLY -> Allies.ally(maker, entity) && !(entity instanceof net.minecraft.world.entity.monster.Enemy);
+        };
+    }
+
+    /** A faint thread along every link, now and then. */
+    private void showLinks(ServerLevel level) {
+        Vec3 from = Vec3.atBottomCenterOf(worldPosition).add(0, 0.2, 0);
+        for (BlockPos link : links) {
+            Vec3 to = Vec3.atBottomCenterOf(link).add(0, 0.2, 0);
+            int steps = Math.max(2, (int) (from.distanceTo(to) * 2));
+            for (int i = 0; i <= steps; i++) {
+                Vec3 at = from.lerp(to, i / (double) steps);
+                level.sendParticles(net.minecraft.core.particles.ParticleTypes.ENCHANT, at.x, at.y, at.z, 1, 0, 0, 0, 0);
+            }
+        }
+    }
+
+    /** Links this sigil to another, or unlinks them if they were. Returns whether they are linked now. */
+    public boolean toggleLink(ServerLevel level, SigilBlockEntity other) {
+        BlockPos to = other.getBlockPos();
+        if (links.remove(to)) {
+            other.sources.remove(worldPosition);
+            setChanged();
+            other.setChanged();
+            return false;
+        }
+        if (links.size() >= MAX_LINKS) return false;
+        links.add(to.immutable());
+        if (!other.sources.contains(worldPosition)) other.sources.add(worldPosition.immutable());
+        setChanged();
+        other.setChanged();
+        return true;
+    }
+
+    /** Struck by an explosion, it is damaged rather than gone (sigil §50): weaker, and turned aside. False where it gives way. */
+    /** An endermite close by (docs/magic-roadmap.md, M6): the sigil loses a little strength each second. */
+    void unsettle() {
+        power = Math.max(0.05f, power * 0.97f);
+        setChanged();
+    }
+
+    boolean damaged() {
+        if (power < 0.4f) return false;
+        power *= 0.6f;
+        if (directed()) {
+            float x = dirX;
+            dirX = -dirZ;
+            dirZ = x;
+        }
+        setChanged();
+        return true;
     }
 
     private SpellEffects.Release release(ServerLevel level, Vec3 direction, double scale) {
         ServerPlayer maker = owner == null ? null : level.getServer().getPlayerList().getPlayer(owner);
         if (maker != null && maker.level() != level) maker = null;
         return new SpellEffects.Release(level, maker, element, inverted,
-                directed() ? Spell.Placement.ARROW : Spell.Placement.FRONT, direction, 16,
+                directed() ? Spell.Placement.ARROW : Spell.Placement.FRONT, direction, reach(),
                 shape == SigilDesign.Shape.BURST, false, false, false, power * scale, area, 1);
     }
 
@@ -180,13 +342,29 @@ public class SigilBlockEntity extends BlockEntity {
         Vec3 hover = hoverPoint();
         if (!directed()) {
             SpellEffects.Release r = release(level, new Vec3(0, 1, 0), 1);
+            double radius = shape == SigilDesign.Shape.SPHERE ? area + 1 : shape == SigilDesign.Shape.RING ? area + 2 : 1.0;
+            if (program.target() != SigilDesign.Target.ANYONE) {
+                // Chosen targets only: the element goes to each of them, and nothing else is touched.
+                for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, new AABB(worldPosition).inflate(radius + 1),
+                        e -> e.isAlive() && !e.isSpectator() && targets(level, e))) {
+                    double distance = entity.position().distanceTo(hover);
+                    if (distance > radius + 0.8 || shape == SigilDesign.Shape.RING && distance < radius - 1.5) continue;
+                    SpellEffects.strike(r, entity.position().add(0, entity.getBbHeight() * 0.5, 0), 0.6, false);
+                }
+                return;
+            }
             if (shape == SigilDesign.Shape.BURST) SpellEffects.burst(r, hover);
-            else SpellEffects.strike(r, hover, shape == SigilDesign.Shape.SPHERE ? area + 1 : 1.0, false);
+            else if (shape == SigilDesign.Shape.RING) {
+                for (int i = 0; i < 10; i++) {
+                    double a = i * Math.PI / 5;
+                    SpellEffects.strike(r, hover.add(Math.cos(a) * radius, -0.5, Math.sin(a) * radius), 1.0, false);
+                }
+            } else SpellEffects.strike(r, hover, radius, false);
             return;
         }
         Vec3 dir = new Vec3(dirX, 0, dirZ).normalize();
         SpellEffects.Release r = release(level, dir, 1);
-        Vec3 end = hover.add(dir.scale(16));
+        Vec3 end = hover.add(dir.scale(reach()));
         BlockHitResult block = level.clip(new ClipContext(hover, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE,
                 CollisionContext.empty()));
         Vec3 stop = block.getType() == HitResult.Type.BLOCK ? block.getLocation().subtract(dir.scale(0.3)) : end;
@@ -194,7 +372,7 @@ public class SigilBlockEntity extends BlockEntity {
         LivingEntity first = null;
         double best = hover.distanceTo(stop);
         for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, new AABB(hover, stop).inflate(1),
-                e -> e.isAlive() && !e.isSpectator())) {
+                e -> e.isAlive() && !e.isSpectator() && (program.target() == SigilDesign.Target.ANYONE || targets(level, e)))) {
             var hit = entity.getBoundingBox().inflate(0.3).clip(hover, stop);
             if (hit.isPresent() && hover.distanceTo(hit.get()) < best) {
                 best = hover.distanceTo(hit.get());
@@ -235,9 +413,11 @@ public class SigilBlockEntity extends BlockEntity {
         this.presence = design.presence();
         this.pulse = design.pulse();
         this.power = power;
-        this.area = shape == SigilDesign.Shape.SPHERE ? 2.5f : 1.2f;
+        this.program = design.program();
+        float grown = (float) Math.pow(1.4, program.size());
+        this.area = (shape == SigilDesign.Shape.SPHERE || shape == SigilDesign.Shape.RING ? 2.5f : 1.2f) * grown;
         this.owner = owner;
-        this.until = now + (presence ? WAITING_LIFE : LIFE);
+        this.until = now + (long) ((presence ? WAITING_LIFE : LIFE) * Math.pow(2, program.duration()));
         this.charges = CHARGES + 2 * design.strength();
         this.unstableAt = unstableAt;
         this.lines = design.lines();
@@ -255,7 +435,12 @@ public class SigilBlockEntity extends BlockEntity {
         dirZ = input.getFloatOr("dir_z", 0);
         forwardX = input.getFloatOr("forward_x", 0);
         forwardZ = input.getFloatOr("forward_z", 1);
-        shape = SigilDesign.Shape.values()[Math.max(0, Math.min(2, input.getIntOr("shape", 0)))];
+        shape = SigilDesign.Shape.values()[Math.max(0, Math.min(SigilDesign.Shape.values().length - 1, input.getIntOr("shape", 0)))];
+        program = input.read("program", PROGRAM).orElse(SigilDesign.Program.NONE);
+        links.clear();
+        links.addAll(input.read("links", BlockPos.CODEC.listOf()).orElse(List.of()));
+        sources.clear();
+        sources.addAll(input.read("sources", BlockPos.CODEC.listOf()).orElse(List.of()));
         presence = input.getBooleanOr("presence", false);
         pulse = input.getBooleanOr("pulse", false);
         power = input.getFloatOr("power", 1);
@@ -283,6 +468,9 @@ public class SigilBlockEntity extends BlockEntity {
         output.putFloat("forward_x", forwardX);
         output.putFloat("forward_z", forwardZ);
         output.putInt("shape", shape.ordinal());
+        output.store("program", PROGRAM, program);
+        if (!links.isEmpty()) output.store("links", BlockPos.CODEC.listOf(), List.copyOf(links));
+        if (!sources.isEmpty()) output.store("sources", BlockPos.CODEC.listOf(), List.copyOf(sources));
         output.putBoolean("presence", presence);
         output.putBoolean("pulse", pulse);
         output.putFloat("power", power);

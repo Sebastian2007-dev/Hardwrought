@@ -31,6 +31,20 @@ public class StorageTubeBlock extends PipeBlock {
         builder.add(NORTH, EAST, SOUTH, WEST, UP, DOWN);
     }
 
+    /** Set down, it may join a desk to the coil on another tube: the desks work out their current again. */
+    @Override
+    protected void onPlace(BlockState state, net.minecraft.world.level.Level level, BlockPos pos, BlockState previous, boolean moving) {
+        super.onPlace(state, level, pos, previous, moving);
+        if (level instanceof net.minecraft.server.level.ServerLevel server && !previous.is(this)) StorageNetwork.rewire(server, pos);
+    }
+
+    /** Taken away, it may cut a desk off from its coil. */
+    @Override
+    protected void affectNeighborsAfterRemoval(BlockState state, net.minecraft.server.level.ServerLevel level, BlockPos pos, boolean moving) {
+        super.affectNeighborsAfterRemoval(state, level, pos, moving);
+        StorageNetwork.rewire(level, pos);
+    }
+
     private static boolean joins(LevelReader level, BlockPos pos, Direction side) {
         return StorageNetwork.isPart(level.getBlockState(pos.relative(side)));
     }

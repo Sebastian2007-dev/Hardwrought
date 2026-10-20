@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "B": "hardwrought:rubber",
+    "P": "hardwrought:iron_plate",
+    "S": "hardwrought:shaft"
+  },
+  "pattern": [
+    "BBB",
+    "PSP"
+  ],
+  "result": {
+    "id": "hardwrought:conveyor",
+    "count": 4
+  }
+}

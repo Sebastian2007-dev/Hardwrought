@@ -1,0 +1,60 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "bulb": "hardwrought:block/hardwrought/heat_lamp_bulb",
+    "shade": "hardwrought:block/hardwrought/lamp_shade",
+    "enamel": "hardwrought:block/hardwrought/appliance_enamel",
+    "casing": "hardwrought:block/hardwrought/appliance_casing",
+    "particle": "hardwrought:block/hardwrought/appliance_casing"
+  },
+  "elements": [
+{
+  "from": [5, 0, 5],
+  "to": [11, 1, 11],
+  "faces": {
+    "north": {"texture": "#casing"},
+    "south": {"texture": "#casing"},
+    "east": {"texture": "#casing"},
+    "west": {"texture": "#casing"},
+    "up": {"texture": "#casing"},
+    "down": {"texture": "#casing"}
+  }
+},
+{
+  "from": [7.5, 1, 7.5],
+  "to": [8.5, 7, 8.5],
+  "faces": {
+    "north": {"texture": "#casing"},
+    "south": {"texture": "#casing"},
+    "east": {"texture": "#casing"},
+    "west": {"texture": "#casing"},
+    "up": {"texture": "#casing"},
+    "down": {"texture": "#casing"}
+  }
+},
+{
+  "from": [4, 7, 4],
+  "to": [12, 12, 12],
+  "faces": {
+    "north": {"texture": "#shade"},
+    "south": {"texture": "#shade"},
+    "east": {"texture": "#shade"},
+    "west": {"texture": "#shade"},
+    "up": {"texture": "#shade"},
+    "down": {"texture": "#shade"}
+  }
+},
+{
+  "from": [5.5, 6, 5.5],
+  "to": [10.5, 7, 10.5],
+  "faces": {
+    "north": {"texture": "#bulb"},
+    "south": {"texture": "#bulb"},
+    "east": {"texture": "#bulb"},
+    "west": {"texture": "#bulb"},
+    "up": {"texture": "#bulb"},
+    "down": {"texture": "#bulb"}
+  }
+}
+  ]
+}

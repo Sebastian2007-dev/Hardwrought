@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "C": "hardwrought:redstone_coil",
+    "W": "hardwrought:copper_wire"
+  },
+  "pattern": [
+    "PCP",
+    "W W",
+    "PCP"
+  ],
+  "result": {
+    "id": "hardwrought:stator"
+  }
+}

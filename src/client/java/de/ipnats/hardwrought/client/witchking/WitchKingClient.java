@@ -15,6 +15,8 @@ public final class WitchKingClient {
         // Swords and souls have no model: they are light, drawn by WitchKingFx.
         EntityRendererRegistry.register(WitchKingContent.HEX_BLADE, NoopRenderer::new);
         EntityRendererRegistry.register(WitchKingContent.SOUL_ORB, NoopRenderer::new);
+        // One sits on the throne and its seat on nothing to see.
+        EntityRendererRegistry.register(WitchKingContent.SEAT_MOUNT, NoopRenderer::new);
         WitchKingFx.initialize();
         MantleClient.initialize();
     }

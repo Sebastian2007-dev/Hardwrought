@@ -82,6 +82,7 @@ public final class VoidDragon {
         DragonHazards.initialize();
         CrystalWards.initialize();
         DragonHeart.initialize();
+        DragonRising.initialize();
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (entity instanceof EnderDragon dragon && entity.level() instanceof ServerLevel level) DragonHeart.died(level, dragon);
         });

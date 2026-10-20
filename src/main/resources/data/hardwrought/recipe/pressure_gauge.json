@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "G": "minecraft:glass_pane",
+    "C": "hardwrought:copper_plate",
+    "F": "hardwrought:fine_gear"
+  },
+  "pattern": [
+    " G ",
+    "CFC"
+  ],
+  "result": {
+    "id": "hardwrought:pressure_gauge"
+  }
+}

@@ -28,21 +28,32 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * The mantle's hover on the client (see {@link MantleFlight}): the key, the movement while hovering —
- * slow, every way, drifting gently up and down as if held on a breath — the souls round its hem, and the
- * charge shown under the crosshair while it is not full.
+ * The mantle's hover on the client (see {@link MantleFlight}): taken up and let go as a creative player
+ * takes to the air, by tapping jump twice while aloft (or with its key), and flown as they fly — every
+ * way at the same pace, up with jump and down with sneak. The souls round its hem, and the charge shown
+ * under the crosshair while it is not full; the charge and the ceiling are what still hold it in check.
  */
 public final class MantleClient {
     public static final KeyMapping HOVER = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "key.hardwrought.hover", InputConstants.Type.KEYBOARD, InputConstants.KEY_X, HardwroughtKeys.CATEGORY));
-    /** How fast the hovering wearer moves, sideways, up and down, in blocks a tick: letting itself sink is quicker than climbing. */
-    static final double DRIFT = 0.2, CLIMB = 0.16, SINK = 0.34;
-    /** The breath it hangs on: how far it carries up and down, and how slowly. */
-    static final double BOB = 0.025, BOB_RATE = 0.1;
+    /** How fast the hovering wearer moves, sideways, up and down, in blocks a tick: a creative player's pace. */
+    static final double DRIFT = 0.55, CLIMB = 0.375, SINK = 0.375;
+    /** How much faster sprinting carries it, as it does a creative flyer. */
+    static final double SPRINT = 2.0;
+    /** How quickly its pace follows the keys: quick to answer, without a jolt. */
+    static final double RESPONSE = 0.35;
+    /** The breath it hangs on while left alone: how far it carries up and down, and how slowly. */
+    static final double BOB = 0.012, BOB_RATE = 0.1;
+    /** Ticks within which a second tap of jump takes to the air or lets go, as for a creative player. */
+    static final int DOUBLE_TAP = 7;
     private static final RandomSource RANDOM = RandomSource.create();
 
     private static boolean hovering;
     private static float charge = 1;
+    /** The keys as they were last tick, so that holding one down counts once. */
+    private static boolean keyWasDown, jumpWasDown;
+    /** Ticks since jump was last pressed, for the double tap. */
+    private static int sinceJump = DOUBLE_TAP + 1;
 
     private MantleClient() { }
 
@@ -67,9 +78,25 @@ public final class MantleClient {
     private static void tick(Minecraft client) {
         LocalPlayer player = client.player;
         if (player == null) return;
-        while (HOVER.consumeClick()) {
+        // Held down, a key repeats its clicks: only a fresh press toggles, or the hover flickers on and off.
+        while (HOVER.consumeClick()) { }
+        boolean keyDown = HOVER.isDown();
+        boolean toggle = keyDown && !keyWasDown;
+        keyWasDown = keyDown;
+        boolean jumpDown = player.input.keyPresses.jump();
+        if (sinceJump <= DOUBLE_TAP) sinceJump++;
+        if (jumpDown && !jumpWasDown && client.gui.screen() == null) {
+            if (sinceJump <= DOUBLE_TAP) {
+                toggle = true;
+                sinceJump = DOUBLE_TAP + 1;
+            } else {
+                sinceJump = 0;
+            }
+        }
+        jumpWasDown = jumpDown;
+        if (toggle) {
             if (hovering) ClientPlayNetworking.send(new MantleFlight.Hover(false));
-            else if (wearing(player) && !player.onGround()) ClientPlayNetworking.send(new MantleFlight.Hover(true));
+            else if (wearing(player) && !player.onGround() && !player.isInWater()) ClientPlayNetworking.send(new MantleFlight.Hover(true));
         }
         if (hovering && !client.isPaused()) hem(player);
     }
@@ -107,10 +134,14 @@ public final class MantleClient {
         var keys = local.input.keyPresses;
         Vec3 flat = new Vec3((keys.left() ? 1 : 0) - (keys.right() ? 1 : 0), 0, (keys.forward() ? 1 : 0) - (keys.backward() ? 1 : 0));
         if (flat.lengthSqr() > 1) flat = flat.normalize();
-        double speed = DRIFT * (player.isSprinting() ? 1.5 : 1);
+        boolean sprinting = keys.sprint() || player.isSprinting();
+        if (sprinting && keys.forward() && !player.isSprinting()) player.setSprinting(true);
+        double speed = DRIFT * (sprinting && keys.forward() ? SPRINT : 1);
         double x = (flat.x * cos - flat.z * sin) * speed, z = (flat.z * cos + flat.x * sin) * speed;
-        double y = (keys.jump() ? CLIMB : 0) - (keys.shift() ? SINK : 0) + BOB * Math.cos(player.tickCount * BOB_RATE);
-        Vec3 velocity = player.getDeltaMovement().lerp(new Vec3(x, y, z), 0.18);
+        double climb = (keys.jump() ? CLIMB : 0) - (keys.shift() ? SINK : 0);
+        // Left alone, it hangs on a slow breath; told to climb or sink, it does just that.
+        double y = climb != 0 ? climb : BOB * Math.cos(player.tickCount * BOB_RATE);
+        Vec3 velocity = player.getDeltaMovement().lerp(new Vec3(x, y, z), RESPONSE);
         player.setDeltaMovement(velocity);
         player.move(MoverType.SELF, velocity);
         player.resetFallDistance();

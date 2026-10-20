@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "S": "hardwrought:steel_plate",
+    "C": "hardwrought:capacitor",
+    "O": "hardwrought:heavy_oil"
+  },
+  "pattern": [
+    "SCS",
+    "COC",
+    "SCS"
+  ],
+  "result": {
+    "id": "hardwrought:capacitor_bank"
+  }
+}

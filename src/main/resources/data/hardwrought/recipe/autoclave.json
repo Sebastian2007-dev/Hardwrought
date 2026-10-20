@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "G": "hardwrought:pressure_gauge",
+    "V": "hardwrought:pressure_vessel",
+    "T": "hardwrought:thermostat",
+    "P": "hardwrought:steel_plate",
+    "H": "hardwrought:heating_element",
+    "C": "hardwrought:basic_circuit"
+  },
+  "pattern": [
+    "GVT",
+    "PHP",
+    "PCP"
+  ],
+  "result": {
+    "id": "hardwrought:autoclave"
+  }
+}

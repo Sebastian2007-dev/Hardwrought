@@ -15,6 +15,13 @@ inventory; it does not have to be held.
 - A chunk is sixteen squares, each four blocks across: the map colour of what lies on top in the
   middle of the square, and whether the ground rises or falls towards the north, as vanilla's maps
   keep it. The surface is what is recorded; caves are not.
+- **Under a roof of rock** (the Nether, the Underworld: any dimension with a ceiling) there is no
+  surface to look down on; from above the atlas would see only bedrock. There it draws at the
+  bearer's height instead: for each square, the first coloured block below open space at the
+  bearer's head (looking up to six blocks higher if their head would be in rock there, and up to 64
+  down), shaded by its slope like the surface. Where it is rock all the way up, the rock is kept in
+  the darkest shade of its colour, which marks it as **wall**. Pages of such dimensions drawn before
+  this were only roof; they are wiped once (marks stay) and drawn again (`Atlas.CAVE_DRAWING`).
 - What was recorded once stays as it was, whether the land changes afterwards or not.
 - Each player has their own atlas for each dimension. It is kept with the world, not in the item: an
   atlas that is lost is a book to be made again, not a map to be walked again.
@@ -38,6 +45,10 @@ when the view or the atlas changes:
 - Little **drawings** stand on the land, at most one to a cell of nine pixels: trees and pines in
   the forests, peaks on rock and snow, waves on open water, tufts on grass, dots on sand and snow,
   houses where something is built.
+
+- Under a roof, **walls** are hatched dark and inked along the floor they close in; the rock
+  underfoot gets rubble instead of peaks, netherrack embers, lava waves, and basalt and blackstone
+  count as rock, not as something built.
 
 The paper grain, the ragged edge and where every drawing stands are worked out from the world's
 coordinates, so they stay in place while the page is dragged.

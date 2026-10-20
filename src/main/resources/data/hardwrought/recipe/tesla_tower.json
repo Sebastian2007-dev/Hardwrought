@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "E": "hardwrought:elite_circuit",
+    "S": "hardwrought:spark_gap",
+    "T": "hardwrought:transformer",
+    "W": "hardwrought:winding",
+    "P": "hardwrought:steel_plate"
+  },
+  "pattern": [
+    "ESE",
+    "TWT",
+    "PPP"
+  ],
+  "result": {
+    "id": "hardwrought:tesla_tower"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "A": "hardwrought:aluminum_plate",
+    "G": "minecraft:glass_pane"
+  },
+  "pattern": [
+    "AAA",
+    "AGA"
+  ],
+  "result": {
+    "id": "hardwrought:reflector"
+  }
+}

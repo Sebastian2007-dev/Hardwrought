@@ -75,7 +75,8 @@ public final class FxPresets {
             case HEX_LANCE -> WitchKingFx.lance(fx, pos, target, color);
             case END_PLATFORM -> de.ipnats.hardwrought.client.end.EndClient.platform(fx, pos, color, s, (int) Math.round(target.y - pos.y));
             case DRAGON_SHIELDED, DRAGON_GUST_CHARGE, DRAGON_GUST, DRAGON_LOCK, DRAGON_STOMP, DRAGON_ROAR, DRAGON_LAND, VOID_CLOUD, VOID_PULL,
-                 FRAGMENT_CRUMBLE, CRYSTAL_WARD_HIT, CRYSTAL_WARD_BREAK -> de.ipnats.hardwrought.client.end.DragonFx.play(fx, effect, pos, target, color, s, follow);
+                 FRAGMENT_CRUMBLE, CRYSTAL_WARD_HIT, CRYSTAL_WARD_BREAK, DRAGON_RISE_CALL, DRAGON_RISE_PILLAR, DRAGON_RISE_PILLAR_BURST,
+                 DRAGON_RISE_SUMMON, DRAGON_RISE_BIRTH -> de.ipnats.hardwrought.client.end.DragonFx.play(fx, effect, pos, target, color, s, follow);
             case RITUAL_IGNITE, RITUAL_BEAM, RITUAL_RING, RITUAL_SKYBEAM, RITUAL_CONVERGE, RITUAL_DISSOLVE, RITUAL_FINALE,
                  RITUAL_WARD, RITUAL_APOTHEOSIS ->
                     de.ipnats.hardwrought.client.ritual.RitualFx.play(fx, effect, pos, target, color, s);

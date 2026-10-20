@@ -140,6 +140,13 @@ same twice in a row, and everything aimed is marked before it strikes.
 His harm is its own damage type, `hardwrought:hex`: armour does not hold it (half of it against his blows), and
 protective runes count only half, at most 40 % instead of 80 %.
 
+**The way he leaves open** ([ThronePassage](../src/main/java/de/ipnats/hardwrought/witchking/ThronePassage.java)): beaten,
+his throne goes cold and stays a way out and back in for good. Sitting on it (use it; two seconds of souls gathering,
+sneak to get up before) carries one up to its **seat** in the overworld, the Witch King's seat; the first time, or when
+its seat is no longer standing, the seat is set down beside where the player sleeps (the world's spawn without a bed in
+the overworld). Sitting on the seat carries one down to the foot of the throne, which from then on leads back up to that
+seat. The seat cannot be broken; sneaking with empty hands picks it up, still bound to its throne, to set down elsewhere.
+
 ## Built so far
 
 **Stage 1 — the dimension** ([Underworld](../src/main/java/de/ipnats/hardwrought/underworld/Underworld.java), data under

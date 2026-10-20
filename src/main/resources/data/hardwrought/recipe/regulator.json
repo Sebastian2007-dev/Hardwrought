@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "R": "hardwrought:resistor",
+    "T": "hardwrought:transistor",
+    "C": "hardwrought:basic_circuit"
+  },
+  "pattern": [
+    "RTR",
+    " C "
+  ],
+  "result": {
+    "id": "hardwrought:regulator"
+  }
+}

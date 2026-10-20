@@ -5,7 +5,9 @@ driveline, bare copper strung between insulators, a lamp, and a meter to read it
 step: masts to carry a line overhead, a battery to hold it up, and the first machine that runs on
 current, the basic crusher. Third step: the machines — electric furnace, sawmill and plate press
 beside the crusher, each with a screen. Fourth: the grid at 240 V — transformers, porcelain,
-switchgear and insulated wire. Motors come after.
+switchgear and insulated wire. Fifth: motors that turn the driveline. The devices that run on all
+this — lights, heaters, coolers, fans, cold stores, the floodlight and the sickbed — are in
+[haven.md](haven.md).
 
 ## The parts
 
@@ -206,9 +208,53 @@ elite circuit, two windings, silicone gaskets and electrical steel.
 
 The transformer itself: two windings, a core, a bushing and steel plates.
 
-## Not yet
+## Motors on the driveline
 
-Motors that turn a driveline (stage E2 of the roadmap).
+Stage E2 of the [roadmap](electricity-roadmap.md): every mechanical machine runs off the grid, anywhere.
+
+| Part | What it is |
+|---|---|
+| **Electric drive** | A motor in a housing on the driveline: the dynamo the other way round. Joined to a line by a copper coil. |
+| **Motor controller** | A circuit and a bank of resistors, fitted to a drive by hand. |
+| **Stator, rotor, commutator, graphite brush, motor housing** | What an electric motor is now built from. |
+
+### The drive
+
+- **Speed follows voltage**: a turn a minute for every two volts at its coil, the dynamo's rule read
+  backwards. 60 V turn it at 30; a gearbox does the rest.
+- **Strength follows current**: it gives its line 6 stress units for every ampere it may draw, up to
+  4 A, at every turn a minute — at 60 V about as much as a good water wheel. It draws what the line
+  asks of it: an idle drive takes a tenth of an ampere, one carrying its full load four.
+- **Starting and stalling.** For two seconds after it starts it draws five times its load. Held still —
+  asked for more strength than it has, or on a jammed line — it draws five times its rating, twenty
+  amperes, for as long as it is held, and trips a breaker.
+- **Its brushes wear** while it turns: two hours of running (one in Ultra). Worn through, it stops and
+  the meter says why; two graphite brushes renew them once the old are down to a quarter.
+- Over 75 V its windings cook as a machine's do, and a coil of thin wire rewinds them. Its housing is
+  earthed.
+
+### The controller
+
+Fitted to a drive (use it on one), it starts the drive gently, without the inrush; it holds a stalled
+drive to its four amperes, so that it only hums; and an empty hand on the drive sets its speed to
+three quarters, a half, a quarter and back to the whole of the voltage. What it does not let through
+it burns in its resistors: a drive turned down to half takes as much current for half the speed. It
+comes off with the drive.
+
+### Parts
+
+| Part | Made |
+|---|---|
+| Stator | 4 iron plates, 2 redstone coils, 2 copper wire |
+| Rotor | 2 iron plates, 2 copper wire and a shaft |
+| Commutator | lathe: a copper rod |
+| Graphite brush (8) | lathe: a graphite electrode |
+| Motor housing | 8 iron plates |
+| Electric motor | housing, stator, rotor, commutator, 2 graphite brushes, 2 bearings |
+| Electric drive | an electric motor, 2 shafts, 6 iron plates |
+| Motor controller | 3 resistors, a basic circuit, 2 copper wire, 3 iron plates |
+
+Every machine that took an electric motor still does; the motor now costs its parts.
 
 ## Tests
 
@@ -221,6 +267,11 @@ on through them; a mast is one thing and carries a line overhead from its
 foot; the basic crusher breaks ore on current and takes none standing idle; every machine makes what
 it is for, and the furnace smelts the crusher's powder. `ElectricityClientGameTest` photographs a line by day and night, and a machine opened.
 
+`MotorGameTests`: a drive turns its line at a turn a minute for every two volts and draws what one
+crusher asks of it, and the crusher crushes; held still by four crushers it trips its breaker, and with a
+controller it is held to its rating and the breaker stays in; a controller turned down to half halves its
+speed, worn brushes stop it and its line, and new brushes go in only once the old are worn.
+
 `GridGameTests`: a transformer steps a line up to four times its voltage and a second steps it down
 for two lamps, with a quarter of the current on the line; an overloaded transformer burns out and couples
 nothing, and within its rating never does; a fuse blows before the wire it guards and leaves the far side
@@ -230,4 +281,4 @@ waits for its eighth length of wire. Flashover in the rain is not tested in a ga
 the weather.
 
 The assets are written by `tools/electricity_assets.py`; those of the grid by `tools/GridAssets.java`
-(`java tools/GridAssets.java`).
+(`java tools/GridAssets.java`), those of the motors by `tools/MotorAssets.java`.
