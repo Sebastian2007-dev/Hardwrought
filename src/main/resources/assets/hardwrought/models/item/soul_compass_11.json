@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "layer0":  "hardwrought:item/soul_compass_11"
+                 },
+    "parent":  "minecraft:item/generated"
+}

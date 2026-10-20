@@ -15,14 +15,22 @@ import java.util.Locale;
  * The rest of the party, at the left edge of the screen, a third of the way down: below the vitals
  * panel and above the chat. One line each — name, a health bar, how far — so a glance says who is
  * hurt and where everyone is without opening anything. Hidden with the rest of the HUD (F1), and
- * while the debug screen is open.
+ * while the debug screen is open; and on its own with {@link #TOGGLE} (O), which is remembered
+ * across restarts in {@code config/hardwrought-hud.properties}.
  *
  * <p>What it shows comes from the server once a second ({@link PartySnapshotPayload}); nothing here
  * decides anything.
  */
 public final class PartyHud {
     static final int X = 6, LINE = 12, BAR_WIDTH = 40, NAME_WIDTH = 70;
+    /** Shows or hides the list. */
+    public static final net.minecraft.client.KeyMapping TOGGLE = net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper.registerKeyMapping(
+            new net.minecraft.client.KeyMapping("key.hardwrought.party_list", com.mojang.blaze3d.platform.InputConstants.Type.KEYBOARD,
+                    com.mojang.blaze3d.platform.InputConstants.KEY_O, de.ipnats.hardwrought.client.HardwroughtKeys.CATEGORY));
+    private static final java.nio.file.Path SETTINGS = net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir()
+            .resolve("hardwrought-hud.properties");
     private static List<PartySnapshotPayload.Member> members = List.of();
+    private static boolean shown = true;
 
     private PartyHud() { }
 
@@ -30,16 +38,56 @@ public final class PartyHud {
         return members;
     }
 
+    public static boolean shown() {
+        return shown;
+    }
+
     public static void initialize() {
+        shown = load();
         ClientPlayNetworking.registerGlobalReceiver(PartySnapshotPayload.TYPE, (payload, context) -> members = payload.members());
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> members = List.of());
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> members = List.of());
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (TOGGLE.consumeClick()) {
+                shown = !shown;
+                save(shown);
+                if (client.player != null) {
+                    client.player.sendOverlayMessage(net.minecraft.network.chat.Component.translatable(
+                            shown ? "message.hardwrought.party_list.shown" : "message.hardwrought.party_list.hidden"));
+                }
+            }
+        });
         HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, Hardwrought.id("party_hud"), (graphics, delta) -> render(graphics));
+    }
+
+    private static boolean load() {
+        var properties = new java.util.Properties();
+        try (var reader = java.nio.file.Files.newBufferedReader(SETTINGS)) {
+            properties.load(reader);
+        } catch (java.io.IOException | IllegalArgumentException missing) {
+            return true;
+        }
+        return !"false".equalsIgnoreCase(properties.getProperty("partyList", "true").trim());
+    }
+
+    private static void save(boolean shown) {
+        var properties = new java.util.Properties();
+        try (var reader = java.nio.file.Files.newBufferedReader(SETTINGS)) {
+            properties.load(reader);
+        } catch (java.io.IOException | IllegalArgumentException missing) {
+            // Written fresh below.
+        }
+        properties.setProperty("partyList", Boolean.toString(shown));
+        try (var writer = java.nio.file.Files.newBufferedWriter(SETTINGS)) {
+            properties.store(writer, "Hardwrought HUD - changed in game");
+        } catch (java.io.IOException exception) {
+            Hardwrought.LOGGER.warn("Cannot save {}", SETTINGS, exception);
+        }
     }
 
     private static void render(net.minecraft.client.gui.GuiGraphicsExtractor graphics) {
         Minecraft client = Minecraft.getInstance();
-        if (client.player == null || members.isEmpty() || client.getDebugOverlay().showDebugScreen()) return;
+        if (!shown || client.player == null || members.isEmpty() || client.getDebugOverlay().showDebugScreen()) return;
         var font = client.font;
         int y = graphics.guiHeight() / 3;
         int right = X + NAME_WIDTH + BAR_WIDTH + 34;

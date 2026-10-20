@@ -247,6 +247,30 @@ public final class UnderworldGameTests {
     }
 
     @GameTest
+    public void ruinsAndCampsStandApart(GameTestHelper helper) {
+        long seed = 1234567L;
+        java.util.List<int[]> sites = new java.util.ArrayList<>();
+        for (int x = -64; x < 64; x++) {
+            for (int z = -64; z < 64; z++) {
+                boolean ruin = de.ipnats.hardwrought.underworld.UnderworldRuins.allows(seed, x, z, false);
+                boolean camp = de.ipnats.hardwrought.underworld.UnderworldRuins.allows(seed, x, z, true);
+                helper.assertTrue(!(ruin && camp), "A chunk holds a ruin or a camp, never both");
+                if (ruin || camp) sites.add(new int[] {x, z});
+            }
+        }
+        // 32 by 32 cells of 4 by 4 chunks: at most one each, and most of them hold something.
+        helper.assertTrue(sites.size() <= 1024 && sites.size() > 700, "About one to a cell of 64 blocks: " + sites.size());
+        for (int i = 0; i < sites.size(); i++) {
+            for (int j = i + 1; j < sites.size(); j++) {
+                int dx = Math.abs(sites.get(i)[0] - sites.get(j)[0]), dz = Math.abs(sites.get(i)[1] - sites.get(j)[1]);
+                helper.assertTrue(Math.max(dx, dz) >= 2, "No two closer than two chunks: " + java.util.Arrays.toString(sites.get(i))
+                        + " " + java.util.Arrays.toString(sites.get(j)));
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest
     public void aGraveHasItsMoundAndHeadstone(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos head = helper.absolutePos(new BlockPos(3, 1, 3));

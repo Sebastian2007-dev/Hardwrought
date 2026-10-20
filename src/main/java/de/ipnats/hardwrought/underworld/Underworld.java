@@ -125,6 +125,7 @@ public final class Underworld {
             int x0 = SectionPos.blockToSectionCoord(origin.getX()) << 4, z0 = SectionPos.blockToSectionCoord(origin.getZ()) << 4;
             BlockState water = Blocks.WATER.defaultBlockState();
             BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+            SimplexNoise grain = new SimplexNoise(RandomSource.create(level.getSeed() ^ 0xF100D_5EA1L));
             boolean changed = false;
             for (int dx = 0; dx < 16; dx++) {
                 for (int dz = 0; dz < 16; dz++) {
@@ -132,17 +133,61 @@ public final class Underworld {
                     if (!flooded(level, pos, x, z)) continue;
                     boolean edge = !flooded(level, pos, x + 1, z) || !flooded(level, pos, x - 1, z)
                             || !flooded(level, pos, x, z + 1) || !flooded(level, pos, x, z - 1);
-                    BlockState rock = Blocks.STONE.defaultBlockState();
+                    boolean deep = false;
                     for (int y = level.getMinY() + 1; y <= WATER_LINE; y++) {
                         pos.set(x, y, z);
                         BlockState here = level.getBlockState(pos);
                         if (here.isAir() || edge && !here.isSolidRender()) {
-                            level.setBlock(pos, edge ? rock : water, Block.UPDATE_CLIENTS);
+                            level.setBlock(pos, edge ? rock(grain, x, y, z, deep) : water, Block.UPDATE_CLIENTS);
                             changed = true;
+                            if (edge) changed |= bulge(level, grain, x, y, z, deep);
                         } else if (here.isSolidRender() && !here.is(Blocks.BEDROCK)) {
-                            rock = here;
+                            deep = here.is(Blocks.DEEPSLATE) || here.is(Blocks.COBBLED_DEEPSLATE) || here.is(Blocks.TUFF);
                         }
                     }
+                }
+            }
+            return changed;
+        }
+
+        /**
+         * A block of the wall that holds a lake in: rock of the depth it stands at, in patches and bands
+         * of its kinds, the way a cave wall is. It used to be the last block under it carried straight up,
+         * which drew the wall as a fence of one-block stripes — moss, tuff, moss — a hundred blocks high.
+         */
+        static BlockState rock(SimplexNoise grain, int x, int y, int z, boolean deep) {
+            double n = grain.get(x * 0.11, y * 0.19, z * 0.11);
+            // A finer grain over it, so no patch is a single flat colour.
+            double fine = grain.get(x * 0.45 + 100, y * 0.45, z * 0.45 + 100);
+            if (deep) {
+                if (n > 0.45) return Blocks.TUFF.defaultBlockState();
+                if (fine > 0.55) return Blocks.COBBLED_DEEPSLATE.defaultBlockState();
+                return Blocks.DEEPSLATE.defaultBlockState();
+            }
+            if (n > 0.5) return Blocks.TUFF.defaultBlockState();
+            if (n < -0.45) return Blocks.ANDESITE.defaultBlockState();
+            if (fine > 0.6) return Blocks.COBBLESTONE.defaultBlockState();
+            return Blocks.STONE.defaultBlockState();
+        }
+
+        /**
+         * The wall's outer face, on the side of the halls beside the lake: rock standing out of it by none
+         * to three blocks, varying up the wall, so it is a rough cliff with ribs and shelves rather than a
+         * sheer face following the biome's edge. Only into open air outside the Flooded Halls, never into a
+         * lake's own water. Returns true where it set anything.
+         */
+        private static boolean bulge(WorldGenLevel level, SimplexNoise grain, int x, int y, int z, boolean deep) {
+            int reach = (int) Math.floor((Math.clamp(grain.get(x * 0.07 + 300, y * 0.12, z * 0.07 + 300), -1, 1) + 1) * 1.6);
+            if (reach <= 0) return false;
+            BlockPos.MutableBlockPos out = new BlockPos.MutableBlockPos();
+            boolean changed = false;
+            for (Direction side : Direction.Plane.HORIZONTAL) {
+                for (int step = 1; step <= reach; step++) {
+                    out.set(x + side.getStepX() * step, y, z + side.getStepZ() * step);
+                    if (flooded(level, new BlockPos.MutableBlockPos(), out.getX(), out.getZ())) break;
+                    if (!level.getBlockState(out).isAir()) break;
+                    level.setBlock(out, rock(grain, out.getX(), y, out.getZ(), deep), Block.UPDATE_CLIENTS);
+                    changed = true;
                 }
             }
             return changed;

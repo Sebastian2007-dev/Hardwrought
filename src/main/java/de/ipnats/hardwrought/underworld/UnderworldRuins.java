@@ -77,6 +77,42 @@ public final class UnderworldRuins {
 
     // ------------------------------------------------------------------------------------ placing
 
+    /**
+     * How far apart they stand: the Underworld is cut into cells of this many chunks a side, and in each
+     * cell one chunk, fixed by the seed, may hold a ruin or a camp — never both, never two. A rarity
+     * chance per chunk alone let them crowd together wherever the floor was open and flat.
+     */
+    static final int CELL = 4, TOWER_CELL = 3;
+
+    /** What the one chunk of a cell holds, by the seed: a ruin a little over half the time, a camp a third, else nothing. */
+    enum Holds { RUIN, CAMP, NOTHING }
+
+    /**
+     * What this chunk may hold: nothing unless it is its cell's one chunk. Same seed, same answer, so
+     * every feature asking about the same chunk agrees. Public for tests.
+     */
+    public static boolean allows(long seed, int chunkX, int chunkZ, boolean camp) {
+        RandomSource cell = cell(seed, chunkX, chunkZ, CELL, 0x5EED_0F_A5L);
+        if (cell == null) return false;
+        int roll = cell.nextInt(20);
+        Holds holds = roll < 11 ? Holds.RUIN : roll < 17 ? Holds.CAMP : Holds.NOTHING;
+        return holds == (camp ? Holds.CAMP : Holds.RUIN);
+    }
+
+    /** Whether this chunk is the one of its cell where a watchtower may stand. Public for tests. */
+    public static boolean allowsTower(long seed, int chunkX, int chunkZ) {
+        return cell(seed, chunkX, chunkZ, TOWER_CELL, 0x70E5_70E5L) != null;
+    }
+
+    /** The cell's own randomness, already past choosing its one chunk, if this is that chunk; else null. */
+    private static RandomSource cell(long seed, int chunkX, int chunkZ, int size, long salt) {
+        int cx = Math.floorDiv(chunkX, size), cz = Math.floorDiv(chunkZ, size);
+        RandomSource random = RandomSource.create(seed ^ salt ^ cx * 341873128712L ^ cz * 132897987541L);
+        // Away from the edges of the cell, so the ones of two neighbouring cells never stand side by side.
+        int inner = Math.max(1, size - 2), slotX = (size - inner) / 2 + random.nextInt(inner), slotZ = (size - inner) / 2 + random.nextInt(inner);
+        return Math.floorMod(chunkX, size) == slotX && Math.floorMod(chunkZ, size) == slotZ ? random : null;
+    }
+
     /** A spot on a cave floor in this chunk, open and flat over a square of the given half width, or null. */
     static BlockPos site(WorldGenLevel level, BlockPos origin, RandomSource random, int half, int height) {
         int x0 = SectionPos.blockToSectionCoord(origin.getX()) << 4, z0 = SectionPos.blockToSectionCoord(origin.getZ()) << 4;
@@ -179,6 +215,7 @@ public final class UnderworldRuins {
 
         @Override
         public boolean place(WorldGenLevel level, ChunkGenerator generator, RandomSource random, BlockPos origin) {
+            if (!allows(level.getSeed(), SectionPos.blockToSectionCoord(origin.getX()), SectionPos.blockToSectionCoord(origin.getZ()), false)) return false;
             BlockPos center = site(level, origin, random, 3, 4);
             if (center == null) return false;
             build(level, center, random);
@@ -243,6 +280,7 @@ public final class UnderworldRuins {
 
         @Override
         public boolean place(WorldGenLevel level, ChunkGenerator generator, RandomSource random, BlockPos origin) {
+            if (!allows(level.getSeed(), SectionPos.blockToSectionCoord(origin.getX()), SectionPos.blockToSectionCoord(origin.getZ()), true)) return false;
             BlockPos center = site(level, origin, random, 2, 3);
             if (center == null) return false;
             build(level, center, random);
@@ -291,6 +329,7 @@ public final class UnderworldRuins {
 
         @Override
         public boolean place(WorldGenLevel level, ChunkGenerator generator, RandomSource random, BlockPos origin) {
+            if (!allowsTower(level.getSeed(), SectionPos.blockToSectionCoord(origin.getX()), SectionPos.blockToSectionCoord(origin.getZ()))) return false;
             for (int attempt = 0; attempt < 6; attempt++) {
                 BlockPos center = site(level, origin, random, 2, 12);
                 if (center == null) return false;

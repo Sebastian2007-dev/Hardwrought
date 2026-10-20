@@ -1,9 +1,4 @@
 {
   "feature": "hardwrought:underworld_camp",
-  "placement": [
-    {
-      "type": "minecraft:rarity_filter",
-      "chance": 16
-    }
-  ]
+  "placement": []
 }

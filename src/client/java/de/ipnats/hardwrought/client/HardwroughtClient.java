@@ -16,6 +16,7 @@ public class HardwroughtClient implements ClientModInitializer {
 		de.ipnats.hardwrought.client.smithing.SmithingClient.initialize();
 		de.ipnats.hardwrought.client.combat.CombatHud.initialize();
 		de.ipnats.hardwrought.client.party.PartyHud.initialize();
+		de.ipnats.hardwrought.client.survival.SleepScreen.initialize();
 		de.ipnats.hardwrought.client.environment.EnvironmentHud.initialize();
 		de.ipnats.hardwrought.client.environment.DynamicLight.initialize();
 		de.ipnats.hardwrought.client.environment.PlacedLights.initialize();

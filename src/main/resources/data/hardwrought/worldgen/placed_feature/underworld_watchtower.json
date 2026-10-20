@@ -1,9 +1,4 @@
 {
   "feature": "hardwrought:underworld_watchtower",
-  "placement": [
-    {
-      "type": "minecraft:rarity_filter",
-      "chance": 5
-    }
-  ]
+  "placement": []
 }

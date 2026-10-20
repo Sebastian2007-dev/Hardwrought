@@ -168,6 +168,7 @@ public class Hardwrought implements ModInitializer {
 		CoreLifecycle.initialize();
 		de.ipnats.hardwrought.party.Parties.initialize();
 		de.ipnats.hardwrought.server.Afk.initialize();
+		de.ipnats.hardwrought.survival.SleeperSync.initialize();
 		de.ipnats.hardwrought.server.ServerCommands.initialize();
 		de.ipnats.hardwrought.encounter.Encounters.initialize();
 		DebugCommands.initialize();
