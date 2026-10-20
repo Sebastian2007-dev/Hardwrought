@@ -66,6 +66,71 @@ public final class Citadel {
         return best;
     }
 
+    /**
+     * Where the middle of the nearest hall lies whose king still lives, searching outwards square by
+     * square of the grid; null when there is none within the given number of squares. What a soul
+     * compass points at.
+     *
+     * <p>Asked every few seconds for every compass, so where a square's hall stands is remembered once
+     * worked out: it follows from the seed alone. A hall whose throne is loaded and cold counts as
+     * fallen even if its fall was never written down — a king beaten before the record was kept.
+     */
+    public static BlockPos nearestStanding(net.minecraft.server.level.ServerLevel level, BlockPos from, int squares) {
+        return nearest(from, squares, (gx, gz) -> hall(level, gx, gz), home -> standing(level, home));
+    }
+
+    /**
+     * The search itself, with where each square's hall stands and which halls count given from outside:
+     * the nearest hall that counts, in the first ring that has one. Public for tests.
+     *
+     * @param hall  the middle of the hall in grid square (gx, gz), or null where that square has none
+     */
+    public static BlockPos nearest(BlockPos from, int squares, java.util.function.BiFunction<Integer, Integer, BlockPos> hall,
+                                   java.util.function.Predicate<BlockPos> counts) {
+        int gx = Math.floorDiv(SectionPos.blockToSectionCoord(from.getX()) - GRID_AT, GRID);
+        int gz = Math.floorDiv(SectionPos.blockToSectionCoord(from.getZ()) - GRID_AT, GRID);
+        BlockPos best = null;
+        for (int ring = 0; ring <= squares && best == null; ring++) {
+            for (int dx = -ring; dx <= ring; dx++) {
+                for (int dz = -ring; dz <= ring; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != ring) continue;
+                    BlockPos at = hall.apply(gx + dx, gz + dz);
+                    if (at == null || !counts.test(at)) continue;
+                    if (best == null || at.distSqr(from) < best.distSqr(from)) best = at;
+                }
+            }
+        }
+        return best;
+    }
+
+    /** Where each grid square's hall stands, once asked, per level; absent from the map until asked. */
+    private static final java.util.Map<net.minecraft.server.level.ServerLevel, java.util.Map<Long, java.util.Optional<BlockPos>>> HALLS =
+            java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
+
+    /** The middle of the hall in grid square (gx, gz), or null where the Ossuary does not reach there. */
+    static BlockPos hall(net.minecraft.server.level.ServerLevel level, int gx, int gz) {
+        var known = HALLS.computeIfAbsent(level, l -> new java.util.HashMap<>());
+        return known.computeIfAbsent(((long) gx << 32) | (gz & 0xFFFFFFFFL), key -> {
+            int x = (gx * GRID + GRID_AT) * 16 + 8, z = (gz * GRID + GRID_AT) * 16 + 8;
+            Integer floor = floor(y -> level.getUncachedNoiseBiome(x >> 2, y >> 2, z >> 2).unwrapKey()
+                    .map(k -> k.identifier().getPath().equals("ossuary")).orElse(false), level.getMinY(), level.getMaxY());
+            return java.util.Optional.ofNullable(floor == null ? null : new BlockPos(x, floor, z));
+        }).orElse(null);
+    }
+
+    /** Whether the king of this hall still lives: not written down as fallen, and his throne, if loaded, not cold. */
+    public static boolean standing(net.minecraft.server.level.ServerLevel level, BlockPos home) {
+        if (FallenKings.fallen(level, home)) return false;
+        BlockPos throne = home.offset(0, 1, -THRONE_DISTANCE);
+        if (!level.isLoaded(throne)) return true;
+        var state = level.getBlockState(throne);
+        if (state.is(WitchKingContent.THRONE) && state.getValue(WitchKingThrone.COLD)) {
+            FallenKings.fall(level, home);
+            return false;
+        }
+        return true;
+    }
+
     /** The lowest height at which the Ossuary is there, sampled every four blocks; null where it is not. */
     static Integer floor(java.util.function.IntPredicate ossuary, int minY, int maxY) {
         for (int y = minY + 10; y < maxY - HEIGHT - 8; y += 4) {

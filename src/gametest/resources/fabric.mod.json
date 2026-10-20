@@ -65,7 +65,8 @@
       "de.ipnats.hardwrought.test.SpawnGameTests",
       "de.ipnats.hardwrought.test.BundleGameTests",
       "de.ipnats.hardwrought.test.PartyGameTests",
-      "de.ipnats.hardwrought.test.EncounterGameTests"
+      "de.ipnats.hardwrought.test.EncounterGameTests",
+      "de.ipnats.hardwrought.test.SoulCompassGameTests"
     ],
     "fabric-client-gametest": [
       "de.ipnats.hardwrought.test.FxClientGameTest",

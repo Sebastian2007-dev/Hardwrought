@@ -70,6 +70,9 @@ public final class WitchKingContent {
             .rarity(Rarity.EPIC).enchantable(15).component(DataComponents.GLIDER, Unit.INSTANCE).repairable(Underworld.PALE_SHARD)
             .component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.CHEST).setEquipSound(SoundEvents.ARMOR_EQUIP_ELYTRA)
                     .setAsset(MANTLE_ASSET).setDamageOnHurt(false).build()));
+    /** Found in the ruins of the Underworld; points to the nearest Witch King still living. */
+    public static final Item SOUL_COMPASS = item("soul_compass", SoulCompass::new, new Item.Properties().stacksTo(1)
+            .rarity(Rarity.RARE).component(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true));
     public static final Item THRONE_ITEM = blockItem(THRONE, new Item.Properties());
     public static final Item SEAT_ITEM = blockItem(SEAT, new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant());
 
@@ -84,7 +87,7 @@ public final class WitchKingContent {
     }
 
     public static List<Item> items() {
-        return List.of(MANTLE, THRONE_ITEM, SEAT_ITEM);
+        return List.of(MANTLE, SOUL_COMPASS, THRONE_ITEM, SEAT_ITEM);
     }
 
     private static <T extends net.minecraft.world.entity.Entity> EntityType<T> entity(String name, EntityType.Builder<T> builder) {

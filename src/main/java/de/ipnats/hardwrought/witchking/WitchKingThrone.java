@@ -180,6 +180,8 @@ public class WitchKingThrone extends BaseEntityBlock {
         public void defeated() {
             state = DEFEATED;
             if (level != null) level.setBlockAndUpdate(worldPosition, getBlockState().setValue(COLD, true));
+            // Written down for the soul compasses, which have to know it of halls far away.
+            if (level instanceof ServerLevel server) FallenKings.fall(server, home(worldPosition));
             setChanged();
         }
 
