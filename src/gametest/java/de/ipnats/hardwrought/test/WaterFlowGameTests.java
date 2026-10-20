@@ -384,7 +384,7 @@ public final class WaterFlowGameTests {
 
             int total = total(level, base, 5);
             helper.assertTrue(total == 4 * WaterAmounts.BLOCK,
-                    "The bucket is still in the shaft: " + total + " of 4000 mB");
+                    "The bucket is still in the shaft: " + total + " of 4000 mB; " + describeShaft(level, base, 5));
             helper.assertTrue(WaterStorage.amount(level, base.above(3)) > 0,
                     "and the level rose without anyone stepping the solver by hand");
             helper.assertTrue(WaterStorage.amount(level, base) >= WaterAmounts.BLOCK,
@@ -693,6 +693,27 @@ public final class WaterFlowGameTests {
         int sum = 0;
         for (int x = 0; x <= 4; x++) sum += WaterStorage.amount(level, base.offset(x, 0, 0));
         return sum;
+    }
+
+    /**
+     * What each cell of a shaft holds from the floor up, and any part of its stone that is no longer
+     * stone: when water goes missing from a closed shaft, this says whether it leaked or vanished.
+     */
+    private static String describeShaft(ServerLevel level, BlockPos base, int height) {
+        StringBuilder text = new StringBuilder("cells");
+        for (int y = 0; y < height; y++) text.append(' ').append(WaterStorage.amount(level, base.above(y)));
+        for (int y = -1; y <= height; y++) {
+            for (int x = -1; x <= 1; x++) {
+                for (int z = -1; z <= 1; z++) {
+                    boolean inside = x == 0 && z == 0 && y >= 0 && y < height;
+                    BlockPos at = base.offset(x, y, z);
+                    if (!inside && !level.getBlockState(at).is(Blocks.STONE)) {
+                        text.append(", ").append(level.getBlockState(at)).append(" in the wall at ").append(x).append(' ').append(y).append(' ').append(z);
+                    }
+                }
+            }
+        }
+        return text.toString();
     }
 
     /** A closed stone shaft with an empty inside, open nowhere. */
@@ -1132,6 +1153,8 @@ public final class WaterFlowGameTests {
         }
         int cells = (2 * half + 1) * (2 * half + 1) * depth;
         long expected = (long) cells * WaterAmounts.BLOCK;
+        // The counts of what has soaked in or dried up run from server start; only what goes now is ours.
+        long goneBefore = flow.seeped() + flow.dried();
         try {
             // A two by two hole knocked into the bed.
             for (int x = 0; x <= 1; x++) {
@@ -1159,12 +1182,16 @@ public final class WaterFlowGameTests {
                 }
             }
             long elapsed = System.nanoTime() - started;
-            long inCavern = seaTotal(level, base, half, -cavity - 1, -1);
+            // The loop stops the moment the sea is found empty, and the last of it may then still be
+            // falling through the hole. The hole is part of the way down, so it is counted with the
+            // cavern: leaving it out was water "lost" whenever the count came at that moment.
+            long inCavern = seaTotal(level, base, half, -cavity - 1, 0);
+            long gone = flow.seeped() + flow.dried() - goneBefore;
             String report = String.format(java.util.Locale.ROOT,
-                    "%d ticks, %d cell steps, %.1f ms, peak queue %d, %d mB left in the sea, %d mB in the cavern, dropped %d",
+                    "%d ticks, %d cell steps, %.1f ms, peak queue %d, %d mB left in the sea, %d mB in the cavern and the hole, dropped %d",
                     passes, stepped, elapsed / 1_000_000.0, peak, inSea, inCavern, flow.droppedCells());
             System.out.println("[drain] " + report);
-            helper.assertTrue(inSea + inCavern + flow.seeped() + flow.dried() == expected, "The sea is moved, not lost: " + report + " seeped " + flow.seeped() + " dried " + flow.dried());
+            helper.assertTrue(inSea + inCavern + gone == expected, "The sea is moved, not lost: " + report + " seeped or dried " + gone);
             helper.assertTrue(flow.droppedCells() == 0, "Nothing may be forgotten on the way: " + report);
             helper.assertTrue(inSea == 0, "and all of it ends up in the cavern: " + report);
         } finally {

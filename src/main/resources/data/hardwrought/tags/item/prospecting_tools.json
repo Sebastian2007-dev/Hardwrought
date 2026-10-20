@@ -9,6 +9,10 @@
       "required": false
     },
     {
+      "id": "hardwrought:bronze_pickaxe",
+      "required": false
+    },
+    {
       "id": "minecraft:wooden_pickaxe",
       "required": false
     },

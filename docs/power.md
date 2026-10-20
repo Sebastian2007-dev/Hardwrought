@@ -30,7 +30,7 @@ copper coil, as a dynamo is. It runs whenever it has fuel, and a redstone signal
 
 **Fuel.** It takes diesel, the still's fuel or kerosene, by pipe or bucket (4 buckets). Diesel goes
 furthest, kerosene gives 90 % and the still's fuel 75 %. It burns 0.25 mB a second idling plus
-1 mB per kJ given, so a bucket runs a 500 W load for about half an hour.
+1 mB per kJ given, so a bucket runs a 500 W load for a little over twenty minutes (0.25 mB/s idle plus 0.5 mB/s for the load).
 
 **Exhaust.** For every 20 mB burnt it gives off a unit of CO₂ and now and then one of CO. The exhaust
 comes out over the generator, or out of the open end of a flue pipe set on it.

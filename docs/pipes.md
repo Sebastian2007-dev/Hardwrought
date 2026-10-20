@@ -15,7 +15,7 @@ Each side is one of:
 | towards a block, **drawing** | arm with an orange ring | the run takes things out of the block, and never fills it |
 | cut off | no arm | nothing passes; stays cut off whatever is placed there |
 
-**Pipe wrench** (three iron ingots in a V over a shaft), used on a side of a pipe — the arm, or the face
+**Pipe wrench** (four iron ingots: a V of two over a handle of two), used on a side of a pipe — the arm, or the face
 of the core facing that way:
 
 - towards a block: filling → drawing → cut off → filling;

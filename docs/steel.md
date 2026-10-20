@@ -24,10 +24,10 @@ cementation and crucible routes are gone.
 | | durability | mining speed | damage | cuts like | armor (helm / chest / legs / boots) | toughness | armor weight vs. iron |
 |---|---|---|---|---|---|---|---|
 | iron | 250 | 6 | 2 | iron | 2 / 6 / 5 / 2 | 0 | 100 % |
-| steel | 900 | 7.5 | 3 | diamond | 2 / 5 / 7 / 2 | 1 | 100 % |
-| stainless steel | 1300 | 7.5 | 3 | diamond | 2 / 6 / 7 / 2 | 1.5 | 102 % |
-| titanium | 1700 | 8.5 | 3.5 | netherite | 3 / 6 / 8 / 3 | 2.5 | 57 % |
-| tungsten steel | 2600 | 10 | 4.5 | netherite | 3 / 7 / 9 / 3 | 3.5 | 110 % |
+| steel | 900 | 7.5 | 3 | diamond | 2 / 7 / 5 / 2 | 1 | 100 % |
+| stainless steel | 1300 | 7.5 | 3 | diamond | 2 / 7 / 6 / 2 | 1.5 | 102 % |
+| titanium | 1700 | 8.5 | 3.5 | netherite | 3 / 8 / 6 / 3 | 2.5 | 57 % |
+| tungsten steel | 2600 | 10 | 4.5 | netherite | 3 / 9 / 7 / 3 | 3.5 | 110 % |
 
 Tungsten steel armor also resists knockback by 10 %. Forging quality and heat treatment apply on top,
 as for iron; every steel hardens when quenched, titanium does not. Weapons use the same class profiles

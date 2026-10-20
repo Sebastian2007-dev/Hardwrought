@@ -17,7 +17,9 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
@@ -143,15 +145,27 @@ public final class ComboGameTests {
         });
     }
 
+    /**
+     * How far above the ground of the test the firestorm is cast. Down there it shared the ground with
+     * whatever the tests beside it had standing about: an evoker within twelve blocks of the caster
+     * unsettles the hand and can send the burst astray, and a monster wandering into the line of the
+     * cast takes the burst in the zombie's place.
+     */
+    private static final int RAISED = 16;
+
     @GameTest(maxTicks = 60)
     public void fireAndWindBurstIntoAFirestorm(GameTestHelper helper) {
         ServerPlayer player = goldenMage(helper, Glyph.FIRE, Glyph.WIND, Glyph.TRIANGLE);
-        BlockPos at = helper.absolutePos(new BlockPos(1, 1, 4));
-        floor(helper, at.offset(-1, -1, -4), at.offset(9, -1, 4));
+        // Everyone in it stands inside the test's own eight by eight, where the chunks are kept ticking.
+        BlockPos at = helper.absolutePos(new BlockPos(1, 1 + RAISED, 3));
+        floor(helper, at.offset(-1, -1, -3), at.offset(9, -1, 4));
         player.teleportTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5);
-        var near = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(5, 1, 4));
+        var near = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(5, 1 + RAISED, 3));
         // Beyond a plain fire burst's reach of three blocks, within a firestorm's five.
-        var far = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(5, 1, 8));
+        var far = helper.spawnWithNoFreeWill(EntityTypes.ZOMBIE, new BlockPos(5, 1 + RAISED, 7));
+        // Helmets, or the sun sets them alight by day and "it burns" says nothing about the spell.
+        near.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.LEATHER_HELMET));
+        far.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.LEATHER_HELMET));
         player.lookAt(EntityAnchorArgument.Anchor.EYES, near.position().add(0, 1, 0));
 
         var result = SpellCaster.cast(player, List.of(path(150, 40, 260, 230, 40, 230, 150, 40),
@@ -161,8 +175,14 @@ public final class ComboGameTests {
         helper.runAfterDelay(15, () -> {
             helper.assertTrue(near.getRemainingFireTicks() > 0, "What it strikes burns");
             helper.assertTrue(far.getRemainingFireTicks() > 0, "and so does what stands four blocks off, out of a plain burst's reach");
-            Vec3 pushed = far.position().subtract(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(5, 1, 8))));
+            Vec3 pushed = far.position().subtract(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(5, 1 + RAISED, 7))));
             helper.assertTrue(pushed.horizontalDistance() > 0.2, "and the wind flings it outward");
+            // Up here they are outside what the test clears away after itself.
+            near.discard();
+            far.discard();
+            for (BlockPos pos : BlockPos.betweenClosed(at.offset(-1, -1, -3), at.offset(9, -1, 4))) {
+                helper.getLevel().setBlockAndUpdate(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+            }
             helper.succeed();
         });
     }

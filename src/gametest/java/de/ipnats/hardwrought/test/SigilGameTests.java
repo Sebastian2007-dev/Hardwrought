@@ -88,8 +88,13 @@ public final class SigilGameTests {
 
     /** A mage on a floor, looking down at the ground two blocks ahead (east). */
     static ServerPlayer mageOnFloor(GameTestHelper helper, Glyph... known) {
+        return mageOnFloor(helper, 0, known);
+    }
+
+    /** The same, with the floor raised this many blocks above the ground of the test. */
+    static ServerPlayer mageOnFloor(GameTestHelper helper, int raised, Glyph... known) {
         ServerPlayer player = mage(helper, known);
-        BlockPos from = helper.absolutePos(new BlockPos(1, 1, 1));
+        BlockPos from = helper.absolutePos(new BlockPos(1, 1 + raised, 1));
         floor(helper, from.offset(-1, -1, -1), from.offset(10, -1, 2));
         player.teleportTo(from.getX() + 0.5, from.getY(), from.getZ() + 0.5);
         player.lookAt(EntityAnchorArgument.Anchor.EYES, Vec3.atBottomCenterOf(from.east(2)).add(0, 0.01, 0));
@@ -237,17 +242,26 @@ public final class SigilGameTests {
         helper.succeed();
     }
 
+    /**
+     * How far above the ground of the test the condition is tried. A sigil looks eight blocks round
+     * for a monster, which on the ground reaches past the test into the gaps and the tests beside
+     * it: a zombie flung out of the test next door, or one left wandering by another, answered for
+     * the monster this test had not yet brought. Up here none of them can be near. It is not the
+     * height the firestorm in {@link ComboGameTests} is cast at, so its zombies are not near either.
+     */
+    private static final int RAISED = 28;
+
     /** Magic roadmap M5: a condition holds a sigil back until it holds. */
     @GameTest(maxTicks = 100)
     public void aConditionHoldsASigilBack(GameTestHelper helper) {
-        ServerPlayer player = mageOnFloor(helper, Glyph.values());
+        ServerPlayer player = mageOnFloor(helper, RAISED, Glyph.values());
         List<CastSpellPayload.Stroke> strokes = base(4, Rune.LIGHT);
         strokes.add(rune(Rune.LIGHTNING, 292, 40, 0.04f, 0, 0, false));
         SpellCaster.cast(player, strokes, 300);
-        var sigil = (SigilBlockEntity) helper.getLevel().getBlockEntity(helper.absolutePos(new BlockPos(3, 1, 1)));
+        var sigil = (SigilBlockEntity) helper.getLevel().getBlockEntity(helper.absolutePos(new BlockPos(3, 1 + RAISED, 1)));
         helper.assertTrue(sigil != null && sigil.program().conditions().contains(SigilDesign.Condition.HOSTILE_NEAR), "inscribed with its condition");
         helper.assertTrue(!sigil.conditionsHold(helper.getLevel()), "With no monster near, it holds back");
-        Husk husk = helper.spawn(EntityTypes.HUSK, new BlockPos(8, 1, 1));
+        Husk husk = helper.spawn(EntityTypes.HUSK, new BlockPos(8, 1 + RAISED, 1));
         husk.setNoAi(true);
         helper.assertTrue(sigil.conditionsHold(helper.getLevel()), "and with one near it acts");
         husk.discard();

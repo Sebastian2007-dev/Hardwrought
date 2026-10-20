@@ -21,6 +21,10 @@ loom {
 		client {
 			programArgs "--username", "Player573"
 		}
+		// A dedicated server of its own, so a server run never touches the client's worlds in run/.
+		server {
+			runDir "run-server"
+		}
 	}
 
 	mods {
@@ -80,8 +84,22 @@ tasks.register("quietTestRuns") {
     }
 }
 
+/**
+ * The game-test server keeps its world in build/run/gameTest/world and loads it again next time:
+ * the level is made new for each run, but the weather, the world clock and the mod's own saved data
+ * carry over. Every run therefore began a few thousand ticks on from where the last one stopped, and
+ * whether a test passed could depend on whether it happened to be raining or night by then (wet
+ * lines leak current, monsters come out in the dark, the seasons turn). Starting each run from a
+ * fresh world gives every run the same morning, clear for the first twelve thousand ticks at least.
+ */
+tasks.register("freshTestWorld", Delete) {
+    description = "Deletes the game-test server's world so that every run starts on the same day and weather."
+    delete file("build/run/gameTest/world")
+}
+
 tasks.configureEach { task ->
     if (task.name == "runClientGameTest") task.dependsOn("quietTestRuns")
+    if (task.name == "runGameTest") task.dependsOn("freshTestWorld")
 }
 
 processResources {

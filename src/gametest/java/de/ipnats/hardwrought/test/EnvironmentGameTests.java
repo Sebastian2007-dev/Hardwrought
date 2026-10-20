@@ -450,24 +450,27 @@ public final class EnvironmentGameTests {
         BlockPos floor = base.below();
         level.setBlockAndUpdate(floor, Gases.with(Blocks.AIR.defaultBlockState(), Gas.CARBON_DIOXIDE, 7));
         level.setBlockAndUpdate(base.above(), Gases.with(Blocks.AIR.defaultBlockState(), Gas.CARBON_DIOXIDE, 2));
-        helper.runAfterDelay(150, () -> {
-            try {
-                // Random ticks may break a unit or two down meanwhile, and that rises: it is counted apart.
-                int decayed = decayedIn(level, base);
-                helper.assertTrue(Gases.units(level.getBlockState(floor), Gas.CARBON_DIOXIDE) + decayed >= 8,
-                        "Two falling onto seven make eight: " + level.getBlockState(floor));
-                helper.assertTrue(countIn(level, base, Gas.CARBON_DIOXIDE, 1) == 0
-                                && countIn(level, base, Gas.CARBON_DIOXIDE, 0) == 0,
-                        "Nothing of it is left above the floor");
-                helper.assertTrue(countIn(level, base, Gas.CARBON_DIOXIDE, -1) + decayed == 9,
-                        "and the one left over lies beside it on the floor: nothing is lost or made");
-                helper.assertTrue(gasBlocksIn(level, base, -1) == 2,
-                        "It gathers into as few blocks as it fits in, not a film over the floor");
-            } finally {
-                clearShell(level, base);
-            }
-            helper.succeed();
-        });
+        // Asked again each tick from then on rather than once: a unit that breaks down at the last
+        // moment leaves the floor for a few ticks out of step while the rest gathers up behind it.
+        helper.runAfterDelay(150, () -> helper.succeedWhen(() -> {
+            // Random ticks may break a unit or two down meanwhile, and that rises: it is counted apart.
+            int decayed = decayedIn(level, base);
+            helper.assertTrue(Gases.units(level.getBlockState(floor), Gas.CARBON_DIOXIDE) + decayed >= 8,
+                    "Two falling onto seven make eight: " + level.getBlockState(floor));
+            helper.assertTrue(countIn(level, base, Gas.CARBON_DIOXIDE, 1) == 0
+                            && countIn(level, base, Gas.CARBON_DIOXIDE, 0) == 0,
+                    "Nothing of it is left above the floor");
+            helper.assertTrue(countIn(level, base, Gas.CARBON_DIOXIDE, -1) + decayed == 9,
+                    "and the one left over lies beside it on the floor: nothing is lost or made");
+            // Nine units fit in two blocks. A unit that broke down rises away from the floor, and the
+            // eight left then fit in one: as few blocks as what is still lying there fits in.
+            int lying = countIn(level, base, Gas.CARBON_DIOXIDE, -1) + countIn(level, base, Gas.DECAYED_CARBON_DIOXIDE, -1);
+            int fewest = (lying + Gas.CAPACITY - 1) / Gas.CAPACITY;
+            helper.assertTrue(gasBlocksIn(level, base, -1) == fewest,
+                    "It gathers into as few blocks as it fits in, not a film over the floor: "
+                            + gasBlocksIn(level, base, -1) + " blocks for " + lying + " units");
+            clearShell(level, base);
+        }));
     }
 
     @GameTest(maxTicks = 300)

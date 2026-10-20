@@ -2266,7 +2266,7 @@
   "compendium.hardwrought.info.nichrome_ingot": "Four parts nickel to one of chromium, alloyed in the smeltery. Drawn into the wire of every heating element.",
   "compendium.hardwrought.info.spark_plug": "Fires the gasoline engine and wears out after an hour of running. Held to the engine, a new one goes in once the old is down to a quarter.",
   "compendium.hardwrought.info.bearing": "Goes into crankshafts, the gasoline engine and the Mk III machines.",
-  "compendium.hardwrought.info.diesel_generator": "64 V from diesel, kerosene or the still's fuel, joined through a copper coil. A bucket runs a 500 W load about half an hour. Its exhaust carries carbon monoxide: give it a flue.",
+  "compendium.hardwrought.info.diesel_generator": "64 V from diesel, kerosene or the still's fuel, joined through a copper coil. A bucket runs a 500 W load a little over twenty minutes. Its exhaust carries carbon monoxide: give it a flue.",
   "compendium.hardwrought.info.gasoline_engine": "A shaft source that runs anywhere: 48 RPM and a strength of 6144. It burns gasoline, wears spark plugs, and its exhaust is rich in carbon monoxide.",
   "compendium.hardwrought.info.gas_burner": "A clean fire for the still, the refinery and the cracker, burning natural gas or LPG. Its flame is open, so it sets firedamp off.",
   "compendium.hardwrought.info.petroleum_lamp": "Burns kerosene: it holds two buckets and uses 100 mB a day. An empty hand turns it on and off. It burns as long as its fuel lasts.",
