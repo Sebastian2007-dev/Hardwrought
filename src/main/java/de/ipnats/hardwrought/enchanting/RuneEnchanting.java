@@ -107,6 +107,7 @@ public final class RuneEnchanting {
             case MITHRIL -> OrePowders.powder(de.ipnats.hardwrought.metallurgy.Metal.MITHRIL);
             case ADAMANT -> OrePowders.powder(de.ipnats.hardwrought.metallurgy.Metal.ADAMANTIUM);
             case WITHER -> de.ipnats.hardwrought.wither.WitherPowers.ESSENCE;
+            case VOID -> de.ipnats.hardwrought.magic.VoidCrystal.INK;
         };
     }
 

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "P": "hardwrought:tungsten_steel_plate",
+    "R": "hardwrought:tungsten_steel_rod"
+  },
+  "pattern": [
+    "P",
+    "R",
+    "R"
+  ],
+  "result": {
+    "id": "hardwrought:tungsten_steel_drill_bit"
+  }
+}

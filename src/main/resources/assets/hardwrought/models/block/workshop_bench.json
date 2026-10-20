@@ -1,0 +1,10 @@
+{
+  "parent": "minecraft:block/orientable_with_bottom",
+  "textures": {
+    "top": "hardwrought:block/hardwrought/workshop_bench_top",
+    "front": "hardwrought:block/hardwrought/workshop_bench_front",
+    "side": "hardwrought:block/hardwrought/workshop_bench_side",
+    "bottom": "hardwrought:block/hardwrought/workshop_bench_bottom",
+    "particle": "hardwrought:block/hardwrought/workshop_bench_side"
+  }
+}

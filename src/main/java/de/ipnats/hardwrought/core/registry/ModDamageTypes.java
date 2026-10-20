@@ -48,6 +48,16 @@ public final class ModDamageTypes {
     public static final ResourceKey<DamageType> VOID =
             ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("void"));
 
+    /** A fire spell (docs/magic-roadmap.md, M6): fire, so fire protection holds and the fireproof feel nothing. */
+    public static final ResourceKey<DamageType> SPELL_FIRE =
+            ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("spell_fire"));
+    /** A fire spell turned around: freezing cold. */
+    public static final ResourceKey<DamageType> SPELL_FROST =
+            ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("spell_frost"));
+    /** An earth spell: a blunt blow of stone, which armour takes as it takes a hammer. */
+    public static final ResourceKey<DamageType> SPELL_STRIKE =
+            ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("spell_strike"));
+
     public static final TagKey<DamageType> IS_SUFFOCATING =
             TagKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("is_suffocating"));
 

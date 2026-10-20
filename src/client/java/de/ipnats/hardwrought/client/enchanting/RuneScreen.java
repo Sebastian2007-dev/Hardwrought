@@ -43,11 +43,11 @@ public class RuneScreen extends Screen {
     /** Lapis blue for a rune that is written, a paler one where it hangs over the edge, red where it may not lie. */
     private static final int OVER_EDGE = 0x70A0A8C8, FORBIDDEN = 0xD0D84030;
     /** Each ink as it lies written, and brighter under the pointer: lapis blue, mithril sea-green, adamant crimson, Wither essence ash-violet. */
-    private static final int[] INKS = {0xFF3A62D8, 0xFF2FB8A4, 0xFFB02A4E, 0xFF4A3A58}, INKS_HOVER = {0xFF6F92FF, 0xFF73E6D1, 0xFFE0607F, 0xFF8A70A4};
+    private static final int[] INKS = {0xFF3A62D8, 0xFF2FB8A4, 0xFFB02A4E, 0xFF4A3A58, 0xFF6A2FB0}, INKS_HOVER = {0xFF6F92FF, 0xFF73E6D1, 0xFFE0607F, 0xFF8A70A4, 0xFFA670F0};
     /** The row of inks above the runes. */
     private static final int INK_BAR = 16;
     /** The inks as they look on a piece that has carried them a while. */
-    private static final int[] OLD_INKS = {0xFF2A4390, 0xFF237A70, 0xFF7A2038, 0xFF33283E};
+    private static final int[] OLD_INKS = {0xFF2A4390, 0xFF237A70, 0xFF7A2038, 0xFF33283E, 0xFF4A2078};
 
     /** A rune as this screen knows it. */
     private record Rune(Identifier id, Holder<Enchantment> enchantment, int tier, RuneWork.Shape shape) { }

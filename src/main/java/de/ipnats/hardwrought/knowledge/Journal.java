@@ -229,6 +229,35 @@ public final class Journal {
         return entry.needsAll();
     }
 
+    /**
+     * The deeper looks a chapter offers once it is reached: optional pages after its notes that set out
+     * how the things of that stage actually work, which the notes themselves leave the player to find.
+     * Nothing hangs on reading them. Each has its text under {@code journal.hardwrought.lore.<id>.title}
+     * and {@code .text}; they are the client's alone and never travel over the wire.
+     */
+    private static final java.util.Map<String, List<String>> LORE = java.util.Map.ofEntries(
+            // LORE-START
+            java.util.Map.entry("bare_hands", List.of("bare_hands_what_gives_way", "bare_hands_thirst_and_water", "bare_hands_fire_and_light", "bare_hands_wounds_and_sickness")),
+            java.util.Map.entry("first_iron", List.of("first_iron_heat", "first_iron_anvil_work", "first_iron_quality_and_quench", "first_iron_sounding_the_rock")),
+            java.util.Map.entry("bench_and_bronze", List.of("bench_and_bronze_the_benches", "bench_and_bronze_the_water_bowl", "bench_and_bronze_crusher_and_crank", "bench_and_bronze_tin_and_bronze")),
+            java.util.Map.entry("the_workshop", List.of("the_workshop_wounds_and_illness", "the_workshop_water_and_filters", "the_workshop_forge_and_temper", "the_workshop_shafts_and_strength")),
+            java.util.Map.entry("smeltery_and_steel", List.of("smeltery_and_steel_building", "smeltery_and_steel_heat_and_melting", "smeltery_and_steel_casting_and_grinding", "smeltery_and_steel_steel")),
+            java.util.Map.entry("runes_and_wands", List.of("runes_and_wands_runes_and_grammar", "runes_and_wands_wand_and_judgement", "runes_and_wands_sigils", "runes_and_wands_rune_writing")),
+            java.util.Map.entry("oil_and_current", List.of("oil_and_current_dynamo_and_line", "oil_and_current_machines_and_safety", "oil_and_current_pipes_and_pumps", "oil_and_current_well_and_column")),
+            java.util.Map.entry("the_nether", List.of("the_nether_crossing", "the_nether_heat", "the_nether_fresh_start", "the_nether_stabilisers")),
+            java.util.Map.entry("the_wither", List.of("the_wither_skulls", "the_wither_fight")),
+            java.util.Map.entry("the_underworld", List.of("the_underworld_ways", "the_underworld_realms", "the_underworld_metals", "the_underworld_witch_king")),
+            java.util.Map.entry("the_end", List.of("the_end_arrival", "the_end_crystals_stages", "the_end_dragon_moves", "the_end_landing_rematch")),
+            java.util.Map.entry("the_ritual", List.of("the_ritual_void_crystal", "the_ritual_temple", "the_ritual_offerings", "the_ritual_last_night"))
+            // LORE-END
+    );
+
+    /** The deeper looks of a chapter, in reading order; none for a chapter without any. */
+    public static List<Identifier> lore(Identifier chapter) {
+        if (chapter == null) return List.of();
+        return LORE.getOrDefault(chapter.getPath(), List.of()).stream().map(Journal::id).toList();
+    }
+
     /** The whole chain as this player reads it, hidden entries included. */
     public static List<CompendiumPagePayload.Note> page(PlayerKnowledge knowledge) {
         List<CompendiumPagePayload.Note> notes = new ArrayList<>(CHAIN.size());

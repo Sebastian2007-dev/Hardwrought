@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "S": "hardwrought:steel_plate",
+    "A": "hardwrought:advanced_circuit",
+    "G": "hardwrought:gripper_arm",
+    "B": "hardwrought:assembly_bench",
+    "M": "hardwrought:electric_motor"
+  },
+  "pattern": [
+    "SAS",
+    "GBG",
+    "SMS"
+  ],
+  "result": {
+    "id": "hardwrought:assembler"
+  }
+}

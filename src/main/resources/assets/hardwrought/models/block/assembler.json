@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "hardwrought:block/hardwrought/assembler_front",
+    "side": "hardwrought:block/hardwrought/appliance_casing",
+    "top": "hardwrought:block/hardwrought/appliance_casing",
+    "particle": "hardwrought:block/hardwrought/appliance_casing"
+  }
+}

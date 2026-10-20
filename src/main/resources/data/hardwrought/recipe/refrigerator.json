@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "N": "hardwrought:insulated_panel",
+    "T": "hardwrought:thermostat",
+    "K": "hardwrought:compressor",
+    "C": "hardwrought:cooling_coil",
+    "R": "hardwrought:refrigerant"
+  },
+  "pattern": [
+    "NTN",
+    "NKN",
+    "NCR"
+  ],
+  "result": {
+    "id": "hardwrought:refrigerator"
+  }
+}

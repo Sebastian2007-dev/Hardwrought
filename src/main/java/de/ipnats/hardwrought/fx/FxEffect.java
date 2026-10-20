@@ -80,6 +80,17 @@ public enum FxEffect {
     FRAGMENT_CRUMBLE(Aim.AREA, 0xB04CFF),
     CRYSTAL_WARD_HIT(Aim.AREA, 0xFF3CC8),
     CRYSTAL_WARD_BREAK(Aim.AREA, 0xFF3CC8),
+    // The dragon raised again (see {@code DragonRising}); pos is where it is called to, target as many blocks above as it lasts.
+    /** The four crystals call: the void stirs and a heart begins to beat. */
+    DRAGON_RISE_CALL(Aim.AREA, 0xB04CFF),
+    /** A pillar called up out of the void: pos its top. */
+    DRAGON_RISE_PILLAR(Aim.AREA, 0xFF3CC8),
+    /** The pillar standing again: pos its top. */
+    DRAGON_RISE_PILLAR_BURST(Aim.AREA, 0xFF3CC8),
+    /** Every crystal pours into one point, and the void there takes a shape. */
+    DRAGON_RISE_SUMMON(Aim.AREA, 0xB04CFF),
+    /** It is there. */
+    DRAGON_RISE_BIRTH(Aim.AREA, 0xFF3CC8),
     // The ritual at the end of the game (see {@code Ritual}). Where an effect lasts, scale is how many ticks.
     RITUAL_IGNITE(Aim.AREA, 0xFFE89A),
     RITUAL_BEAM(Aim.RAY, 0xFFE89A),

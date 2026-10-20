@@ -111,10 +111,11 @@ public final class RuneWork {
      * What a rune is written with. Lapis is the ordinary ink. Powdered mithril and adamant
      * overcharge the rune: written in them it reaches one or two levels beyond what its enchantment
      * has otherwise. They also let the piece hold more runes than its material takes by itself.
-     * Wither essence writes one rune only, and that rune only in it: soulbound (see {@link #inkSuits}).
+     * Void ink, ground from void crystal, is between them. Wither essence writes one rune only, and that
+     * rune only in it: soulbound (see {@link #inkSuits}).
      */
     public enum Ink {
-        LAPIS(0, 0), MITHRIL(1, 1), ADAMANT(2, 3), WITHER(0, 0);
+        LAPIS(0, 0), MITHRIL(1, 1), ADAMANT(2, 3), WITHER(0, 0), VOID(1, 2);
 
         private final int overcharge, moreRunes;
 

@@ -28,6 +28,7 @@ public final class ModCreativeTabs {
                 output.accept(ModItems.DIRT_SLAB);
                 for (HewnWood wood : HewnWood.values()) output.accept(ModBlocks.HEWN_WORKBENCH.itemStack(wood));
                 for (HewnWood wood : HewnWood.values()) output.accept(ModBlocks.NAILED_WORKBENCH.itemStack(wood));
+                output.accept(ModItems.WORKSHOP_BENCH);
                 output.accept(ModItems.LEAF_STRING);
                 output.accept(ModItems.COMPENDIUM);
                 output.accept(de.ipnats.hardwrought.atlas.Atlas.ITEM);
@@ -131,6 +132,10 @@ public final class ModCreativeTabs {
                 output.accept(ModItems.ITEM_PIPE_TITANIUM);
                 de.ipnats.hardwrought.fluids.FluidBlocks.items().forEach(output::accept);
                 de.ipnats.hardwrought.electricity.ElectricBlocks.items().forEach(output::accept);
+                de.ipnats.hardwrought.haven.HavenBlocks.items().forEach(output::accept);
+                de.ipnats.hardwrought.carried.CarriedItems.items().forEach(output::accept);
+                de.ipnats.hardwrought.automation.AutomationBlocks.items().forEach(output::accept);
+                de.ipnats.hardwrought.tesla.TeslaBlocks.items().forEach(output::accept);
                 de.ipnats.hardwrought.power.PowerBlocks.items().forEach(output::accept);
                 de.ipnats.hardwrought.multiblock.BigMachines.items().forEach(output::accept);
                 de.ipnats.hardwrought.storage.StorageBlocks.items().forEach(output::accept);

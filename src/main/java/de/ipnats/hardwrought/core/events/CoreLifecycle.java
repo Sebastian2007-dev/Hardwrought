@@ -69,14 +69,14 @@ public final class CoreLifecycle {
             if (runtime == null) return;
             // The first time a player is seen they are given what the mod assumes they start with.
             // Every time after that, only the guarantee that they are wearing a pack at all — which
-            // also quietly fits out every player of a world saved before packs existed.
+            // also quietly fits out every player of a world saved before packs existed. Not in Ultra.
             if (handler.player.getStats().getValue(net.minecraft.stats.Stats.CUSTOM
                     .get(net.minecraft.stats.Stats.PLAY_TIME)) == 0) {
                 runtime.equipment().welcome(handler.player);
                 de.ipnats.hardwrought.health.Diseases.grantImmunity(handler.player);
                 de.ipnats.hardwrought.survival.GroundSpawn.settle(handler.player);
             } else {
-                runtime.equipment().ensureBackpack(handler.player);
+                runtime.equipment().rejoined(handler.player);
             }
         });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {

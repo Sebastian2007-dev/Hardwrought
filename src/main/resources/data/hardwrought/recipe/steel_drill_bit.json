@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "P": "hardwrought:steel_plate",
+    "R": "hardwrought:steel_rod"
+  },
+  "pattern": [
+    "P",
+    "R",
+    "R"
+  ],
+  "result": {
+    "id": "hardwrought:steel_drill_bit"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "facing=north,on=false": {
+      "model": "hardwrought:block/bedside_monitor"
+    },
+    "facing=north,on=true": {
+      "model": "hardwrought:block/bedside_monitor_on"
+    },
+    "facing=east,on=false": {
+      "model": "hardwrought:block/bedside_monitor",
+      "y": 90
+    },
+    "facing=east,on=true": {
+      "model": "hardwrought:block/bedside_monitor_on",
+      "y": 90
+    },
+    "facing=south,on=false": {
+      "model": "hardwrought:block/bedside_monitor",
+      "y": 180
+    },
+    "facing=south,on=true": {
+      "model": "hardwrought:block/bedside_monitor_on",
+      "y": 180
+    },
+    "facing=west,on=false": {
+      "model": "hardwrought:block/bedside_monitor",
+      "y": 270
+    },
+    "facing=west,on=true": {
+      "model": "hardwrought:block/bedside_monitor_on",
+      "y": 270
+    }
+  }
+}

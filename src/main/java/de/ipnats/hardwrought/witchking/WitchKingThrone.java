@@ -6,6 +6,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.BlockGetter;
@@ -20,16 +21,21 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The Witch King's throne, at the head of his hall. He sleeps on it until someone comes into the hall;
  * then it wakes — five seconds of souls drawn in and the hall humming — and he rises out of a rift
  * before it. Beaten, he is gone for good and the throne goes cold; left alone long enough, he goes back
  * to it and waits, whole again.
+ *
+ * <p>Cold, the throne is a way out and back in for good: sitting on it carries one up to its seat in the
+ * overworld ({@link ThronePassage}).
  */
 public class WitchKingThrone extends BaseEntityBlock {
     public static final BooleanProperty COLD = BooleanProperty.create("cold");
@@ -51,6 +57,14 @@ public class WitchKingThrone extends BaseEntityBlock {
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return SHAPE;
+    }
+
+    @Override
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+        if (!state.getValue(COLD)) return InteractionResult.PASS;
+        // It faces south, down its hall.
+        if (level instanceof ServerLevel server) SeatMount.sit(server, pos, 0, player);
+        return InteractionResult.SUCCESS;
     }
 
     @Override
@@ -85,6 +99,8 @@ public class WitchKingThrone extends BaseEntityBlock {
         public static final int SLEEPING = 0, WAKING = 1, AWAKE = 2, DEFEATED = 3;
         int state = SLEEPING;
         int waking;
+        /** The seat in the overworld the cold throne leads up to, once it has one. */
+        private @Nullable BlockPos seat;
 
         public Entity(BlockPos pos, BlockState state) {
             super(WitchKingContent.THRONE_ENTITY, pos, state);
@@ -92,6 +108,15 @@ public class WitchKingThrone extends BaseEntityBlock {
 
         public int state() {
             return state;
+        }
+
+        public @Nullable BlockPos seat() {
+            return seat;
+        }
+
+        public void link(BlockPos seat) {
+            this.seat = seat;
+            setChanged();
         }
 
         void tick(ServerLevel level) {
@@ -162,12 +187,14 @@ public class WitchKingThrone extends BaseEntityBlock {
         protected void saveAdditional(ValueOutput output) {
             super.saveAdditional(output);
             output.putInt("state", state == WAKING ? SLEEPING : state);
+            if (seat != null) output.store("seat", BlockPos.CODEC, seat);
         }
 
         @Override
         protected void loadAdditional(ValueInput input) {
             super.loadAdditional(input);
             state = input.getIntOr("state", SLEEPING);
+            seat = input.read("seat", BlockPos.CODEC).orElse(null);
         }
     }
 }

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "L": "minecraft:lever",
+    "C": "hardwrought:copper_plate",
+    "P": "hardwrought:porcelain"
+  },
+  "pattern": [
+    "L",
+    "C",
+    "P"
+  ],
+  "result": {
+    "id": "hardwrought:toggle_switch",
+    "count": 2
+  }
+}

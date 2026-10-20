@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "R": "hardwrought:steel_rod",
+    "P": "hardwrought:steel_plate"
+  },
+  "pattern": [
+    "RPR",
+    "P P",
+    "RPR"
+  ],
+  "result": {
+    "id": "hardwrought:saw_chain"
+  }
+}

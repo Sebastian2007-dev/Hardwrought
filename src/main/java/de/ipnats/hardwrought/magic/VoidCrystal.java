@@ -38,6 +38,12 @@ public final class VoidCrystal {
     public static final Block CLUSTER = registerCluster("void_crystal_cluster", 7, 3,
             Blocks.AMETHYST_CLUSTER);
     public static final Item SHARD = registerItem("void_crystal_shard");
+    /**
+     * A shard ground into ink (docs/magic-roadmap.md, stage M2): in enchanting it writes a rune one level
+     * over its enchantment's own highest and lets the piece hold two runes more; a scroll bound in it holds
+     * steadier.
+     */
+    public static final Item INK = registerItem("void_ink");
 
     public static final ResourceKey<PlacedFeature> GEODE = ResourceKey.create(Registries.PLACED_FEATURE,
             Hardwrought.id("void_crystal_geode"));
@@ -62,7 +68,7 @@ public final class VoidCrystal {
 
     public static List<Item> items() {
         return List.of(BLOCK.asItem(), BUDDING.asItem(), SMALL_BUD.asItem(), MEDIUM_BUD.asItem(),
-                LARGE_BUD.asItem(), CLUSTER.asItem(), SHARD);
+                LARGE_BUD.asItem(), CLUSTER.asItem(), SHARD, INK);
     }
 
     private static Block registerCluster(String name, float height, float width, Block copied) {

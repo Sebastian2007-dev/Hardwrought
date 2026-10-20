@@ -79,6 +79,8 @@ public final class DragonFx {
         }
         for (VoidBolt bolt : level.getEntitiesOfClass(VoidBolt.class, near, Entity::isAlive)) bolt(fx, bolt);
         for (EndCrystal crystal : level.getEntitiesOfClass(EndCrystal.class, near, Entity::isAlive)) ward(fx, crystal);
+        // Being raised, the sky tears as well.
+        torn = Math.max(torn, DragonRiseFx.tear());
         de.ipnats.hardwrought.client.fx.FxPost.voidTear(torn);
         if (raging) tornSky(fx, client);
         else clearTear();
@@ -362,6 +364,8 @@ public final class DragonFx {
                 fx.light(pos, MAGENTA, 14, 16).intensity(2).fadeFrom(0.2f);
                 FxScreen.shake(pos, 0.3f, 30);
             }
+            case DRAGON_RISE_CALL, DRAGON_RISE_PILLAR, DRAGON_RISE_PILLAR_BURST, DRAGON_RISE_SUMMON, DRAGON_RISE_BIRTH ->
+                    DragonRiseFx.play(fx, effect, pos, target, s, follow);
             default -> { }
         }
     }

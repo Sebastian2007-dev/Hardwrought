@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "side": "hardwrought:block/hardwrought/resonant_coil",
+    "end": "hardwrought:block/hardwrought/resonant_coil_end"
+  }
+}

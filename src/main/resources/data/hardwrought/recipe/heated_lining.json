@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "N": "hardwrought:nichrome_mesh",
+    "R": "hardwrought:regulator",
+    "L": "minecraft:leather"
+  },
+  "pattern": [
+    "NRN",
+    "LLL"
+  ],
+  "result": {
+    "id": "hardwrought:heated_lining"
+  }
+}

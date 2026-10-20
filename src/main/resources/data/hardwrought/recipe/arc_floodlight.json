@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "E": "hardwrought:arc_electrode",
+    "R": "hardwrought:reflector",
+    "S": "hardwrought:steel_plate",
+    "B": "hardwrought:ballast",
+    "P": "hardwrought:porcelain",
+    "T": "hardwrought:steel_rod"
+  },
+  "pattern": [
+    "ERE",
+    "SBS",
+    "PTP"
+  ],
+  "result": {
+    "id": "hardwrought:arc_floodlight"
+  }
+}

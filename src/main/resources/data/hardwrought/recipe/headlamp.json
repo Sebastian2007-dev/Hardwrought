@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "S": "hardwrought:strap",
+    "R": "hardwrought:reflector",
+    "H": "hardwrought:device_housing",
+    "L": "hardwrought:light_bulb",
+    "T": "hardwrought:toggle_switch"
+  },
+  "pattern": [
+    "SRS",
+    "HLT"
+  ],
+  "result": {
+    "id": "hardwrought:headlamp"
+  }
+}

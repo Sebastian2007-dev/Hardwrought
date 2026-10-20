@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    "hardwrought:bearing",
+    "hardwrought:bearing",
+    "hardwrought:rubber_gasket",
+    "hardwrought:rubber_gasket",
+    "hardwrought:machine_oil"
+  ],
+  "result": {
+    "id": "hardwrought:service_kit"
+  }
+}

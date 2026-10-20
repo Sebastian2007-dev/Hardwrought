@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=south": { "model": "hardwrought:block/witch_king_seat" },
+    "facing=west": { "model": "hardwrought:block/witch_king_seat", "y": 90 },
+    "facing=north": { "model": "hardwrought:block/witch_king_seat", "y": 180 },
+    "facing=east": { "model": "hardwrought:block/witch_king_seat", "y": 270 }
+  }
+}

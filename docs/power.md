@@ -8,7 +8,7 @@ and the small parts that machines are now built from.
 | Part | Recipe | Goes into |
 | --- | --- | --- |
 | Redstone coil (2) | copper wire, redstone, iron rod | motor, furnace heating, injector |
-| Electric motor | iron plates, copper wire, 2 redstone coils, shaft | crusher, sawmill, press, electric pump |
+| Electric motor | housing, stator, rotor, commutator, 2 graphite brushes, 2 bearings ([electricity.md](electricity.md#motors-on-the-driveline)) | crusher, sawmill, press, electric pump, electric drive |
 | Spark plug (2) | copper rod, fireclay, steel plate | gasoline engine (wears), gas burner |
 | Glow plug (2) | redstone, fireclay, steel plate | diesel generator |
 | Engine piston (2) | 3 steel plates, 2 steel rods | engines |

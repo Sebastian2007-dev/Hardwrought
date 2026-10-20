@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    "hardwrought:porcelain",
+    "hardwrought:copper_plate"
+  ],
+  "result": {
+    "id": "hardwrought:lamp_socket",
+    "count": 2
+  }
+}

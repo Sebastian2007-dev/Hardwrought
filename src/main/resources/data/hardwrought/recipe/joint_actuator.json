@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "B": "hardwrought:bearing",
+    "M": "hardwrought:electric_motor",
+    "G": "hardwrought:reduction_gear"
+  },
+  "pattern": [
+    "BMB",
+    " G "
+  ],
+  "result": {
+    "id": "hardwrought:joint_actuator"
+  }
+}

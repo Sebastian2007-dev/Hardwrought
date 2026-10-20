@@ -425,6 +425,18 @@ final class SpellEffects {
     }
 
     static DamageSource damage(Release r) {
+        // Fire burns, cold freezes, lightning electrocutes, earth strikes (full specification §28); the rest is magic.
+        net.minecraft.resources.ResourceKey<net.minecraft.world.damagesource.DamageType> type = switch (r.core()) {
+            case FIRE -> r.inverted() ? de.ipnats.hardwrought.core.registry.ModDamageTypes.SPELL_FROST
+                    : de.ipnats.hardwrought.core.registry.ModDamageTypes.SPELL_FIRE;
+            case LIGHTNING -> de.ipnats.hardwrought.core.registry.ModDamageTypes.ELECTROCUTION;
+            case EARTH -> r.inverted() ? null : de.ipnats.hardwrought.core.registry.ModDamageTypes.SPELL_STRIKE;
+            default -> null;
+        };
+        if (type != null) {
+            var holder = r.level().registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.DAMAGE_TYPE).getOrThrow(type);
+            return r.caster() == null ? new DamageSource(holder) : new DamageSource(holder, r.caster(), r.caster());
+        }
         // A sigil's magic may outlast its maker's presence; then it is nobody's.
         return r.caster() == null ? r.level().damageSources().magic()
                 : r.level().damageSources().indirectMagic(r.caster(), r.caster());

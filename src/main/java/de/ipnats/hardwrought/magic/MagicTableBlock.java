@@ -145,6 +145,18 @@ public final class MagicTableBlock extends Block {
         return super.updateShape(state, level, ticks, pos, direction, neighborPos, neighborState, random);
     }
 
+    /** How near a Mage Table a caster must stand for its help. */
+    public static final int REACH = 3;
+
+    /** Whether this player stands at a Mage Table (docs/magic-roadmap.md, stage M3). */
+    public static boolean near(Player player) {
+        BlockPos at = player.blockPosition();
+        for (BlockPos pos : BlockPos.betweenClosed(at.offset(-REACH, -REACH, -REACH), at.offset(REACH, REACH, REACH))) {
+            if (player.level().getBlockState(pos).getBlock() instanceof MagicTableBlock) return true;
+        }
+        return false;
+    }
+
     @Override
     protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                           Player player, InteractionHand hand, BlockHitResult hit) {

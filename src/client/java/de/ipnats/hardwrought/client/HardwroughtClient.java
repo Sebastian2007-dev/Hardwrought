@@ -51,7 +51,12 @@ public class HardwroughtClient implements ClientModInitializer {
 		de.ipnats.hardwrought.client.knowledge.LookHud.initialize();
 		de.ipnats.hardwrought.client.machinery.MachineryClient.initialize();
 		de.ipnats.hardwrought.client.electricity.ElectricityClient.initialize();
+		de.ipnats.hardwrought.client.haven.HavenClient.initialize();
 		de.ipnats.hardwrought.client.storage.StorageClient.initialize();
+		net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(
+				de.ipnats.hardwrought.survival.Ultra.State.TYPE, (payload, context) -> de.ipnats.hardwrought.survival.Ultra.clientActive = payload.on());
+		net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register(
+				(handler, client) -> de.ipnats.hardwrought.survival.Ultra.clientActive = false);
 		de.ipnats.hardwrought.client.fx.FxClient.initialize();
 		de.ipnats.hardwrought.client.underworld.UnderworldClient.initialize();
 		de.ipnats.hardwrought.client.witchking.WitchKingClient.initialize();

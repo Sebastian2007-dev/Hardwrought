@@ -122,6 +122,14 @@ public final class EquipmentSystem {
     }
 
     /**
+     * Called when a player comes back. Wearing no pack, they are given one — a world saved before
+     * packs existed is fitted out this way — but not in Ultra, where having none is how one starts.
+     */
+    public void rejoined(ServerPlayer player) {
+        if (!de.ipnats.hardwrought.survival.Ultra.active(server)) ensureBackpack(player);
+    }
+
+    /**
      * Puts a starter pack back where there is none. Never an upgrade: a player who is wearing a
      * better pack keeps it, and one who is wearing nothing gets the plainest one there is.
      */

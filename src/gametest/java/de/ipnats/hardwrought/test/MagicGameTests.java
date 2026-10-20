@@ -5,6 +5,7 @@ import de.ipnats.hardwrought.magic.CastSpellPayload;
 import de.ipnats.hardwrought.magic.Glyph;
 import de.ipnats.hardwrought.magic.Magic;
 import de.ipnats.hardwrought.magic.MagicShields;
+import de.ipnats.hardwrought.magic.MagicWorld;
 import de.ipnats.hardwrought.magic.Rune;
 import de.ipnats.hardwrought.magic.RuneKnowledge;
 import de.ipnats.hardwrought.magic.RuneRecognizer;
@@ -307,6 +308,67 @@ public final class MagicGameTests {
         helper.succeed();
     }
 
+    /** Magic roadmap M3: the Mage Table's help, and a scroll bound at it and read without a wand. */
+    @GameTest
+    public void aMageTableBindsAScrollThatIsReadWithoutAWand(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        ServerPlayer player = mage(helper, Glyph.values());
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Magic.GOLDEN_WAND));
+        BlockPos table = helper.absolutePos(new BlockPos(2, 1, 2));
+        player.teleportTo(table.getX() + 2.5, table.getY(), table.getZ() + 0.5);
+        var light = List.of(rune(Rune.LIGHT, 150, 150));
+        helper.assertTrue(SpellCaster.cast(player, light, 300, false, CastSpellPayload.BIND) == null, "Away from a table nothing is bound");
+        level.setBlockAndUpdate(table, Magic.MAGIC_TABLE.defaultBlockState());
+        helper.assertTrue(de.ipnats.hardwrought.magic.MagicTableBlock.near(player), "Now the mage stands at a table");
+        helper.assertTrue(SpellCaster.cast(player, light, 300, false, CastSpellPayload.BIND) == null, "and without parchment and ink still nothing");
+        player.getInventory().add(new ItemStack(de.ipnats.hardwrought.magic.Scrolls.PARCHMENT));
+        player.getInventory().add(new ItemStack(de.ipnats.hardwrought.magic.Scrolls.RUNE_INK));
+        helper.assertTrue(SpellCaster.cast(player, light, 300, false, CastSpellPayload.BIND) != null, "With them it is bound");
+        ItemStack scroll = ItemStack.EMPTY;
+        boolean parchmentLeft = false;
+        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = player.getInventory().getItem(slot);
+            if (stack.is(de.ipnats.hardwrought.magic.Scrolls.SCROLL)) scroll = stack;
+            if (stack.is(de.ipnats.hardwrought.magic.Scrolls.PARCHMENT)) parchmentLeft = true;
+        }
+        helper.assertTrue(!scroll.isEmpty() && scroll.has(de.ipnats.hardwrought.magic.Scrolls.WRITING), "into a scroll that keeps the drawing");
+        helper.assertTrue(!parchmentLeft, "and the parchment went into it");
+        var writing = scroll.get(de.ipnats.hardwrought.magic.Scrolls.WRITING);
+        helper.assertTrue(writing.judged().getFirst().stability() > 0.5, "with the quality it was bound with: " + writing.judged());
+        // Read with no wand in hand: it is cast and used up.
+        player.setItemInHand(InteractionHand.MAIN_HAND, scroll.copy());
+        ItemStack held = player.getMainHandItem();
+        held.getItem().use(level, player, InteractionHand.MAIN_HAND);
+        helper.assertTrue(held.isEmpty(), "Read, the scroll is gone");
+        // The table steadies: the same drawing judged there holds better than in the hand.
+        Spell heavy = read(rune(Rune.FIRE, 40, 150), rune(Rune.FIRE, 110, 150), rune(Rune.FIRE, 180, 150), arrow(260, 260, 260, 60));
+        var four = List.of(drawn(CastQuality.Role.CORE, 0.8, true), drawn(CastQuality.Role.AMPLIFIER, 0.8, true),
+                drawn(CastQuality.Role.AMPLIFIER, 0.8, true), drawn(CastQuality.Role.SIGN, 0.8, true));
+        helper.assertTrue(CastQuality.judge(four, heavy, WandTier.WOOD, 1, 0, CastQuality.Bench.TABLE).stability()
+                > CastQuality.judge(four, heavy, WandTier.WOOD, 1, 0, CastQuality.Bench.HAND).stability() + 0.2,
+                "The table steadies a spell and carries some of its load");
+        level.setBlockAndUpdate(table, Blocks.AIR.defaultBlockState());
+        helper.succeed();
+    }
+
+    /** Magic roadmap M2: the wands past gold. */
+    @GameTest
+    public void mithrilAndVoidCrystalWandsCarryMoreAndSteadier(GameTestHelper helper) {
+        helper.assertTrue(WandTier.MITHRIL.tier() > WandTier.GOLD.tier() && WandTier.VOID.tier() > WandTier.MITHRIL.tier(),
+                "Mithril carries more than gold, void crystal more again");
+        helper.assertTrue(WandTier.VOID.steadiness() > WandTier.MITHRIL.steadiness()
+                && WandTier.MITHRIL.steadiness() > WandTier.GOLD.steadiness(), "and each steadier");
+        helper.assertTrue(WandTier.VOID.overloadCost() * 2 == WandTier.MITHRIL.overloadCost(),
+                "Overload costs a void crystal wand half as much");
+        Spell heavy = read(rune(Rune.FIRE, 40, 150), rune(Rune.FIRE, 110, 150), rune(Rune.FIRE, 180, 150), arrow(260, 260, 260, 60));
+        var four = List.of(drawn(CastQuality.Role.CORE, 0.8, true), drawn(CastQuality.Role.AMPLIFIER, 0.8, true),
+                drawn(CastQuality.Role.AMPLIFIER, 0.8, true), drawn(CastQuality.Role.SIGN, 0.8, true));
+        helper.assertTrue(CastQuality.judge(four, heavy, WandTier.MITHRIL, 1).stability()
+                > CastQuality.judge(four, heavy, WandTier.IRON, 1).stability(), "A mithril wand holds a spell steadier than iron");
+        helper.assertTrue(new ItemStack(Magic.VOID_CRYSTAL_WAND).getMaxDamage() == WandTier.VOID.durability(), "and wears as its material does");
+        helper.succeed();
+    }
+
     private static CastQuality.Drawn drawn(CastQuality.Role role, double accuracy, boolean known) {
         return new CastQuality.Drawn(role, accuracy, true, 500, known);
     }
@@ -528,16 +590,108 @@ public final class MagicGameTests {
     public void waterIsWeakInTheNether(GameTestHelper helper) {
         ServerLevel nether = helper.getLevel().getServer().getLevel(Level.NETHER);
         helper.assertTrue(nether != null, "The Nether exists");
-        try {
-            var method = SpellCaster.class.getDeclaredMethod("surroundings", ServerLevel.class, Rune.class);
-            method.setAccessible(true);
-            helper.assertTrue((double) method.invoke(null, nether, Rune.WATER) < 1, "Water magic is weaker in the Nether");
-            helper.assertTrue((double) method.invoke(null, nether, Rune.FIRE) == 1, "Fire magic is not");
-            helper.assertTrue((double) method.invoke(null, helper.getLevel(), Rune.WATER) == 1, "Water is itself elsewhere");
-        } catch (ReflectiveOperationException e) {
-            throw new AssertionError(e);
+        Vec3 inside = new Vec3(0.5, 64, 0.5);
+        helper.assertTrue(MagicWorld.surroundings(nether, inside, Rune.WATER) == 0.5, "Water magic is weaker in the Nether");
+        helper.assertTrue(MagicWorld.surroundings(nether, inside, Rune.FIRE) > 1, "and fire magic stronger");
+        Vec3 here = helper.absoluteVec(new Vec3(1.5, 1, 1.5));
+        helper.assertTrue(MagicWorld.surroundings(helper.getLevel(), here, Rune.WATER) == 1
+                || helper.getLevel().isRainingAt(BlockPos.containing(here)), "Water is itself elsewhere");
+        helper.succeed();
+    }
+
+    /** Magic roadmap M6: water and rock overhead change what an element can do. */
+    @GameTest
+    public void thePlaceChangesTheElements(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos wet = helper.absolutePos(new BlockPos(1, 1, 1));
+        level.setBlockAndUpdate(wet, Blocks.WATER.defaultBlockState());
+        Vec3 inWater = Vec3.atCenterOf(wet);
+        helper.assertTrue(MagicWorld.surroundings(level, inWater, Rune.FIRE) <= 0.3 + 1e-9, "Fire under water is all but drowned");
+        helper.assertTrue(MagicWorld.surroundings(level, inWater, Rune.WATER) > 1, "and water stronger in it");
+        BlockPos below = helper.absolutePos(new BlockPos(4, 1, 4));
+        level.setBlockAndUpdate(below.above(2), Blocks.STONE.defaultBlockState());
+        Vec3 under = Vec3.atCenterOf(below);
+        helper.assertTrue(MagicWorld.surroundings(level, under, Rune.EARTH) > 1, "Under rock, earth is stronger");
+        helper.assertTrue(MagicWorld.surroundings(level, under, Rune.WIND) < 1, "and wind weaker");
+        ServerLevel underworld = level.getServer().getLevel(de.ipnats.hardwrought.underworld.Underworld.LEVEL);
+        if (underworld != null) {
+            helper.assertTrue(MagicWorld.surroundings(underworld, new Vec3(0.5, 64, 0.5), Rune.LIGHT) < 1, "Light is weak in the Underworld");
+            helper.assertTrue(MagicWorld.surroundings(underworld, new Vec3(0.5, 64, 0.5), Rune.DARK) > 1, "and darkness strong");
         }
         helper.succeed();
+    }
+
+    /** Magic roadmap M6: metal on the body, a shield and an evoker nearby make a cast less steady. */
+    @GameTest
+    public void gearAndEvokersDisturbTheHand(GameTestHelper helper) {
+        ServerPlayer player = mage(helper, Glyph.values());
+        helper.assertTrue(MagicWorld.interference(player) == 0, "Bare, nothing disturbs the hand");
+        player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.FEET, new ItemStack(net.minecraft.world.item.Items.LEATHER_BOOTS));
+        helper.assertTrue(MagicWorld.interference(player) == 0, "Leather costs nothing");
+        player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, new ItemStack(net.minecraft.world.item.Items.IRON_CHESTPLATE));
+        player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD, new ItemStack(net.minecraft.world.item.Items.IRON_HELMET));
+        player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(net.minecraft.world.item.Items.SHIELD));
+        double worn = MagicWorld.interference(player);
+        helper.assertTrue(Math.abs(worn - 0.10) < 1e-9, "Iron chest and helmet and a shield: 0.04 + 0.02 + 0.04, not " + worn);
+        Vec3 at = helper.absoluteVec(new Vec3(1.5, 1, 1.5));
+        helper.assertTrue(MagicWorld.evokers(helper.getLevel(), at) == 0, "No evoker, no unsettling");
+        var evoker = helper.spawn(EntityTypes.EVOKER, new BlockPos(4, 1, 1));
+        evoker.setNoAi(true);
+        helper.assertTrue(MagicWorld.evokers(helper.getLevel(), at) > 0, "An evoker close by unsettles magic");
+        helper.succeed();
+    }
+
+    /** Magic roadmap M6: an earth spell is a blunt blow of stone, not plain magic. */
+    @GameTest(maxTicks = 60)
+    public void earthStrikesAsStone(GameTestHelper helper) {
+        ServerPlayer player = mage(helper, Glyph.EARTH, Glyph.ARROW);
+        BlockPos from = helper.absolutePos(new BlockPos(1, 1, 1));
+        floor(helper, from.offset(-1, -1, -1), from.offset(9, -1, 1));
+        player.teleportTo(from.getX() + 0.5, from.getY(), from.getZ() + 0.5);
+        Husk husk = helper.spawn(EntityTypes.HUSK, new BlockPos(5, 1, 1));
+        husk.setNoAi(true);
+        player.lookAt(EntityAnchorArgument.Anchor.EYES, husk.getEyePosition());
+        SpellCaster.cast(player, List.of(rune(Rune.EARTH, 80, 150), arrow(220, 280, 220, 60)), 300);
+        helper.succeedWhen(() -> {
+            var source = husk.getLastDamageSource();
+            helper.assertTrue(source != null && source.is(de.ipnats.hardwrought.core.registry.ModDamageTypes.SPELL_STRIKE),
+                    "The stone strikes the husk as stone: " + source);
+            helper.assertTrue(de.ipnats.hardwrought.combat.CombatDamageType.classify(source)
+                    == de.ipnats.hardwrought.combat.CombatDamageType.BLUNT, "which is a blunt blow");
+        });
+    }
+
+    /** Magic roadmap M6: a rune tome teaches a rune its reader does not know; to one who knows all, nothing. */
+    @GameTest
+    public void aRuneTomeTeachesAnUnknownRune(GameTestHelper helper) {
+        ServerPlayer player = mage(helper);
+        Glyph taught = de.ipnats.hardwrought.magic.RuneTomeItem.teach(player);
+        helper.assertTrue(taught != null && RuneKnowledge.knows(player, taught), "The tome teaches a rune");
+        ServerPlayer master = mage(helper, Glyph.values());
+        helper.assertTrue(de.ipnats.hardwrought.magic.RuneTomeItem.teach(master) == null, "but nothing to one who knows them all");
+        helper.succeed();
+    }
+
+    /** Magic roadmap M6: an endermite near a standing shield wears it down. */
+    @GameTest(maxTicks = 100)
+    public void anEndermiteWearsAStandingShield(GameTestHelper helper) {
+        List<float[]> spiral = new ArrayList<>();
+        for (int i = 0; i <= 60; i++) {
+            double t = i / 60.0, a = t * Math.PI * 4.5, r = 6 + 60 * t;
+            spiral.add(new float[] {130 + (float) (r * Math.cos(a)), 180 + (float) (r * Math.sin(a))});
+        }
+        ServerPlayer player = mage(helper, Glyph.LIGHT, Glyph.CIRCLE, Glyph.SPIRAL);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Magic.GOLDEN_WAND));
+        BlockPos from = helper.absolutePos(new BlockPos(1, 1, 1));
+        floor(helper, from.offset(-1, -1, -1), from.offset(8, -1, 4));
+        player.teleportTo(from.getX() + 0.5, from.getY(), from.getZ() + 0.5);
+        SpellCaster.cast(player, List.of(circle(230, 70, 40), rune(Rune.LIGHT, 230, 70, 0.06f, 0, 0, false), stroke(spiral)), 300);
+        double before = MagicShields.fixedStrength(player);
+        helper.assertTrue(before > 0, "A standing shield stands");
+        var mite = helper.spawn(EntityTypes.ENDERMITE, new BlockPos(6, 1, 3));
+        mite.setNoAi(true);
+        helper.succeedWhen(() -> helper.assertTrue(MagicShields.fixedStrength(player) < before,
+                "An endermite by it wears it down: " + MagicShields.fixedStrength(player)));
     }
 
     @GameTest

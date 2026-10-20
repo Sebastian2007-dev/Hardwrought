@@ -1,0 +1,60 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "frame": "hardwrought:block/hardwrought/bell_frame",
+    "brass": "hardwrought:block/hardwrought/brass",
+    "enamel": "hardwrought:block/hardwrought/appliance_enamel",
+    "casing": "hardwrought:block/hardwrought/appliance_casing",
+    "particle": "hardwrought:block/hardwrought/appliance_casing"
+  },
+  "elements": [
+{
+  "from": [4, 0, 4],
+  "to": [12, 2, 12],
+  "faces": {
+    "north": {"texture": "#frame"},
+    "south": {"texture": "#frame"},
+    "east": {"texture": "#frame"},
+    "west": {"texture": "#frame"},
+    "up": {"texture": "#frame"},
+    "down": {"texture": "#frame"}
+  }
+},
+{
+  "from": [7, 2, 7],
+  "to": [9, 4, 9],
+  "faces": {
+    "north": {"texture": "#frame"},
+    "south": {"texture": "#frame"},
+    "east": {"texture": "#frame"},
+    "west": {"texture": "#frame"},
+    "up": {"texture": "#frame"},
+    "down": {"texture": "#frame"}
+  }
+},
+{
+  "from": [4, 4, 4],
+  "to": [12, 10, 12],
+  "faces": {
+    "north": {"texture": "#brass"},
+    "south": {"texture": "#brass"},
+    "east": {"texture": "#brass"},
+    "west": {"texture": "#brass"},
+    "up": {"texture": "#brass"},
+    "down": {"texture": "#brass"}
+  }
+},
+{
+  "from": [5, 10, 5],
+  "to": [11, 12, 11],
+  "faces": {
+    "north": {"texture": "#brass"},
+    "south": {"texture": "#brass"},
+    "east": {"texture": "#brass"},
+    "west": {"texture": "#brass"},
+    "up": {"texture": "#brass"},
+    "down": {"texture": "#brass"}
+  }
+}
+  ]
+}

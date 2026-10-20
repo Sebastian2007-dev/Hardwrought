@@ -109,6 +109,7 @@ public final class Smelting {
             put("steel", Alloys.STEEL_INGOT);
             put("stainless_steel", Alloys.STAINLESS_STEEL_INGOT);
             put("tungsten_steel", Alloys.TUNGSTEN_STEEL_INGOT);
+            put("nichrome", Alloys.NICHROME_INGOT);
             put("iron", Items.IRON_INGOT);
             put("copper", Items.COPPER_INGOT);
             put("gold", Items.GOLD_INGOT);

@@ -1,0 +1,60 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "lens": "hardwrought:block/hardwrought/floodlight_lens_on",
+    
+    "enamel": "hardwrought:block/hardwrought/appliance_enamel",
+    "casing": "hardwrought:block/hardwrought/appliance_casing",
+    "particle": "hardwrought:block/hardwrought/appliance_casing"
+  },
+  "elements": [
+{
+  "from": [3, 0, 3],
+  "to": [13, 2, 13],
+  "faces": {
+    "north": {"texture": "#casing"},
+    "south": {"texture": "#casing"},
+    "east": {"texture": "#casing"},
+    "west": {"texture": "#casing"},
+    "up": {"texture": "#casing"},
+    "down": {"texture": "#casing"}
+  }
+},
+{
+  "from": [2, 2, 7],
+  "to": [3, 9, 9],
+  "faces": {
+    "north": {"texture": "#casing"},
+    "south": {"texture": "#casing"},
+    "east": {"texture": "#casing"},
+    "west": {"texture": "#casing"},
+    "up": {"texture": "#casing"},
+    "down": {"texture": "#casing"}
+  }
+},
+{
+  "from": [13, 2, 7],
+  "to": [14, 9, 9],
+  "faces": {
+    "north": {"texture": "#casing"},
+    "south": {"texture": "#casing"},
+    "east": {"texture": "#casing"},
+    "west": {"texture": "#casing"},
+    "up": {"texture": "#casing"},
+    "down": {"texture": "#casing"}
+  }
+},
+{
+  "from": [3, 4, 3],
+  "to": [13, 14, 13],
+  "faces": {
+    "north": {"texture": "#lens"},
+    "south": {"texture": "#casing"},
+    "east": {"texture": "#casing"},
+    "west": {"texture": "#casing"},
+    "up": {"texture": "#casing"},
+    "down": {"texture": "#casing"}
+  }
+}
+  ]
+}

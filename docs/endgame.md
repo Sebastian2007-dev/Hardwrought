@@ -177,9 +177,10 @@ again); the client is told, so nothing shows that the server refuses.
 The Witch King's mantle is the one way to fly in (§ 3). It glides like elytra and drives on with held
 jump (built). For the air fight it also **hovers**:
 
-- A key switches between gliding and hovering. Hovering, the wearer hangs in the air and drifts slowly
-  up and down, as if held on a breath of souls; they move slowly in every direction, rise with jump and
-  sink with sneak. Souls trail from the mantle's hem.
+- Tapping jump twice in the air (as a creative player takes off), or its key (X), switches between
+  gliding and hovering. Hovering flies as creative flight does: at creative pace every way (twice as fast
+  sprinting), rising with jump and sinking with sneak; left alone it hangs on a slow breath of souls.
+  Only a fresh press toggles, so a held key does not flicker it. Souls trail from the mantle's hem.
 - **Soul charge** limits it: hovering drains it (about 20 seconds from full), gliding and standing on
   ground refill it. Empty, the wearer drops out of the hover into a glide.
 - **A ceiling:** whoever flies too high, the mantle gives out — it stops carrying them and they fall,
@@ -235,6 +236,15 @@ all and runes only half; and every hit throws the one it hits — in the air, to
 **The rematch.** Once dead, it can be raised again with four crystals on the exit portal, as in
 vanilla. The raised dragon is stronger — more health, quicker, harder hitting, and a move it did not
 have — and only it gives what the ritual needs (§ 5).
+
+The raising is a sight of its own (`DragonRising`, `DragonRiseFx`), laid over vanilla's sequence and
+in step with it: *the call* — titles "Die Leere regt sich", motes drawn in to the point over the
+portal, a heart beating there ever quicker, a sigil drawing itself across the island, the sky
+beginning to tear; *the pillars* — for each, lightning from that point to its top, a column of light
+out of the void beneath it, and as it stands again a burst and thunder; *the summoning* — lightning
+out of every crystal, rings closing in, the void swelling black in a cracking shell, the view bent
+towards it, the sky torn wide; *the birth* — a flash, waves over the whole island, black wings of
+smoke, its roar, and the title "Der Drache erhebt sich".
 
 *Built (stages 5 and 6):* [VoidDragon](../src/main/java/de/ipnats/hardwrought/end/dragon/VoidDragon.java),
 [DragonHunt](../src/main/java/de/ipnats/hardwrought/end/dragon/DragonHunt.java),

@@ -57,9 +57,19 @@ public class NailedWorkbenchBlock extends CraftingTableBlock implements net.mine
     protected net.minecraft.world.InteractionResult useWithoutItem(BlockState state, net.minecraft.world.level.Level level,
                                                                    BlockPos pos, net.minecraft.world.entity.player.Player player,
                                                                    net.minecraft.world.phys.BlockHitResult hit) {
+        net.minecraft.world.InteractionResult opened = openKeptGrid(level, pos, player);
+        return opened != null ? opened : super.useWithoutItem(state, level, pos, player, hit);
+    }
+
+    /**
+     * Opens the grid a bench keeps, for this player, unless somebody else is working at it. Null where
+     * there is nothing to open it with here: on the client, or a bench from before benches kept a grid.
+     */
+    static net.minecraft.world.InteractionResult openKeptGrid(net.minecraft.world.level.Level level, BlockPos pos,
+                                                               net.minecraft.world.entity.player.Player player) {
         if (level.isClientSide() || !(player instanceof net.minecraft.server.level.ServerPlayer worker)
                 || !(level.getBlockEntity(pos) instanceof KeptGridBlockEntity grid)) {
-            return super.useWithoutItem(state, level, pos, player, hit);
+            return null;
         }
         if (!grid.claim(worker)) {
             worker.sendSystemMessage(net.minecraft.network.chat.Component.translatable(

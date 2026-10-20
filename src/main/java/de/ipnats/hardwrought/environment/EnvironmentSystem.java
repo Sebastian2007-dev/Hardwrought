@@ -58,6 +58,15 @@ public final class EnvironmentSystem {
     private static final double MAX_ROOM_HEAT = 45.0;
     private static final double TEMPERATURE_RELAXATION = 0.10;
     private static final int MIN_EFFECTIVE_VOLUME = 8;
+    /**
+     * Degrees a room warms per watt a device puts into it, divided by its volume: a 120-watt heater warms
+     * a room of sixty blocks by about twenty degrees. A cooler puts in negative watts.
+     */
+    public static final double DEVICE_HEAT_PER_WATT = 10.0;
+    /** How much each block of opening — an open door, a fence — loses of what a device puts in. */
+    public static final double DEVICE_LEAK_PER_OPENING = 2.0;
+    /** How long a device's offer stands without being renewed. */
+    private static final int DEVICE_OFFER_TICKS = 100;
     /** Section 19: a flame needs oxygen. Air thinner than this, high up, will not keep one alight. */
     public static final double FIRE_MINIMUM_OXYGEN = 0.130;
     /**
@@ -73,6 +82,8 @@ public final class EnvironmentSystem {
     private final CoreSaveData save;
     private final SimulationScheduler scheduler;
     private final Map<UUID, Tracked> tracking = new HashMap<>();
+    /** What the heaters and coolers in each room put into it, by room and position, until when. */
+    private final Map<String, Map<Long, Device>> devices = new HashMap<>();
     private final LinkedHashMap<String, EnvironmentCell> cells =
             new LinkedHashMap<>(32, 0.75f, true) {
                 @Override
@@ -95,6 +106,8 @@ public final class EnvironmentSystem {
     }
 
     private record Tracked(String key, RoomScan scan, long scannedTick, BlockPos scannedAt) { }
+
+    private record Device(ServerLevel level, double watts, long until) { }
 
     /** One enclosed space. Geometry comes from a scan, its warmth is carried over time. */
     private static final class EnvironmentCell {
@@ -194,6 +207,54 @@ public final class EnvironmentSystem {
         return clamp(0.20 + 0.40 * altitude + 0.40 * weather, 0, 1);
     }
 
+    // ---------------------------------------------------------------- devices
+
+    /**
+     * The temperature of the room a scan found, as it is carried now; NaN in the open air. Makes the
+     * room known if it was not, so that a thermostat can read a room nobody is standing in.
+     */
+    public double roomTemperature(ServerLevel level, RoomScan scan) {
+        EnvironmentCell cell = cell(level, scan);
+        return cell == null ? Double.NaN : cell.temperature;
+    }
+
+    /**
+     * A device puts this many watts of heat into the room a scan found — a cooler negative watts. It
+     * stands for {@link #DEVICE_OFFER_TICKS} and is renewed by saying it again; a room with a device
+     * working in it is kept warm or cold whether anyone is in it or not. False in the open air, where
+     * there is no room to warm.
+     */
+    public boolean offerHeat(ServerLevel level, RoomScan scan, BlockPos device, double watts) {
+        EnvironmentCell cell = cell(level, scan);
+        if (cell == null) return false;
+        devices.computeIfAbsent(cell.key, key -> new HashMap<>())
+                .put(device.asLong(), new Device(level, watts, scheduler.ticks() + DEVICE_OFFER_TICKS));
+        return true;
+    }
+
+    private EnvironmentCell cell(ServerLevel level, RoomScan scan) {
+        String key = cellKey(level, scan);
+        if (key == null) return null;
+        EnvironmentCell cell = cells.computeIfAbsent(key, id -> new EnvironmentCell(id, save.cellAtmosphere(id), scheduler.ticks()));
+        cell.applyGeometry(scan);
+        return cell;
+    }
+
+    /** What the devices in a room put into it now, in watts; the stale ones are forgotten. */
+    private double deviceWatts(EnvironmentCell cell) {
+        Map<Long, Device> offers = devices.get(cell.key);
+        if (offers == null) return 0.0;
+        long now = scheduler.ticks();
+        offers.values().removeIf(device -> device.until() < now);
+        if (offers.isEmpty()) {
+            devices.remove(cell.key);
+            return 0.0;
+        }
+        double watts = 0.0;
+        for (Device device : offers.values()) watts += device.watts();
+        return watts;
+    }
+
     // ---------------------------------------------------------------- simulation
 
     private void tickCells() {
@@ -204,10 +265,19 @@ public final class EnvironmentSystem {
             if (tracked.key == null) continue;
             witness.putIfAbsent(tracked.key, player);
         }
-        for (var entry : witness.entrySet()) {
+        Map<String, ServerLevel> levels = new HashMap<>();
+        for (var entry : witness.entrySet()) levels.put(entry.getKey(), entry.getValue().level());
+        // A room a device works in is kept up whether anyone stands in it or not.
+        long now = scheduler.ticks();
+        for (var entry : devices.entrySet()) {
+            for (Device device : entry.getValue().values()) {
+                if (device.until() >= now) levels.putIfAbsent(entry.getKey(), device.level());
+            }
+        }
+        for (var entry : levels.entrySet()) {
             EnvironmentCell cell = cells.get(entry.getKey());
             if (cell == null) continue;
-            ServerLevel level = entry.getValue().level();
+            ServerLevel level = entry.getValue();
             updateCell(cell, level);
             save.setCellAtmosphere(cell.key, new CellAtmosphere(cell.temperature, cell.updatedTick));
         }
@@ -254,7 +324,10 @@ public final class EnvironmentSystem {
         double volume = Math.max(MIN_EFFECTIVE_VOLUME, cell.volume);
         double outdoor = outdoorTemperature(level, BlockPos.of(cell.origin));
         double heat = Math.min(MAX_ROOM_HEAT, combustion * COMBUSTION_HEAT / volume) * (0.4 + 0.6 * cell.insulation);
-        double target = outdoor + heat;
+        // What heaters and coolers put in, against the volume, kept by the walls and lost through the openings.
+        double devices = clamp(deviceWatts(cell) * DEVICE_HEAT_PER_WATT / volume, -MAX_ROOM_HEAT, MAX_ROOM_HEAT)
+                * (0.4 + 0.6 * cell.insulation) / (1.0 + DEVICE_LEAK_PER_OPENING * cell.apertureArea);
+        double target = outdoor + heat + devices;
         double relaxation = 1.0 - Math.pow(1.0 - TEMPERATURE_RELAXATION, seconds);
         cell.temperature = clamp(cell.temperature + (target - cell.temperature) * relaxation, -80, 1_200);
     }
@@ -325,8 +398,8 @@ public final class EnvironmentSystem {
             if (cell == null) {
                 return String.format(Locale.ROOT, "outdoor=%.1fC room not simulated yet", outdoor);
             }
-            return String.format(Locale.ROOT, "room=%.1fC outdoor=%.1fC fires=%.1f",
-                    cell.temperature, outdoor, combustionWeight(level, cell));
+            return String.format(Locale.ROOT, "room=%.1fC outdoor=%.1fC fires=%.1f devices=%.0fW",
+                    cell.temperature, outdoor, combustionWeight(level, cell), deviceWatts(cell));
         });
     }
 

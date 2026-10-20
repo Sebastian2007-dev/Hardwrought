@@ -153,7 +153,10 @@ public final class Diseases {
     public static void ate(ServerPlayer player, ItemStack stack) {
         Double chance = stack.is(de.ipnats.hardwrought.underworld.UnderworldRuins.STALE_BREAD) ? STALE_BREAD
                 : BAD_FOOD.get(BuiltInRegistries.ITEM.getKey(stack.getItem()));
-        if (chance != null && player.getRandom().nextDouble() < chance) infect(player, Disease.GASTRO, 10);
+        // Food gone stale or rotten on top of what it is.
+        double spoiled = de.ipnats.hardwrought.food.Spoilage.illness(stack, player.level().getGameTime());
+        double odds = 1.0 - (1.0 - (chance == null ? 0.0 : chance)) * (1.0 - spoiled);
+        if (odds > 0.0 && player.getRandom().nextDouble() < odds) infect(player, Disease.GASTRO, 10);
     }
 
     /** Bad water drunk: what used to be a spell of thirst is a stomach bug now. */
@@ -253,6 +256,8 @@ public final class Diseases {
         double care = 1.0;
         if (player.isSleeping()) care *= 3.0;
         else if (resting) care *= 1.3;
+        // A sickbed: a bed beside a working bedside monitor (stage E3).
+        if (de.ipnats.hardwrought.haven.MonitorBlockEntity.tended(player)) care *= de.ipnats.hardwrought.haven.MonitorBlockEntity.CARE;
         if (vitals.hydration() < 30) care *= 0.6;
         if (player.getFoodData().getFoodLevel() < 6) care *= 0.6;
         // Cold or overheated beyond what the fever itself accounts for.

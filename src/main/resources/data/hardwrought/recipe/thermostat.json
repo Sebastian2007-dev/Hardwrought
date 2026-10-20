@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "B": "hardwrought:bimetal_strip",
+    "P": "hardwrought:porcelain",
+    "W": "hardwrought:copper_wire"
+  },
+  "pattern": [
+    "B",
+    "P",
+    "W"
+  ],
+  "result": {
+    "id": "hardwrought:thermostat"
+  }
+}

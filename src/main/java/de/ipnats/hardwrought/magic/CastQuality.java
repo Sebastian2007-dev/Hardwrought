@@ -91,6 +91,29 @@ public record CastQuality(double accuracy, double stability, double power, Outco
      * @param otherLoad the tiers of the other spells cast with this one
      */
     public static CastQuality judge(List<Drawn> drawn, Spell spell, WandTier wand, double surroundings, int otherLoad) {
+        return judge(drawn, spell, wand, surroundings, otherLoad, Bench.HAND);
+    }
+
+    /**
+     * Where a spell is drawn (docs/magic-roadmap.md, stage M3): in the hand, or at a Mage Table, which
+     * steadies it, carries some of its load and lets every stroke take as long as it takes.
+     *
+     * @param capacity tiers it carries besides the wand
+     * @param steadiness what it adds to the stability
+     * @param patient whether a slow stroke costs nothing
+     */
+    public record Bench(int capacity, double steadiness, boolean patient) {
+        public static final Bench HAND = new Bench(0, 0, false);
+        public static final Bench TABLE = new Bench(1, 0.10, true);
+
+        /** The same, less steady by what disturbs the hand (docs/magic-roadmap.md, M6). */
+        public Bench disturbed(double by) {
+            return by == 0 ? this : new Bench(capacity, steadiness - by, patient);
+        }
+    }
+
+    /** Judges a spell drawn here: in the hand, or at a table. */
+    public static CastQuality judge(List<Drawn> drawn, Spell spell, WandTier wand, double surroundings, int otherLoad, Bench bench) {
         if (drawn.isEmpty()) return new CastQuality(0, 0, 0, Outcome.FIZZLE, -1);
         double accuracy = 0;
         int worst = 0;
@@ -115,8 +138,9 @@ public record CastQuality(double accuracy, double stability, double power, Outco
         accuracy /= drawn.size();
         if (spell == null) return new CastQuality(accuracy, 0, 0, Outcome.FIZZLE, worst);
 
-        int overload = Math.max(0, spell.tier() + otherLoad - wand.tier());
-        double stability = accuracy + spell.steadiness() + wand.steadiness() - 0.15 * overload - slowness;
+        int overload = Math.max(0, spell.tier() + otherLoad - wand.tier() - bench.capacity());
+        if (bench.patient()) slowness = 0;
+        double stability = accuracy + spell.steadiness() + wand.steadiness() + bench.steadiness() - wand.overloadCost() * overload - slowness;
         // Experimenting is dangerous (section 5): runes the caster does not know hold badly, and a
         // stroke that read as nothing at all shakes the whole spell.
         stability *= Math.pow(0.8, unknown) * Math.pow(0.6, unread);

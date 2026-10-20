@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    "hardwrought:tungsten_filament",
+    "hardwrought:glass_bulb",
+    "hardwrought:lamp_socket"
+  ],
+  "result": {
+    "id": "hardwrought:light_bulb"
+  }
+}

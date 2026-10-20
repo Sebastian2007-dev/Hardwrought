@@ -2,21 +2,28 @@ package de.ipnats.hardwrought.test;
 
 import de.ipnats.hardwrought.witchking.Citadel;
 import de.ipnats.hardwrought.witchking.HexBlade;
+import de.ipnats.hardwrought.witchking.SeatMount;
 import de.ipnats.hardwrought.witchking.WitchKing;
 import de.ipnats.hardwrought.witchking.WitchKingContent;
 import de.ipnats.hardwrought.witchking.WitchKingMantle;
+import de.ipnats.hardwrought.witchking.WitchKingSeat;
 import de.ipnats.hardwrought.witchking.WitchKingThrone;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 /** The Witch King: his three phases, his crystals, his citadel and throne, his swords, his mantle. */
@@ -197,5 +204,35 @@ public final class WitchKingGameTests {
                         && runes.contains(net.minecraft.world.item.enchantment.Enchantments.PROTECTION),
                 "Runes can be written on it, as on a chestplate: " + runes);
         helper.succeed();
+    }
+
+    @GameTest(maxTicks = 120)
+    public void theColdThroneLeadsUpToItsSeat(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos throne = helper.absolutePos(new BlockPos(1, 1, 1));
+        level.setBlockAndUpdate(throne, WitchKingContent.THRONE.defaultBlockState().setValue(WitchKingThrone.COLD, true));
+        BlockPos home = helper.absolutePos(new BlockPos(6, 1, 6));
+        var player = helper.makeMockServerPlayerInLevel();
+        player.setRespawnPosition(new ServerPlayer.RespawnConfig(LevelData.RespawnData.of(Level.OVERWORLD, home, 0, 0), true), false);
+        level.getBlockState(throne).useWithoutItem(level, player, new BlockHitResult(Vec3.atCenterOf(throne), Direction.UP, throne, false));
+        helper.assertTrue(player.getVehicle() instanceof SeatMount, "One sits down on the cold throne");
+        helper.runAfterDelay(60, () -> {
+            BlockPos seat = ((WitchKingThrone.Entity) level.getBlockEntity(throne)).seat();
+            helper.assertTrue(seat != null && level.getBlockState(seat).is(WitchKingContent.SEAT), "Sat on, it sets its seat down: " + seat);
+            helper.assertTrue(seat.distManhattan(home) <= 12, "where the player sleeps: " + seat + " / " + home);
+            helper.assertTrue(throne.equals(((WitchKingSeat.Entity) level.getBlockEntity(seat)).throne()), "bound to the throne");
+            helper.assertTrue(!player.isPassenger() && player.position().distanceTo(Vec3.atCenterOf(seat)) < 6,
+                    "and carries the player up beside it: " + player.position());
+            player.setShiftKeyDown(true);
+            level.getBlockState(seat).useWithoutItem(level, player, new BlockHitResult(Vec3.atCenterOf(seat), Direction.UP, seat, false));
+            helper.assertTrue(level.getBlockState(seat).isAir(), "Sneaking picks the seat up");
+            ItemStack carried = ItemStack.EMPTY;
+            for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+                if (player.getInventory().getItem(slot).is(WitchKingContent.SEAT_ITEM)) carried = player.getInventory().getItem(slot);
+            }
+            helper.assertTrue(carried.is(WitchKingContent.SEAT_ITEM) && throne.equals(carried.get(WitchKingContent.THRONE_LINK)),
+                    "still bound to its throne: " + carried);
+            helper.succeed();
+        });
     }
 }

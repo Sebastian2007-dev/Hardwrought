@@ -92,6 +92,92 @@ public final class StorageGameTests {
         helper.succeed();
     }
 
+    /** A copper coil set on a tube of the store room feeds the desk along the tubes; cut the tube, and it goes dark. */
+    @GameTest
+    public void aCoilOnATubeFeedsTheDesk(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos desk = helper.absolutePos(new BlockPos(1, 1, 1));
+        room(level, desk);
+        BlockPos tube = desk.east(2);
+        BlockPos coil = tube.above();
+        level.setBlockAndUpdate(coil, de.ipnats.hardwrought.electricity.ElectricBlocks.COPPER_COIL.defaultBlockState()
+                .setValue(de.ipnats.hardwrought.electricity.CoilBlock.FACING, Direction.UP));
+        BlockPos box = desk.above(4);
+        level.setBlockAndUpdate(box.east(), de.ipnats.hardwrought.electricity.ElectricBlocks.DYNAMO.defaultBlockState()
+                .setValue(de.ipnats.hardwrought.electricity.DynamoBlock.FACING, Direction.EAST));
+        level.setBlockAndUpdate(box, de.ipnats.hardwrought.core.registry.ModBlocks.CRANK_BOX.defaultBlockState()
+                .setValue(de.ipnats.hardwrought.machinery.CrankBoxBlock.TURNING, true));
+        de.ipnats.hardwrought.electricity.Electricity.connect(level, box.east(), coil, de.ipnats.hardwrought.electricity.Gauge.WIRE);
+        de.ipnats.hardwrought.electricity.Electricity.update(level, desk);
+        var works = (de.ipnats.hardwrought.storage.StorageDeskBlockEntity) level.getBlockEntity(desk);
+        helper.assertTrue(works.powered(), "The coil on the tube feeds the desk: " + works.volts() + " V");
+
+        level.setBlockAndUpdate(desk.east(1), Blocks.AIR.defaultBlockState());
+        helper.assertTrue(!works.powered(), "With the tube between them taken out, the desk goes dark: " + works.volts() + " V");
+        helper.succeed();
+    }
+
+    /**
+     * A workshop bench against the desk: its grid opens beside the list, what it makes goes into the
+     * inventory, the grid fills again from the store room after each craft, and stays on the bench.
+     */
+    @GameTest
+    public void aWorkshopBenchAtTheDeskCraftsFromTheStoreRoom(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos desk = helper.absolutePos(new BlockPos(1, 1, 1));
+        ChestBlockEntity[] chests = room(level, desk);
+        power(level, desk);
+        ItemStack plate = new ItemStack(MetalStock.plate("steel")), rod = new ItemStack(MetalStock.rod("steel"));
+        ItemStack nailed = new ItemStack(de.ipnats.hardwrought.core.registry.ModItems.NAILED_WORKBENCH);
+        ItemStack tube = new ItemStack(StorageBlocks.TUBE_SECTION);
+        chests[0].setItem(0, plate.copyWithCount(2));
+        chests[0].setItem(3, tube.copyWithCount(1));
+        chests[0].setItem(1, rod.copyWithCount(4));
+        chests[0].setItem(2, nailed.copyWithCount(1));
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        player.setPos(desk.getX() + 0.5, desk.getY() + 1.0, desk.getZ() + 0.5);
+        player.getInventory().clearContent();
+
+        StorageDeskMenu alone = new StorageDeskMenu(1, player.getInventory(), level, desk);
+        helper.assertTrue(!alone.benchHere() && !alone.getSlot(alone.gridStart).isActive(), "A desk alone has no grid");
+        alone.removed(player);
+
+        BlockPos benchAt = desk.west();
+        level.setBlockAndUpdate(benchAt, de.ipnats.hardwrought.core.registry.ModBlocks.WORKSHOP_BENCH.defaultBlockState());
+        StorageDeskMenu menu = new StorageDeskMenu(2, player.getInventory(), level, desk);
+        helper.assertTrue(menu.benchHere() && menu.getSlot(menu.gridStart).isActive(), "With the bench beside it, the desk has its grid: " + level.getBlockState(benchAt) + " " + level.getBlockEntity(benchAt)
+                        + " beside=" + de.ipnats.hardwrought.progression.WorkshopBenchBlock.beside(level, desk));
+
+        String[] pattern = {"PTP", "RNR", "R R"};
+        for (int index = 0; index < 9; index++) {
+            char key = pattern[index / 3].charAt(index % 3);
+            ItemStack lay = key == 'P' ? plate : key == 'R' ? rod : key == 'N' ? nailed : key == 'T' ? tube : ItemStack.EMPTY;
+            menu.getSlot(menu.gridStart + index).set(lay.copy());
+        }
+        helper.assertTrue(menu.getSlot(menu.resultSlot).getItem().is(de.ipnats.hardwrought.core.registry.ModItems.WORKSHOP_BENCH),
+                "The grid makes what a nailed bench makes: " + menu.getSlot(menu.resultSlot).getItem());
+
+        menu.clicked(menu.resultSlot, 0, net.minecraft.world.inventory.ContainerInput.PICKUP, player);
+        helper.assertTrue(menu.getCarried().is(de.ipnats.hardwrought.core.registry.ModItems.WORKSHOP_BENCH), "A click on the result takes one");
+        helper.assertTrue(menu.getSlot(menu.gridStart).getItem().is(plate.getItem())
+                        && menu.getSlot(menu.gridStart + 4).getItem().is(nailed.getItem()),
+                "and the squares it emptied are filled again from the store room");
+        helper.assertTrue(chests[0].getItem(0).isEmpty() && chests[0].getItem(2).isEmpty(), "out of the chests");
+        menu.setCarried(ItemStack.EMPTY);
+
+        menu.clicked(menu.resultSlot, 0, net.minecraft.world.inventory.ContainerInput.QUICK_MOVE, player);
+        helper.assertTrue(player.getInventory().countItem(de.ipnats.hardwrought.core.registry.ModItems.WORKSHOP_BENCH) == 1
+                        && menu.getSlot(menu.gridStart).getItem().isEmpty(),
+                "A shift-click makes as many as the store room has the makings of, into the inventory");
+
+        menu.getSlot(menu.gridStart).set(plate.copy());
+        menu.removed(player);
+        var grid = (de.ipnats.hardwrought.progression.KeptGridBlockEntity) level.getBlockEntity(benchAt);
+        helper.assertTrue(grid.contents().get(0).is(plate.getItem()) && player.getInventory().countItem(plate.getItem()) == 0,
+                "Closed, the grid stays on the bench and is not handed back");
+        helper.succeed();
+    }
+
     @GameTest
     public void anOpenDeskFetchesAndPutsAway(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();

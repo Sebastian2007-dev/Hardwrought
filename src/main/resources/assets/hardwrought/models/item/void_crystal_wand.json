@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "hardwrought:item/void_crystal_wand"
+  }
+}

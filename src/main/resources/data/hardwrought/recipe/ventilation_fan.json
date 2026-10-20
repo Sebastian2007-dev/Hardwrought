@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "F": "hardwrought:fan_blades",
+    "M": "hardwrought:electric_motor",
+    "D": "hardwrought:tube_section"
+  },
+  "pattern": [
+    "PFP",
+    "PMP",
+    "PDP"
+  ],
+  "result": {
+    "id": "hardwrought:ventilation_fan"
+  }
+}

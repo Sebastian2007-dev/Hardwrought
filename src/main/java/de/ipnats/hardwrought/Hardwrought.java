@@ -66,6 +66,11 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.metallurgy.MetalBlocks.initialize();
 		de.ipnats.hardwrought.smeltery.SmelteryBlocks.initialize();
 		de.ipnats.hardwrought.electricity.ElectricBlocks.initialize();
+		de.ipnats.hardwrought.haven.HavenBlocks.initialize();
+		de.ipnats.hardwrought.carried.CarriedItems.initialize();
+		de.ipnats.hardwrought.carried.CarriedPower.initialize();
+		de.ipnats.hardwrought.automation.AutomationBlocks.initialize();
+		de.ipnats.hardwrought.tesla.TeslaBlocks.initialize();
 		de.ipnats.hardwrought.storage.StorageBlocks.initialize();
 		de.ipnats.hardwrought.magic.Magic.initialize();
 		de.ipnats.hardwrought.smithing.ToolParts.initialize();
@@ -79,6 +84,7 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.health.Diseases.initialize();
 		de.ipnats.hardwrought.survival.Overeating.initialize();
 		de.ipnats.hardwrought.health.Herbs.initialize();
+		de.ipnats.hardwrought.food.Spoilage.initialize();
 		de.ipnats.hardwrought.health.Ailments.initialize();
 		de.ipnats.hardwrought.survival.GoldenApples.initialize();
 		de.ipnats.hardwrought.survival.Adrenaline.initialize();

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "S": "hardwrought:steel_plate",
+    "N": "hardwrought:nailed_workbench",
+    "R": "hardwrought:steel_rod"
+  },
+  "pattern": [
+    "SSS",
+    "RNR",
+    "R R"
+  ],
+  "result": {
+    "id": "hardwrought:assembly_bench"
+  }
+}

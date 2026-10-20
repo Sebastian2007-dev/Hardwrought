@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "facing=north,on=false": {
+      "model": "hardwrought:block/arc_floodlight"
+    },
+    "facing=north,on=true": {
+      "model": "hardwrought:block/arc_floodlight_on"
+    },
+    "facing=east,on=false": {
+      "model": "hardwrought:block/arc_floodlight",
+      "y": 90
+    },
+    "facing=east,on=true": {
+      "model": "hardwrought:block/arc_floodlight_on",
+      "y": 90
+    },
+    "facing=south,on=false": {
+      "model": "hardwrought:block/arc_floodlight",
+      "y": 180
+    },
+    "facing=south,on=true": {
+      "model": "hardwrought:block/arc_floodlight_on",
+      "y": 180
+    },
+    "facing=west,on=false": {
+      "model": "hardwrought:block/arc_floodlight",
+      "y": 270
+    },
+    "facing=west,on=true": {
+      "model": "hardwrought:block/arc_floodlight_on",
+      "y": 270
+    }
+  }
+}

@@ -46,6 +46,10 @@ import java.util.stream.LongStream;
  * Each player has their own atlas for each dimension, kept with the world and not in the item: an
  * atlas that is lost is a book to be made again, not a map to be walked again.
  *
+ * <p>Under a roof of rock — the Nether, the Underworld — there is no surface to look down on. There the
+ * atlas draws the land at the height its bearer walks: the floor under them where it is open, and the
+ * rock they would walk into where it is not, marked as wall (see {@link #survey(ServerLevel, int, int, int)}).
+ *
  * <p>The bearer can also mark places in it, with a name, and where they die it marks by itself.
  */
 public final class Atlas {
@@ -60,6 +64,13 @@ public final class Atlas {
     public static final int MAX_MARKERS = 64, MAX_NAME = 24;
     /** Chunks sent to a client in one message. */
     static final int BATCH = 256;
+    /** How far up from the bearer's head a cave floor is still looked for, and how far down. */
+    static final int CLIMB = 6, DROP = 64;
+    /**
+     * How a page of a roofed dimension is drawn. Pages drawn before caves were drawn at the bearer's
+     * height show nothing but the roof, and are drawn again.
+     */
+    static final int CAVE_DRAWING = 1;
 
     /** The book itself. Opening it is the client's affair. */
     public static final class Book extends Item {
@@ -118,16 +129,19 @@ public final class Atlas {
         static final Codec<Page> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.LONG_STREAM.fieldOf("chunks").forGetter(page -> page.tiles.keySet().stream().mapToLong(Long::longValue)),
                 Codec.BYTE_BUFFER.fieldOf("tiles").forGetter(Page::packed),
-                Marker.CODEC.listOf().optionalFieldOf("markers", List.of()).forGetter(page -> page.markers)
+                Marker.CODEC.listOf().optionalFieldOf("markers", List.of()).forGetter(page -> page.markers),
+                Codec.INT.optionalFieldOf("drawing", 0).forGetter(page -> page.drawing)
         ).apply(instance, Page::new));
 
         /** Chunk (see {@link #key}) to its sixteen squares, in the order they were drawn. */
         final LinkedHashMap<Long, byte[]> tiles = new LinkedHashMap<>();
         final List<Marker> markers = new ArrayList<>();
+        /** How the page was drawn; see {@link #CAVE_DRAWING}. */
+        int drawing;
 
         Page() { }
 
-        private Page(LongStream chunks, ByteBuffer packed, List<Marker> markers) {
+        private Page(LongStream chunks, ByteBuffer packed, List<Marker> markers, int drawing) {
             long[] keys = chunks.toArray();
             ByteBuffer bytes = packed.duplicate();
             for (long key : keys) {
@@ -137,6 +151,7 @@ public final class Atlas {
                 tiles.put(key, tile);
             }
             this.markers.addAll(markers);
+            this.drawing = drawing;
         }
 
         private ByteBuffer packed() {
@@ -213,7 +228,19 @@ public final class Atlas {
     }
 
     public static Page page(ServerPlayer player) {
-        return ((ServerLevel) player.level()).getDataStorage().computeIfAbsent(Data.TYPE).page(player.getUUID());
+        ServerLevel level = (ServerLevel) player.level();
+        return page(level, level.getDataStorage().computeIfAbsent(Data.TYPE), player);
+    }
+
+    /** A player's page of a level, its old roof-only drawing wiped first if it is a roofed one. */
+    private static Page page(ServerLevel level, Data data, ServerPlayer player) {
+        Page page = data.page(player.getUUID());
+        if (level.dimensionType().hasCeiling() && page.drawing < CAVE_DRAWING) {
+            page.tiles.clear();
+            page.drawing = CAVE_DRAWING;
+            data.setDirty();
+        }
+        return page;
     }
 
     private static Identifier dimension(ServerPlayer player) {
@@ -253,7 +280,7 @@ public final class Atlas {
     public static int record(ServerPlayer player) {
         ServerLevel level = (ServerLevel) player.level();
         Data data = level.getDataStorage().computeIfAbsent(Data.TYPE);
-        Page page = data.page(player.getUUID());
+        Page page = page(level, data, player);
         int chunkX = player.getBlockX() >> 4, chunkZ = player.getBlockZ() >> 4;
         List<Long> drawn = new ArrayList<>();
         for (int dz = -REACH; dz <= REACH; dz++) {
@@ -261,7 +288,7 @@ public final class Atlas {
                 long key = key(chunkX + dx, chunkZ + dz);
                 // Only what is loaded anyway is drawn: the atlas never loads a chunk to look at it.
                 if (page.tiles.containsKey(key) || level.getChunkSource().getChunkNow(chunkX + dx, chunkZ + dz) == null) continue;
-                page.tiles.put(key, survey(level, chunkX + dx, chunkZ + dz));
+                page.tiles.put(key, survey(level, chunkX + dx, chunkZ + dz, player.getBlockY()));
                 drawn.add(key);
             }
         }
@@ -278,6 +305,63 @@ public final class Atlas {
      * falls, as vanilla's maps shade it.
      */
     public static byte[] survey(ServerLevel level, int chunkX, int chunkZ) {
+        return survey(level, chunkX, chunkZ, level.getSeaLevel());
+    }
+
+    /**
+     * One chunk as the atlas draws it for a bearer standing at {@code y}. Under a roof that is the floor
+     * below the bearer's head, shaded by its slope as on the surface, and where the rock comes up past
+     * their head, the rock, as the darkest shade of its colour: a wall. Elsewhere {@code y} is ignored.
+     */
+    public static byte[] survey(ServerLevel level, int chunkX, int chunkZ, int y) {
+        if (!level.dimensionType().hasCeiling()) return surface(level, chunkX, chunkZ);
+        byte[] tile = new byte[TILE];
+        int head = Math.clamp(y + 1L, level.getMinY(), level.getMinY() + level.dimensionType().logicalHeight() - 1);
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+        for (int sz = 0; sz < SQUARES; sz++) {
+            for (int sx = 0; sx < SQUARES; sx++) {
+                int x = (chunkX << 4) + sx * BLOCKS + BLOCKS / 2, z = (chunkZ << 4) + sz * BLOCKS + BLOCKS / 2;
+                int floor = floor(level, pos, x, z, head);
+                if (floor == Integer.MIN_VALUE) {
+                    pos.set(x, head, z);
+                    tile[sz * SQUARES + sx] = level.getBlockState(pos).getMapColor(level, pos).getPackedId(MapColor.Brightness.LOWEST);
+                    continue;
+                }
+                boolean northLoaded = (z - BLOCKS) >> 4 == chunkZ || level.getChunkSource().getChunkNow(chunkX, chunkZ - 1) != null;
+                int north = northLoaded ? floor(level, pos, x, z - BLOCKS, head) : floor;
+                if (north == Integer.MIN_VALUE) north = floor;
+                MapColor colour = MapColor.NONE;
+                if (floor > level.getMinY()) {
+                    pos.set(x, floor, z);
+                    colour = level.getBlockState(pos).getMapColor(level, pos);
+                }
+                MapColor.Brightness light = floor > north ? MapColor.Brightness.HIGH
+                        : floor < north ? MapColor.Brightness.LOW : MapColor.Brightness.NORMAL;
+                tile[sz * SQUARES + sx] = colour.getPackedId(light);
+            }
+        }
+        return tile;
+    }
+
+    /**
+     * The height of the first thing with a colour below open space at {@code head}, looking a little way
+     * up for the open space if the bearer's head would be in rock there; {@link Integer#MIN_VALUE} if it
+     * is rock all the way up, and the bottom of the world if nothing is found below.
+     */
+    private static int floor(ServerLevel level, BlockPos.MutableBlockPos pos, int x, int z, int head) {
+        int top = level.getMinY() + level.dimensionType().logicalHeight() - 1;
+        int open = head;
+        while (level.getBlockState(pos.set(x, open, z)).isCollisionShapeFullBlock(level, pos)) {
+            if (++open > head + CLIMB || open > top) return Integer.MIN_VALUE;
+        }
+        for (int down = open - 1; down >= Math.max(level.getMinY(), open - DROP); down--) {
+            pos.set(x, down, z);
+            if (level.getBlockState(pos).getMapColor(level, pos) != MapColor.NONE) return down;
+        }
+        return level.getMinY();
+    }
+
+    private static byte[] surface(ServerLevel level, int chunkX, int chunkZ) {
         byte[] tile = new byte[TILE];
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         for (int sz = 0; sz < SQUARES; sz++) {
@@ -339,7 +423,7 @@ public final class Atlas {
     public static boolean mark(ServerPlayer player, int x, int z, String name, int kind, int icon) {
         ServerLevel level = (ServerLevel) player.level();
         Data data = level.getDataStorage().computeIfAbsent(Data.TYPE);
-        Page page = data.page(player.getUUID());
+        Page page = page(level, data, player);
         if (page.markers.size() >= MAX_MARKERS) {
             int oldestDeath = -1;
             for (int i = 0; i < page.markers.size() && oldestDeath < 0; i++) if (page.markers.get(i).kind() == 1) oldestDeath = i;
@@ -355,7 +439,7 @@ public final class Atlas {
     public static boolean unmark(ServerPlayer player, int index) {
         ServerLevel level = (ServerLevel) player.level();
         Data data = level.getDataStorage().computeIfAbsent(Data.TYPE);
-        Page page = data.page(player.getUUID());
+        Page page = page(level, data, player);
         if (index < 0 || index >= page.markers.size()) return false;
         page.markers.remove(index);
         data.setDirty();

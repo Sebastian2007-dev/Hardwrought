@@ -44,6 +44,8 @@ public final class Magic {
     public static final WandItem WOODEN_WAND = wand("wooden_wand", WandTier.WOOD);
     public static final WandItem IRON_WAND = wand("iron_wand", WandTier.IRON);
     public static final WandItem GOLDEN_WAND = wand("golden_wand", WandTier.GOLD);
+    public static final WandItem MITHRIL_WAND = wand("mithril_wand", WandTier.MITHRIL);
+    public static final WandItem VOID_CRYSTAL_WAND = wand("void_crystal_wand", WandTier.VOID);
     /** A sigil inscribed on the ground; never held, only drawn. */
     public static final SigilBlock SIGIL = blockOnly("sigil", SigilBlock::new,
             BlockBehaviour.Properties.of().noCollision().noOcclusion().instabreak().noLootTable()
@@ -63,12 +65,16 @@ public final class Magic {
         Veil.initialize();
         ComboEffects.initialize();
         RuneRuins.initialize();
+        Scrolls.initialize();
+        MagicWorld.initialize();
+        // Registers the sigil link's component while the registries are still open.
+        java.util.Objects.requireNonNull(Sigils.LINK_FROM);
         PayloadTypeRegistry.serverboundPlay().register(CastSpellPayload.TYPE, CastSpellPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ShieldPayload.TYPE, ShieldPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(GatePayload.TYPE, GatePayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(GateTargetPayload.TYPE, GateTargetPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(CastSpellPayload.TYPE,
-                (payload, context) -> SpellCaster.cast(context.player(), payload.strokes(), payload.size(), payload.action()));
+                (payload, context) -> SpellCaster.cast(context.player(), payload.strokes(), payload.size(), payload.action(), payload.mode()));
         ServerPlayNetworking.registerGlobalReceiver(GateTargetPayload.TYPE,
                 (payload, context) -> Portals.travel(context.player(), payload.x(), payload.y(), payload.z()));
         registerCommands();
@@ -80,6 +86,10 @@ public final class Magic {
         items.add(new ItemStack(WOODEN_WAND));
         items.add(new ItemStack(IRON_WAND));
         items.add(new ItemStack(GOLDEN_WAND));
+        items.add(new ItemStack(MITHRIL_WAND));
+        items.add(new ItemStack(VOID_CRYSTAL_WAND));
+        for (net.minecraft.world.item.Item item : Scrolls.items()) items.add(new ItemStack(item));
+        items.add(new ItemStack(MagicWorld.RUNE_TOME));
         for (Glyph glyph : Glyph.values()) items.add(runeStone(glyph));
         return items;
     }

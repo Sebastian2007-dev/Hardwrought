@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "P": "hardwrought:electrical_steel_plate",
+    "W": "hardwrought:winding",
+    "I": "hardwrought:iron_plate"
+  },
+  "pattern": [
+    "PWP",
+    "III"
+  ],
+  "result": {
+    "id": "hardwrought:ballast"
+  }
+}

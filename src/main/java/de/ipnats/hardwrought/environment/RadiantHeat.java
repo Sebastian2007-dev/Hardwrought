@@ -86,6 +86,10 @@ public final class RadiantHeat {
         if (state.is(BlockTags.CANDLES) || state.is(BlockTags.CANDLE_CAKES)) {
             return lit(state) ? SMALL_FLAME : 0;
         }
+        // Stage E3: a heat lamp warms like a working fire, while it is lit.
+        if (state.is(de.ipnats.hardwrought.haven.HavenBlocks.of(de.ipnats.hardwrought.haven.Appliance.HEAT_LAMP))) {
+            return state.getValue(de.ipnats.hardwrought.haven.ApplianceBlock.ON) ? WORKING_FIRE : 0;
+        }
         return 0;
     }
 

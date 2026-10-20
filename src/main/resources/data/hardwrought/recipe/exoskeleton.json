@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "F": "hardwrought:exo_frame",
+    "C": "hardwrought:advanced_circuit",
+    "J": "hardwrought:joint_actuator",
+    "R": "hardwrought:regulator",
+    "S": "hardwrought:strap"
+  },
+  "pattern": [
+    "FCF",
+    "JRJ",
+    "S S"
+  ],
+  "result": {
+    "id": "hardwrought:exoskeleton"
+  }
+}

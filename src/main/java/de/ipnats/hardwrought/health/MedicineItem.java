@@ -30,6 +30,8 @@ public class MedicineItem extends Item {
         DISINFECTED_BANDAGE(40, ItemUseAnimation.BRUSH, SoundEvents.WOOL_PLACE),
         /** Spirit poured on a wound: it stings, and cleans it. */
         SPIRIT(20, ItemUseAnimation.BRUSH, SoundEvents.BOTTLE_EMPTY),
+        /** A dressing out of the autoclave: the wound bound twice as long, and cleaned as antiseptic would. */
+        STERILE_DRESSING(40, ItemUseAnimation.BRUSH, SoundEvents.WOOL_PLACE),
         /** Antiseptic on a wound: cleans it, and much of an infection with it. */
         ANTISEPTIC(20, ItemUseAnimation.BRUSH, SoundEvents.BOTTLE_EMPTY),
         /** Pills of willow bark: a fever brought well down for ten minutes. */
@@ -110,6 +112,10 @@ public class MedicineItem extends Item {
                 Wounds.clean(player, SPIRIT_CLEANS);
             }
             case ANTISEPTIC -> Wounds.clean(player, ANTISEPTIC_CLEANS);
+            case STERILE_DRESSING -> {
+                Wounds.clean(player, ANTISEPTIC_CLEANS);
+                Wounds.bandage(player, Wounds.BANDAGE_TICKS * 2);
+            }
             case FEVER_PILLS -> player.addEffect(new MobEffectInstance(ModEffects.WILLOW_BARK, PILL_TICKS, 1));
             case ANTIBIOTICS -> player.addEffect(new MobEffectInstance(ModEffects.ANTIBIOTIC, PILL_TICKS, 0));
         }

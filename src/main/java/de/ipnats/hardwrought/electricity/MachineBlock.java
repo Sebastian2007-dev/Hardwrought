@@ -81,6 +81,26 @@ public class MachineBlock extends ElectricNodeBlock {
             if (level instanceof ServerLevel server) Electricity.update(server, pos);
             return InteractionResult.SUCCESS;
         }
+        // Stage E5: oil, and a service kit for worn bearings.
+        if ((stack.is(de.ipnats.hardwrought.automation.AutomationBlocks.MACHINE_OIL) || stack.is(de.ipnats.hardwrought.automation.AutomationBlocks.SERVICE_KIT))
+                && level.getBlockEntity(pos) instanceof MachineBlockEntity machine) {
+            if (level.isClientSide()) return InteractionResult.SUCCESS;
+            boolean oil = stack.is(de.ipnats.hardwrought.automation.AutomationBlocks.MACHINE_OIL);
+            boolean done = oil ? machine.oiled() : machine.serviced((ServerLevel) level);
+            if (!done) {
+                player.sendOverlayMessage(net.minecraft.network.chat.Component.translatable(oil ? "message.hardwrought.machine.oiled_already"
+                        : "message.hardwrought.machine.not_worn", Math.round(machine.wear() * 100.0f)));
+                return InteractionResult.FAIL;
+            }
+            if (!player.getAbilities().instabuild) {
+                stack.shrink(1);
+                if (oil && !player.getInventory().add(new ItemStack(net.minecraft.world.item.Items.GLASS_BOTTLE))) {
+                    player.spawnAtLocation((ServerLevel) level, new ItemStack(net.minecraft.world.item.Items.GLASS_BOTTLE));
+                }
+            }
+            level.playSound(null, pos, oil ? SoundEvents.BOTTLE_EMPTY : SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 0.6f, 1.2f);
+            return InteractionResult.SUCCESS;
+        }
         if (stack.is(net.minecraft.world.item.Items.SHEARS) || stack.getItem() instanceof WireItem
                 || stack.getItem() instanceof MeterItem) {
             return super.useItemOn(stack, state, level, pos, player, hand, hit);

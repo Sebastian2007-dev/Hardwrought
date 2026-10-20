@@ -12,6 +12,7 @@ public final class ElectricityClient {
         BlockEntityRendererRegistry.register(ElectricBlocks.INSULATOR_ENTITY, WireRenderer::new);
         BlockEntityRendererRegistry.register(ElectricBlocks.LAMP_ENTITY, WireRenderer::new);
         BlockEntityRendererRegistry.register(ElectricBlocks.DYNAMO_ENTITY, WireRenderer::new);
+        BlockEntityRendererRegistry.register(ElectricBlocks.ELECTRIC_DRIVE_ENTITY, WireRenderer::new);
         BlockEntityRendererRegistry.register(ElectricBlocks.MAST_ENTITY, WireRenderer::new);
         BlockEntityRendererRegistry.register(ElectricBlocks.COIL_ENTITY, WireRenderer::new);
         BlockEntityRendererRegistry.register(ElectricBlocks.BATTERY_ENTITY, WireRenderer::new);

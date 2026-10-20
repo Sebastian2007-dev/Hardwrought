@@ -312,4 +312,24 @@ public final class EquipmentGameTests {
     private static ServerPlayer survivor(GameTestHelper helper) {
         return (ServerPlayer) helper.makeMockServerPlayer(GameType.SURVIVAL);
     }
+
+    /** A closed square of the own grid still takes a pack, into an empty square only, and gives it back. */
+    @GameTest
+    public void aClosedSquareStillTakesAPack(GameTestHelper helper) {
+        var container = new net.minecraft.world.SimpleContainer(1);
+        var slot = new de.ipnats.hardwrought.equipment.CarriedSlot(container, 0, 0, 0, () -> false, () -> true);
+        var pack = new net.minecraft.world.item.ItemStack(de.ipnats.hardwrought.core.registry.ModItems.STARTER_BACKPACK);
+        var player = helper.makeMockServerPlayerInLevel();
+        helper.assertTrue(slot.shut() && slot.isActive(), "Closed, and still to be worked for a pack");
+        helper.assertTrue(!slot.mayPlace(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.STONE)), "Stone does not go in");
+        helper.assertTrue(slot.mayPlace(pack), "A pack goes into it while it is empty");
+        slot.set(pack.copy());
+        helper.assertTrue(!slot.mayPlace(pack), "but not onto another pack");
+        helper.assertTrue(slot.mayPickup(player), "and a pack is taken out again");
+        container.setItem(0, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.STONE));
+        helper.assertTrue(!slot.mayPickup(player), "Anything else stays shut in");
+        var hidden = new de.ipnats.hardwrought.equipment.CarriedSlot(container, 0, 0, 0, () -> false, () -> false);
+        helper.assertTrue(!hidden.isActive() && !hidden.mayPlace(pack), "With the pack's page shown, the square is not there at all");
+        helper.succeed();
+    }
 }

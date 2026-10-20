@@ -342,8 +342,8 @@ public class CompendiumScreen extends Screen {
         CompendiumPagePayload current = CompendiumClient.page();
         if (current == null) return 1;
         if (mode == CompendiumPagePayload.MODE_JOURNAL) {
-            // The contents first, then one page to a note.
-            return current.journal().size() + 1;
+            // The contents first, then one page to a note, each chapter's deeper looks after its notes.
+            return leaves(current.journal()).size() + 1;
         }
         if (mode == CompendiumPagePayload.MODE_SHELF) {
             if (MultiblockSection.open()) {
@@ -482,7 +482,11 @@ public class CompendiumScreen extends Screen {
             Component counter = mode != CompendiumPagePayload.MODE_JOURNAL
                     ? Component.translatable("gui.hardwrought.compendium.page", page + 1, pageCount())
                     : page == 0 ? Component.translatable("gui.hardwrought.compendium.contents")
-                    : Component.translatable("gui.hardwrought.compendium.note", page, pageCount() - 1);
+                    : journalCounter(current);
+            // Between the arrows there is room for a few words; a longer counter keeps only its numbers.
+            if (font.width(counter) > CONTENT_WIDTH - 52 && mode == CompendiumPagePayload.MODE_JOURNAL && page > 0) {
+                counter = journalNumbers(current);
+            }
             centeredInk(graphics, counter,
                     // Level with the middle of the page buttons it sits between, not below them on
                     // the edge of the cover.
@@ -592,6 +596,7 @@ public class CompendiumScreen extends Screen {
     private void drawBookControls(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         drawBookButton(graphics, leftContentX(), top + CONTROLS_Y, 54, 18,
                 Component.translatable("gui.hardwrought.compendium.back"), mouseX, mouseY);
+        if (mode == CompendiumPagePayload.MODE_JOURNAL) drawLoreButton(graphics, mouseX, mouseY);
         if (structure() != null) {
             drawBookButton(graphics, leftContentX() + STRUCTURE_BUTTON_OFFSET, top + CONTROLS_Y,
                     CONTENT_WIDTH - STRUCTURE_BUTTON_OFFSET, 18,
@@ -616,6 +621,34 @@ public class CompendiumScreen extends Screen {
         }
     }
 
+    /**
+     * Beside the back button on a chapter's pages: on its notes, the way to its deeper looks; on a deeper
+     * look, the way back to its notes. Nothing where the chapter has none, or none that can be read yet.
+     */
+    private void drawLoreButton(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+        CompendiumPagePayload current = CompendiumClient.page();
+        if (current == null || current.journal().isEmpty() || page == 0) return;
+        List<Leaf> leaves = leaves(current.journal());
+        Leaf leaf = leaves.get(Math.clamp(page - 1, 0, leaves.size() - 1));
+        ChapterSpan span = null;
+        for (ChapterSpan candidate : chapterSpans(current.journal())) {
+            if (candidate.holds(page)) span = candidate;
+        }
+        if (span == null || span.lore() == 0 || span.unknown()) return;
+        int x = leftContentX() + STRUCTURE_BUTTON_OFFSET, y = top + CONTROLS_Y, w = CONTENT_WIDTH - STRUCTURE_BUTTON_OFFSET;
+        int target;
+        Component label;
+        if (leaf.lore() == null) {
+            target = span.end() - span.lore() + 1;
+            label = Component.translatable("gui.hardwrought.compendium.lore.open", span.lore());
+        } else {
+            target = span.target();
+            label = Component.translatable("gui.hardwrought.compendium.lore.back");
+        }
+        drawBookButton(graphics, x, y, w, BUTTON_HEIGHT, label, mouseX, mouseY);
+        chapterRows.add(new int[]{x, y, w, BUTTON_HEIGHT, target});
+    }
+
     /** What a crafting tree opened from this page is about: the page's subject, on a page about one. */
     private Identifier treeSubject() {
         boolean lookup = mode == CompendiumPagePayload.MODE_RECIPES || mode == CompendiumPagePayload.MODE_USAGES;
@@ -636,6 +669,11 @@ public class CompendiumScreen extends Screen {
         boolean hovered = inside(mouseX, mouseY, x, y, width, height);
         graphics.blitSprite(RenderPipelines.GUI_TEXTURED,
                 hovered ? BUTTON_HOVERED_SPRITE : BUTTON_SPRITE, x, y, width, height);
+        if (font.width(label) > width - 8) {
+            FormattedCharSequence cut = ellipsis(label.getVisualOrderText(), width - 8);
+            ink(graphics, cut, x + (width - font.width(cut)) / 2, y + 5, TEXT_COLOR);
+            return;
+        }
         centeredInk(graphics, label, x + width / 2, y + 5, TEXT_COLOR);
     }
 
@@ -767,7 +805,13 @@ public class CompendiumScreen extends Screen {
             drawContents(graphics, notes);
             return;
         }
-        CompendiumPagePayload.Note note = notes.get(Math.min(page - 1, notes.size() - 1));
+        List<Leaf> leaves = leaves(notes);
+        Leaf leaf = leaves.get(Math.min(page - 1, leaves.size() - 1));
+        if (leaf.lore() != null) {
+            drawLore(graphics, notes, leaves, leaf);
+            return;
+        }
+        CompendiumPagePayload.Note note = notes.get(leaf.note());
         boolean unread = note.state() == Journal.HIDDEN;
         int textLeft = leftContentX();
         Item subjectItem = note.subject() == null ? null : BuiltInRegistries.ITEM.getValue(note.subject());
@@ -912,12 +956,12 @@ public class CompendiumScreen extends Screen {
         for (int index = 0; index < notes.size(); index++) {
             int state = notes.get(index).state();
             if (state == Journal.OPEN) {
-                page = index + 1;
+                page = pageOfNote(notes, index);
                 return;
             }
             if (state != Journal.DONE && unfollowed < 0) unfollowed = index;
         }
-        page = unfollowed >= 0 ? unfollowed + 1 : notes.size();
+        page = pageOfNote(notes, unfollowed >= 0 ? unfollowed : notes.size() - 1);
     }
 
     private static final String[] ROMAN = {"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII",
@@ -933,19 +977,60 @@ public class CompendiumScreen extends Screen {
      * One chapter as the player stands in it: where its thoughts lie in the chain, how many are followed,
      * whether any of them can be read yet, and the page a click on it opens.
      */
-    private record ChapterSpan(Identifier id, int number, int start, int end, int done, boolean unknown, int target) {
-        int total() { return end - start; }
+    private record ChapterSpan(Identifier id, int number, int start, int end, int total, int done, int lore, boolean unknown,
+                               int target) {
         boolean finished() { return done == total(); }
-        boolean holds(int notePage) { return notePage > start && notePage <= end; }
+        /** Whether a page of the written half (1 for the first after the contents) lies in this chapter. */
+        boolean holds(int leafPage) { return leafPage > start && leafPage <= end; }
     }
 
+    /**
+     * One page of the written half after the contents: a note (its index among the notes), or one of
+     * its chapter's deeper looks, which follow the chapter's last note.
+     */
+    private record Leaf(int note, Identifier lore, Identifier chapter) { }
+
+    private static List<Leaf> leaves(List<CompendiumPagePayload.Note> notes) {
+        List<Leaf> leaves = new ArrayList<>(notes.size() + 32);
+        for (int index = 0; index < notes.size(); index++) {
+            Identifier chapter = notes.get(index).chapter();
+            leaves.add(new Leaf(index, null, chapter));
+            boolean last = index + 1 == notes.size() || !Objects.equals(notes.get(index + 1).chapter(), chapter);
+            if (last) {
+                for (Identifier lore : Journal.lore(chapter)) leaves.add(new Leaf(-1, lore, chapter));
+            }
+        }
+        return leaves;
+    }
+
+    /** The page a note is on. */
+    private static int pageOfNote(List<CompendiumPagePayload.Note> notes, int note) {
+        List<Leaf> leaves = leaves(notes);
+        for (int index = 0; index < leaves.size(); index++) {
+            if (leaves.get(index).note() == note) return index + 1;
+        }
+        return Math.max(0, Math.min(note + 1, leaves.size()));
+    }
+
+    /**
+     * The chapters as the player stands in them. Only the notes count towards how far a chapter is
+     * followed; its deeper looks are there to be read or not.
+     */
     private static List<ChapterSpan> chapterSpans(List<CompendiumPagePayload.Note> notes) {
+        List<Leaf> leaves = leaves(notes);
         List<ChapterSpan> spans = new ArrayList<>();
-        for (int start = 0; start < notes.size(); ) {
-            Identifier chapter = notes.get(start).chapter();
-            int end = start, done = 0, hidden = 0, firstOpen = -1, firstUnfollowed = -1;
-            while (end < notes.size() && Objects.equals(notes.get(end).chapter(), chapter)) {
-                int state = notes.get(end).state();
+        for (int start = 0; start < leaves.size(); ) {
+            Identifier chapter = leaves.get(start).chapter();
+            int end = start, total = 0, done = 0, hidden = 0, lore = 0, firstOpen = -1, firstUnfollowed = -1;
+            while (end < leaves.size() && Objects.equals(leaves.get(end).chapter(), chapter)) {
+                Leaf leaf = leaves.get(end);
+                if (leaf.lore() != null) {
+                    lore++;
+                    end++;
+                    continue;
+                }
+                total++;
+                int state = notes.get(leaf.note()).state();
                 if (state == Journal.DONE) done++;
                 else if (firstUnfollowed < 0) firstUnfollowed = end;
                 if (state == Journal.OPEN && firstOpen < 0) firstOpen = end;
@@ -953,10 +1038,89 @@ public class CompendiumScreen extends Screen {
                 end++;
             }
             int target = firstOpen >= 0 ? firstOpen : firstUnfollowed >= 0 ? firstUnfollowed : start;
-            spans.add(new ChapterSpan(chapter, spans.size(), start, end, done, hidden == end - start, target + 1));
+            spans.add(new ChapterSpan(chapter, spans.size(), start, end, total, done, lore, hidden == total, target + 1));
             start = end;
         }
         return spans;
+    }
+
+    /** The counter under the page arrows as bare numbers, for where its words do not fit. */
+    private Component journalNumbers(CompendiumPagePayload current) {
+        if (current == null || current.journal().isEmpty()) return Component.empty();
+        List<Leaf> leaves = leaves(current.journal());
+        Leaf leaf = leaves.get(Math.clamp(page - 1, 0, leaves.size() - 1));
+        if (leaf.lore() == null) return Component.literal((leaf.note() + 1) + "/" + current.journal().size());
+        List<Identifier> lore = Journal.lore(leaf.chapter());
+        return Component.literal((lore.indexOf(leaf.lore()) + 1) + "/" + lore.size());
+    }
+
+    /** Under the page arrows: a note's number among the notes, or a deeper look's within its chapter. */
+    private Component journalCounter(CompendiumPagePayload current) {
+        if (current == null || current.journal().isEmpty()) return Component.empty();
+        List<Leaf> leaves = leaves(current.journal());
+        Leaf leaf = leaves.get(Math.clamp(page - 1, 0, leaves.size() - 1));
+        if (leaf.lore() == null) {
+            return Component.translatable("gui.hardwrought.compendium.note", leaf.note() + 1, current.journal().size());
+        }
+        List<Identifier> lore = Journal.lore(leaf.chapter());
+        return Component.translatable("gui.hardwrought.compendium.lore.counter", lore.indexOf(leaf.lore()) + 1, lore.size());
+    }
+
+    /**
+     * A deeper look at how the things of a chapter work: a heading marked as such, and its text running
+     * down the left page and on down the right, scrolled where it is longer than both. It can be read
+     * once any note of its chapter can; before that it is scrawl, as the notes are.
+     */
+    private void drawLore(GuiGraphicsExtractor graphics, List<CompendiumPagePayload.Note> notes, List<Leaf> leaves, Leaf leaf) {
+        boolean readable = false;
+        for (Leaf other : leaves) {
+            if (other.lore() == null && Objects.equals(other.chapter(), leaf.chapter())
+                    && notes.get(other.note()).state() != Journal.HIDDEN) {
+                readable = true;
+                break;
+            }
+        }
+        ink(graphics, Component.translatable("gui.hardwrought.compendium.lore"), leftContentX(), top + PAPER_TOP + 16, FADED_COLOR);
+        Component title = readable ? Component.translatable(loreKey(leaf.lore()) + ".title") : scrawl(18);
+        List<FormattedCharSequence> titleLines = font.split(title, CONTENT_WIDTH);
+        ink(graphics, titleLines.size() > 1 ? ellipsis(titleLines.getFirst(), CONTENT_WIDTH) : titleLines.getFirst(),
+                leftContentX(), top + PAPER_TOP + 27, TEXT_COLOR);
+        int rule = top + JOURNAL_TEXT_TOP - 8;
+        graphics.fill(leftContentX(), rule, leftContentX() + CONTENT_WIDTH, rule + 1, RULE_COLOR);
+        graphics.fill(rightContentX(), rule, rightContentX() + CONTENT_WIDTH, rule + 1, RULE_COLOR);
+        if (!readable) {
+            journalOverflow = 0;
+            int y = wrapInk(graphics, Component.translatable("gui.hardwrought.compendium.unread"),
+                    leftContentX(), top + JOURNAL_TEXT_TOP, CONTENT_WIDTH, FADED_COLOR);
+            graphics.enableScissor(leftContentX(), y, leftContentX() + CONTENT_WIDTH, top + CONTENT_BOTTOM);
+            for (int line = 0; line < 4; line++) ink(graphics, scrawl(26 + line % 3 * 4), leftContentX(), y + 10 + line * 12, SCRAWL_COLOR);
+            graphics.disableScissor();
+            return;
+        }
+        List<FormattedCharSequence> rows = font.split(Component.translatable(loreKey(leaf.lore()) + ".text"), CONTENT_WIDTH);
+        int linesPerPage = JOURNAL_LINES;
+        int visible = linesPerPage * 2;
+        journalOverflow = Math.max(0, rows.size() - visible);
+        journalScroll = Math.clamp(journalScroll, 0, journalOverflow);
+        for (int row = journalScroll; row < Math.min(rows.size(), journalScroll + visible); row++) {
+            int index = row - journalScroll;
+            int x = index < linesPerPage ? leftContentX() : rightContentX();
+            int y = top + JOURNAL_TEXT_TOP + index % linesPerPage * JOURNAL_LINE;
+            ink(graphics, rows.get(row), x, y, TEXT_COLOR);
+        }
+        if (journalOverflow > 0) {
+            int from = top + JOURNAL_TEXT_TOP, to = from + linesPerPage * JOURNAL_LINE;
+            int track = to - from;
+            int thumb = Math.max(8, track * visible / rows.size());
+            int thumbAt = from + (track - thumb) * journalScroll / journalOverflow;
+            int barX = rightContentX() + CONTENT_WIDTH + 2;
+            graphics.fill(barX, from, barX + 2, to, 0x30000000);
+            graphics.fill(barX, thumbAt, barX + 2, thumbAt + thumb, 0xA0000000 | (FADED_COLOR & 0xFFFFFF));
+        }
+    }
+
+    private static String loreKey(Identifier lore) {
+        return "journal.hardwrought.lore." + lore.getPath();
     }
 
     /** Above the contents the book's own word for this half; above a note, the chapter it belongs to. */
@@ -965,7 +1129,7 @@ public class CompendiumScreen extends Screen {
             return Component.translatable("gui.hardwrought.compendium.journal");
         }
         for (ChapterSpan span : chapterSpans(current.journal())) {
-            if (span.id() != null && span.holds(Math.min(page, current.journal().size()))) {
+            if (span.id() != null && span.holds(Math.min(page, leaves(current.journal()).size()))) {
                 return Component.translatable("gui.hardwrought.compendium.chapter",
                         roman(span.number()), chapterName(span.id()));
             }
@@ -1057,6 +1221,9 @@ public class CompendiumScreen extends Screen {
                 List<Component> lines = new ArrayList<>();
                 lines.add(name);
                 if (span != null) lines.add(Component.literal(span.done() + "/" + span.total()).withStyle(ChatFormatting.GRAY));
+                if (span != null && span.lore() > 0 && !dead) {
+                    lines.add(Component.translatable("gui.hardwrought.compendium.lore.count", span.lore()).withStyle(ChatFormatting.DARK_GRAY));
+                }
                 graphics.setComponentTooltipForNextFrame(font, lines, mouseX, mouseY);
             }
         }

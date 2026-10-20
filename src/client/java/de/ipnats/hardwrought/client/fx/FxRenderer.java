@@ -215,7 +215,17 @@ public final class FxRenderer {
         }
     }
 
+    /**
+     * A ribbon along a path, turned to face the camera. Neither end is ever seen to stop: each fades out
+     * over the last stretch of the path, and wherever the eye looks nearly along it, where a flat ribbon
+     * would show itself flat, it fades too.
+     */
     private static void ribbon(Quads quads, List<Vec3> points, float width, int color, float p1, float p2) {
+        if (points.size() == 2) points = subdivide(points.get(0), points.get(1));
+        float total = 0;
+        for (int i = 0; i < points.size() - 1; i++) total += (float) points.get(i).distanceTo(points.get(i + 1));
+        float taper = Math.max(0.01f, Math.min(total * 0.2f, 1.5f + width * 8));
+        float alpha = ARGB.alpha(color) / 255f;
         float along = 0;
         for (int i = 0; i < points.size() - 1; i++) {
             Vec3 a = points.get(i), b = points.get(i + 1);
@@ -227,22 +237,44 @@ public final class FxRenderer {
             float mx = (ax + bx) * 0.5f, my = (ay + by) * 0.5f, mz = (az + bz) * 0.5f;
             float sx = dy * mz - dz * my, sy = dz * mx - dx * mz, sz = dx * my - dy * mx;
             float s = (float) Math.sqrt(sx * sx + sy * sy + sz * sz);
-            if (s < 1.0e-5f) {
-                along += length;
-                continue;
-            }
+            float u0 = along, u1 = along + length;
+            along = u1;
+            if (s < 1.0e-5f) continue;
+            // How square the piece stands to the line of sight: 0 seen end on, 1 seen across.
+            float m = (float) Math.sqrt(mx * mx + my * my + mz * mz);
+            float across = m < 1.0e-4f ? 1 : s / (length * m);
+            float edgeOn = smooth((across - 0.06f) / 0.3f);
+            if (edgeOn <= 0) continue;
+            int c0 = ARGB.color(Mth.clamp(Math.round(alpha * edgeOn * ends(u0, total, taper) * 255), 0, 255), color);
+            int c1 = ARGB.color(Mth.clamp(Math.round(alpha * edgeOn * ends(u1, total, taper) * 255), 0, 255), color);
             sx = sx / s * width;
             sy = sy / s * width;
             sz = sz / s * width;
             // Overlap the segments a little, so the joints of a bent path leave no gaps.
             float ex = dx / length * width * 0.5f, ey = dy / length * width * 0.5f, ez = dz / length * width * 0.5f;
-            float u0 = along, u1 = along + length;
-            quads.vertex(ax - ex - sx, ay - ey - sy, az - ez - sz, color, u0, -1, p1, p2);
-            quads.vertex(ax - ex + sx, ay - ey + sy, az - ez + sz, color, u0, 1, p1, p2);
-            quads.vertex(bx + ex + sx, by + ey + sy, bz + ez + sz, color, u1, 1, p1, p2);
-            quads.vertex(bx + ex - sx, by + ey - sy, bz + ez - sz, color, u1, -1, p1, p2);
-            along = u1;
+            quads.vertex(ax - ex - sx, ay - ey - sy, az - ez - sz, c0, u0, -1, p1, p2);
+            quads.vertex(ax - ex + sx, ay - ey + sy, az - ez + sz, c0, u0, 1, p1, p2);
+            quads.vertex(bx + ex + sx, by + ey + sy, bz + ez + sz, c1, u1, 1, p1, p2);
+            quads.vertex(bx + ex - sx, by + ey - sy, bz + ez - sz, c1, u1, -1, p1, p2);
         }
+    }
+
+    /** A straight beam in pieces of about two blocks, so its ends can fade smoothly. */
+    private static List<Vec3> subdivide(Vec3 from, Vec3 to) {
+        int pieces = Mth.clamp((int) Math.ceil(from.distanceTo(to) / 2), 1, 64);
+        List<Vec3> points = new java.util.ArrayList<>(pieces + 1);
+        for (int i = 0; i <= pieces; i++) points.add(from.lerp(to, i / (double) pieces));
+        return points;
+    }
+
+    /** How much of a ribbon shows at a point along it: fading in over the first stretch and out over the last. */
+    private static float ends(float at, float total, float taper) {
+        return smooth(at / taper) * smooth((total - at) / taper);
+    }
+
+    private static float smooth(float x) {
+        x = Mth.clamp(x, 0, 1);
+        return x * x * (3 - 2 * x);
     }
 
     /**

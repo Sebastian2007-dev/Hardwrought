@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "A": "hardwrought:aluminum_plate",
+    "R": "hardwrought:steel_rod"
+  },
+  "pattern": [
+    "A A",
+    " R ",
+    "A A"
+  ],
+  "result": {
+    "id": "hardwrought:fan_blades"
+  }
+}

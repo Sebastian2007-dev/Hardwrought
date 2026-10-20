@@ -29,6 +29,8 @@ public final class StoragePayloads {
     public static final int PUT_ONE = 3;
     /** One notch of the wheel: one of the kind out of the store room and into the inventory. */
     public static final int FETCH_ONE = 4;
+    /** The button by a workshop bench's grid: everything on it back into the store room. */
+    public static final int CLEAR_GRID = 5;
 
     private StoragePayloads() { }
 

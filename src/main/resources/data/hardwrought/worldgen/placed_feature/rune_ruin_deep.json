@@ -1,0 +1,23 @@
+{
+  "feature": "hardwrought:rune_ruin_deep",
+  "placement": [
+    {
+      "type": "minecraft:rarity_filter",
+      "chance": 24
+    },
+    {
+      "type": "minecraft:in_square"
+    },
+    {
+      "type": "minecraft:height_range",
+      "height": {
+        "type": "minecraft:uniform",
+        "min_inclusive": { "absolute": 20 },
+        "max_inclusive": { "absolute": 100 }
+      }
+    },
+    {
+      "type": "minecraft:biome"
+    }
+  ]
+}

@@ -83,6 +83,15 @@ public final class Portals {
         return open != null && open.until() >= player.level().getGameTime();
     }
 
+    /** Where far gates stand open in a level now: endermites are drawn to them (docs/magic-roadmap.md, M6). */
+    static java.util.List<Vec3> openGates(ServerLevel level) {
+        java.util.List<Vec3> gates = new java.util.ArrayList<>();
+        for (Open open : OPEN.values()) {
+            if (open.dimension() == level.dimension() && open.until() >= level.getGameTime()) gates.add(open.origin());
+        }
+        return gates;
+    }
+
     /** The caster has named where their open gate leads; steps them through it, if it is still open. */
     public static boolean travel(ServerPlayer player, int x, int y, int z) {
         Open open = OPEN.remove(player.getUUID());

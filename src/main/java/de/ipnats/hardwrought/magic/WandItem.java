@@ -42,6 +42,14 @@ public class WandItem extends Item {
     public InteractionResult useOn(UseOnContext context) {
         Player player = context.getPlayer();
         if (player == null) return InteractionResult.PASS;
+        // Sneaking, a wand links one sigil to another (docs/magic-roadmap.md, stage M5).
+        if (player.isSecondaryUseActive() && context.getLevel().getBlockState(context.getClickedPos()).getBlock() instanceof SigilBlock) {
+            if (context.getLevel() instanceof net.minecraft.server.level.ServerLevel server
+                    && player instanceof net.minecraft.server.level.ServerPlayer linker) {
+                Sigils.link(server, linker, context.getItemInHand(), context.getClickedPos());
+            }
+            return InteractionResult.SUCCESS;
+        }
         InteractionResult result = MagicTableBlock.awaken(context.getLevel(), context.getClickedPos(), player,
                 context.getHand());
         return result == InteractionResult.PASS ? super.useOn(context) : result;

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "C": "hardwrought:chuck",
+    "G": "hardwrought:reduction_gear",
+    "M": "hardwrought:electric_motor",
+    "H": "hardwrought:device_housing",
+    "T": "hardwrought:toggle_switch"
+  },
+  "pattern": [
+    "CGM",
+    "HTH"
+  ],
+  "result": {
+    "id": "hardwrought:electric_drill"
+  }
+}

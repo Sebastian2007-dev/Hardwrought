@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "C": "hardwrought:copper_plate",
+    "W": "hardwrought:silicon_wafer",
+    "N": "hardwrought:nickel_plate"
+  },
+  "pattern": [
+    "CWC",
+    "NWN"
+  ],
+  "result": {
+    "id": "hardwrought:thermoelectric_pad"
+  }
+}

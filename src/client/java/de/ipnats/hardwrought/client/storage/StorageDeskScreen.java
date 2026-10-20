@@ -27,6 +27,9 @@ import java.util.Locale;
  * inventory does the same. The wheel moves one item at a time, over the inventory and, with shift,
  * over the list. None of it happens here — the click is sent, and the list that comes
  * back is drawn.
+ *
+ * <p>With a workshop bench against the desk, a panel stands out to the right of it with the bench's
+ * grid and result, and a button that clears the grid back into the store room.
  */
 public class StorageDeskScreen extends AbstractContainerScreen<StorageDeskMenu> {
     private static final int PANEL = 0xFFC6C6C6;
@@ -37,6 +40,11 @@ public class StorageDeskScreen extends AbstractContainerScreen<StorageDeskMenu> 
     private static final int TEXT = 0xFF404040;
     private static final int CELL = 18;
     private static final int COLUMNS = StorageDeskMenu.COLUMNS, ROWS = StorageDeskMenu.ROWS;
+    /** The desk itself, without the bench's panel. */
+    private static final int DESK_WIDTH = 176;
+    /** The bench's panel: as tall as reaches below its result and the button beside it. */
+    private static final int PANEL_HEIGHT = StorageDeskMenu.RESULT_Y + 28;
+    private static final int CLEAR_X = StorageDeskMenu.RESULT_X + 26, CLEAR_Y = StorageDeskMenu.RESULT_Y + 2, CLEAR_SIZE = 12;
 
     private EditBox search;
     private String searchText = "";
@@ -45,6 +53,8 @@ public class StorageDeskScreen extends AbstractContainerScreen<StorageDeskMenu> 
     private StoragePayloads.Contents shownFrom;
     private String shownFor;
     private int scroll;
+    /** Whether the screen is laid out with the bench's panel; the menu says so only once it is open. */
+    private boolean laidOutWithBench;
 
     public StorageDeskScreen(StorageDeskMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title, 176, 222);
@@ -53,7 +63,10 @@ public class StorageDeskScreen extends AbstractContainerScreen<StorageDeskMenu> 
 
     @Override
     protected void init() {
+        laidOutWithBench = menu.benchHere();
         super.init();
+        // The desk and the bench's panel are centred together.
+        if (laidOutWithBench) leftPos = (width - DESK_WIDTH - StorageDeskMenu.PANEL_WIDTH) / 2;
         search = new EditBox(font, leftPos + 82, topPos + 5, 86, 11,
                 Component.translatable("gui.hardwrought.compendium.search"));
         search.setMaxLength(32);
@@ -64,6 +77,13 @@ public class StorageDeskScreen extends AbstractContainerScreen<StorageDeskMenu> 
             scroll = 0;
         });
         addRenderableWidget(search);
+    }
+
+    @Override
+    protected void containerTick() {
+        super.containerTick();
+        // The bench is told after the screen is up, and it may be broken while it is open: lay out again.
+        if (menu.benchHere() != laidOutWithBench) rebuildWidgets();
     }
 
     // ---------------------------------------------------------------- the list
@@ -109,9 +129,10 @@ public class StorageDeskScreen extends AbstractContainerScreen<StorageDeskMenu> 
         super.extractBackground(graphics, mouseX, mouseY, delta);
         int x = leftPos;
         int y = topPos;
-        graphics.fill(x, y, x + imageWidth, y + imageHeight, DARK);
-        graphics.fill(x, y, x + imageWidth - 1, y + imageHeight - 1, LIGHT);
-        graphics.fill(x + 1, y + 1, x + imageWidth - 1, y + imageHeight - 1, PANEL);
+        if (laidOutWithBench) bench(graphics, mouseX, mouseY);
+        graphics.fill(x, y, x + DESK_WIDTH, y + imageHeight, DARK);
+        graphics.fill(x, y, x + DESK_WIDTH - 1, y + imageHeight - 1, LIGHT);
+        graphics.fill(x + 1, y + 1, x + DESK_WIDTH - 1, y + imageHeight - 1, PANEL);
 
         for (int row = 0; row < ROWS; row++) {
             for (int column = 0; column < COLUMNS; column++) {
@@ -151,9 +172,9 @@ public class StorageDeskScreen extends AbstractContainerScreen<StorageDeskMenu> 
             int track = ROWS * CELL - 2;
             int bar = Math.max(8, track * ROWS / (ROWS + rows));
             int top = y + StorageDeskMenu.GRID_Y + (track - bar) * scroll / rows;
-            graphics.fill(x + imageWidth - 5, y + StorageDeskMenu.GRID_Y, x + imageWidth - 3,
+            graphics.fill(x + DESK_WIDTH - 5, y + StorageDeskMenu.GRID_Y, x + DESK_WIDTH - 3,
                     y + StorageDeskMenu.GRID_Y + track, SLOT);
-            graphics.fill(x + imageWidth - 5, top, x + imageWidth - 3, top + bar, DARK);
+            graphics.fill(x + DESK_WIDTH - 5, top, x + DESK_WIDTH - 3, top + bar, DARK);
         }
     }
 
@@ -165,12 +186,62 @@ public class StorageDeskScreen extends AbstractContainerScreen<StorageDeskMenu> 
         if (contents != null && (!contents.powered() || contents.stores() == 0)) {
             Component none = Component.translatable(contents.powered()
                     ? "gui.hardwrought.storage.no_stores" : "gui.hardwrought.storage.no_power");
-            graphics.text(font, none, (imageWidth - font.width(none)) / 2,
+            graphics.text(font, none, (DESK_WIDTH - font.width(none)) / 2,
                     StorageDeskMenu.GRID_Y + ROWS * CELL / 2 - 4, 0xFFFFFFFF, true);
         } else if (contents != null) {
             Component stores = Component.translatable("gui.hardwrought.storage.stores", contents.stores());
-            graphics.text(font, stores, imageWidth - 8 - font.width(stores), inventoryLabelY, TEXT, false);
+            graphics.text(font, stores, DESK_WIDTH - 8 - font.width(stores), inventoryLabelY, TEXT, false);
         }
+        if (laidOutWithBench) {
+            Component bench = Component.translatable("block.hardwrought.workshop_bench");
+            int room = StorageDeskMenu.PANEL_WIDTH - 10;
+            graphics.text(font, font.width(bench) > room ? Component.literal(font.plainSubstrByWidth(bench.getString(), room)) : bench,
+                    StorageDeskMenu.PANEL_X + 4, 8, TEXT, false);
+        }
+    }
+
+    /**
+     * The bench's panel, set against the right of the desk: its grid, an arrow down to the result, and
+     * the button that clears the grid into the store room.
+     */
+    private void bench(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+        int px = leftPos + StorageDeskMenu.PANEL_X - 4, py = topPos + 4;
+        int pw = StorageDeskMenu.PANEL_WIDTH + 4, ph = PANEL_HEIGHT - 4;
+        graphics.fill(px, py, px + pw, py + ph, DARK);
+        graphics.fill(px, py, px + pw - 1, py + ph - 1, LIGHT);
+        graphics.fill(px + 1, py + 1, px + pw - 1, py + ph - 1, PANEL);
+        for (int row = 0; row < 3; row++) {
+            for (int column = 0; column < 3; column++) {
+                slot(graphics, StorageDeskMenu.CRAFT_X + column * CELL, StorageDeskMenu.CRAFT_Y + row * CELL);
+            }
+        }
+        // The result in a larger frame, as on a crafting table, and an arrow down to it.
+        int rx = leftPos + StorageDeskMenu.RESULT_X, ry = topPos + StorageDeskMenu.RESULT_Y;
+        graphics.fill(rx - 5, ry - 5, rx + 21, ry + 21, LIGHT);
+        graphics.fill(rx - 5, ry - 5, rx + 20, ry + 20, SLOT_DARK);
+        graphics.fill(rx - 4, ry - 4, rx + 20, ry + 20, SLOT);
+        int ax = rx + 8, ay = topPos + StorageDeskMenu.CRAFT_Y + 3 * CELL + 2;
+        graphics.fill(ax - 1, ay, ax + 1, ay + 8, DARK);
+        for (int i = 0; i < 4; i++) graphics.fill(ax - 4 + i, ay + 8 + i, ax + 4 - i, ay + 9 + i, DARK);
+        int cx = leftPos + CLEAR_X, cy = topPos + CLEAR_Y;
+        boolean hovered = mouseX >= cx && mouseX < cx + CLEAR_SIZE && mouseY >= cy && mouseY < cy + CLEAR_SIZE;
+        graphics.fill(cx, cy, cx + CLEAR_SIZE, cy + CLEAR_SIZE, DARK);
+        graphics.fill(cx, cy, cx + CLEAR_SIZE - 1, cy + CLEAR_SIZE - 1, LIGHT);
+        graphics.fill(cx + 1, cy + 1, cx + CLEAR_SIZE - 1, cy + CLEAR_SIZE - 1, hovered ? 0xFFA8B8D8 : SLOT);
+        graphics.centeredText(font, Component.literal("↑"), cx + CLEAR_SIZE / 2, cy + 2, 0xFFFFFFFF);
+        if (hovered) {
+            graphics.setTooltipForNextFrame(font, Component.translatable("gui.hardwrought.storage.clear_grid"), mouseX, mouseY);
+        }
+    }
+
+    /** The bench's panel is part of the screen: a click on it is not a click beside the desk, which would throw what is held. */
+    @Override
+    protected boolean hasClickedOutside(double mx, double my, int xo, int yo) {
+        if (laidOutWithBench && mx >= xo + StorageDeskMenu.PANEL_X - 4 && mx < xo + StorageDeskMenu.PANEL_X + StorageDeskMenu.PANEL_WIDTH
+                && my >= yo && my < yo + PANEL_HEIGHT) {
+            return false;
+        }
+        return super.hasClickedOutside(mx, my, xo, yo);
     }
 
     private void slot(GuiGraphicsExtractor graphics, int atX, int atY) {
@@ -192,13 +263,21 @@ public class StorageDeskScreen extends AbstractContainerScreen<StorageDeskMenu> 
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
+        if (laidOutWithBench && event.button() == InputConstants.MOUSE_BUTTON_LEFT
+                && event.x() >= leftPos + CLEAR_X && event.x() < leftPos + CLEAR_X + CLEAR_SIZE
+                && event.y() >= topPos + CLEAR_Y && event.y() < topPos + CLEAR_Y + CLEAR_SIZE) {
+            send(ItemStack.EMPTY, StoragePayloads.CLEAR_GRID);
+            return true;
+        }
         int cell = cellAt(event.x(), event.y());
         // Named, never numbered: the buttons are not counted from nought here, and a left click
         // taken for a right one fetches half a stack and sets one item down.
         boolean left = event.button() == InputConstants.MOUSE_BUTTON_LEFT;
         boolean right = event.button() == InputConstants.MOUSE_BUTTON_RIGHT;
         if (cell < 0 || !left && !right) return super.mouseClicked(event, doubled);
-        search.setFocused(false);
+        // Through the screen, not the box alone: the screen would still count the box as focused, and a
+        // later click on it would not focus it again.
+        setFocused(null);
         List<StoragePayloads.Entry> list = entries();
         int index = cell + scroll * COLUMNS;
         ItemStack clicked = index < list.size() ? list.get(index).stack() : ItemStack.EMPTY;

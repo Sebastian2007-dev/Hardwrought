@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "hardwrought:block/workshop_bench"
+    },
+    "facing=east": {
+      "model": "hardwrought:block/workshop_bench",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "hardwrought:block/workshop_bench",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "hardwrought:block/workshop_bench",
+      "y": 270
+    }
+  }
+}

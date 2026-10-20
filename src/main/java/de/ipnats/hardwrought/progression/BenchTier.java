@@ -35,8 +35,15 @@ public final class BenchTier {
     public static final int HEWN = 1;
     /** The first bench that was built rather than cut. Everything metal starts here. */
     public static final int JOINED = 2;
+    /**
+     * The assembly bench (stage E4 of the electricity roadmap), where carried devices are laid out part
+     * by part. Above the ladder's default: only what its own tag lists needs it.
+     */
+    public static final int ASSEMBLY = 3;
     /** What a result needs when no tag has heard of it. */
     public static final int HIGHEST = JOINED;
+    /** What only the assembly bench makes. */
+    private static final TagKey<Item> ASSEMBLY_PRODUCTS = TagKey.create(Registries.ITEM, Hardwrought.id("assembly_products"));
 
     /**
      * Results each rung may make, listed at the lowest rung that may make them. A tier has no tag of
@@ -63,6 +70,9 @@ public final class BenchTier {
         if (state == null) return INVENTORY;
         if (isHewnBench(state)) return HEWN;
         if (isNailedBench(state)) return JOINED;
+        // The workshop bench makes what the nailed one makes; what it adds is the store room at its side.
+        if (state.getBlock() instanceof WorkshopBenchBlock) return JOINED;
+        if (state.getBlock() instanceof de.ipnats.hardwrought.carried.AssemblyBenchBlock) return ASSEMBLY;
         // A vanilla crafting table is no bench here: it is never made, never generated, and one left
         // standing from before falls apart when used (see StructureLoot).
         return INVENTORY;
@@ -71,6 +81,7 @@ public final class BenchTier {
     /** The lowest bench that may make this. Anything unlisted needs the best one there is. */
     public static int required(ItemStack result) {
         if (result == null || result.isEmpty()) return HIGHEST;
+        if (result.is(ASSEMBLY_PRODUCTS)) return ASSEMBLY;
         for (int tier = 0; tier < PRODUCTS.length; tier++) {
             if (result.is(PRODUCTS[tier])) return tier;
         }

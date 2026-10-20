@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "hardwrought:golden_wand",
+    "hardwrought:mithril_ingot",
+    "hardwrought:mithril_ingot",
+    "minecraft:amethyst_shard",
+    "minecraft:amethyst_shard"
+  ],
+  "result": {
+    "id": "hardwrought:mithril_wand"
+  }
+}

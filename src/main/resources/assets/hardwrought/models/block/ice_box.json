@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "hardwrought:block/hardwrought/ice_box_front",
+    "side": "hardwrought:block/hardwrought/ice_box_side",
+    "top": "hardwrought:block/hardwrought/ice_box_top",
+    "particle": "hardwrought:block/hardwrought/ice_box_side"
+  }
+}

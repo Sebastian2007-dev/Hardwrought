@@ -15,13 +15,18 @@ import java.util.Map;
  * of land, and the kind decides the wash and the drawings; the brightness the server kept for the slope
  * shades the wash, so the relief still shows.
  *
+ * <p>Under a roof of rock the server draws the floor at the bearer's height and marks the rock they would
+ * walk into as wall, in the darkest shade of its colour. Walls are hatched dark and inked along the
+ * floor they close in, and the rock underfoot gets rubble, not mountain peaks.
+ *
  * <p>Everything here is laid out in pixels counted from the world, not from the screen: the grain of the
  * paper, the ragged edge and where a tree stands stay where they are while the page is dragged.
  */
 final class AtlasPainter {
     enum Land {
         WATER(0xFF8FB3B8), FOREST(0xFF8DA570), GRASS(0xFFB9C489), SAND(0xFFE2CB8E), SNOW(0xFFF1EEE6),
-        ROCK(0xFFB5AC9A), DIRT(0xFFC2A77E), BUILT(0xFFC9A27A), LAVA(0xFFD9784A), NETHER(0xFFA8665A), OTHER(0);
+        ROCK(0xFFB5AC9A), DIRT(0xFFC2A77E), BUILT(0xFFC9A27A), LAVA(0xFFD9784A), NETHER(0xFFA8665A),
+        WALL(0xFF6B6153), OTHER(0);
 
         final int wash;
 
@@ -39,6 +44,8 @@ final class AtlasPainter {
     private static final int SAND_DOT = 0xFFB59A5C, SNOW_DOT = 0xFFB8C8D6;
     private static final int PEAK_FILL = 0xFFD8D0BE, PEAK_SHADE = 0xFF8F8574, PEAK_INK = 0xFF4A4034;
     private static final int HOUSE_FILL = 0xFFB06A48;
+    private static final int WALL_HATCH = 0xFF4E463C, WALL_INK = 0xFF2E2820;
+    private static final int RUBBLE = 0xFF857B6A, EMBER = 0xFF7A3A30, LAVA_INK = 0xFF9A3A1E;
     /** How far apart, in pixels, the little drawings may stand. */
     private static final int CELL = 9;
 
@@ -48,6 +55,8 @@ final class AtlasPainter {
     private int[] squares = new int[0];
     private long squareX0, squareZ0;
     private int squaresWide, squaresHigh;
+    /** Whether the page is of a roofed dimension, drawn at the bearer's height. */
+    private boolean cave;
 
     /**
      * Paints the page into {@code pixels}, row by row.
@@ -55,7 +64,9 @@ final class AtlasPainter {
      * @param worldX0 the world pixel the page's left edge falls on: a block at x lies on world pixel x / bpp
      * @param bpp     blocks to a pixel
      */
-    void paint(int[] pixels, int width, int height, long worldX0, long worldZ0, double bpp, Map<Long, byte[]> tiles) {
+    void paint(int[] pixels, int width, int height, long worldX0, long worldZ0, double bpp, Map<Long, byte[]> tiles,
+               boolean cave) {
+        this.cave = cave;
         survey(width, height, worldX0, worldZ0, bpp, tiles);
         boolean[] known = new boolean[width * height];
         Land[] lands = new Land[width * height];
@@ -76,11 +87,14 @@ final class AtlasPainter {
                 Land land = Land.values()[value >> 2];
                 known[index] = true;
                 lands[index] = land;
-                pixels[index] = grain(relief(land == Land.OTHER ? PAPER : land.wash, value & 3), wx, wy);
+                // Rock is hatched, as engravers hatch a section through it.
+                int wash = land == Land.WALL ? (Math.floorMod(wx + wy, 4) == 0 ? WALL_HATCH : land.wash)
+                        : relief(land == Land.OTHER ? PAPER : land.wash, value & 3);
+                pixels[index] = grain(wash, wx, wy);
             }
         }
         inkEdges(pixels, known, lands, width, height);
-        stamp(pixels, known, lands, width, height, worldX0, worldZ0, bpp);
+        stamp(pixels, known, lands, width, height, worldX0, worldZ0, bpp, cave);
     }
 
     // ---------------------------------------------------------------- the land
@@ -122,6 +136,7 @@ final class AtlasPainter {
      */
     private Land classify(int packed, int[] raw, int row, int column) {
         MapColor colour = MapColor.byId(packed >> 2);
+        if ((packed & 3) == MapColor.Brightness.LOWEST.id && colour != MapColor.NONE) return Land.WALL;
         if (colour == MapColor.WATER) return Land.WATER;
         if (colour == MapColor.PLANT) {
             int plants = 0;
@@ -148,6 +163,8 @@ final class AtlasPainter {
         if (colour == MapColor.NETHER || colour == MapColor.CRIMSON_NYLIUM || colour == MapColor.CRIMSON_STEM
                 || colour == MapColor.CRIMSON_HYPHAE || colour == MapColor.WARPED_NYLIUM || colour == MapColor.WARPED_STEM
                 || colour == MapColor.WARPED_HYPHAE || colour == MapColor.WARPED_WART_BLOCK) return Land.NETHER;
+        // Basalt and blackstone, in the Nether, are the land and not something built on it.
+        if (cave && (colour == MapColor.COLOR_BLACK || colour == MapColor.TERRACOTTA_BLACK)) return Land.ROCK;
         if (colour == MapColor.WOOD || colour == MapColor.WOOL || colour == MapColor.METAL) return Land.BUILT;
         // Badlands are coloured clay; the dyed colours are what people put there.
         if (colour.id >= MapColor.TERRACOTTA_WHITE.id && colour.id <= MapColor.TERRACOTTA_BLACK.id) return Land.DIRT;
@@ -174,7 +191,7 @@ final class AtlasPainter {
             for (int px = 0; px < width; px++) {
                 int index = py * width + px;
                 if (!known[index]) continue;
-                boolean edge = false, scorched = false, coast = false, shallow = false;
+                boolean edge = false, scorched = false, coast = false, shallow = false, cliff = false;
                 Land land = lands[index];
                 for (int d = 1; d <= 2; d++) {
                     for (int[] step : STEPS) {
@@ -186,12 +203,14 @@ final class AtlasPainter {
                             else scorched = true;
                             continue;
                         }
+                        if (land == Land.WALL && lands[other] != Land.WALL && d == 1) cliff = true;
                         boolean water = lands[other] == Land.WATER;
                         if (land != Land.WATER && water && d == 1) coast = true;
                         if (land == Land.WATER && !water) shallow = true;
                     }
                 }
                 if (edge) pixels[index] = EDGE;
+                else if (cliff) pixels[index] = WALL_INK;
                 else if (coast) pixels[index] = COAST;
                 else if (scorched) pixels[index] = blend(pixels[index], SCORCH, 0.6);
                 else if (shallow) pixels[index] = SHALLOW;
@@ -205,7 +224,7 @@ final class AtlasPainter {
 
     /** Trees, peaks, waves, tufts, dots and houses, at most one to a cell of the world's pixels. */
     private static void stamp(int[] pixels, boolean[] known, Land[] lands, int width, int height,
-                              long worldX0, long worldZ0, double bpp) {
+                              long worldX0, long worldZ0, double bpp, boolean cave) {
         long cellX0 = Math.floorDiv(worldX0, CELL) - 1, cellZ0 = Math.floorDiv(worldZ0, CELL) - 1;
         long cellX1 = Math.floorDiv(worldX0 + width, CELL) + 1, cellZ1 = Math.floorDiv(worldZ0 + height, CELL) + 1;
         for (long cz = cellZ0; cz <= cellZ1; cz++) {
@@ -221,7 +240,10 @@ final class AtlasPainter {
                     case FOREST -> draw(pixels, known, lands, width, height, left + 1, top,
                             roll < 50 ? AtlasIcons.TREE : AtlasIcons.PINE, land, TREE_INK, TREE_FILL, TREE_FILL);
                     case ROCK -> {
-                        if (roll < 70) draw(pixels, known, lands, width, height, left - 1, top + 2, AtlasIcons.PEAK,
+                        // Underground the rock is the floor, not a mountain: rubble on it.
+                        if (cave) {
+                            if (roll < 55) dots(pixels, known, lands, width, height, left, top, hash, land, RUBBLE);
+                        } else if (roll < 70) draw(pixels, known, lands, width, height, left - 1, top + 2, AtlasIcons.PEAK,
                                 land, PEAK_INK, PEAK_FILL, PEAK_SHADE);
                     }
                     case SNOW -> {
@@ -239,6 +261,13 @@ final class AtlasPainter {
                     }
                     case SAND, DIRT -> {
                         if (roll < 55) dots(pixels, known, lands, width, height, left, top, hash, land, SAND_DOT);
+                    }
+                    case NETHER -> {
+                        if (roll < 55) dots(pixels, known, lands, width, height, left, top, hash, land, EMBER);
+                    }
+                    case LAVA -> {
+                        if (roll < 40) draw(pixels, known, lands, width, height, left + 1, top + 3, AtlasIcons.WAVE,
+                                land, LAVA_INK, LAVA_INK, LAVA_INK);
                     }
                     case BUILT -> {
                         if (roll < 60) draw(pixels, known, lands, width, height, left + 1, top + 2, AtlasIcons.HOUSE,

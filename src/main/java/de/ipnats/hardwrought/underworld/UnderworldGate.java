@@ -268,7 +268,7 @@ public final class UnderworldGate {
     }
 
     /** The nearest block a player can stand in near a position, searching up and down; carved out if there is none. */
-    static BlockPos ground(ServerLevel level, BlockPos around, int radius) {
+    public static BlockPos ground(ServerLevel level, BlockPos around, int radius) {
         level.getChunk(SectionPos.blockToSectionCoord(around.getX()), SectionPos.blockToSectionCoord(around.getZ()));
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         for (int r = 0; r <= radius; r += 2) {
@@ -298,7 +298,7 @@ public final class UnderworldGate {
     }
 
     /** The closest block a player can stand in, nearest first in every direction alike, or null within the radius. */
-    static BlockPos nearest(ServerLevel level, BlockPos around, int radius) {
+    public static BlockPos nearest(ServerLevel level, BlockPos around, int radius) {
         level.getChunk(SectionPos.blockToSectionCoord(around.getX()), SectionPos.blockToSectionCoord(around.getZ()));
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         for (int d = 0; d <= radius; d++) {

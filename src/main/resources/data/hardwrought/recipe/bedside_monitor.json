@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "G": "minecraft:glass_pane",
+    "A": "hardwrought:advanced_circuit",
+    "C": "hardwrought:basic_circuit",
+    "O": "hardwrought:quartz_oscillator",
+    "P": "hardwrought:iron_plate",
+    "W": "hardwrought:insulated_wire"
+  },
+  "pattern": [
+    "GGG",
+    "ACO",
+    "PWP"
+  ],
+  "result": {
+    "id": "hardwrought:bedside_monitor"
+  }
+}

@@ -10,7 +10,8 @@ import net.minecraft.world.level.block.state.BlockState;
  * <p>It is a resistance of {@link #OHMS} between the wire and the ground, taken the whole time it
  * stands on a line — the works have to be turning before anybody asks them for anything. Below
  * {@link #MIN_VOLTS} they do not turn, and the desk shows nothing and fetches nothing. Like a
- * machine it takes no wire itself: a copper coil set against it joins it to a line.
+ * machine it takes no wire itself: a copper coil set against it joins it to a line — or a coil set on
+ * any tube or port of its store room, the tubes carrying the current to it (see {@link StorageNetwork#parts}).
  */
 public class StorageDeskBlockEntity extends ElectricBlockEntity {
     /** One ampere at sixty volts: twice a lamp. */

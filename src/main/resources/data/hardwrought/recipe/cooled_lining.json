@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "P": "hardwrought:thermoelectric_pad",
+    "R": "hardwrought:regulator",
+    "L": "minecraft:leather"
+  },
+  "pattern": [
+    "PRP",
+    "LLL"
+  ],
+  "result": {
+    "id": "hardwrought:cooled_lining"
+  }
+}

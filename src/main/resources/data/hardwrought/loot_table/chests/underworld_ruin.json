@@ -243,6 +243,11 @@
               }
             }
           ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "hardwrought:rune_tome",
+          "weight": 3
         }
       ]
     },

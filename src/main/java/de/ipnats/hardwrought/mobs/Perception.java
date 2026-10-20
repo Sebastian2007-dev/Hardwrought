@@ -140,7 +140,10 @@ public final class Perception {
     }
 
     private static int heldLight(Player player) {
-        return Math.max(lightOf(player.getMainHandItem()), lightOf(player.getOffhandItem()));
+        int held = Math.max(lightOf(player.getMainHandItem()), lightOf(player.getOffhandItem()));
+        // A lit headlamp is a light carried on the head (stage E4).
+        return de.ipnats.hardwrought.carried.CarriedPower.headlampLit(player)
+                ? Math.max(held, de.ipnats.hardwrought.carried.CarriedPower.HEADLAMP_LIGHT) : held;
     }
 
     private static int lightOf(ItemStack stack) {

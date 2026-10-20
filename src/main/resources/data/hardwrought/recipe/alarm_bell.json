@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "B": "minecraft:bell",
+    "R": "hardwrought:relay",
+    "C": "hardwrought:redstone_coil",
+    "P": "hardwrought:iron_plate"
+  },
+  "pattern": [
+    " B ",
+    "RCR",
+    "PPP"
+  ],
+  "result": {
+    "id": "hardwrought:alarm_bell"
+  }
+}

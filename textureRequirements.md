@@ -16,7 +16,8 @@ The dirt slab also uses a vanilla texture, deliberately: it is made from ordinar
 | 2 | `mob_effect/thirst.png` — vorhanden, aber noch ein generierter Platzhalter | ein 18x18-Sprite |
 | 3 | Das Kompendium samt Oberfläche | umgesetzt |
 | 4 | Die Werkbank der zweiten Stufe | umgesetzt: 52 Block-Sprites für 13 Holzarten |
-| 5 | Schmieden: Esse, Blasebalg, Handschuhe, Schamotte, feuerfester Ziegel | Werkzeugteile umgesetzt; übrige Platzhalter siehe Abschnitt „Schmieden“ |
+| 5 | Schmieden: Esse, Blasebalg, Handschuhe, Schamotte, feuerfester Ziegel | Werkzeugteile, Schamotte und Ziegel umgesetzt; weitere Platzhalter im Abschnitt Schmieden |
+| 7 | Magie M2–M6: Mithril- und Leerenkristallstab, Leerentinte, Pergament, Runentinte, Schriftrolle, Runenfoliant | 7 Item-Sprites, heute generierte Platzhalter; siehe Abschnitt „Magie M2–M6“ |
 | 6 | Aschkork und Rindenrüstung (Nether) | 11 Sprites und 2 Rüstungsschichten, heute aus Vanilla umgefärbte Platzhalter; siehe Abschnitt „Nether: der Aschenhain“ |
 
 Die Werkbank-Stufen haben ein eigenes Dokument, weil dort die Erzählung über die Stufen hinweg
@@ -38,13 +39,13 @@ noch Glut sitzt; innen korkfarbenes, warmes Holz; graugrüne, staubige Blätter,
 | `textures/block/ashcork_planks.png` | Akazienbretter umgefärbt | Bretter aus Korkholz, heller und gröber als Eiche. |
 | `textures/block/ashcork_leaves.png` | Azaleenlaub umgefärbt | Kleine, graugrüne, wie mit Asche bestäubte Blätter; Lücken durchsichtig. |
 | `textures/block/ashcork_sapling.png` | Akaziensetzling umgefärbt | Ein dünner grauer Trieb mit wenigen staubigen Blättern. |
-| `textures/item/ashcork_bark.png` | Weidenrinde umgefärbt | Ein gebogenes Stück dicker, grauer Korkrinde mit hellem Innenrand. |
+| `textures/item/ashcork_bark.png` | gezeichnetes 16x16-Kleinteil | Ein gebogenes Stück dicker, grauer Korkrinde mit hellem Innenrand. |
 | `textures/item/ashcork_{helmet,chestplate,leggings,boots}.png` | Lederrüstung umgefärbt | Rüstung aus vernähten Rindenplatten: grau außen, korkbraun an den Kanten, mit Schnur gebunden. |
 | `textures/entity/equipment/humanoid/ashcork.png`, `humanoid_leggings/ashcork.png` | Lederrüstung umgefärbt | Dieselbe Rindenrüstung am Körper. |
 | `textures/block/nether_grass.png`, `nether_grass_side.png` | Wirr-Nylium umgefärbt | Graues, staubiges Gras auf Netherrack; an der Seite hängt es in Fransen über den roten Stein. |
 | `textures/block/cast_obsidian.png` | Obsidian aufgehellt, mit Glutflecken | Schnell erstarrte Lava: glasiger und grauer als Obsidian, von feinen Rissen durchzogen, in denen orange Glut sitzt. |
 | `textures/block/nether_{coal,copper,tin,iron}_ore.png` | Erzflecken der Overworld-Erze auf Netherrack kopiert | Dieselben Erze, aber eingewachsen in rötlichen Netherrack; die Flecken etwas von Hitze angelaufen. |
-| `textures/item/blackstone_piece.png` | Bruchsteinstück in Schwarzstein-Farben | Ein scharfkantiger Brocken Schwarzstein, fast schwarz mit violettem Schimmer. |
+| `textures/item/blackstone_piece.png` | gezeichnetes 16x16-Kleinteil | Ein scharfkantiger Brocken Schwarzstein, fast schwarz mit violettem Schimmer. |
 | `textures/block/provisional_portal_stabilizer{,_active,_top}.png` | Schwarzsteinziegel mit Magma-Fenster | Ein grober Block aus Schwarzstein, in der Mitte ein Herz aus Magma hinter Gittern; aus: erkaltet dunkel, an: glühend. |
 | `textures/block/portal_stabilizer{,_active,_top}.png` | Quarz mit Goldrand, Fenster aus weinendem Obsidian | Ein gefasster Quarzblock mit Goldbeschlägen, oben ein Anschluss für den Draht; in der Mitte ein Kristall, aus: matt violett, an: hell leuchtend. |
 
@@ -311,8 +312,8 @@ werden von `tools/glow_textures.py` erzeugt. **Nach jeder neuen oder geänderten
 | --- | --- | --- |
 | `textures/item/smithing_gloves.png` | generierte braune Faust | Dicke, genähte Lederhandschuhe mit Stulpe; angesengte Fingerspitzen wären ein schönes Detail. |
 | `textures/gui/sprites/equipment/slot_gloves.png` | graue Silhouette derselben Form | Leeres-Slot-Symbol im Stil von `slot_backpack` und `slot_lamp`. |
-| `textures/item/fireclay.png` | generierter grauer Klumpen | Ein Klumpen hellgrauer, körniger Ton mit sichtbarem Sand und Kies darin. |
-| `textures/item/refractory_brick.png` | generierter gelblicher Ziegel | Ein feuerfester Schamotteziegel: blass gelbbraun, feinporig, heller als ein gewöhnlicher Ziegel. |
+| `textures/item/fireclay.png` | gezeichnetes 16x16-Sprite | Ein Klumpen hellgrauer, körniger Ton mit sichtbarem Sand und Kies darin. |
+| `textures/item/refractory_brick.png` | gezeichnetes 16x16-Sprite | Ein feuerfester Schamotteziegel: blass gelbbraun, feinporig, heller als ein gewöhnlicher Ziegel. |
 
 ## Milestone 4: das Durst-Symbol (Platzhalter)
 
@@ -324,6 +325,21 @@ Effektsymbole weichen von den Regeln für Inventarsprites oben ab:
 | Datei | Was es sein soll |
 | --- | --- |
 | `textures/mob_effect/thirst.png` | **18x18**, nicht 16x16. Ein Symbol im Stil der Vanilla-Effektsymbole: klar lesbar in der winzigen Leiste neben der Erfahrungsanzeige, mit demselben leichten Volumen und derselben dunklen Unterkante wie Hunger oder Übelkeit. Motiv: ein fast leerer Wassertropfen oder eine aufgesprungene Lippe. Gedeckte Blaugrautöne passend zur Effektfarbe `#3A6B7C`, transparenter Hintergrund. |
+
+## Magie M2–M6 (Platzhalter)
+
+Alle Sprites unten erzeugt `java tools/MagicAssets.java` als einfache 16x16-Platzhalter (die Stäbe sind
+umgefärbte Goldstäbe). Spielbar, aber nicht gezeichnet.
+
+| Datei | Was es sein soll |
+| --- | --- |
+| `textures/item/mithril_wand.png` | Ein schlanker Stab mit Mithrilbeschlägen, silbrig-blau schimmernd, ein Amethyst an der Spitze. |
+| `textures/item/void_crystal_wand.png` | Ein dunkler Stab, in dessen Spitze ein violett-schwarzer Leerenkristall sitzt; der stärkste Stab. |
+| `textures/item/void_ink.png` | Ein Tintenfässchen mit tief violetter, leicht funkelnder Tinte. |
+| `textures/item/parchment.png` | Ein leeres, gelbliches Pergamentblatt mit leicht gewellten Rändern. |
+| `textures/item/rune_ink.png` | Ein Fläschchen dunkelblauer Tinte mit einem goldenen Glimmen darin. |
+| `textures/item/scroll.png` | Eine Schriftrolle mit Holzstäben an beiden Enden, eine leuchtende Rune darauf. |
+| `textures/item/rune_tome.png` | Ein altes, dunkles Lederbuch mit Messingecken und einer schwach leuchtenden Rune auf dem Deckel. |
 
 ## Fertig, nichts mehr zu tun
 
@@ -365,3 +381,23 @@ the milestone that adds them:
 - Cloth armor (section 36); there is no cloth armor item.
 - Lantern, oil lamp, gas lamp and electric lamp of the lighting progression (section 20).
 - Ventilation shafts, mechanical fans and gas detectors (sections 18.3 and 19).
+
+## Stand nach Rücknahme der größeren Texturen
+
+Die Rüstungen, getragenen Geräte, Werkzeuge und Blockflächen verwenden wieder
+ihre vorherigen Modelle und Texturen. Für die zuvor unversionierten E2–E6-Blockflächen
+wurden einfache 16×16-Generatorflächen nachgebildet; ihre früheren PNG-Bytes
+standen nicht zur Verfügung. Diese Flächen bleiben visuelle Platzhalter.
+
+Als fertig bearbeitete Kleinteile bleiben Schamotte und feuerfeste Ziegel,
+Aschkorkrinde und Schwarzsteinstück, Motorbauteile, die Komponenten aus E3–E6
+sowie die Metallstangen und -platten erhalten. Alle 25 Metallstangen und -platten
+nutzen nun dieselben Silhouetten und Lichtkanten wie Nichrom, jeweils in der
+Palette ihres Barrens. Die älteren Parts-&-Circuits-Icons
+sind auf eine zurückhaltende Vanilla-Palette abgestimmt. Die Öl- und
+Chemie-Symbole behalten ihren vorherigen Stand.
+
+Kleinteil-Export: `python tools/export_requirement_icons.py`; ältere
+Parts-&-Circuits-Icons: `python tools/vanilla_style_items.py`; Metallformen:
+`python tools/metal_stock_textures.py`. Die einfachen Blockflächen werden mit
+`python tools/legacy_device_textures.py` erzeugt.

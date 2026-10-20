@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "facing=north,on=false": {
+      "model": "hardwrought:block/electric_heater"
+    },
+    "facing=north,on=true": {
+      "model": "hardwrought:block/electric_heater_on"
+    },
+    "facing=east,on=false": {
+      "model": "hardwrought:block/electric_heater",
+      "y": 90
+    },
+    "facing=east,on=true": {
+      "model": "hardwrought:block/electric_heater_on",
+      "y": 90
+    },
+    "facing=south,on=false": {
+      "model": "hardwrought:block/electric_heater",
+      "y": 180
+    },
+    "facing=south,on=true": {
+      "model": "hardwrought:block/electric_heater_on",
+      "y": 180
+    },
+    "facing=west,on=false": {
+      "model": "hardwrought:block/electric_heater",
+      "y": 270
+    },
+    "facing=west,on=true": {
+      "model": "hardwrought:block/electric_heater_on",
+      "y": 270
+    }
+  }
+}

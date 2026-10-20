@@ -48,7 +48,7 @@ public final class ModBlockEntities {
     public static final BlockEntityType<de.ipnats.hardwrought.progression.KeptGridBlockEntity> KEPT_GRID =
             Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Hardwrought.id("kept_grid"),
                     new BlockEntityType<>(de.ipnats.hardwrought.progression.KeptGridBlockEntity::new,
-                            Set.of(ModBlocks.NAILED_WORKBENCH)));
+                            Set.of(ModBlocks.NAILED_WORKBENCH, ModBlocks.WORKSHOP_BENCH)));
 
     /** The forge's fire and the pieces lying in it. */
     public static final BlockEntityType<de.ipnats.hardwrought.smithing.ForgeBlockEntity> FORGE =

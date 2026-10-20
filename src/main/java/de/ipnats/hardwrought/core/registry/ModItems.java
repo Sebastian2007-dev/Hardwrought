@@ -64,6 +64,9 @@ public final class ModItems {
     public static final Item NAILED_WORKBENCH = register("nailed_workbench",
             properties -> new BlockItem(ModBlocks.NAILED_WORKBENCH, properties),
             new Item.Properties().useBlockDescriptionPrefix());
+    public static final Item WORKSHOP_BENCH = register("workshop_bench",
+            properties -> new BlockItem(ModBlocks.WORKSHOP_BENCH, properties),
+            new Item.Properties().useBlockDescriptionPrefix());
     // Milestone 7, section 56: three parts copper to one of tin is bronze, and the mixture is what
     // goes back into the fire. The metals themselves, tin included, are registered from the table
     // in de.ipnats.hardwrought.metallurgy.Metal rather than one by one here.
@@ -153,6 +156,8 @@ public final class ModItems {
     /** Wheat, sugar and water, to be distilled into spirit. */
     public static final Item MASH = register("mash", Item::new, new Item.Properties().stacksTo(16));
     /** Distilled from mash: cleans a wound, and soaks a bandage. */
+    public static final Item STERILE_DRESSING = register("sterile_dressing", properties -> new de.ipnats.hardwrought.health.MedicineItem(
+            de.ipnats.hardwrought.health.MedicineItem.Kind.STERILE_DRESSING, properties), new Item.Properties().stacksTo(16));
     public static final Item SPIRIT = register("spirit", properties -> new de.ipnats.hardwrought.health.MedicineItem(
             de.ipnats.hardwrought.health.MedicineItem.Kind.SPIRIT, properties),
             new Item.Properties().stacksTo(16).craftRemainder(net.minecraft.world.item.Items.GLASS_BOTTLE));
