@@ -732,14 +732,20 @@ public final class NuclearAssets {
         text(blocks.resolve("overhead_strand.json"), Files.readString(blocks.resolve("cable_strand.json"))
                 .replace("block/hardwrought/wire_copper", "block/hardwrought/wire_aluminium"));
         text(blocks.resolve("overhead_strand_hot.json"), Files.readString(blocks.resolve("cable_strand_hot.json")));
-        for (String strand : List.of("heavy_cable_strand", "heavy_cable_strand_hot", "overhead_strand", "overhead_strand_hot")) {
+        // The high-power cable: thicker again, in the dull grey of its lead sheath.
+        write(tint(read(wires.resolve("wire_rubber.png")), 0x6E747A), wires.resolve("wire_lead.png"));
+        text(blocks.resolve("power_cable_strand.json"), thickest(insulated).replace("block/hardwrought/wire_rubber", "block/hardwrought/wire_lead"));
+        text(blocks.resolve("power_cable_strand_hot.json"), thickest(insulatedHot));
+        for (String strand : List.of("heavy_cable_strand", "heavy_cable_strand_hot", "overhead_strand", "overhead_strand_hot",
+                "power_cable_strand", "power_cable_strand_hot")) {
             plainState(strand);
         }
         // The coils in hand.
         BufferedImage cable = read(ITEM_TEX.resolve("copper_cable.png"));
         write(tint(cable, 0x3A3A3E), ITEM_TEX.resolve("heavy_power_cable.png"));
         write(tint(cable, 0xC8CCD0), ITEM_TEX.resolve("overhead_conductor.png"));
-        for (String coil : List.of("heavy_power_cable", "overhead_conductor")) {
+        write(tint(cable, 0x6E747A), ITEM_TEX.resolve("high_power_cable.png"));
+        for (String coil : List.of("heavy_power_cable", "overhead_conductor", "high_power_cable")) {
             text(ASSETS.resolve("models/item/" + coil + ".json"), """
                     {
                       "parent": "minecraft:item/generated",
@@ -829,6 +835,8 @@ public final class NuclearAssets {
         addToTag(RES.resolve("data/minecraft/tags/block/mineable/pickaxe.json"),
                 List.of("power_transformer", "battery_bank_casing", "battery_cell_stack", "battery_bank_controller"));
         shaped("heavy_power_cable", 1, new String[] {"CC", "CC", "RR"}, "C", "hardwrought:copper_cable", "R", "hardwrought:rubber");
+        shaped("high_power_cable", 1, new String[] {"HH", "HH", "LS"}, "H", "hardwrought:heavy_power_cable",
+                "L", "hardwrought:lead_plate", "S", "hardwrought:silicone");
         shaped("overhead_conductor", 2, new String[] {"AAA", "ASA", "AAA"}, "A", "hardwrought:aluminum_rod", "S", "hardwrought:steel_rod");
         shaped("power_transformer", 1, new String[] {"BPB", "WCW", "KCK"}, "B", "hardwrought:bushing", "P", "hardwrought:steel_plate",
                 "W", "hardwrought:winding", "C", "hardwrought:transformer_core", "K", "hardwrought:cooling_coil");
@@ -837,6 +845,11 @@ public final class NuclearAssets {
                 "C", "hardwrought:cell_case");
         shaped("battery_bank_controller", 1, new String[] {"VCV", "BRB", "PPP"}, "V", "hardwrought:voltmeter",
                 "C", "hardwrought:advanced_circuit", "B", "hardwrought:battery", "R", "hardwrought:relay", "P", "hardwrought:battery_bank_casing");
+    }
+
+    /** A strand model made thicker still: the high-power cable. */
+    private static String thickest(String model) {
+        return model.replace("7.4", "6.2").replace("8.6", "9.8");
     }
 
     /** A strand model made thicker: the heavy cable is twice a wire's width. */

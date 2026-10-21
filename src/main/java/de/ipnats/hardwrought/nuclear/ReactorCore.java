@@ -20,11 +20,12 @@ import net.minecraft.world.level.storage.ValueOutput;
  *
  * <h2>Reactivity</h2>
  * <pre>
- *   k = (0.12 + Σ fresh share of each assembly · 0.12 − 0.025 per breeder rod) · moderation
+ *   k = (0.12 + Σ fresh share of each assembly · 0.125 − 0.025 per breeder rod) · moderation
  *   ρ = (k − 1) / k − rods − xenon + α (T − 20 °C)
  * </pre>
- * Nine fresh assemblies give a k of 1.2 cold, eight about 1.08; seven will not go critical. A burnt
- * assembly is worth a fifth of a fresh one. The water in the core is its moderator: without it the
+ * Nine fresh assemblies give a k of 1.245 cold, eight 1.12; seven will not go critical. A burnt-out
+ * assembly is still worth 82 % of a fresh one: enough that a full core holds full power, hot and with
+ * its xenon, to the end of its fuel, and the rods have that much less to hold back as it burns. The water in the core is its moderator: without it the
  * neutrons are not slowed and the reaction stops, as in every water-moderated reactor. The temperature
  * coefficient is negative, so a hotter core holds itself back.
  *
@@ -60,12 +61,12 @@ public final class ReactorCore {
     /** What the automatic control lets the reactivity rise to: while starting up, and near its setpoint. */
     static final double STARTUP_REACTIVITY = 0.003, RUNNING_REACTIVITY = 0.0015;
     /** k of the core's structure, and what each fresh assembly adds. */
-    static final double BASE_K = 0.12, PER_ASSEMBLY = 0.12, BURNT_SHARE = 0.8, PER_BREEDER = 0.025;
+    static final double BASE_K = 0.12, PER_ASSEMBLY = 0.125, BURNT_SHARE = 0.18, PER_BREEDER = 0.025;
     /** Reactivity of one control rod drive's rod, fully in. */
     public static final double ROD_WORTH = 0.05;
     /** Fraction the rods move a second under their drives, and fall a second when they are let go. */
     static final double ROD_SPEED = 0.02, ROD_DROP = 0.5;
-    static final double TEMPERATURE_COEFFICIENT = -2.0e-4;
+    static final double TEMPERATURE_COEFFICIENT = -5.0e-5;
     static final double XENON_WORTH = 0.09, IODINE_TIME = 400, XENON_TIME = 600, XENON_BURN = 2.0;
     /** The three groups of decay heat: share of the power at equilibrium, and time, in seconds. */
     static final double[] DECAY_SHARE = {0.035, 0.02, 0.01}, DECAY_TIME = {60, 1200, 36_000};

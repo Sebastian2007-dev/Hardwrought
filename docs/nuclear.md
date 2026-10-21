@@ -85,11 +85,12 @@ from somewhere else before it can make its own.
   `dC/dt = λ(P − C)`, with β = 0.0065 and λ = 0.08/s. The period is (β − ρ)/(λρ). A fall is never faster
   than an 80 s period. At ρ ≥ β the core is prompt critical and the power runs away with a generation
   time of 1 ms. A startup source keeps a loaded core at 10⁻⁵.
-- **Reactivity.** k = (0.12 + 0.12 per fresh assembly − 0.025 per breeder rod) × moderation. A burnt
-  assembly is worth a fifth of a fresh one. Moderation is 0.6 without water, so a water-moderated core
-  stops on losing its water. ρ = (k−1)/k − 0.05 per drive × rod insertion − 0.09 × xenon −
-  0.0002/K × (T − 20 °C). Nine fresh assemblies give k = 1.2 cold, eight 1.08, seven 0.96. At least
-  four drives are needed to shut a fresh core down cold.
+- **Reactivity.** k = (0.12 + 0.125 per fresh assembly − 0.025 per breeder rod) × moderation. A
+  burnt-out assembly is still worth 82 % of a fresh one. That is enough for a full core to hold full
+  power, hot and with its xenon, to the end of its fuel. Moderation is 0.6 without water, so a
+  water-moderated core stops on losing its water. ρ = (k−1)/k − 0.05 per drive × rod insertion −
+  0.09 × xenon − 0.00005/K × (T − 20 °C). Nine fresh assemblies give k = 1.245 cold, eight 1.12,
+  seven 0.995. At least four drives are needed to shut a fresh core down cold.
 - **Rod control.** By hand, the rods move at 2 %/s towards where they are set. With a power setpoint
   the desk drives them itself: out while the power is low and ρ is below 0.0015 (0.003 while starting
   up from the source), in when the power is above the setpoint or ρ is above that. Between critical and
@@ -136,6 +137,7 @@ amperes, so a power station has its own:
 |---|---|---|---|---|---|
 | Heavy power cable | 0.002 | 80 A | 16 | no | 4 copper cables, 2 rubber |
 | Overhead conductor ×2 | 0.006 | 40 A | 48 | yes | 8 aluminium rods round a steel rod |
+| High-power cable | 0.0008 | 300 A | 24 | no | 4 heavy power cables, a lead plate, silicone |
 
 The **power transformer** steps up or down four times, as the small one does, but carries 60 A on its
 high side through 0.05 Ω. The turbine's 240 V become 960 V, so 40 kW go over a long line at about

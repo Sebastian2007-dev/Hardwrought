@@ -2668,5 +2668,7 @@
   "gui.hardwrought.battery_bank.volts": "%s V · %s cell stacks",
   "gui.hardwrought.battery_bank.full_in": "Full in about %s",
   "gui.hardwrought.battery_bank.empty_in": "Empty in about %s",
-  "hud.hardwrought.fatigue": "Tired %s%%"
+  "hud.hardwrought.fatigue": "Tired %s%%",
+  "item.hardwrought.high_power_cable": "High-Power Cable",
+  "compendium.hardwrought.info.high_power_cable": "Copper in oil-filled paper under a lead sheath: 0.0008 Ω per block, 300 A, insulated, spans 24. What many turbines feed their transformers through."
 }

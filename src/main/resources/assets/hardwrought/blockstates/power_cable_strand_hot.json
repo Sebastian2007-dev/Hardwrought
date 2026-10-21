@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "hardwrought:block/power_cable_strand_hot"
+    }
+  }
+}

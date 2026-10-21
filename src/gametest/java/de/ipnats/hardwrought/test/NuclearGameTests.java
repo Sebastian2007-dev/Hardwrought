@@ -93,6 +93,23 @@ public final class NuclearGameTests {
         helper.succeed();
     }
 
+    /** A full core holds full power to the end of its fuel: nearly burnt out, its rods still have room. */
+    @GameTest
+    public void aNearlyBurntCoreStillHoldsFullPower(GameTestHelper helper) {
+        ReactorCore core = new ReactorCore();
+        core.setSetpoint(1.0);
+        ReactorCore.Load[] loads = new ReactorCore.Load[9];
+        Arrays.fill(loads, ReactorCore.Load.FUEL);
+        float[] burnt = new float[9];
+        Arrays.fill(burnt, 0.95f);
+        ReactorCore.Conditions old = new ReactorCore.Conditions(loads, burnt, 9, true, 1.0, true, false);
+        run(core, old, 1800);
+        helper.assertTrue(core.trip() == ReactorCore.Trip.NONE, "No trip on the way up: " + core.trip());
+        helper.assertTrue(core.power() > 0.95, "Burnt to 95 %, the core still reaches full power: " + core.power());
+        helper.assertTrue(core.rods() > 0.0, "with its rods not all the way out: " + core.rods());
+        helper.succeed();
+    }
+
     @GameTest
     public void aScramDropsThePowerAndLeavesTheDecayHeat(GameTestHelper helper) {
         ReactorCore core = atHalfPower();
@@ -302,6 +319,10 @@ public final class NuclearGameTests {
         var overhead = de.ipnats.hardwrought.electricity.Gauge.OVERHEAD;
         helper.assertTrue(heavy.amps() >= 80 && heavy.insulated(), "The heavy cable carries eighty amperes, sheathed");
         helper.assertTrue(overhead.span() >= 48 && !overhead.insulated(), "The overhead conductor spans far, bare");
+        var power = de.ipnats.hardwrought.electricity.Gauge.POWER_CABLE;
+        helper.assertTrue(power.amps() >= 300 && power.insulated() && power.ohmsPerBlock() < heavy.ohmsPerBlock()
+                && power.item() == de.ipnats.hardwrought.electricity.ElectricBlocks.HIGH_POWER_CABLE,
+                "The high-power cable carries three hundred amperes, sheathed, with less loss than the heavy cable");
         helper.assertTrue(heavy.item() == de.ipnats.hardwrought.electricity.ElectricBlocks.HEAVY_POWER_CABLE
                 && overhead.item() == de.ipnats.hardwrought.electricity.ElectricBlocks.OVERHEAD_CONDUCTOR, "Each is its own coil");
         helper.setBlock(new BlockPos(1, 2, 1), de.ipnats.hardwrought.electricity.ElectricBlocks.POWER_TRANSFORMER);

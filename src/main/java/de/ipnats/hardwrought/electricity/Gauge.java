@@ -6,7 +6,8 @@ import net.minecraft.world.item.Item;
 /**
  * How thick a strung conductor is. A thin wire is cheap and reaches less far; it also has four times
  * the resistance of a cable and carries a quarter of the current before it starts to cook. A power
- * station wants more: the heavy cable carries eighty amperes, the overhead conductor spans far.
+ * station wants more: the heavy cable carries eighty amperes, the overhead conductor spans far, the
+ * high-power cable carries three hundred.
  */
 public enum Gauge {
     WIRE("wire", 0.04, 4.0, 16.0),
@@ -22,7 +23,12 @@ public enum Gauge {
      * Aluminium strands round a steel core, bare, as overhead lines are strung: light, so it spans far
      * between masts, and made for high voltage, where the current is small.
      */
-    OVERHEAD("overhead", 0.006, 40.0, 48.0);
+    OVERHEAD("overhead", 0.006, 40.0, 48.0),
+    /**
+     * The power station's own feeder: thick copper in oil-filled paper under a lead sheath, as the
+     * cables between a station and its substation are laid. Three hundred amperes, insulated, heavy.
+     */
+    POWER_CABLE("power_cable", 0.0008, 300.0, 24.0);
 
     public static final Codec<Gauge> CODEC = Codec.STRING.xmap(Gauge::byName, Gauge::serializedName);
     /** One coil in the inventory strings this many blocks. */
@@ -56,7 +62,7 @@ public enum Gauge {
 
     /** Whether it is sheathed: it bites nobody and needs no clear air between its ends. */
     public boolean insulated() {
-        return this == INSULATED || this == HEAVY_CABLE;
+        return this == INSULATED || this == HEAVY_CABLE || this == POWER_CABLE;
     }
 
     /** How far it can be strung between two supports, in blocks. */
@@ -71,6 +77,7 @@ public enum Gauge {
             case INSULATED -> ElectricBlocks.INSULATED_WIRE;
             case HEAVY_CABLE -> ElectricBlocks.HEAVY_POWER_CABLE;
             case OVERHEAD -> ElectricBlocks.OVERHEAD_CONDUCTOR;
+            case POWER_CABLE -> ElectricBlocks.HIGH_POWER_CABLE;
         };
     }
 

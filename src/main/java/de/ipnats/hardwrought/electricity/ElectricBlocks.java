@@ -93,12 +93,15 @@ public final class ElectricBlocks {
     public static final Block HEAVY_CABLE_STRAND_HOT = strand("heavy_cable_strand_hot", 9);
     public static final Block OVERHEAD_STRAND = strand("overhead_strand", 0);
     public static final Block OVERHEAD_STRAND_HOT = strand("overhead_strand_hot", 9);
+    public static final Block POWER_CABLE_STRAND = strand("power_cable_strand", 0);
+    public static final Block POWER_CABLE_STRAND_HOT = strand("power_cable_strand_hot", 9);
 
     public static final Item COPPER_WIRE = item("copper_wire", properties -> new WireItem(Gauge.WIRE, properties));
     public static final Item COPPER_CABLE = item("copper_cable", properties -> new WireItem(Gauge.CABLE, properties));
     public static final Item INSULATED_WIRE = item("insulated_wire", properties -> new WireItem(Gauge.INSULATED, properties));
     public static final Item HEAVY_POWER_CABLE = item("heavy_power_cable", properties -> new WireItem(Gauge.HEAVY_CABLE, properties));
     public static final Item OVERHEAD_CONDUCTOR = item("overhead_conductor", properties -> new WireItem(Gauge.OVERHEAD, properties));
+    public static final Item HIGH_POWER_CABLE = item("high_power_cable", properties -> new WireItem(Gauge.POWER_CABLE, properties));
     public static final Item METER = item("voltmeter", properties -> new MeterItem(properties.stacksTo(1)));
 
     /** The point a coil in hand was first held to, waiting for the second. */
@@ -153,7 +156,7 @@ public final class ElectricBlocks {
                 COIL_WINDER.asItem(), WIRE_DRAWER.asItem(), GLASS_KILN.asItem(), AUTOCLAVE.asItem(),
                 COIL_WINDER_MK2.asItem(), WIRE_DRAWER_MK2.asItem(), GLASS_KILN_MK2.asItem(), TRANSFORMER.asItem(), POWER_TRANSFORMER.asItem(), BUSHING.asItem(), PORCELAIN_INSULATOR.asItem(),
                 HIGH_VOLTAGE_MAST.asItem(), KNIFE_SWITCH.asItem(), FUSE_BOX.asItem(), BREAKER.asItem(),
-                COPPER_WIRE, COPPER_CABLE, INSULATED_WIRE, HEAVY_POWER_CABLE, OVERHEAD_CONDUCTOR, METER);
+                COPPER_WIRE, COPPER_CABLE, INSULATED_WIRE, HEAVY_POWER_CABLE, OVERHEAD_CONDUCTOR, HIGH_POWER_CABLE, METER);
     }
 
     /** Whether this is a support of porcelain, which stands high voltage in the rain. */

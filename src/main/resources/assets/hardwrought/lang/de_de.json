@@ -2668,5 +2668,7 @@
   "gui.hardwrought.battery_bank.volts": "%s V · %s Zellengestelle",
   "gui.hardwrought.battery_bank.full_in": "Voll in etwa %s",
   "gui.hardwrought.battery_bank.empty_in": "Leer in etwa %s",
-  "hud.hardwrought.fatigue": "Müde %s%%"
+  "hud.hardwrought.fatigue": "Müde %s%%",
+  "item.hardwrought.high_power_cable": "Hochleistungskabel",
+  "compendium.hardwrought.info.high_power_cable": "Kupfer in ölgetränktem Papier unter einem Bleimantel: 0,0008 Ω pro Block, 300 A, isoliert, Spannweite 24. Darüber speisen viele Turbinen ihre Transformatoren."
 }

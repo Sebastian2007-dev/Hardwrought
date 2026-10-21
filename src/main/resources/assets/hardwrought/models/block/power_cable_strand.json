@@ -1,0 +1,21 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "wire": "hardwrought:block/hardwrought/wire_lead",
+    "particle": "hardwrought:block/hardwrought/wire_lead"
+  },
+  "elements": [
+{
+  "from": [0, 6.2, 6.2],
+  "to": [16, 9.8, 9.8],
+  "faces": {
+    "north": {"texture": "#wire"},
+    "south": {"texture": "#wire"},
+    "east": {"texture": "#wire"},
+    "west": {"texture": "#wire"},
+    "up": {"texture": "#wire"},
+    "down": {"texture": "#wire"}
+  }
+}
+  ]
+}

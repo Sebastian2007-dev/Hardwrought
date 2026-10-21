@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "H": "hardwrought:heavy_power_cable",
+    "L": "hardwrought:lead_plate",
+    "S": "hardwrought:silicone"
+  },
+  "pattern": [
+    "HH",
+    "HH",
+    "LS"
+  ],
+  "result": {
+    "id": "hardwrought:high_power_cable"
+  }
+}
