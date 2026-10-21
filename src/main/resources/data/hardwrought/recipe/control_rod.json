@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:stainless_steel_plate",
+    "H": "hardwrought:hafnium"
+  },
+  "pattern": [
+    "PHP",
+    "PHP",
+    "PHP"
+  ],
+  "result": {
+    "id": "hardwrought:control_rod"
+  }
+}

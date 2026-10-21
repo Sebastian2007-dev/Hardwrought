@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "hardwrought:block/control_rod_drive_top",
+    "side": "hardwrought:block/control_rod_drive"
+  }
+}

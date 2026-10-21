@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:zircaloy_plate",
+    "N": "hardwrought:nichrome_wire"
+  },
+  "pattern": [
+    "P P",
+    " N ",
+    "P P"
+  ],
+  "result": {
+    "id": "hardwrought:spacer_grid",
+    "count": 2
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": "hardwrought:bearing",
+    "S": "hardwrought:stainless_steel_rod",
+    "T": "hardwrought:tube_section"
+  },
+  "pattern": [
+    " B ",
+    "STS",
+    " B "
+  ],
+  "result": {
+    "id": "hardwrought:centrifuge_rotor"
+  }
+}

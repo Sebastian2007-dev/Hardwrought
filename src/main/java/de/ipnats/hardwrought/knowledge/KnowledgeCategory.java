@@ -30,7 +30,8 @@ public enum KnowledgeCategory {
     MEDICINE("medicine"),
     CHEMISTRY("chemistry"),
     MAGIC("magic"),
-    ELECTRICITY("electricity");
+    ELECTRICITY("electricity"),
+    NUCLEAR("nuclear");
 
     private final String serializedName;
 
@@ -112,6 +113,8 @@ public enum KnowledgeCategory {
                 de.ipnats.hardwrought.parts.Parts.MICROCHIP, de.ipnats.hardwrought.parts.Parts.QUARTZ_OSCILLATOR,
                 de.ipnats.hardwrought.parts.Parts.BASIC_CIRCUIT, de.ipnats.hardwrought.parts.Parts.ADVANCED_CIRCUIT,
                 de.ipnats.hardwrought.parts.Parts.ELITE_CIRCUIT));
+        put.accept(NUCLEAR, de.ipnats.hardwrought.nuclear.NuclearItems.items());
+        put.accept(NUCLEAR, de.ipnats.hardwrought.nuclear.NuclearBlocks.items());
         listed = map;
         return map;
     }

@@ -1,0 +1,10 @@
+{
+  "parent": "hardwrought:block/transformer",
+  "textures": {
+    "tank": "hardwrought:block/hardwrought/power_transformer_tank",
+    "fins": "hardwrought:block/hardwrought/power_transformer_fins",
+    "porcelain": "hardwrought:block/hardwrought/porcelain",
+    "copper": "hardwrought:block/hardwrought/wire_copper",
+    "particle": "hardwrought:block/hardwrought/power_transformer_tank"
+  }
+}

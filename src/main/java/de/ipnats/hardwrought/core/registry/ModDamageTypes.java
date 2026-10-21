@@ -36,6 +36,10 @@ public final class ModDamageTypes {
     public static final ResourceKey<DamageType> ELECTROCUTION =
             ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("electrocution"));
 
+    /** Ionising radiation: a body that has taken too large a dose. Armour is no help. */
+    public static final ResourceKey<DamageType> RADIATION =
+            ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("radiation"));
+
     /** The Witch King's magic: it tears at the soul, so armour is no help and runes only half a help (see {@code WitchKing.rend}). */
     public static final ResourceKey<DamageType> HEX =
             ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("hex"));

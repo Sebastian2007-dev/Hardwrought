@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "hardwrought:block/reactor_vessel_wall"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": "hardwrought:turbine_blade",
+    "Q": "hardwrought:bearing",
+    "S": "hardwrought:shaft"
+  },
+  "pattern": [
+    "BBB",
+    "QSQ",
+    "BBB"
+  ],
+  "result": {
+    "id": "hardwrought:turbine_rotor"
+  }
+}

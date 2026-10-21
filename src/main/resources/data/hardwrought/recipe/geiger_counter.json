@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "T": "hardwrought:geiger_mueller_tube",
+    "C": "hardwrought:capacitor",
+    "H": "hardwrought:device_housing",
+    "B": "hardwrought:basic_circuit"
+  },
+  "pattern": [
+    " T ",
+    "CHC",
+    " B "
+  ],
+  "result": {
+    "id": "hardwrought:geiger_counter"
+  }
+}

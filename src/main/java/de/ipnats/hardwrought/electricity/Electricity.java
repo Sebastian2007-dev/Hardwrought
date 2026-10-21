@@ -349,7 +349,7 @@ public final class Electricity {
                 }
                 // Counted from the transformer's end.
                 if (theirs != null && here instanceof TransformerBlockEntity transformer) {
-                    windings.add(new Coupling(mine, theirs, TransformerBlockEntity.RATIO, TransformerBlockEntity.OHMS, 0.0));
+                    windings.add(new Coupling(mine, theirs, TransformerBlockEntity.RATIO, transformer.ohms(), 0.0));
                 }
             }
         }
@@ -370,8 +370,12 @@ public final class Electricity {
             emfs[i] = nodes.get(i).emf();
         }
         List<Flow> flows = new ArrayList<>();
+        double[] own = emfs.clone();
         // A source that would have to do what it cannot — a dynamo take current, an empty battery give
-        // it, a full one take more — stands aside, and the rest is worked out again without it.
+        // it, a full one take more — stands aside, and the rest is worked out again without it. One at a
+        // time, the worst first: setting one aside changes what the others would have to do. And one set
+        // aside comes back where the line has since risen above it and it can take: an empty battery
+        // that could not hold the line up may still be charged by it.
         for (int round = 0; ; round++) {
             boolean driven = false;
             for (double emf : emfs) if (emf > 0.0) driven = true;
@@ -409,17 +413,31 @@ public final class Electricity {
             }
             eliminate(matrix, solution);
             System.arraycopy(solution, 0, volts, 0, n);
-            boolean again = false;
-            for (int i = 0; i < n && round < 6; i++) {
+            if (round >= Math.max(6, 2 * n)) break;
+            int worst = -1;
+            double worstAmps = 0.0;
+            for (int i = 0; i < n; i++) {
                 if (emfs[i] <= 0.0) continue;
                 ElectricBlockEntity node = nodes.get(i);
                 double out = (emfs[i] - volts[i]) / node.sourceOhms();
-                if ((out > 1e-6 && !node.canGive()) || (out < -1e-6 && !node.canTake())) {
-                    emfs[i] = 0.0;
-                    again = true;
+                if (((out > 1e-6 && !node.canGive()) || (out < -1e-6 && !node.canTake())) && Math.abs(out) > worstAmps) {
+                    worst = i;
+                    worstAmps = Math.abs(out);
                 }
             }
-            if (!again) break;
+            int back = -1;
+            if (worst < 0) {
+                for (int i = 0; i < n; i++) {
+                    if (emfs[i] > 0.0 || own[i] <= 0.0) continue;
+                    if (volts[i] > own[i] + 1e-3 && nodes.get(i).canTake()) {
+                        back = i;
+                        break;
+                    }
+                }
+            }
+            if (worst >= 0) emfs[worst] = 0.0;
+            else if (back >= 0) emfs[back] = own[back];
+            else break;
         }
 
         double generated = 0.0, delivered = 0.0, leaked = 0.0, lost = 0.0;

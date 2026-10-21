@@ -42,7 +42,7 @@ def write(path, data):
     path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
 
-HOOD_TEXTURES = {"brick": "minecraft:block/iron_block",
+HOOD_TEXTURES = {"brick": "minecraft:block/bricks",
                  "trim": "minecraft:block/polished_blackstone",
                  "soot": "minecraft:block/coal_block",
                  "particle": "#brick"}

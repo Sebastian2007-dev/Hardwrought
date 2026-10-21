@@ -2,7 +2,7 @@
   "type": "minecraft:crafting_shapeless",
   "category": "equipment",
   "ingredients": [
-    "hardwrought:wooden_wand",
+    "hardwrought:iron_wand",
     "minecraft:gold_ingot",
     "minecraft:gold_ingot",
     "minecraft:amethyst_shard"

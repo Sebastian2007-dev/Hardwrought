@@ -1,7 +1,8 @@
 """Generates the wooden and iron hammer from the stone one, and the cracked looks of the wooden anvil.
 
 The hammers keep the stone hammer's shape, handle and binding; only the head is recoloured. The
-wooden anvil's cracks are drawn into its vanilla log textures, two stages: cracked and split.
+wooden anvil is a stripped oak stump: dark oak bark on the sides, light end grain on top, fresh as
+vanilla draws them. Its cracks are drawn into those same textures, two stages: cracked and split.
 It also writes the anvil's blockstate, which picks the look from how worn it is.
 
 Run from the repository root:  python tools/hammer_and_anvil_textures.py
@@ -74,7 +75,16 @@ def cracked(base, path):
 def anvil():
     top = vanilla("stripped_oak_log_top")
     side = vanilla("oak_log")
-    base_model = json.loads((ASSETS / "models/block/wooden_anvil.json").read_text(encoding="utf-8"))
+    top.save(ASSETS / "textures/block/wooden_anvil_top.png")
+    side.save(ASSETS / "textures/block/wooden_anvil_side.png")
+    base_path = ASSETS / "models/block/wooden_anvil.json"
+    base_model = json.loads(base_path.read_text(encoding="utf-8"))
+    base_model["textures"] = {
+        "side": "hardwrought:block/wooden_anvil_side",
+        "top": "hardwrought:block/wooden_anvil_top",
+        "particle": "hardwrought:block/wooden_anvil_side",
+    }
+    base_path.write_text(json.dumps(base_model, indent=2) + "\n", encoding="utf-8")
     for stage in ("cracked", "split"):
         cracked(top, TOP_CRACKS[stage]).save(ASSETS / f"textures/block/wooden_anvil_top_{stage}.png")
         cracked(side, SIDE_CRACKS[stage]).save(ASSETS / f"textures/block/wooden_anvil_side_{stage}.png")

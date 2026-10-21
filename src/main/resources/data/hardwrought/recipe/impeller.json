@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:stainless_steel_plate",
+    "R": "hardwrought:stainless_steel_rod"
+  },
+  "pattern": [
+    "P P",
+    " R ",
+    "P P"
+  ],
+  "result": {
+    "id": "hardwrought:impeller"
+  }
+}

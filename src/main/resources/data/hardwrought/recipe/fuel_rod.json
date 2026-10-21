@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:cladding_tube",
+    "hardwrought:fuel_pellet",
+    "hardwrought:fuel_pellet",
+    "hardwrought:fuel_pellet",
+    "hardwrought:fuel_pellet",
+    "hardwrought:plenum_spring",
+    "hardwrought:end_plug",
+    "hardwrought:end_plug"
+  ],
+  "result": {
+    "id": "hardwrought:fuel_rod"
+  }
+}

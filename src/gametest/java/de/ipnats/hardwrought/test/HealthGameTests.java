@@ -107,6 +107,12 @@ public final class HealthGameTests {
         Diseases.infect(player, Disease.GASTRO, 10);
         helper.assertTrue(Diseases.health(player).infection(Disease.GASTRO) == null,
                 "and for a while it cannot be caught again");
+        helper.assertTrue(player.hasEffect(ModEffects.IMMUNITY), "The body's defences are still up: immunity");
+        Diseases.infect(player, Disease.COLD, 10);
+        helper.assertTrue(Diseases.health(player).infection(Disease.COLD) == null, "and for a while nothing else takes hold either");
+        player.removeEffect(ModEffects.IMMUNITY);
+        Diseases.infect(player, Disease.COLD, 10);
+        helper.assertTrue(Diseases.health(player).infection(Disease.COLD) != null, "Once that is over, a cold can be caught again");
         helper.succeed();
     }
 

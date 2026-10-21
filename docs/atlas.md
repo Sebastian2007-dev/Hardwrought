@@ -5,7 +5,7 @@ Atlas mod.
 
 ## Making and carrying it
 
-A book and a compass, in any order, make an **atlas**. It does its work while it is anywhere in the
+A book and quill makes an **atlas**. It does its work while it is anywhere in the
 inventory; it does not have to be held.
 
 ## What it records

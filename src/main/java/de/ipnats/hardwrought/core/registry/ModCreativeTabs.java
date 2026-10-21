@@ -172,6 +172,14 @@ public final class ModCreativeTabs {
                 de.ipnats.hardwrought.storage.StorageBlocks.parts().forEach(output::accept);
             });
 
+    /** Nuclear engineering: from fluorite and yellowcake to the reactor, the turbine and the counter. */
+    public static final CreativeModeTab NUCLEAR = tab(key("nuclear"), "itemGroup.hardwrought.nuclear",
+            () -> new ItemStack(de.ipnats.hardwrought.nuclear.NuclearItems.FUEL_ASSEMBLY), output -> {
+                de.ipnats.hardwrought.nuclear.NuclearBlocks.items().forEach(output::accept);
+                de.ipnats.hardwrought.nuclear.NuclearItems.items().forEach(output::accept);
+                output.accept(de.ipnats.hardwrought.multiblock.BigMachines.GAS_PORT);
+            });
+
     /** Runes, sigils and the void. */
     public static final CreativeModeTab MAGIC = tab(key("magic"), "itemGroup.hardwrought.magic",
             () -> de.ipnats.hardwrought.magic.Magic.items().getFirst().copy(), output -> {

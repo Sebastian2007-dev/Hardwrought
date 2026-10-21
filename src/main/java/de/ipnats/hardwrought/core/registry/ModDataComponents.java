@@ -82,6 +82,16 @@ public final class ModDataComponents {
                     .networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.FLOAT)
                     .build());
 
+    /**
+     * How far a fuel assembly has burnt, or a breeder rod has bred, from 0 fresh to 1 done; see
+     * {@code de.ipnats.hardwrought.nuclear.ReactorFuelItem}.
+     */
+    public static final DataComponentType<Float> BURNUP =
+            register("burnup", DataComponentType.<Float>builder()
+                    .persistent(com.mojang.serialization.Codec.floatRange(0.0f, 1.0f))
+                    .networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.FLOAT)
+                    .build());
+
     /** How rusted a piece of plain steel is, from 0 to 1; see {@code Rust}. */
     public static final DataComponentType<Float> RUST =
             register("rust", DataComponentType.<Float>builder()

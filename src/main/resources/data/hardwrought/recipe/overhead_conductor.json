@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "hardwrought:aluminum_rod",
+    "S": "hardwrought:steel_rod"
+  },
+  "pattern": [
+    "AAA",
+    "ASA",
+    "AAA"
+  ],
+  "result": {
+    "id": "hardwrought:overhead_conductor",
+    "count": 2
+  }
+}

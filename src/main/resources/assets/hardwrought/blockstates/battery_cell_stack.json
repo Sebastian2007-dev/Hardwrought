@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "hardwrought:block/battery_cell_stack"
+    }
+  }
+}

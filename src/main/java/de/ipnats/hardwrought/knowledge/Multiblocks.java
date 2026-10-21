@@ -116,6 +116,58 @@ public final class Multiblocks {
             Optional.empty());
 
     /**
+     * The reactor: a 5×5×5 vessel. Graphite above and below the core, nine fuel channels in it, up to nine
+     * control rod drives in the head. The ports may take the place of any wall block but the head's middle.
+     */
+    public static final Multiblock REACTOR = new Multiblock(Hardwrought.id("reactor"),
+            List.of(List.of("WWWWW", "WWWWW", "WWWWW", "WWWWW", "WWWWW"),
+                    List.of("WWWWW", "WGGGW", "WGGGW", "WGGGW", "FWIWP"),
+                    List.of("WWWWW", "WCCCW", "WCCCW", "WCCCW", "WWKWW"),
+                    List.of("WWWWW", "WGGGW", "WGGGW", "WGGGW", "WWSWW"),
+                    List.of("WWWWW", "WDDDW", "WDDDW", "WDDDW", "WWWWW")),
+            legend('W', List.of(Hardwrought.id("reactor_vessel_wall")), 'K', List.of(Hardwrought.id("reactor_controller")),
+                    'C', List.of(Hardwrought.id("fuel_channel")), 'G', List.of(Hardwrought.id("graphite_electrode")),
+                    'D', List.of(Hardwrought.id("control_rod_drive"), Hardwrought.id("reactor_vessel_wall")),
+                    'F', List.of(Hardwrought.id("fluid_port")), 'S', List.of(Hardwrought.id("gas_port")),
+                    'I', List.of(Hardwrought.id("item_port")), 'P', List.of(Hardwrought.id("power_port"))),
+            Optional.empty());
+
+    /** The steam turbine: casing round a rotor, a condenser under it, steam in, water and current out. */
+    public static final Multiblock STEAM_TURBINE = new Multiblock(Hardwrought.id("steam_turbine"),
+            List.of(List.of("TTT", "TNT", "FTP"), List.of("TTT", "TRT", "TKT"), List.of("TTT", "TTT", "TST")),
+            legend('T', List.of(Hardwrought.id("turbine_casing")), 'K', List.of(Hardwrought.id("turbine_controller")),
+                    'R', List.of(Hardwrought.id("turbine_rotor")), 'N', List.of(Hardwrought.id("condenser")),
+                    'F', List.of(Hardwrought.id("fluid_port")), 'S', List.of(Hardwrought.id("gas_port")),
+                    'P', List.of(Hardwrought.id("power_port"))),
+            Optional.empty());
+
+    /**
+     * The centrifuge cascade: five gas centrifuges in the middle layer, the feed in through a gas port in a
+     * wall or the floor, the product out through one in the roof, the tails out through an item port.
+     */
+    public static final Multiblock CENTRIFUGE_CASCADE = new Multiblock(Hardwrought.id("centrifuge_cascade"),
+            List.of(List.of("CCC", "CSC", "IPC"), List.of("ZCZ", "CZC", "ZKZ"), List.of("CCC", "COC", "CCC")),
+            legend('C', List.of(Hardwrought.id("centrifuge_casing")), 'K', List.of(Hardwrought.id("centrifuge_controller")),
+                    'Z', List.of(Hardwrought.id("gas_centrifuge")), 'S', List.of(Hardwrought.id("gas_port")),
+                    'O', List.of(Hardwrought.id("gas_port")), 'I', List.of(Hardwrought.id("item_port")),
+                    'P', List.of(Hardwrought.id("power_port"))),
+            Optional.empty());
+
+    /**
+     * The battery bank: a 5×5×5 hull of casing with up to 27 cell stacks inside, the controller in the
+     * middle of one side, and a power port anywhere in the casing.
+     */
+    public static final Multiblock BATTERY_BANK = new Multiblock(Hardwrought.id("battery_bank"),
+            List.of(List.of("CCCCC", "CCCCC", "CCCCC", "CCCCC", "CCCCC"),
+                    List.of("CCCCC", "CSSSC", "CSSSC", "CSSSC", "CCCCP"),
+                    List.of("CCCCC", "CSSSC", "CSSSC", "CSSSC", "CCKCC"),
+                    List.of("CCCCC", "CSSSC", "CSSSC", "CSSSC", "CCCCC"),
+                    List.of("CCCCC", "CCCCC", "CCCCC", "CCCCC", "CCCCC")),
+            legend('C', List.of(Hardwrought.id("battery_bank_casing")), 'K', List.of(Hardwrought.id("battery_bank_controller")),
+                    'S', List.of(Hardwrought.id("battery_cell_stack")), 'P', List.of(Hardwrought.id("power_port"))),
+            Optional.empty());
+
+    /**
      * The seal in the abyss: the seal stone between four pillars of worked deepslate, two blocks out at
      * the corners, each with a soul lantern on it. A nether star on the stone opens the way down.
      */
@@ -130,7 +182,8 @@ public final class Multiblocks {
 
     /** Every structure: the machines, the seal, and the three temples of the end of the game. */
     public static final List<Multiblock> ALL = java.util.stream.Stream.concat(
-            java.util.stream.Stream.of(HOODED_FORGE, SMELTERY, LARGE_ARC_FURNACE, LARGE_DIESEL, UNDERWORLD_SEAL),
+            java.util.stream.Stream.of(HOODED_FORGE, SMELTERY, LARGE_ARC_FURNACE, LARGE_DIESEL, BATTERY_BANK, REACTOR, STEAM_TURBINE,
+                    CENTRIFUGE_CASCADE, UNDERWORLD_SEAL),
             de.ipnats.hardwrought.ritual.Temple.multiblocks().stream()).toList();
 
     private Multiblocks() { }

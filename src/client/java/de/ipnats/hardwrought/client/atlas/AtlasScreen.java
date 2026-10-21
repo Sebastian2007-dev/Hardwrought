@@ -33,7 +33,7 @@ public class AtlasScreen extends Screen {
     private static final int OUTER = 8, LEATHER = 7, SIDE = 118, GUTTER = 10, HEAD = 16, FOOT = 26, ROW = 14;
     private static final int COVER = 0xFF4A3220, COVER_DARK = 0xFF2E1E12, STITCH = 0xFF8A6A48;
     private static final int PAPER = 0xFFE8D9B0, PAPER_DARK = 0xFFD8C69A, RULE = 0xFF9A8058;
-    private static final int INK = 0xFF2A2018, FADED = 0xFF6A5640, SELF = 0xFFF4F0E6, OTHERS = 0xFF3A70C0;
+    private static final int INK = 0xFF2A2018, FADED = 0xFF6A5640, SELF = 0xFFD8392B, OTHERS = 0xFF3A70C0, PARTY = 0xFF3C9A48;
     /** Pixels to a square of the atlas, at each scale. A square is four blocks. */
     private static final int[] SCALES = {1, 2, 3, 4, 6, 8};
     /** How near a mark the pointer has to be to mean it. */
@@ -367,8 +367,14 @@ public class AtlasScreen extends Screen {
         tooltip = new ArrayList<>();
         for (Atlas.Bearer bearer : AtlasClient.bearers(dimension)) {
             int x = screenX(bearer.x()), y = screenY(bearer.z());
-            arrow(graphics, x, y, bearer.yaw(), OTHERS);
-            if (SCALES[scale] >= 3) label(graphics, Component.literal(bearer.name()), x + 7, y - 4);
+            int colour = bearer.party() ? PARTY : OTHERS;
+            if (bearer.party() && !inMap(x, y)) {
+                // Off the page: a mark on its edge, pointing the way to them, with their name.
+                edge(graphics, x, y, colour, Component.literal(bearer.name()));
+                continue;
+            }
+            arrow(graphics, x, y, bearer.yaw(), colour);
+            if (bearer.party() || SCALES[scale] >= 3) label(graphics, Component.literal(bearer.name()), x + 9, y - 4);
             if (Math.abs(mouseX - x) <= NEAR && Math.abs(mouseY - y) <= NEAR && naming == null) {
                 tooltip.add(Component.literal(bearer.name()).getVisualOrderText());
             }
@@ -432,24 +438,81 @@ public class AtlasScreen extends Screen {
         graphics.text(font, text, x, y, INK, false);
     }
 
-    /** An arrow the way someone faces, in ink with a coloured middle. */
+    /**
+     * An arrow the way someone faces: a long point with a notch cut into its back, so the way it points
+     * cannot be mistaken, in ink round a coloured middle.
+     */
     private static void arrow(GuiGraphicsExtractor graphics, int x, int y, float yaw, int fill) {
         double facing = Math.toRadians(yaw);
-        double fx = -Math.sin(facing), fz = Math.cos(facing);
-        for (int pass = 0; pass < 2; pass++) {
-            double size = pass == 0 ? 7.5 : 5.0;
-            int colour = pass == 0 ? INK : fill;
-            double tipX = fx * size, tipZ = fz * size;
-            double leftX = (-fx * 0.6 - fz * 0.75) * size, leftZ = (-fz * 0.6 + fx * 0.75) * size;
-            double rightX = (-fx * 0.6 + fz * 0.75) * size, rightZ = (-fz * 0.6 - fx * 0.75) * size;
-            for (int dy = -8; dy <= 8; dy++) {
-                for (int dx = -8; dx <= 8; dx++) {
-                    if (inside(dx + 0.5, dy + 0.5, tipX, tipZ, leftX, leftZ, rightX, rightZ)) {
-                        graphics.fill(x + dx, y + dy, x + dx + 1, y + dy + 1, colour);
-                    }
-                }
+        dart(graphics, x, y, -Math.sin(facing), Math.cos(facing), fill);
+    }
+
+    /** How far an arrow reaches from its place, in pixels, with room for its rim. */
+    private static final int DART = 10;
+
+    /**
+     * The arrow's shape, pointing along (fx, fz): a tip, two barbs and the notch between them, filled with
+     * its colour and rimmed all round with one pixel of ink.
+     */
+    private static void dart(GuiGraphicsExtractor graphics, int x, int y, double fx, double fz, int fill) {
+        double tipX = fx * 8, tipZ = fz * 8;
+        double backX = -fx * 5, backZ = -fz * 5, notchX = -fx * 1.5, notchZ = -fz * 1.5;
+        double sideX = -fz * 5, sideZ = fx * 5;
+        double leftX = backX + sideX, leftZ = backZ + sideZ, rightX = backX - sideX, rightZ = backZ - sideZ;
+        int span = 2 * DART + 3;
+        boolean[][] body = new boolean[span][span];
+        for (int dy = -DART; dy <= DART; dy++) {
+            for (int dx = -DART; dx <= DART; dx++) {
+                double px = dx + 0.5, py = dy + 0.5;
+                body[dy + DART + 1][dx + DART + 1] = inside(px, py, tipX, tipZ, leftX, leftZ, notchX, notchZ)
+                        || inside(px, py, tipX, tipZ, notchX, notchZ, rightX, rightZ);
             }
         }
+        for (int row = 0; row < span; row++) {
+            for (int column = 0; column < span; column++) {
+                int colour;
+                if (body[row][column]) {
+                    colour = fill;
+                } else if (touches(body, row, column)) {
+                    colour = INK;
+                } else {
+                    continue;
+                }
+                int px = x + column - DART - 1, py = y + row - DART - 1;
+                graphics.fill(px, py, px + 1, py + 1, colour);
+            }
+        }
+    }
+
+    /** Whether a pixel outside the arrow lies against it, so it belongs to the rim. */
+    private static boolean touches(boolean[][] body, int row, int column) {
+        for (int dr = -1; dr <= 1; dr++) {
+            for (int dc = -1; dc <= 1; dc++) {
+                int r = row + dr, c = column + dc;
+                if (r >= 0 && c >= 0 && r < body.length && c < body.length && body[r][c]) return true;
+            }
+        }
+        return false;
+    }
+
+    /** Whether a point is on the map, clear of its edge by the room an arrow takes. */
+    private boolean inMap(int x, int y) {
+        return x >= mapLeft() + 8 && x <= mapRight() - 8 && y >= mapTop() + 8 && y <= mapBottom() - 8;
+    }
+
+    /** Someone off the page: an arrow at its edge, on the line from the middle to them, and their name. */
+    private void edge(GuiGraphicsExtractor graphics, int x, int y, int colour, Component name) {
+        double cx = (mapLeft() + mapRight()) / 2.0, cy = (mapTop() + mapBottom()) / 2.0;
+        double dx = x - cx, dy = y - cy;
+        double length = Math.max(1e-6, Math.hypot(dx, dy));
+        double halfW = (mapRight() - mapLeft()) / 2.0 - 10, halfH = (mapBottom() - mapTop()) / 2.0 - 10;
+        double t = Math.min(halfW / Math.max(1e-6, Math.abs(dx)), halfH / Math.max(1e-6, Math.abs(dy)));
+        int ex = (int) Math.round(cx + dx * t), ey = (int) Math.round(cy + dy * t);
+        dart(graphics, ex, ey, dx / length, dy / length, colour);
+        int width = font.width(name);
+        int lx = Math.clamp(ex - width / 2, mapLeft() + 2, mapRight() - width - 2);
+        int ly = dy > 0 ? ey - 18 : ey + 10;
+        label(graphics, name, lx, Math.clamp(ly, mapTop() + 2, mapBottom() - 11));
     }
 
     private static boolean inside(double px, double py, double ax, double ay, double bx, double by, double cx, double cy) {

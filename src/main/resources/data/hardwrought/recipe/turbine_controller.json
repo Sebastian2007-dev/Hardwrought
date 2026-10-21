@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": "hardwrought:pressure_gauge",
+    "C": "hardwrought:advanced_circuit",
+    "S": "hardwrought:stator",
+    "R": "hardwrought:rotor",
+    "W": "hardwrought:turbine_casing"
+  },
+  "pattern": [
+    "GCG",
+    "SRS",
+    "WWW"
+  ],
+  "result": {
+    "id": "hardwrought:turbine_controller"
+  }
+}

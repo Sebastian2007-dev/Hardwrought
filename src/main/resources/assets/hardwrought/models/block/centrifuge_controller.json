@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "hardwrought:block/centrifuge_controller",
+    "side": "hardwrought:block/centrifuge_casing",
+    "top": "hardwrought:block/centrifuge_casing"
+  }
+}

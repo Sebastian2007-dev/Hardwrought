@@ -37,7 +37,7 @@ public final class MoltenMetals {
     public static final List<String> ORDER = List.of("iron", "gold", "copper", "bronze", "steel", "stainless_steel",
             "tungsten_steel", "titanium", "tungsten", "tin", "zinc", "lead", "manganese", "magnesium", "aluminum",
             "nickel", "cobalt", "chromium", "uranium", "thorium", "platinum", "silver", "mithril",
-            "adamantium", "netherite", CARBON, "lava", "nichrome");
+            "adamantium", "netherite", CARBON, "lava", "nichrome", "zircaloy");
 
     /** What one item gives: which material, how much of it. */
     public record Melt(String material, int amount) { }

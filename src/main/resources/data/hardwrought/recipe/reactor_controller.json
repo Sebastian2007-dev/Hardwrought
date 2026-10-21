@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "F": "hardwrought:fission_chamber",
+    "E": "hardwrought:elite_circuit",
+    "M": "hardwrought:electric_motor",
+    "I": "hardwrought:impeller",
+    "W": "hardwrought:reactor_vessel_wall",
+    "G": "hardwrought:pressure_gauge"
+  },
+  "pattern": [
+    "FEF",
+    "MIM",
+    "WGW"
+  ],
+  "result": {
+    "id": "hardwrought:reactor_controller"
+  }
+}

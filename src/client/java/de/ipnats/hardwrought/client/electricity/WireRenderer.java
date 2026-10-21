@@ -30,7 +30,8 @@ public class WireRenderer<T extends ElectricBlockEntity> implements BlockEntityR
     /** Two to each gauge, in the order of {@link de.ipnats.hardwrought.electricity.Gauge}: cold, then glowing. */
     private static final Block[] STRANDS = {ElectricBlocks.WIRE_STRAND, ElectricBlocks.WIRE_STRAND_HOT,
             ElectricBlocks.CABLE_STRAND, ElectricBlocks.CABLE_STRAND_HOT, ElectricBlocks.INSULATED_STRAND,
-            ElectricBlocks.INSULATED_STRAND_HOT};
+            ElectricBlocks.INSULATED_STRAND_HOT, ElectricBlocks.HEAVY_CABLE_STRAND, ElectricBlocks.HEAVY_CABLE_STRAND_HOT,
+            ElectricBlocks.OVERHEAD_STRAND, ElectricBlocks.OVERHEAD_STRAND_HOT};
 
     /** A wire from one point to another, measured from the drawing block's corner. */
     record Run(Vec3 from, Vec3 to, int strand) { }

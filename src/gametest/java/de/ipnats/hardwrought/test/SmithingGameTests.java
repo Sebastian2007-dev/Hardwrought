@@ -1021,8 +1021,8 @@ public final class SmithingGameTests {
 
     @GameTest
     public void everySolidMetalIsForgedIntoRodsAndPlates(GameTestHelper helper) {
-        helper.assertTrue(de.ipnats.hardwrought.smithing.MetalStock.metals().size() == 25,
-                "Iron, copper, gold, bronze, the three steels, nichrome and every ore metal but mercury have stock: "
+        helper.assertTrue(de.ipnats.hardwrought.smithing.MetalStock.metals().size() == 26,
+                "Iron, copper, gold, bronze, the three steels, nichrome, zircaloy and every ore metal but mercury have stock: "
                         + de.ipnats.hardwrought.smithing.MetalStock.metals().size());
         for (var metal : de.ipnats.hardwrought.smithing.MetalStock.metals()) {
             var ingot = metal.ingot().get();

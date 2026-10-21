@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:steel_plate",
+    "C": "minecraft:gray_concrete",
+    "L": "hardwrought:lead_ingot"
+  },
+  "pattern": [
+    "PCP",
+    "CLC",
+    "PCP"
+  ],
+  "result": {
+    "id": "hardwrought:reactor_vessel_wall",
+    "count": 4
+  }
+}

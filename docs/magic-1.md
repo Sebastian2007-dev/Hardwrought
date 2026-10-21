@@ -285,7 +285,7 @@ never break blocks.
 | --- | --- | --- | --- | --- |
 | Wooden | pointed stick, stick, leaf string | 2 | +0 | 64 |
 | Iron | wooden wand, 2 iron ingots | 4 | +0.04 | 250 |
-| Golden | wooden wand, 2 gold ingots, amethyst shard | 5 | +0.12 | 120 |
+| Golden | iron wand, 2 gold ingots, amethyst shard | 5 | +0.12 | 120 |
 
 - Every cast wears the wand by 1, plus 6 per tier of overload. Each tier of overload also costs 0.15
   stability.

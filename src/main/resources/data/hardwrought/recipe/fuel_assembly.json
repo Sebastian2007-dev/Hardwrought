@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "R": "hardwrought:fuel_rod",
+    "T": "hardwrought:top_nozzle",
+    "G": "hardwrought:spacer_grid",
+    "B": "hardwrought:bottom_nozzle"
+  },
+  "pattern": [
+    "RTR",
+    "RGR",
+    "RBR"
+  ],
+  "result": {
+    "id": "hardwrought:fuel_assembly"
+  }
+}

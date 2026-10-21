@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "S": "hardwrought:stainless_steel_plate",
+    "P": "hardwrought:steel_plate"
+  },
+  "pattern": [
+    "SPS",
+    "P P",
+    "SPS"
+  ],
+  "result": {
+    "id": "hardwrought:turbine_casing",
+    "count": 4
+  }
+}

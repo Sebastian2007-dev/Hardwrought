@@ -20,6 +20,7 @@
       "de.ipnats.hardwrought.test.PowerGameTests",
       "de.ipnats.hardwrought.test.MaterialGameTests",
       "de.ipnats.hardwrought.test.MultiblockGameTests",
+      "de.ipnats.hardwrought.test.NuclearGameTests",
       "de.ipnats.hardwrought.test.ThermalGameTests",
       "de.ipnats.hardwrought.test.SeasonGameTests",
       "de.ipnats.hardwrought.test.WaterGameTests",

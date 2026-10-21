@@ -291,6 +291,6 @@ Ultra is done:
   not a minigame, or it becomes tedious.
 - Is the oscillator-and-tube path for night vision too modern? A simple dark-adaptation boost from a
   red headlamp would be a cheaper middle step.
-- Uranium and thorium are in the ground. A reactor is beyond this roadmap; thorium could go into gas
-  mantles for the petroleum lamp instead.
+- Uranium and thorium are in the ground. A reactor is beyond this roadmap; it is in docs/nuclear.md.
+  Thorium could still go into gas mantles for the petroleum lamp.
 - Ammonia refrigerant: poisonous leak via the gas system, yes or no?

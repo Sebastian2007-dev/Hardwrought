@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:stainless_steel_plate",
+    "S": "hardwrought:plenum_spring"
+  },
+  "pattern": [
+    "PSP",
+    "P P"
+  ],
+  "result": {
+    "id": "hardwrought:top_nozzle"
+  }
+}

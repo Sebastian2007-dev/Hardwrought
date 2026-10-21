@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:steel_plate",
+    "A": "hardwrought:aluminum_plate"
+  },
+  "pattern": [
+    "PAP",
+    "A A",
+    "PAP"
+  ],
+  "result": {
+    "id": "hardwrought:centrifuge_casing",
+    "count": 4
+  }
+}

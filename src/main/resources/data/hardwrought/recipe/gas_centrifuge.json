@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "R": "hardwrought:centrifuge_rotor",
+    "T": "hardwrought:tube_section",
+    "M": "hardwrought:electric_motor",
+    "C": "hardwrought:motor_controller"
+  },
+  "pattern": [
+    " R ",
+    "TMT",
+    " C "
+  ],
+  "result": {
+    "id": "hardwrought:gas_centrifuge"
+  }
+}

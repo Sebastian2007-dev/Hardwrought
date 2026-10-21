@@ -82,6 +82,16 @@
       "max_radius": 22,
       "min_grade": 0.01,
       "max_grade": 0.1
+    },
+    {
+      "ore": "hardwrought:fluorite_ore",
+      "weight": 2,
+      "min_y": -160,
+      "max_y": 40,
+      "min_radius": 10,
+      "max_radius": 22,
+      "min_grade": 0.04,
+      "max_grade": 0.2
     }
   ]
 }

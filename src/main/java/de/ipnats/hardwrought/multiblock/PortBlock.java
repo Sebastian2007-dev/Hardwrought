@@ -18,11 +18,13 @@ import net.minecraft.world.phys.Vec3;
  * <ul>
  *   <li>A fluid port is the machine's tank to a fluid pipe.
  *   <li>An item port is its inputs and outputs to an item pipe or a hopper.
+ *   <li>A gas port is its gas store to a gas line: steam, or uranium hexafluoride.
  *   <li>A power port is the machine on the line: a copper coil set against it joins it to wires.
  * </ul>
+ * What each leads to is the controller's to say (see {@link PortHost}).
  */
 public class PortBlock extends ElectricNodeBlock {
-    public enum Kind { FLUID, ITEM, POWER }
+    public enum Kind { FLUID, ITEM, POWER, GAS }
 
     private final Kind kind;
 
@@ -54,8 +56,8 @@ public class PortBlock extends ElectricNodeBlock {
     }
 
     /**
-     * The port's entity. Only a power port does anything electrically: it gives the generator's voltage,
-     * or takes the furnace's current, of the controller it belongs to. The other ports are only passages.
+     * The port's entity. Only a power port does anything electrically: it gives the voltage, or takes the
+     * current, of the controller it belongs to. The other ports are only passages.
      */
     public static class Entity extends ElectricBlockEntity {
         /** The controller of the machine it is part of, set each time the controller checks its hull. */
@@ -80,26 +82,45 @@ public class PortBlock extends ElectricNodeBlock {
                     && entity.ports().contains(worldPosition) ? entity : null;
         }
 
+        /** The machine behind this port, if it is a working power port: the first of its kind in the hull. */
+        private PortHost power() {
+            return kind() == Kind.POWER && controller() instanceof PortHost host
+                    && ((ControllerBlock.Entity) host).powerPort(worldPosition) ? host : null;
+        }
+
+        /** The machine behind this port, whatever its kind, while it stands. */
+        public PortHost host() {
+            return controller() instanceof PortHost host ? host : null;
+        }
+
         @Override
         public double emf() {
-            return kind() == Kind.POWER && controller() instanceof LargeDieselController generator && generator.powerPort(worldPosition)
-                    ? generator.emf() : 0.0;
+            PortHost host = power();
+            return host == null ? 0.0 : host.emf();
         }
 
         @Override
         public double sourceOhms() {
-            return LargeDieselController.OHMS;
+            PortHost host = power();
+            return host == null ? 1.0 : host.sourceOhms();
         }
 
         @Override
         public boolean canGive() {
-            return emf() > 0.0;
+            PortHost host = power();
+            return host != null && host.emf() > 0.0 && host.canGive();
+        }
+
+        @Override
+        public boolean canTake() {
+            PortHost host = power();
+            return host != null && host.canTake();
         }
 
         @Override
         public double conductance() {
-            return kind() == Kind.POWER && controller() instanceof ArcFurnaceController furnace && furnace.powerPort(worldPosition)
-                    ? furnace.conductance() : 0.0;
+            PortHost host = power();
+            return host == null ? 0.0 : host.conductance();
         }
 
         @Override
@@ -110,15 +131,14 @@ public class PortBlock extends ElectricNodeBlock {
         @Override
         protected void solved(ServerLevel level, double volts, double amps, boolean wet, double seconds) {
             super.solved(level, volts, amps, wet, seconds);
-            if (controller() instanceof LargeDieselController generator && generator.powerPort(worldPosition)) {
-                generator.solved(volts, amps, seconds);
-            }
+            PortHost host = power();
+            if (host != null) host.solved(volts, amps, seconds);
         }
 
         public static void serverTick(Level level, BlockPos pos, BlockState state, Entity port) {
-            if (level instanceof ServerLevel server && level.getGameTime() % Electricity.PULSE_TICKS == 0
-                    && port.controller() instanceof LargeDieselController) {
-                Electricity.pulse(server, pos);
+            if (level instanceof ServerLevel server && level.getGameTime() % Electricity.PULSE_TICKS == 0) {
+                PortHost host = port.power();
+                if (host != null && host.pulses()) Electricity.pulse(server, pos);
             }
         }
     }

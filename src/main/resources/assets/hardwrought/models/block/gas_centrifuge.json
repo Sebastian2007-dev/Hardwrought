@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "hardwrought:block/gas_centrifuge_top",
+    "side": "hardwrought:block/gas_centrifuge"
+  }
+}

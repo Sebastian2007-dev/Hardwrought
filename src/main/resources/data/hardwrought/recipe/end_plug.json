@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "R": "hardwrought:zircaloy_rod"
+  },
+  "pattern": [
+    "RR"
+  ],
+  "result": {
+    "id": "hardwrought:end_plug",
+    "count": 8
+  }
+}

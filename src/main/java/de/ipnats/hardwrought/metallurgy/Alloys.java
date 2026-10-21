@@ -18,6 +18,11 @@ public final class Alloys {
     public static final Item TUNGSTEN_STEEL_INGOT = register("tungsten_steel_ingot");
     /** Four parts nickel to one of chromium: the wire every heating element is wound from. */
     public static final Item NICHROME_INGOT = register("nichrome_ingot");
+    /**
+     * Zirconium with a pinch of tin, remelted in the large arc furnace: it hardly takes up neutrons and
+     * does not rust in hot water, so fuel is clad in it. Too hot to melt for any smeltery.
+     */
+    public static final Item ZIRCALOY_INGOT = register("zircaloy_ingot");
 
     private Alloys() { }
 

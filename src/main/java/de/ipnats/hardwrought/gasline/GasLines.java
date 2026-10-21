@@ -79,12 +79,12 @@ public final class GasLines {
         GasStorage.SIDED.registerForBlockEntity((rig, side) -> rig.gasOutlet(), ModBlockEntities.DRILLING_RIG);
     }
 
-    /** The full canister of a gas; null for chlorine, which is not bottled. */
+    /** The full canister of a gas; null for chlorine, steam and the hexafluorides, which are not bottled. */
     public static Item canister(GasKind kind) {
         return switch (kind) {
             case LPG -> LPG_CANISTER;
             case NATURAL_GAS -> ModItems.NATURAL_GAS_CANISTER;
-            case CHLORINE -> null;
+            case CHLORINE, STEAM, URANIUM_HEXAFLUORIDE, ENRICHED_HEXAFLUORIDE -> null;
         };
     }
 

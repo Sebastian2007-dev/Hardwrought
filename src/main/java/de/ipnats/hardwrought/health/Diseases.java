@@ -47,7 +47,12 @@ public final class Diseases {
     public static final double TURNING = 5;
     static final double MOST = 100;
     /** How long a disease, once thrown off, cannot be caught again, in seconds. */
-    public static final int IMMUNE_SECONDS = 600;
+    public static final int IMMUNE_SECONDS = 1800;
+    /**
+     * How long a body that has just thrown a disease off is proof against everything, in ticks: twenty
+     * minutes, while its defences are still up.
+     */
+    public static final int ALERT_TICKS = 20 * 60 * 20;
 
     /** Hungrier while ill: the body burns more fighting it. */
     public static final double SICK_HUNGER = 1.5;
@@ -229,6 +234,8 @@ public final class Diseases {
             if (next.age() >= next.disease().incubation() && next.load() <= 0) {
                 health = health.recovered(next.disease(), IMMUNE_SECONDS);
                 told(player, next.disease(), null);
+                // The immune system is still on the alert: for a while nothing else takes hold either.
+                player.addEffect(new MobEffectInstance(ModEffects.IMMUNITY, ALERT_TICKS, 0, false, false, true));
                 continue;
             }
             health = health.with(next.disease(), next);

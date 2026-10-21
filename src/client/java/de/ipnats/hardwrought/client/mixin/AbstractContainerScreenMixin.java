@@ -40,10 +40,13 @@ public abstract class AbstractContainerScreenMixin extends Screen {
     @Shadow protected int leftPos;
     @Shadow protected int topPos;
     @Shadow @Final protected int imageHeight;
+    @Shadow @Final protected int imageWidth;
     @Shadow
     protected Slot hoveredSlot;
 
     @Unique private Button hardwrought$recipeChoiceButton;
+    /** Wide enough for "2/3 »", and kept inside the window where the result sits near its edge. */
+    @Unique private static final int CHOICE_WIDTH = 32;
     /** Dark enough to read as closed, light enough that the well beneath is still visible. */
     @Unique private static final int SHUT_COLOR = 0xC0101010;
 
@@ -96,13 +99,16 @@ public abstract class AbstractContainerScreenMixin extends Screen {
         if (!(menu instanceof AbstractCraftingMenu crafting)
                 || !(menu instanceof RecipeSelectionMenu selection)) return;
         Slot result = crafting.getResultSlot();
-        hardwrought$recipeChoiceButton = Button.builder(Component.literal("↻"), button -> {
+        // As wide as the result's frame and just under it: which result is shown, of how many, and that
+        // pressing it goes on to the next.
+        hardwrought$recipeChoiceButton = Button.builder(hardwrought$choiceLabel(selection), button -> {
                     if (minecraft != null && minecraft.gameMode != null) {
                         minecraft.gameMode.handleInventoryButtonClick(
                                 menu.containerId, RecipeSelectionMenu.NEXT_RECIPE_BUTTON);
                     }
                 })
-                .bounds(leftPos + result.x + 1, topPos + result.y + 20, 16, 12)
+                .bounds(leftPos + Math.min(result.x + 8 - CHOICE_WIDTH / 2, imageWidth - 5 - CHOICE_WIDTH),
+                        topPos + result.y + 22, CHOICE_WIDTH, 14)
                 .tooltip(Tooltip.create(Component.translatable("gui.hardwrought.next_matching_recipe")))
                 .build();
         hardwrought$recipeChoiceButton.visible = selection.hardwrought$recipeChoiceCount() > 1;
@@ -117,6 +123,15 @@ public abstract class AbstractContainerScreenMixin extends Screen {
         boolean multiple = selection.hardwrought$recipeChoiceCount() > 1;
         hardwrought$recipeChoiceButton.visible = multiple;
         hardwrought$recipeChoiceButton.active = multiple;
+        if (multiple) hardwrought$recipeChoiceButton.setMessage(hardwrought$choiceLabel(selection));
+    }
+
+    /** "1/2 »": the result shown, of how many there are, and the way on to the next. */
+    @Unique
+    private static Component hardwrought$choiceLabel(RecipeSelectionMenu selection) {
+        int count = Math.max(1, selection.hardwrought$recipeChoiceCount());
+        int shown = Math.floorMod(selection.hardwrought$recipeChoiceIndex(), count) + 1;
+        return Component.literal(shown + "/" + count + " »");
     }
 
     @Inject(method = "tick", at = @At("TAIL"))

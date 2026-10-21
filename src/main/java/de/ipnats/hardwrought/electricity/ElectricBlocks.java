@@ -67,6 +67,10 @@ public final class ElectricBlocks {
     // The grid: transformers for long lines, porcelain where the voltage is high, and switchgear.
     public static final TransformerBlock TRANSFORMER = block("transformer", TransformerBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(3.5f).noOcclusion());
+    /** A power station's transformer: oil-cooled, its windings of heavy copper. Fifteen times the current. */
+    public static final TransformerBlock POWER_TRANSFORMER = block("power_transformer",
+            properties -> new TransformerBlock(properties, TransformerBlockEntity.POWER_RATED_AMPS, TransformerBlockEntity.POWER_OHMS),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f).noOcclusion());
     public static final InsulatorBlock PORCELAIN_INSULATOR = block("porcelain_insulator", InsulatorBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS).strength(1.0f).noOcclusion().forceSolidOn());
     /** A coil in a porcelain sleeve: where a line at high voltage goes into a transformer or a machine. */
@@ -85,10 +89,16 @@ public final class ElectricBlocks {
     public static final Block CABLE_STRAND_HOT = strand("cable_strand_hot", 9);
     public static final Block INSULATED_STRAND = strand("insulated_strand", 0);
     public static final Block INSULATED_STRAND_HOT = strand("insulated_strand_hot", 9);
+    public static final Block HEAVY_CABLE_STRAND = strand("heavy_cable_strand", 0);
+    public static final Block HEAVY_CABLE_STRAND_HOT = strand("heavy_cable_strand_hot", 9);
+    public static final Block OVERHEAD_STRAND = strand("overhead_strand", 0);
+    public static final Block OVERHEAD_STRAND_HOT = strand("overhead_strand_hot", 9);
 
     public static final Item COPPER_WIRE = item("copper_wire", properties -> new WireItem(Gauge.WIRE, properties));
     public static final Item COPPER_CABLE = item("copper_cable", properties -> new WireItem(Gauge.CABLE, properties));
     public static final Item INSULATED_WIRE = item("insulated_wire", properties -> new WireItem(Gauge.INSULATED, properties));
+    public static final Item HEAVY_POWER_CABLE = item("heavy_power_cable", properties -> new WireItem(Gauge.HEAVY_CABLE, properties));
+    public static final Item OVERHEAD_CONDUCTOR = item("overhead_conductor", properties -> new WireItem(Gauge.OVERHEAD, properties));
     public static final Item METER = item("voltmeter", properties -> new MeterItem(properties.stacksTo(1)));
 
     /** The point a coil in hand was first held to, waiting for the second. */
@@ -113,7 +123,7 @@ public final class ElectricBlocks {
             new BlockEntityType<>((pos, state) -> new ElectricBlockEntity(ElectricBlocks.MAST_ENTITY, pos, state),
                     Set.of(MAST, HIGH_VOLTAGE_MAST)));
     public static final BlockEntityType<TransformerBlockEntity> TRANSFORMER_ENTITY = entity("transformer",
-            new BlockEntityType<>(TransformerBlockEntity::new, Set.of(TRANSFORMER)));
+            new BlockEntityType<>(TransformerBlockEntity::new, Set.of(TRANSFORMER, POWER_TRANSFORMER)));
     public static final BlockEntityType<SwitchgearBlockEntity> SWITCHGEAR_ENTITY = entity("switchgear",
             new BlockEntityType<>(SwitchgearBlockEntity::new, Set.of(KNIFE_SWITCH, FUSE_BOX, BREAKER)));
     public static final BlockEntityType<BatteryBlockEntity> BATTERY_ENTITY = entity("battery",
@@ -141,9 +151,9 @@ public final class ElectricBlocks {
                 SAWMILL_MK2.asItem(), SAWMILL_MK3.asItem(), PLATE_PRESS_MK2.asItem(), PLATE_PRESS_MK3.asItem(),
                 BASIC_CRUSHER_MK4.asItem(), ELECTRIC_FURNACE_MK4.asItem(), SAWMILL_MK4.asItem(), PLATE_PRESS_MK4.asItem(),
                 COIL_WINDER.asItem(), WIRE_DRAWER.asItem(), GLASS_KILN.asItem(), AUTOCLAVE.asItem(),
-                COIL_WINDER_MK2.asItem(), WIRE_DRAWER_MK2.asItem(), GLASS_KILN_MK2.asItem(), TRANSFORMER.asItem(), BUSHING.asItem(), PORCELAIN_INSULATOR.asItem(),
+                COIL_WINDER_MK2.asItem(), WIRE_DRAWER_MK2.asItem(), GLASS_KILN_MK2.asItem(), TRANSFORMER.asItem(), POWER_TRANSFORMER.asItem(), BUSHING.asItem(), PORCELAIN_INSULATOR.asItem(),
                 HIGH_VOLTAGE_MAST.asItem(), KNIFE_SWITCH.asItem(), FUSE_BOX.asItem(), BREAKER.asItem(),
-                COPPER_WIRE, COPPER_CABLE, INSULATED_WIRE, METER);
+                COPPER_WIRE, COPPER_CABLE, INSULATED_WIRE, HEAVY_POWER_CABLE, OVERHEAD_CONDUCTOR, METER);
     }
 
     /** Whether this is a support of porcelain, which stands high voltage in the rain. */

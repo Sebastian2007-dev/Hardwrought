@@ -2,8 +2,7 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    "minecraft:book",
-    "minecraft:compass"
+    "minecraft:writable_book"
   ],
   "result": {
     "id": "hardwrought:atlas",

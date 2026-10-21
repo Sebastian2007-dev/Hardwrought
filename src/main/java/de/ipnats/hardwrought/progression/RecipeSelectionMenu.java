@@ -19,4 +19,7 @@ public interface RecipeSelectionMenu {
 
     /** Synced to the client; the button is unnecessary for zero or one possible result. */
     int hardwrought$recipeChoiceCount();
+
+    /** Synced to the client: which of the possible results is shown, counted from nought. */
+    int hardwrought$recipeChoiceIndex();
 }

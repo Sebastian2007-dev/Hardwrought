@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "L": "hardwrought:lead_plate",
+    "A": "hardwrought:battery_acid",
+    "C": "hardwrought:cell_case"
+  },
+  "pattern": [
+    "LAL",
+    "LCL",
+    "LAL"
+  ],
+  "result": {
+    "id": "hardwrought:battery_cell_stack"
+  }
+}

@@ -33,9 +33,10 @@ public class RefineryMenu extends AbstractContainerMenu {
 
     /** What the window is of: tells the screen which line of state to write. */
     public static final int KIND_BASE = 0, KIND_STAGE = 1, KIND_PROCESSOR = 2, KIND_GAS_TANK = 3, KIND_FLARE = 4,
-            KIND_DIESEL = 5, KIND_ENGINE = 6, KIND_BURNER = 7;
+            KIND_DIESEL = 5, KIND_ENGINE = 6, KIND_BURNER = 7, KIND_TURBINE = 8, KIND_BATTERY_BANK = 9;
     public static final int GAUGES = 6;
-    private static final int KIND = 0, HEATED = 1, RUNNING = 2, PROGRESS = 3, INFO = 4, COUNT = 5, FIRST_GAUGE = 6;
+    private static final int KIND = 0, HEATED = 1, RUNNING = 2, PROGRESS = 3, INFO = 4, COUNT = 5, MORE = 6, MOST = 7,
+            FIRST_GAUGE = 8;
     public static final int SIZE = FIRST_GAUGE + GAUGES * 3;
 
     /** What a gauge holds: nothing, crude oil, one of the products by its order, or a gas. */
@@ -84,6 +85,13 @@ public class RefineryMenu extends AbstractContainerMenu {
             values[RUNNING] = running ? 1 : 0;
             values[PROGRESS] = progressPerMille;
             values[INFO] = info;
+        }
+
+        /** Two more numbers of the block's own, for a block with more to say than one. */
+        public Panel more(int more, int most) {
+            values[MORE] = more;
+            values[MOST] = most;
+            return this;
         }
 
         public Panel gauge(int substance, long amount, long capacity) {
@@ -139,6 +147,9 @@ public class RefineryMenu extends AbstractContainerMenu {
         if (substance == GAS + GasKind.NATURAL_GAS.ordinal()) return 0xFFA8C8E0;
         if (substance == GAS + GasKind.LPG.ordinal()) return 0xFFF0A040;
         if (substance == GAS + GasKind.CHLORINE.ordinal()) return 0xFFC0D850;
+        if (substance == GAS + GasKind.STEAM.ordinal()) return 0xFFE8EEF2;
+        if (substance == GAS + GasKind.URANIUM_HEXAFLUORIDE.ordinal()) return 0xFFD8D0A0;
+        if (substance == GAS + GasKind.ENRICHED_HEXAFLUORIDE.ordinal()) return 0xFFB8E070;
         if (substance >= PRODUCT && substance - PRODUCT < RefineryProduct.values().length) {
             return 0xFF000000 | RefineryProduct.values()[substance - PRODUCT].color();
         }
@@ -156,6 +167,10 @@ public class RefineryMenu extends AbstractContainerMenu {
     public int progress() { return data.get(PROGRESS); }
 
     public int info() { return data.get(INFO); }
+
+    public int more() { return data.get(MORE); }
+
+    public int most() { return data.get(MOST); }
 
     public int gauges() { return Math.min(GAUGES, data.get(COUNT)); }
 

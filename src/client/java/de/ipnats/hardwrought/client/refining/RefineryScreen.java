@@ -23,6 +23,8 @@ public class RefineryScreen extends AbstractContainerScreen<RefineryMenu> {
     private static final int SLOT_DARK = 0xFF373737, TEXT = 0xFF404040, EMPTY = 0xFF8B8B8B, BAR = 0xFF2A2320;
     private static final int GOOD = 0xFF2E7D32, BAD = 0xFF9E2A2A;
     private static final int PROGRESS_Y = 62, GAUGE_TOP = 72, GAUGE_BOTTOM = 122, GAUGE_W = 24, GAUGE_STEP = 40;
+    /** The battery bank's charge bar, across the window under its lines. */
+    private static final int BANK_BAR_Y = 108, BANK_BAR_H = 14;
 
     public RefineryScreen(RefineryMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title, 176, 146);
@@ -53,6 +55,19 @@ public class RefineryScreen extends AbstractContainerScreen<RefineryMenu> {
             graphics.fill(x + 8, y + PROGRESS_Y, x + imageWidth - 8, y + PROGRESS_Y + 3, BAR);
             int filled = (imageWidth - 16) * Math.clamp(menu.progress(), 0, 1000) / 1000;
             if (menu.running() && filled > 0) graphics.fill(x + 8, y + PROGRESS_Y, x + 8 + filled, y + PROGRESS_Y + 3, 0xFFE0A030);
+        }
+
+        if (menu.kind() == RefineryMenu.KIND_BATTERY_BANK) {
+            // The charge as a bar, a mark every tenth, green as it fills.
+            int bx = x + 8, by = y + BANK_BAR_Y, width = imageWidth - 16;
+            graphics.fill(bx - 1, by - 1, bx + width + 1, by + BANK_BAR_H + 1, SLOT_DARK);
+            graphics.fill(bx, by, bx + width, by + BANK_BAR_H, EMPTY);
+            int filled = width * Math.clamp(menu.progress(), 0, 1000) / 1000;
+            if (filled > 0) graphics.fill(bx, by, bx + filled, by + BANK_BAR_H, 0xFF4CAF50);
+            for (int tenth = 1; tenth < 10; tenth++) {
+                int mx = bx + width * tenth / 10;
+                graphics.fill(mx, by, mx + 1, by + (tenth == 5 ? BANK_BAR_H : 4), 0x80FFFFFF);
+            }
         }
 
         for (int gauge = 0; gauge < menu.gauges(); gauge++) {
@@ -86,7 +101,8 @@ public class RefineryScreen extends AbstractContainerScreen<RefineryMenu> {
                     8, lineY, lit ? GOOD : BAD, false);
             lineY += 10;
         } else if (menu.kind() == RefineryMenu.KIND_DIESEL || menu.kind() == RefineryMenu.KIND_ENGINE
-                || menu.kind() == RefineryMenu.KIND_BURNER) {
+                || menu.kind() == RefineryMenu.KIND_BURNER || menu.kind() == RefineryMenu.KIND_TURBINE
+                || menu.kind() == RefineryMenu.KIND_BATTERY_BANK) {
             boolean on = menu.running();
             String key = menu.kind() == RefineryMenu.KIND_BURNER
                     ? (on ? "gui.hardwrought.power.burning" : "gui.hardwrought.power.burner_out")
@@ -102,9 +118,14 @@ public class RefineryScreen extends AbstractContainerScreen<RefineryMenu> {
             lineY += 10;
         }
         gaugeLabels(graphics);
+        int lastLine = menu.kind() == RefineryMenu.KIND_BATTERY_BANK ? BANK_BAR_Y - 11 : PROGRESS_Y - 10;
+        if (menu.kind() == RefineryMenu.KIND_BATTERY_BANK) {
+            String percent = String.format(Locale.ROOT, "%.1f %%", menu.progress() / 10.0);
+            graphics.text(font, percent, (imageWidth - font.width(percent)) / 2, BANK_BAR_Y + 3, 0xFFFFFFFF, true);
+        }
         for (Component line : lines()) {
             for (FormattedCharSequence part : font.split(line, imageWidth - 16)) {
-                if (lineY > PROGRESS_Y - 10) break;
+                if (lineY > lastLine) break;
                 graphics.text(font, part, 8, lineY, TEXT, false);
                 lineY += 9;
             }
@@ -167,8 +188,51 @@ public class RefineryScreen extends AbstractContainerScreen<RefineryMenu> {
                             (int) de.ipnats.hardwrought.power.GasolineEngineBlock.Entity.CAPACITY)
                             : Component.translatable("gui.hardwrought.power.engine_how"));
             case RefineryMenu.KIND_BURNER -> List.of(Component.translatable("gui.hardwrought.power.burner_how"));
+            // The progress field carries the speed in tenths of a percent; the info the output in tens of watts.
+            // The progress field carries the charge in thousandths; the info the power in tens of watts, given positive.
+            case RefineryMenu.KIND_BATTERY_BANK -> {
+                double share = menu.progress() / 1000.0;
+                double volts = de.ipnats.hardwrought.multiblock.BatteryBankController.EMPTY_VOLTS + share
+                        * (de.ipnats.hardwrought.multiblock.BatteryBankController.FULL_VOLTS
+                        - de.ipnats.hardwrought.multiblock.BatteryBankController.EMPTY_VOLTS);
+                double line = menu.more() / 10.0;
+                int stacks = menu.most();
+                double capacity = stacks * de.ipnats.hardwrought.multiblock.BatteryBankController.STACK_JOULES;
+                double stored = share * capacity;
+                double watts = info * 10.0;
+                Component state;
+                Component time = Component.empty();
+                if (stacks == 0) state = Component.translatable("gui.hardwrought.battery_bank.no_stacks");
+                else if (info > 0) {
+                    state = Component.translatable("gui.hardwrought.battery_bank.giving", info * 10);
+                    time = Component.translatable("gui.hardwrought.battery_bank.empty_in", duration(stored / watts));
+                } else if (info < 0) {
+                    state = Component.translatable("gui.hardwrought.battery_bank.taking", -info * 10);
+                    time = Component.translatable("gui.hardwrought.battery_bank.full_in", duration((capacity - stored)
+                            / (-watts * de.ipnats.hardwrought.multiblock.BatteryBankController.EFFICIENCY)));
+                } else if (share >= 0.999) state = Component.translatable("gui.hardwrought.battery_bank.full");
+                else if (line < 1) state = Component.translatable("gui.hardwrought.battery_bank.no_line");
+                else state = Component.translatable("gui.hardwrought.battery_bank.too_low",
+                        String.format(Locale.ROOT, "%.0f", line), String.format(Locale.ROOT, "%.0f", volts));
+                yield List.of(Component.translatable("gui.hardwrought.battery_bank.stored", String.format(Locale.ROOT, "%.2f", stored / 3.6e6),
+                                String.format(Locale.ROOT, "%.1f", capacity / 3.6e6)),
+                        Component.translatable("gui.hardwrought.battery_bank.volts", String.format(Locale.ROOT, "%.0f", volts), stacks),
+                        state, time);
+            }
+            case RefineryMenu.KIND_TURBINE -> List.of(menu.running()
+                    ? Component.translatable("gui.hardwrought.turbine.output", info * 10,
+                            String.format(Locale.ROOT, "%.0f", menu.progress() / 1000.0 * de.ipnats.hardwrought.nuclear.TurbineController.VOLTS))
+                    : Component.translatable("gui.hardwrought.turbine.how"));
             default -> List.of();
         };
+    }
+
+    /** Seconds as hours and minutes, or minutes and seconds, for how long a battery bank still takes. */
+    private static String duration(double seconds) {
+        if (!Double.isFinite(seconds) || seconds < 0) return "–";
+        long whole = Math.round(seconds);
+        if (whole >= 3600) return String.format(Locale.ROOT, "%d h %02d min", whole / 3600, whole % 3600 / 60);
+        return String.format(Locale.ROOT, "%d min %02d s", whole / 60, whole % 60);
     }
 
     /** The cuts a column of so many trays has no tray for, and so burns off at its top. */

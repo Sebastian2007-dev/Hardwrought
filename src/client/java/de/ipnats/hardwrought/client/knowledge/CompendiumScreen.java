@@ -31,7 +31,8 @@ import java.util.Objects;
  *
  * <p>Opening it lands on the front page, where the halves are chosen between. <b>Knowledge</b> is
  * the recipe browser — shelves on the left, a search field, R for how a thing is made and U for what
- * it is used in, click an ingredient to walk to it, backspace to walk back. Its one departure from
+ * it is used in, click an ingredient to walk to it, backspace to walk back step by step, the back
+ * button one level up: from a recipe to its shelf, from a shelf to the front page. Its one departure from
  * every other browser is that an undiscovered entry is drawn as its own black shadow and named with
  * question marks, so the shape of what is still ahead stays visible without giving it away.
  *
@@ -301,6 +302,30 @@ public class CompendiumScreen extends Screen {
         setSearchQuietly(view.search());
         if (mode != MODE_HOME) CompendiumClient.refresh(mode, subject, view.search());
         rebuildWidgets();
+    }
+
+    /**
+     * The back button: one level up rather than one step back. A recipe page goes up to its shelf, as it
+     * was last left, search and page and all; a shelf or the journal goes up to the front page that asks
+     * which half is wanted. Backspace still walks back through every step, this one included.
+     */
+    private void goUp() {
+        if (mode == CompendiumPagePayload.MODE_RECIPES || mode == CompendiumPagePayload.MODE_USAGES) {
+            for (View view : history) {
+                if (view.mode() != CompendiumPagePayload.MODE_SHELF) continue;
+                remember();
+                mode = view.mode();
+                subject = view.subject();
+                page = view.page();
+                setSearchQuietly(view.search());
+                CompendiumClient.refresh(mode, subject, view.search());
+                rebuildWidgets();
+                return;
+            }
+            CompendiumClient.openShelf(CompendiumClient.shelf(), "");
+            return;
+        }
+        showHome();
     }
 
     private void turnPage(int direction) {
@@ -1732,7 +1757,7 @@ public class CompendiumScreen extends Screen {
             return false;
         }
         if (inside(event.x(), event.y(), leftContentX(), top + CONTROLS_Y, 54, 18)) {
-            goBack();
+            goUp();
             return true;
         }
         if (inside(event.x(), event.y(), leftContentX() + STRUCTURE_BUTTON_OFFSET, top + CONTROLS_Y,

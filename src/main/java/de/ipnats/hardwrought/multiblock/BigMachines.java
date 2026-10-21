@@ -2,9 +2,7 @@ package de.ipnats.hardwrought.multiblock;
 
 import de.ipnats.hardwrought.Hardwrought;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
-import net.fabricmc.fabric.api.transfer.v1.item.ContainerStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
-import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -22,8 +20,9 @@ import java.util.Set;
 import java.util.function.Function;
 
 /**
- * The big machines built of several blocks — the large arc furnace and the large diesel generator — and
- * the blocks they are built of: casings, the furnace's electrode, the engine core, controllers and ports.
+ * The big machines built of several blocks — the large arc furnace, the large diesel generator and the
+ * battery bank — and the blocks they are built of: casings, the furnace's electrode, the engine core,
+ * the cell stacks, controllers and ports.
  */
 public final class BigMachines {
     public static final Block REFRACTORY_CASING = block("refractory_casing", Block::new, casing());
@@ -37,32 +36,44 @@ public final class BigMachines {
                     .lightLevel(state -> state.getValue(ControllerBlock.RUNNING) ? 10 : 0));
     public static final ControllerBlock LARGE_DIESEL_CONTROLLER = block("large_diesel_controller",
             p -> new ControllerBlock(ControllerBlock.Machine.LARGE_DIESEL, p), casing());
+    /** Steel and plastic: the hull of the battery bank. */
+    public static final Block BATTERY_BANK_CASING = block("battery_bank_casing", Block::new, casing());
+    /** A rack of lead-acid cells in plastic cases, wired in series to the bank's voltage. */
+    public static final Block BATTERY_CELL_STACK = block("battery_cell_stack", Block::new, casing());
+    public static final ControllerBlock BATTERY_BANK_CONTROLLER = block("battery_bank_controller",
+            p -> new ControllerBlock(ControllerBlock.Machine.BATTERY_BANK, p), casing());
     public static final PortBlock FLUID_PORT = block("fluid_port", p -> new PortBlock(PortBlock.Kind.FLUID, p), casing());
     public static final PortBlock ITEM_PORT = block("item_port", p -> new PortBlock(PortBlock.Kind.ITEM, p), casing());
     public static final PortBlock POWER_PORT = block("power_port", p -> new PortBlock(PortBlock.Kind.POWER, p), casing());
+    /** Steam out of a reactor and into a turbine, uranium hexafluoride through the centrifuges. */
+    public static final PortBlock GAS_PORT = block("gas_port", p -> new PortBlock(PortBlock.Kind.GAS, p), casing());
 
     public static final BlockEntityType<ArcFurnaceController> ARC_FURNACE_ENTITY = entity("arc_furnace_controller",
             new BlockEntityType<>(ArcFurnaceController::new, Set.of(ARC_FURNACE_CONTROLLER)));
     public static final BlockEntityType<LargeDieselController> LARGE_DIESEL_ENTITY = entity("large_diesel_controller",
             new BlockEntityType<>(LargeDieselController::new, Set.of(LARGE_DIESEL_CONTROLLER)));
+    public static final BlockEntityType<BatteryBankController> BATTERY_BANK_ENTITY = entity("battery_bank_controller",
+            new BlockEntityType<>(BatteryBankController::new, Set.of(BATTERY_BANK_CONTROLLER)));
     public static final BlockEntityType<PortBlock.Entity> PORT_ENTITY = entity("machine_port",
-            new BlockEntityType<>(PortBlock.Entity::new, Set.of(FLUID_PORT, ITEM_PORT, POWER_PORT)));
+            new BlockEntityType<>(PortBlock.Entity::new, Set.of(FLUID_PORT, ITEM_PORT, POWER_PORT, GAS_PORT)));
 
     private BigMachines() { }
 
     /** Touching the class registers everything; then pipes are told what each port leads to. */
     public static void initialize() {
-        FluidStorage.SIDED.registerForBlockEntity((port, side) -> port.kind() == PortBlock.Kind.FLUID
-                && port.controller() instanceof LargeDieselController generator ? generator.fuel : null, PORT_ENTITY);
-        ItemStorage.SIDED.registerForBlockEntity((port, side) -> port.kind() == PortBlock.Kind.ITEM
-                && port.controller() instanceof ArcFurnaceController furnace
-                ? ContainerStorage.of(furnace, side == null ? Direction.UP : side) : null, PORT_ENTITY);
+        FluidStorage.SIDED.registerForBlockEntity((port, side) -> port.kind() == PortBlock.Kind.FLUID && port.host() != null
+                ? port.host().fluid(port.getBlockPos()) : null, PORT_ENTITY);
+        ItemStorage.SIDED.registerForBlockEntity((port, side) -> port.kind() == PortBlock.Kind.ITEM && port.host() != null
+                ? port.host().items(port.getBlockPos(), side) : null, PORT_ENTITY);
+        de.ipnats.hardwrought.gasline.GasStorage.SIDED.registerForBlockEntity((port, side) -> port.kind() == PortBlock.Kind.GAS
+                && port.host() != null ? port.host().gas(port.getBlockPos()) : null, PORT_ENTITY);
     }
 
     public static List<Item> items() {
         return List.of(ARC_FURNACE_CONTROLLER.asItem(), REFRACTORY_CASING.asItem(), GRAPHITE_ELECTRODE.asItem(),
                 LARGE_DIESEL_CONTROLLER.asItem(), ENGINE_CASING.asItem(), ENGINE_CORE.asItem(),
-                FLUID_PORT.asItem(), ITEM_PORT.asItem(), POWER_PORT.asItem());
+                BATTERY_BANK_CONTROLLER.asItem(), BATTERY_BANK_CASING.asItem(), BATTERY_CELL_STACK.asItem(),
+                FLUID_PORT.asItem(), ITEM_PORT.asItem(), POWER_PORT.asItem(), GAS_PORT.asItem());
     }
 
     private static BlockBehaviour.Properties casing() {

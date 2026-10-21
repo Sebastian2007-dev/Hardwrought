@@ -105,6 +105,7 @@ public final class WorldRecipes {
         register(de.ipnats.hardwrought.smeltery.Casts::worldRecipes);
         register(de.ipnats.hardwrought.nether.CastObsidian::worldRecipes);
         register(de.ipnats.hardwrought.nether.Ashcork::worldRecipes);
+        register(de.ipnats.hardwrought.nuclear.Nuclear::worldRecipes);
     }
 
     /** The uses of a fire and of water that are acts rather than cooking: boiling a skin or a bowl clean. */

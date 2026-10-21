@@ -139,6 +139,11 @@ Outside Ultra a player is **immune for forty minutes** on first joining a world 
 scald turns into an infection. It is time to find clean water and lay in bandages. Ultra gives none.
 Test: `HealthGameTests.aNewArrivalIsImmuneForFortyMinutes`.
 
+A body that has just thrown a disease off is on the alert: for **twenty minutes** it has the same
+immunity effect (`Diseases.ALERT_TICKS`), in Ultra too, since it is the body's own and not a grace. The
+disease it got over cannot be caught again for half an hour (`Diseases.IMMUNE_SECONDS`). Test:
+`HealthGameTests.aStomachBugRunsItsCourseAndIsThenKnown`.
+
 ## Harm from within pushes nobody
 
 Bad air, carbon monoxide, smoke, thirst, exposure and illness are not blows, so they give no knockback:

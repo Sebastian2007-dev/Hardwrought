@@ -63,6 +63,13 @@ public final class ModEffects {
     public static final Holder<MobEffect> STAMINA_REGENERATION = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
             Hardwrought.id("stamina_regeneration"), new de.ipnats.hardwrought.survival.ThirstEffect(MobEffectCategory.BENEFICIAL, 0xE3B23C));
 
+    /**
+     * Radiation sickness (see {@link de.ipnats.hardwrought.nuclear.Radiation}): a marker of how bad it is,
+     * its level the stage. The radiation pass does the harm itself, once a second.
+     */
+    public static final Holder<MobEffect> RADIATION_SICKNESS = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+            Hardwrought.id("radiation_sickness"), new de.ipnats.hardwrought.survival.ThirstEffect(MobEffectCategory.HARMFUL, 0x9ACD32));
+
     /** Brewed from an awkward potion and honey; redstone draws it out, glowstone makes it stronger. */
     public static final Holder<net.minecraft.world.item.alchemy.Potion> STAMINA_REGENERATION_POTION = potion(
             "stamina_regeneration", "stamina_regeneration", 3600, 0);

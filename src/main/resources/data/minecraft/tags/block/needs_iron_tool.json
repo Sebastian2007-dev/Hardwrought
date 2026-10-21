@@ -72,6 +72,8 @@
     {
       "id": "hardwrought:void_crystal_cluster",
       "required": false
-    }
+    },
+    "hardwrought:corium",
+    "hardwrought:reactor_vessel_wall"
   ]
 }

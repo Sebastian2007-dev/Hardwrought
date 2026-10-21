@@ -178,7 +178,7 @@ public final class CoreClientGameTest implements FabricClientGameTest {
                 && client.gui.screen().children().stream()
                 .filter(net.minecraft.client.gui.components.Button.class::isInstance)
                 .map(net.minecraft.client.gui.components.Button.class::cast)
-                .anyMatch(button -> button.visible && button.getMessage().getString().equals("↻")));
+                .anyMatch(button -> button.visible && button.getMessage().getString().matches("\\d+/2 »")));
 
         net.minecraft.world.item.Item[] first = new net.minecraft.world.item.Item[1];
         context.runOnClient(client -> {

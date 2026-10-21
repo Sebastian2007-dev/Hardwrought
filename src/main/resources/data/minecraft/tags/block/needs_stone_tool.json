@@ -51,6 +51,8 @@
     },
     "hardwrought:nether_copper_ore",
     "hardwrought:nether_tin_ore",
-    "hardwrought:nether_iron_ore"
+    "hardwrought:nether_iron_ore",
+    "hardwrought:deepslate_fluorite_ore",
+    "hardwrought:fluorite_ore"
   ]
 }

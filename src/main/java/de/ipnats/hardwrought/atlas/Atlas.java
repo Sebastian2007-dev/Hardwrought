@@ -118,8 +118,15 @@ public final class Atlas {
         }
     }
 
-    /** Another bearer, as one atlas shows them: who, where, and which way they face. */
-    public record Bearer(String name, int x, int z, float yaw) { }
+    /**
+     * Another player, as one atlas shows them: who, where, which way they face, and whether they are of
+     * the same party — then they are shown however far off they are, atlas or no atlas.
+     */
+    public record Bearer(String name, int x, int z, float yaw, boolean party) {
+        public Bearer(String name, int x, int z, float yaw) {
+            this(name, x, z, yaw, false);
+        }
+    }
 
     /** How far another bearer can be and still be drawn in one's atlas, in blocks. */
     public static final int BEARER_RANGE = 256;
@@ -256,10 +263,17 @@ public final class Atlas {
                 bearers.add(player);
             }
         }
-        // Bearers see one another in their atlases while they are near: two books kept side by side.
+        // Bearers see one another in their atlases while they are near: two books kept side by side. The
+        // members of one's party are in it wherever they are in the same world, as a party keeps track.
+        List<ServerPlayer> everyone = server.getPlayerList().getPlayers();
         for (ServerPlayer player : bearers) {
             if (!ServerPlayNetworking.canSend(player, AtlasPayloads.Bearers.TYPE)) continue;
-            ServerPlayNetworking.send(player, new AtlasPayloads.Bearers(dimension(player), others(player, bearers)));
+            List<Bearer> shown = new ArrayList<>(party(player, everyone));
+            for (Bearer near : others(player, bearers)) {
+                if (shown.size() >= AtlasPayloads.MAX_BEARERS) break;
+                if (shown.stream().noneMatch(member -> member.name().equals(near.name()))) shown.add(near);
+            }
+            ServerPlayNetworking.send(player, new AtlasPayloads.Bearers(dimension(player), shown));
         }
     }
 
@@ -274,6 +288,18 @@ public final class Atlas {
             if (near.size() >= AtlasPayloads.MAX_BEARERS) break;
         }
         return near;
+    }
+
+    /** The members of this player's party in the same dimension, however far off, atlas or not. */
+    public static List<Bearer> party(ServerPlayer player, List<ServerPlayer> players) {
+        List<Bearer> members = new ArrayList<>();
+        for (ServerPlayer other : players) {
+            if (other == player || other.isSpectator() || other.level() != player.level()) continue;
+            if (!de.ipnats.hardwrought.party.Parties.together(player, other)) continue;
+            members.add(new Bearer(other.getGameProfile().name(), other.getBlockX(), other.getBlockZ(), other.getYRot(), true));
+            if (members.size() >= AtlasPayloads.MAX_BEARERS) break;
+        }
+        return members;
     }
 
     /** Draws in every chunk near the bearer that is not in their atlas yet, and tells their client. */

@@ -13,7 +13,7 @@ public final class MoltenColors {
             Map.entry("tungsten_steel", 0x6E7483), Map.entry("titanium", 0xC7B8D8), Map.entry("tungsten", 0x8C8F99),
             Map.entry("tin", 0xDCDDE8), Map.entry("zinc", 0xB8C8C8), Map.entry("lead", 0x7C7A96),
             Map.entry("manganese", 0xB89A96), Map.entry("magnesium", 0xEDEDE0), Map.entry("aluminum", 0xD8DDE3),
-            Map.entry("nickel", 0xD3CFA8), Map.entry("nichrome", 0xB9B4A0), Map.entry("cobalt", 0x5A7DD8), Map.entry("chromium", 0xC8D8E4),
+            Map.entry("nickel", 0xD3CFA8), Map.entry("nichrome", 0xB9B4A0), Map.entry("zircaloy", 0xA7AEB4), Map.entry("cobalt", 0x5A7DD8), Map.entry("chromium", 0xC8D8E4),
             Map.entry("uranium", 0x7FD04F), Map.entry("thorium", 0x9FA8A0), Map.entry("platinum", 0xD8ECF4),
             Map.entry("silver", 0xE7EEF2), Map.entry("mithril", 0x73E6D1), Map.entry("adamantium", 0xCA4868),
             Map.entry("netherite", 0x5A4448), Map.entry("carbon", 0x2A2626),

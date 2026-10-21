@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "hardwrought:cladding_tube",
+    "hardwrought:thorium_pellet",
+    "hardwrought:thorium_pellet",
+    "hardwrought:thorium_pellet",
+    "hardwrought:thorium_pellet",
+    "hardwrought:plenum_spring",
+    "hardwrought:end_plug",
+    "hardwrought:end_plug"
+  ],
+  "result": {
+    "id": "hardwrought:thorium_breeder_rod"
+  }
+}

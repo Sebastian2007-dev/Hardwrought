@@ -121,6 +121,7 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.materials.Materials.initialize();
 		de.ipnats.hardwrought.materials.MaterialBlocks.initialize();
 		de.ipnats.hardwrought.multiblock.BigMachines.initialize();
+		de.ipnats.hardwrought.nuclear.Nuclear.initialize();
 		de.ipnats.hardwrought.building.BuildingPhysics.initialize();
 		de.ipnats.hardwrought.building.SharedCell.initialize();
 		de.ipnats.hardwrought.environment.SeasonState.initialize();

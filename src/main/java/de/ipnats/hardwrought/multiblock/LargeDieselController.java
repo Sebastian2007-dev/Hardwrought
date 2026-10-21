@@ -30,7 +30,7 @@ import java.util.function.Predicate;
  * resistance, so five times the current, and it gets more out of its fuel. Its exhaust goes out over
  * the top of the hull.
  */
-public class LargeDieselController extends ControllerBlock.Entity implements ExtendedMenuProvider<BlockPos> {
+public class LargeDieselController extends ControllerBlock.Entity implements ExtendedMenuProvider<BlockPos>, PortHost {
     public static final double VOLTS = DieselGeneratorBlock.Entity.VOLTS;
     public static final double OHMS = 0.1;
     public static final int BUCKETS = 16;
@@ -67,12 +67,29 @@ public class LargeDieselController extends ControllerBlock.Entity implements Ext
         return running;
     }
 
+    @Override
     public double emf() {
         return running ? VOLTS : 0.0;
     }
 
+    @Override
+    public double sourceOhms() {
+        return OHMS;
+    }
+
+    @Override
+    public boolean pulses() {
+        return true;
+    }
+
+    @Override
+    public net.fabricmc.fabric.api.transfer.v1.storage.Storage<net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant> fluid(BlockPos port) {
+        return fuel;
+    }
+
     /** Told by its power port what the line took of it. */
-    void solved(double volts, double amps, double seconds) {
+    @Override
+    public void solved(double volts, double amps, double seconds) {
         watts = running ? (float) Math.abs(volts * amps) : 0.0f;
         Fluid held = fuel.held();
         if (running && seconds > 0 && held != null) {

@@ -286,6 +286,26 @@
     "hardwrought:tesla_tower",
     "hardwrought:resonant_coil",
     "hardwrought:top_load",
-    "hardwrought:capacitor_bank"
+    "hardwrought:capacitor_bank",
+    "hardwrought:centrifuge_casing",
+    "hardwrought:centrifuge_controller",
+    "hardwrought:condenser",
+    "hardwrought:control_rod_drive",
+    "hardwrought:corium",
+    "hardwrought:deepslate_fluorite_ore",
+    "hardwrought:fluorite_ore",
+    "hardwrought:fuel_channel",
+    "hardwrought:gas_centrifuge",
+    "hardwrought:gas_port",
+    "hardwrought:radioactive_debris",
+    "hardwrought:reactor_controller",
+    "hardwrought:reactor_vessel_wall",
+    "hardwrought:turbine_casing",
+    "hardwrought:turbine_controller",
+    "hardwrought:turbine_rotor",
+    "hardwrought:battery_bank_casing",
+    "hardwrought:battery_bank_controller",
+    "hardwrought:battery_cell_stack",
+    "hardwrought:power_transformer"
   ]
 }

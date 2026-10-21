@@ -5,13 +5,24 @@ import net.minecraft.world.item.Item;
 
 /**
  * How thick a strung conductor is. A thin wire is cheap and reaches less far; it also has four times
- * the resistance of a cable and carries a quarter of the current before it starts to cook.
+ * the resistance of a cable and carries a quarter of the current before it starts to cook. A power
+ * station wants more: the heavy cable carries eighty amperes, the overhead conductor spans far.
  */
 public enum Gauge {
     WIRE("wire", 0.04, 4.0, 16.0),
     CABLE("cable", 0.01, 16.0, 24.0),
     /** Thin wire in rubber: it does not bite and may be laid through a wall, but spans less. */
-    INSULATED("insulated", 0.04, 4.0, 12.0);
+    INSULATED("insulated", 0.04, 4.0, 12.0),
+    /**
+     * Four cables' worth of copper in one rubber sheath: what a power station is wired with inside, from
+     * the generator to the transformer. Insulated, heavy, and short in span.
+     */
+    HEAVY_CABLE("heavy_cable", 0.002, 80.0, 16.0),
+    /**
+     * Aluminium strands round a steel core, bare, as overhead lines are strung: light, so it spans far
+     * between masts, and made for high voltage, where the current is small.
+     */
+    OVERHEAD("overhead", 0.006, 40.0, 48.0);
 
     public static final Codec<Gauge> CODEC = Codec.STRING.xmap(Gauge::byName, Gauge::serializedName);
     /** One coil in the inventory strings this many blocks. */
@@ -45,7 +56,7 @@ public enum Gauge {
 
     /** Whether it is sheathed: it bites nobody and needs no clear air between its ends. */
     public boolean insulated() {
-        return this == INSULATED;
+        return this == INSULATED || this == HEAVY_CABLE;
     }
 
     /** How far it can be strung between two supports, in blocks. */
@@ -58,6 +69,8 @@ public enum Gauge {
             case WIRE -> ElectricBlocks.COPPER_WIRE;
             case CABLE -> ElectricBlocks.COPPER_CABLE;
             case INSULATED -> ElectricBlocks.INSULATED_WIRE;
+            case HEAVY_CABLE -> ElectricBlocks.HEAVY_POWER_CABLE;
+            case OVERHEAD -> ElectricBlocks.OVERHEAD_CONDUCTOR;
         };
     }
 

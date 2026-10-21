@@ -211,9 +211,9 @@ public final class SurvivalHud {
      * itself. The load is still shown, but as the colour of the frame round the portrait rather
      * than as a figure (see {@link VitalsPortrait}).
      *
-     * <p>The two rows carry no written label either. A scale that runs blue to red and ends in °C
-     * is a thermometer whatever is printed over it, and the only other thing here is counted out
-     * of a hundred; two words would have cost a third of the panel to say what it already says.
+     * <p>The thermometer carries no written label: a scale that runs blue to red and ends in °C is one
+     * whatever is printed over it. The other row says what it is — "Tired 25%" — because a bare
+     * "25 / 100" left players guessing what was being counted.
      */
     private static void renderDetails(net.minecraft.client.gui.GuiGraphicsExtractor graphics,
                                       SurvivalSnapshotPayload values) {
@@ -234,7 +234,7 @@ public final class SurvivalHud {
                 temperatureTextColor(values.bodyTemperature()), true);
 
         thinBar(graphics, BAR_X, y + 20, BAR_WIDTH, values.fatigue(), 100, fatigueColor(values.fatigue()));
-        String fatigue = String.format(Locale.ROOT, "%.0f / 100", values.fatigue());
+        String fatigue = I18n.get("hud.hardwrought.fatigue", String.format(Locale.ROOT, "%.0f", values.fatigue()));
         graphics.text(client.font, fatigue, right - client.font.width(fatigue), y + 18, 0xFFC9D0D4, true);
         for (int line = 0; line < ills.size(); line++) {
             graphics.text(client.font, ills.get(line), x, y + PANEL_HEIGHT + line * DISEASE_LINE - 1, DISEASE_COLOR, true);

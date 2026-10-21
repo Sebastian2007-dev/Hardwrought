@@ -738,9 +738,11 @@ public class WitchKing extends Monster {
                     }
                     setTarget(furthest);
                 }
-                if (teleportCooldown <= 0 && teleport(level, getTarget().position(), 0, 0, true)) {
+                // A target the mob would not take — one in creative, say — leaves it with none: keep the old one.
+                LivingEntity aim = getTarget() != null ? getTarget() : target;
+                if (teleportCooldown <= 0 && teleport(level, aim.position(), 0, 0, true)) {
                     combo = enraged() ? 1 : 0;
-                    windUp(level, getTarget());
+                    windUp(level, aim);
                 }
                 rest(70);
             }

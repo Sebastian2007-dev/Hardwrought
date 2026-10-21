@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "hardwrought:block/battery_bank_controller",
+    "side": "hardwrought:block/battery_bank_casing",
+    "top": "hardwrought:block/battery_bank_casing"
+  }
+}

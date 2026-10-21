@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": "hardwrought:pressure_gauge",
+    "C": "hardwrought:advanced_circuit",
+    "M": "hardwrought:microchip",
+    "X": "hardwrought:compressor",
+    "W": "hardwrought:centrifuge_casing"
+  },
+  "pattern": [
+    "GCG",
+    "MXM",
+    "WWW"
+  ],
+  "result": {
+    "id": "hardwrought:centrifuge_controller"
+  }
+}

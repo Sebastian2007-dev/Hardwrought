@@ -62,6 +62,8 @@ public final class BuildingPhysics {
     /** Fall damage of collapsing blocks, as for an anvil. */
     private static final float FALL_DAMAGE_PER_BLOCK = 2f;
     private static final int MAX_FALL_DAMAGE = 40;
+    /** Marks a falling block that came down in a collapse; see {@link #crushable}. */
+    public static final String COLLAPSE_TAG = "hardwrought.collapse";
 
     private static final class LevelState {
         final LongLinkedOpenHashSet dirty = new LongLinkedOpenHashSet();
@@ -345,6 +347,9 @@ public final class BuildingPhysics {
         level.playSound(null, pos, block.getSoundType().getBreakSound(), SoundSource.BLOCKS, 1f, 0.6f);
         // Mob specification section 37: a structure coming down is felt far off, by a warden too.
         level.gameEvent(null, net.minecraft.world.level.gameevent.GameEvent.BLOCK_DESTROY, pos);
+        // A flower or a torch under it holds nothing up: it is crushed, and the block falls past it.
+        // Otherwise a cut tree hung over a flower would break into logs in the hand, without an axe.
+        if (!block.hasBlockEntity() && crushable(level, pos.below())) level.destroyBlock(pos.below(), true);
         // A block with something under it cannot fall: it is crushed where it stands. As a falling
         // block it would land in its own place again, whole and uncracked, and fail over and over.
         // A falling block cannot carry a chest's contents safely either; it breaks and spills them.
@@ -356,6 +361,19 @@ public final class BuildingPhysics {
         // collapse spreads through whatever depended on it.
         FallingBlockEntity falling = FallingBlockEntity.fall(level, pos, block);
         falling.setHurtsEntities(FALL_DAMAGE_PER_BLOCK, MAX_FALL_DAMAGE);
+        falling.addTag(COLLAPSE_TAG);
+    }
+
+    /**
+     * Whether a collapsing block crushes what is here rather than breaking on it: something with
+     * nothing to stand on, a flower, a torch, a rail, and no contents to lose. Vanilla breaks a
+     * falling block on these and drops it as an item - which turned a felled tree into free logs.
+     */
+    public static boolean crushable(ServerLevel level, BlockPos pos) {
+        BlockState state = level.getBlockState(pos);
+        return !state.isAir() && !FallingBlock.isFree(state) && !state.hasBlockEntity()
+                && state.getCollisionShape(level, pos).isEmpty()
+                && state.getDestroySpeed(level, pos) >= 0;
     }
 
     private static void refreshCracks(ServerLevel level, LevelState state) {

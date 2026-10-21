@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:zircaloy_plate",
+    "G": "hardwrought:spacer_grid"
+  },
+  "pattern": [
+    "P P",
+    "PGP",
+    "P P"
+  ],
+  "result": {
+    "id": "hardwrought:fuel_channel",
+    "count": 2
+  }
+}

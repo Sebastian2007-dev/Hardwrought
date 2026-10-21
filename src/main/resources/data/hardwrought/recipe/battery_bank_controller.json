@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "V": "hardwrought:voltmeter",
+    "C": "hardwrought:advanced_circuit",
+    "B": "hardwrought:battery",
+    "R": "hardwrought:relay",
+    "P": "hardwrought:battery_bank_casing"
+  },
+  "pattern": [
+    "VCV",
+    "BRB",
+    "PPP"
+  ],
+  "result": {
+    "id": "hardwrought:battery_bank_controller"
+  }
+}

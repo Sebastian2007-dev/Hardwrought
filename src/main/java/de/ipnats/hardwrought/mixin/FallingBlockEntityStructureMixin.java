@@ -8,6 +8,7 @@ import de.ipnats.hardwrought.building.BuiltBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.item.FallingBlockEntity;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,6 +30,24 @@ public abstract class FallingBlockEntityStructureMixin {
         FallingBlockEntity entity = original.call(level, pos, state);
         if (built) entity.addTag(BUILT_TAG);
         return entity;
+    }
+
+    /**
+     * A block of a collapse crushes a flower or a torch it lands on and takes its place, instead of
+     * breaking into an item as sand does: a tree felled onto flowers would come down as loose logs.
+     */
+    @WrapOperation(method = "tick", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/world/level/block/state/BlockState;canBeReplaced(Lnet/minecraft/world/item/context/BlockPlaceContext;)Z"))
+    private boolean hardwrought$crush(BlockState state, BlockPlaceContext context, Operation<Boolean> original) {
+        if (original.call(state, context)) return true;
+        if (!(context.getLevel() instanceof ServerLevel server)
+                || !((FallingBlockEntity) (Object) this).entityTags().contains(BuildingPhysics.COLLAPSE_TAG)) {
+            return false;
+        }
+        BlockPos pos = context.getClickedPos();
+        if (!BuildingPhysics.crushable(server, pos)) return false;
+        server.destroyBlock(pos, true);
+        return true;
     }
 
     @WrapOperation(method = "tick", at = @At(value = "INVOKE",

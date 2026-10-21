@@ -42,7 +42,7 @@ import java.util.function.Predicate;
  * charge of quartz and coke. And it makes steel the electric way, out of iron and coke. It draws about
  * thirteen amperes at the line's voltage: it wants copper cable, and a strong source.
  */
-public class ArcFurnaceController extends ControllerBlock.Entity implements WorldlyContainer, ExtendedMenuProvider<BlockPos> {
+public class ArcFurnaceController extends ControllerBlock.Entity implements WorldlyContainer, ExtendedMenuProvider<BlockPos>, PortHost {
     public static final double OHMS = 5.0;
     private static final int[] ALL_SLOTS = {0, 1, 2, 3};
 
@@ -70,7 +70,12 @@ public class ArcFurnaceController extends ControllerBlock.Entity implements Worl
                     // Steel melted with silicon: the soft-magnetic steel transformer and motor cores are stacked from.
                     new ChemMachine.Recipe("large_arc_furnace/electrical_steel",
                             List.of(new ItemStack(de.ipnats.hardwrought.metallurgy.Alloys.STEEL_INGOT, 2), new ItemStack(Materials.RAW_SILICON)),
-                            null, 0, null, 0, List.of(new ItemStack(de.ipnats.hardwrought.parts.Parts.ELECTRICAL_STEEL, 2)), null, 0, 60));
+                            null, 0, null, 0, List.of(new ItemStack(de.ipnats.hardwrought.parts.Parts.ELECTRICAL_STEEL, 2)), null, 0, 60),
+                    // Zirconium sponge remelted under the arc with a little tin: zircaloy, for fuel cladding.
+                    new ChemMachine.Recipe("large_arc_furnace/zircaloy",
+                            List.of(new ItemStack(de.ipnats.hardwrought.nuclear.NuclearItems.ZIRCONIUM_SPONGE, 4),
+                                    new ItemStack(de.ipnats.hardwrought.metallurgy.ModMetals.ingot(de.ipnats.hardwrought.metallurgy.Metal.TIN))),
+                            null, 0, null, 0, List.of(new ItemStack(de.ipnats.hardwrought.metallurgy.Alloys.ZIRCALOY_INGOT, 4)), null, 0, 120));
         }
         return recipes;
     }
@@ -92,8 +97,15 @@ public class ArcFurnaceController extends ControllerBlock.Entity implements Worl
         return dy == 0 ? Component.translatable("message.hardwrought.multiblock.hollow") : BigMachines.GRAPHITE_ELECTRODE.getName();
     }
 
+    @Override
     public double conductance() {
         return current != null ? 1.0 / OHMS : 0.0;
+    }
+
+    @Override
+    public net.fabricmc.fabric.api.transfer.v1.storage.Storage<net.fabricmc.fabric.api.transfer.v1.item.ItemVariant> items(
+            BlockPos port, Direction side) {
+        return net.fabricmc.fabric.api.transfer.v1.item.ContainerStorage.of(this, side == null ? Direction.UP : side);
     }
 
     /** The voltage at its power port. */

@@ -92,9 +92,9 @@ public final class AtlasPayloads {
         }
     }
 
-    /** Server to client, once a second while the atlas is carried: the other bearers near this one. */
+    /** Server to client, once a second while the atlas is carried: the other bearers near this one, and the party. */
     public record Bearers(Identifier dimension, List<Atlas.Bearer> bearers) implements CustomPacketPayload {
-        public static final Type<Bearers> TYPE = new Type<>(Hardwrought.id("atlas_bearers_v1"));
+        public static final Type<Bearers> TYPE = new Type<>(Hardwrought.id("atlas_bearers_v2"));
         public static final StreamCodec<RegistryFriendlyByteBuf, Bearers> CODEC = StreamCodec.of(
                 (buffer, bearers) -> {
                     buffer.writeIdentifier(bearers.dimension);
@@ -104,6 +104,7 @@ public final class AtlasPayloads {
                         buffer.writeInt(bearer.x());
                         buffer.writeInt(bearer.z());
                         buffer.writeFloat(bearer.yaw());
+                        buffer.writeBoolean(bearer.party());
                     }
                 },
                 buffer -> {
@@ -111,7 +112,8 @@ public final class AtlasPayloads {
                     int count = Math.min(buffer.readVarInt(), MAX_BEARERS);
                     List<Atlas.Bearer> bearers = new ArrayList<>(count);
                     for (int i = 0; i < count; i++) {
-                        bearers.add(new Atlas.Bearer(buffer.readUtf(16), buffer.readInt(), buffer.readInt(), buffer.readFloat()));
+                        bearers.add(new Atlas.Bearer(buffer.readUtf(16), buffer.readInt(), buffer.readInt(), buffer.readFloat(),
+                                buffer.readBoolean()));
                     }
                     return new Bearers(dimension, bearers);
                 });

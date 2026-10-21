@@ -26,12 +26,13 @@ import java.util.List;
 import java.util.function.Predicate;
 
 /**
- * The controller of a big machine: a block in the middle of one side of a 3×3×3 hull, its face out.
- * It checks the hull behind it every second; while the hull is whole it is <i>formed</i>, and the ports
- * set in the hull serve it. Opened with an empty hand, it shows the machine, or, unformed, what is wrong.
+ * The controller of a big machine: a block in the middle of one side of a cubic hull, its face out —
+ * 3×3×3 for most, 5×5×5 for the reactor and the battery bank. It checks the hull behind it every second; while the hull is
+ * whole it is <i>formed</i>, and the ports set in the hull serve it. Opened with an empty hand, it shows
+ * the machine, or, unformed, what is wrong.
  */
 public class ControllerBlock extends Block implements EntityBlock {
-    public enum Machine { ARC_FURNACE, LARGE_DIESEL }
+    public enum Machine { ARC_FURNACE, LARGE_DIESEL, REACTOR, TURBINE, CENTRIFUGE, BATTERY_BANK }
 
     public static final EnumProperty<Direction> FACING = HorizontalDirectionalBlock.FACING;
     public static final BooleanProperty FORMED = BooleanProperty.create("formed");
@@ -68,7 +69,14 @@ public class ControllerBlock extends Block implements EntityBlock {
 
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return machine == Machine.ARC_FURNACE ? new ArcFurnaceController(pos, state) : new LargeDieselController(pos, state);
+        return switch (machine) {
+            case ARC_FURNACE -> new ArcFurnaceController(pos, state);
+            case LARGE_DIESEL -> new LargeDieselController(pos, state);
+            case REACTOR -> new de.ipnats.hardwrought.nuclear.ReactorController(pos, state);
+            case TURBINE -> new de.ipnats.hardwrought.nuclear.TurbineController(pos, state);
+            case CENTRIFUGE -> new de.ipnats.hardwrought.nuclear.CentrifugeController(pos, state);
+            case BATTERY_BANK -> new BatteryBankController(pos, state);
+        };
     }
 
     @Override
@@ -86,6 +94,8 @@ public class ControllerBlock extends Block implements EntityBlock {
         private boolean formed;
         private final List<BlockPos> ports = new ArrayList<>();
         private Component problem = Component.empty();
+        /** Whether the hull has been looked over since the controller was loaded: the first tick does it. */
+        private boolean checked;
 
         protected Entity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
             super(type, pos, state);
@@ -103,8 +113,27 @@ public class ControllerBlock extends Block implements EntityBlock {
         /** Names what belongs at such a special place, for the message when it is missing. */
         protected abstract Component specialName(int dx, int dy, int dz);
 
+        /** How far the hull reaches from its centre: 1 for a 3×3×3 hull, 2 for a 5×5×5 one. */
+        protected int reach() {
+            return 1;
+        }
+
+        /**
+         * Whether a port may stand at this place of the shell. Every place of the shell may take one,
+         * unless the machine says otherwise.
+         */
+        protected boolean portAllowed(int dx, int dy, int dz) {
+            return true;
+        }
+
         /** One tick of the machine, once it stands. */
         protected abstract void work(ServerLevel level, BlockPos pos, BlockState state);
+
+        /**
+         * One tick while the hull is not whole. Most machines simply stop; a reactor's core does not stop
+         * being hot because a wall was taken out of it.
+         */
+        protected void idle(ServerLevel level, BlockPos pos, BlockState state) { }
 
         /** Told when the hull has come together or fallen apart, or its ports have changed. */
         protected void changed(ServerLevel level) { }
@@ -121,9 +150,9 @@ public class ControllerBlock extends Block implements EntityBlock {
             return problem;
         }
 
-        /** The middle of the hull: one block behind the controller. */
+        /** The middle of the hull: as far behind the controller as the hull reaches. */
         public BlockPos centre() {
-            return worldPosition.relative(getBlockState().getValue(FACING).getOpposite());
+            return worldPosition.relative(getBlockState().getValue(FACING).getOpposite(), reach());
         }
 
         /** The first port of a kind in the hull, or null. */
@@ -141,8 +170,12 @@ public class ControllerBlock extends Block implements EntityBlock {
         }
 
         void tick(ServerLevel level, BlockPos pos, BlockState state) {
-            if ((level.getGameTime() + pos.asLong()) % 20 == 0) check(level);
+            if (!checked || (level.getGameTime() + pos.asLong()) % 20 == 0) {
+                checked = true;
+                check(level);
+            }
             if (formed) work(level, pos, level.getBlockState(pos));
+            else idle(level, pos, level.getBlockState(pos));
         }
 
         /** Looks the hull over and sets what it found. */
@@ -150,9 +183,10 @@ public class ControllerBlock extends Block implements EntityBlock {
             List<BlockPos> found = new ArrayList<>();
             Component wrong = null;
             BlockPos centre = centre();
-            for (int dx = -1; dx <= 1 && wrong == null; dx++) {
-                for (int dy = -1; dy <= 1 && wrong == null; dy++) {
-                    for (int dz = -1; dz <= 1 && wrong == null; dz++) {
+            int reach = reach();
+            for (int dx = -reach; dx <= reach && wrong == null; dx++) {
+                for (int dy = -reach; dy <= reach && wrong == null; dy++) {
+                    for (int dz = -reach; dz <= reach && wrong == null; dz++) {
                         BlockPos at = centre.offset(dx, dy, dz);
                         if (at.equals(worldPosition)) continue;
                         BlockState state = level.getBlockState(at);
@@ -160,7 +194,7 @@ public class ControllerBlock extends Block implements EntityBlock {
                         if (special != null) {
                             if (!special.test(state)) wrong = Component.translatable("message.hardwrought.multiblock.needs",
                                     specialName(dx, dy, dz), at.getX(), at.getY(), at.getZ());
-                        } else if (state.getBlock() instanceof PortBlock) {
+                        } else if (state.getBlock() instanceof PortBlock && portAllowed(dx, dy, dz)) {
                             found.add(at.immutable());
                         } else if (!state.is(casing())) {
                             wrong = Component.translatable("message.hardwrought.multiblock.needs",

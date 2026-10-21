@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": "hardwrought:bushing",
+    "P": "hardwrought:steel_plate",
+    "W": "hardwrought:winding",
+    "C": "hardwrought:transformer_core",
+    "K": "hardwrought:cooling_coil"
+  },
+  "pattern": [
+    "BPB",
+    "WCW",
+    "KCK"
+  ],
+  "result": {
+    "id": "hardwrought:power_transformer"
+  }
+}

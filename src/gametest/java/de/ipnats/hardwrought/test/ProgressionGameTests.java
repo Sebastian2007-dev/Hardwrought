@@ -488,6 +488,38 @@ public final class ProgressionGameTests {
         helper.succeed();
     }
 
+    /** Three copper ingots in a row make copper wire or a gas pipe: at a bench both are offered to choose from. */
+    @GameTest
+    public void aBenchOffersEveryResultOfTheSameGrid(GameTestHelper helper) {
+        BlockPos at = new BlockPos(1, 2, 1);
+        helper.setBlock(at, de.ipnats.hardwrought.core.registry.ModBlocks.NAILED_WORKBENCH);
+        net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        var menu = new net.minecraft.world.inventory.CraftingMenu(1, player.getInventory(),
+                net.minecraft.world.inventory.ContainerLevelAccess.create(helper.getLevel(), helper.absolutePos(at)));
+        // Slot 0 is the result; the grid's middle row is slots 4 to 6.
+        for (int slot = 4; slot <= 6; slot++) menu.getSlot(slot).set(new ItemStack(Items.COPPER_INGOT));
+        int count = ((RecipeSelectionMenu) menu).hardwrought$recipeChoiceCount();
+        Item first = menu.getResultSlot().getItem().getItem();
+        helper.assertTrue(count == 2, "Copper wire and a gas pipe are both offered: " + count + ", showing " + first);
+        menu.clickMenuButton(player, RecipeSelectionMenu.NEXT_RECIPE_BUTTON);
+        helper.assertTrue(menu.getResultSlot().getItem().getItem() != first, "and the button changes between them");
+        helper.succeed();
+    }
+
+    /** A hewn bench cannot make what wants a nailed one: copper wire shows nothing there, not a result without a choice. */
+    @GameTest
+    public void aBenchDoesNotShowWhatItCannotMake(GameTestHelper helper) {
+        BlockPos at = new BlockPos(1, 2, 1);
+        helper.setBlock(at, de.ipnats.hardwrought.core.registry.ModBlocks.HEWN_WORKBENCH);
+        net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        var menu = new net.minecraft.world.inventory.CraftingMenu(1, player.getInventory(),
+                net.minecraft.world.inventory.ContainerLevelAccess.create(helper.getLevel(), helper.absolutePos(at)));
+        for (int slot = 4; slot <= 6; slot++) menu.getSlot(slot).set(new ItemStack(Items.COPPER_INGOT));
+        helper.assertTrue(menu.getResultSlot().getItem().isEmpty(),
+                "A hewn bench makes no copper wire: " + menu.getResultSlot().getItem());
+        helper.succeed();
+    }
+
     @GameTest
     public void matchingCraftingRecipesCanBeSelected(GameTestHelper helper) {
         net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();

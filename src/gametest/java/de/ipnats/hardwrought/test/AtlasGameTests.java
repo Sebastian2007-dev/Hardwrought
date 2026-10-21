@@ -24,6 +24,23 @@ public final class AtlasGameTests {
         helper.succeed();
     }
 
+    /** One's party is in one's atlas however far off, and with no atlas of their own; a stranger is not. */
+    @GameTest
+    public void thePartyIsInTheAtlasWhereverItIs(GameTestHelper helper) {
+        var parties = de.ipnats.hardwrought.core.events.CoreLifecycle.require(helper.getLevel().getServer()).party();
+        ServerPlayer one = TestPlayers.survivor(helper, 2, 2), friend = TestPlayers.survivor(helper, 3, 2),
+                stranger = TestPlayers.survivor(helper, 4, 2);
+        helper.assertTrue(parties.invite(one, friend) == de.ipnats.hardwrought.party.PartySystem.Result.OK
+                && parties.accept(friend, one.getUUID()) == de.ipnats.hardwrought.party.PartySystem.Result.OK, "They form a party");
+        friend.teleportTo(one.getX() + 2000, one.getY(), one.getZ());
+        stranger.teleportTo(one.getX() + 2000, one.getY(), one.getZ() + 5);
+        var shown = Atlas.party(one, java.util.List.of(one, friend, stranger));
+        helper.assertTrue(shown.size() == 1 && shown.getFirst().name().equals(friend.getGameProfile().name()) && shown.getFirst().party(),
+                "The friend two thousand blocks off, with no atlas, is in it; the stranger is not: " + shown);
+        parties.leave(friend);
+        helper.succeed();
+    }
+
     @GameTest
     public void theAtlasDrawsWhatItsBearerWalksThroughAndKeepsIt(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": "hardwrought:glass_tube",
+    "F": "hardwrought:tungsten_filament",
+    "W": "hardwrought:copper_wire"
+  },
+  "pattern": [
+    "G",
+    "F",
+    "W"
+  ],
+  "result": {
+    "id": "hardwrought:geiger_mueller_tube"
+  }
+}

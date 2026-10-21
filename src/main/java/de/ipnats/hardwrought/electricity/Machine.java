@@ -64,6 +64,13 @@ public enum Machine {
             if (input.is(de.ipnats.hardwrought.materials.Materials.PLASTIC_PELLETS)) {
                 return new ItemStack(de.ipnats.hardwrought.materials.Materials.PLASTIC_SHEET);
             }
+            // Uranium dioxide pressed into green pellets, thorium dioxide into pellets of its own.
+            if (input.is(de.ipnats.hardwrought.nuclear.NuclearItems.URANIUM_DIOXIDE)) {
+                return new ItemStack(de.ipnats.hardwrought.nuclear.NuclearItems.GREEN_PELLET, 4);
+            }
+            if (input.is(de.ipnats.hardwrought.nuclear.NuclearItems.THORIUM_DIOXIDE)) {
+                return new ItemStack(de.ipnats.hardwrought.nuclear.NuclearItems.THORIUM_PELLET, 4);
+            }
             // Electrical steel is rolled thin, for laminations: two plates to the ingot.
             if (input.is(de.ipnats.hardwrought.parts.Parts.ELECTRICAL_STEEL)) {
                 return new ItemStack(de.ipnats.hardwrought.parts.Parts.ELECTRICAL_STEEL_PLATE, 2);
@@ -95,6 +102,8 @@ public enum Machine {
     TUBE_MILL("tube_mill", 35.0, 100, SoundEvents.ANVIL_USE, ParticleTypes.CRIT) {
         @Override
         public ItemStack result(ServerLevel level, ItemStack input) {
+            // Zircaloy plate drawn down into thin seamless tube: fuel cladding.
+            if (input.is(MetalStock.plate("zircaloy"))) return new ItemStack(de.ipnats.hardwrought.nuclear.NuclearItems.CLADDING_TUBE, 2);
             return input.is(MetalStock.plate("bronze"))
                     ? new ItemStack(de.ipnats.hardwrought.storage.StorageBlocks.TUBE_SECTION) : ItemStack.EMPTY;
         }
@@ -210,6 +219,10 @@ public enum Machine {
         public ItemStack result(ServerLevel level, ItemStack input) {
             if (input.is(net.minecraft.world.item.Items.GLASS)) return new ItemStack(de.ipnats.hardwrought.parts.Parts.GLASS_BULB, 4);
             if (input.is(net.minecraft.world.item.Items.GLASS_PANE)) return new ItemStack(de.ipnats.hardwrought.parts.Parts.GLASS_TUBE, 2);
+            // Green pellets sintered hard, as a ceramic is fired.
+            if (input.is(de.ipnats.hardwrought.nuclear.NuclearItems.GREEN_PELLET)) {
+                return new ItemStack(de.ipnats.hardwrought.nuclear.NuclearItems.FUEL_PELLET);
+            }
             return ItemStack.EMPTY;
         }
     },

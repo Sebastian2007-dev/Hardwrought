@@ -294,6 +294,38 @@ public final class BuildingGameTests {
         });
     }
 
+    /**
+     * A felled tree crushes a flower or a torch in its way and lands as logs, rather than breaking on
+     * it into items as gravel does on a torch: that would be wood without an axe.
+     */
+    @GameTest(maxTicks = 200)
+    public void aFelledTreeCrushesWhatIsUnderIt(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos foot = helper.absolutePos(new BlockPos(2, 3, 2));
+        for (int y = 0; y < 4; y++) level.setBlockAndUpdate(foot.above(y), Blocks.OAK_LOG.defaultBlockState());
+        level.setBlockAndUpdate(foot.above(3).east(), Blocks.OAK_LOG.defaultBlockState());
+        // The branch comes down from high up onto a torch; nothing next to the foot, so the cut leaves it be.
+        level.setBlockAndUpdate(foot.below(2).east(), Blocks.STONE.defaultBlockState());
+        level.setBlockAndUpdate(foot.below().east(), Blocks.TORCH.defaultBlockState());
+        var player = helper.makeMockServerPlayerInLevel();
+        player.setGameMode(net.minecraft.world.level.GameType.CREATIVE);
+        helper.runAfterDelay(5, () -> player.gameMode.destroyBlock(foot));
+        // While the trunk cracks, a flower is set right under it, where the foot was.
+        helper.runAfterDelay(6, () -> {
+            level.setBlockAndUpdate(foot.below(), Blocks.DIRT.defaultBlockState());
+            level.setBlockAndUpdate(foot, Blocks.POPPY.defaultBlockState());
+        });
+        helper.runAfterDelay(150, () -> {
+            helper.assertTrue(level.getBlockState(foot).is(Blocks.OAK_LOG), "The trunk crushed the flower and lies in its place");
+            helper.assertTrue(level.getBlockState(foot.below().east()).is(Blocks.OAK_LOG), "The branch crushed the torch and lies in its place");
+            boolean looseLogs = level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+                            new net.minecraft.world.phys.AABB(foot).inflate(4))
+                    .stream().anyMatch(item -> item.getItem().is(net.minecraft.world.item.Items.OAK_LOG));
+            helper.assertFalse(looseLogs, "No log came down as an item");
+            helper.succeed();
+        });
+    }
+
     @GameTest(maxTicks = 100)
     public void digingIntoTheLandBringsNothingDown(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();

@@ -36,14 +36,32 @@ public class TransformerBlock extends ElectricNodeBlock {
     /** Its windings are charred. A new winding mends it. */
     public static final BooleanProperty BURNT = BooleanProperty.create("burnt");
 
+    private final double ratedAmps;
+    private final double ohms;
+
     public TransformerBlock(Properties properties) {
+        this(properties, TransformerBlockEntity.RATED_AMPS, TransformerBlockEntity.OHMS);
+    }
+
+    /** A transformer of another size: the current its high side is made for, and its windings' resistance. */
+    public TransformerBlock(Properties properties, double ratedAmps, double ohms) {
         super(properties);
+        this.ratedAmps = ratedAmps;
+        this.ohms = ohms;
         registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(BURNT, false));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING, BURNT);
+    }
+
+    public double ratedAmps() {
+        return ratedAmps;
+    }
+
+    public double ohms() {
+        return ohms;
     }
 
     @Override

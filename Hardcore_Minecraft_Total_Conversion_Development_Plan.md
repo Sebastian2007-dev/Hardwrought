@@ -2403,12 +2403,14 @@ Vulkanische Regionen können geothermische Energie liefern.
 
 # 113. Kerntechnik
 
-Optional für sehr spätes Endgame:
+Umgesetzt, siehe `docs/nuclear.md`:
 
-- Uran
-- Thorium
-
-Nur falls Kerntechnik tatsächlich ins Gesamtkonzept passt.
+- Brennstoffkette: Uranerz → Yellowcake → UF₆ → Zentrifugenkaskade → UO₂ → Tabletten → Brennstab → Brennelement
+- Zirkonium aus Monazit (Zirkon, Kroll-Prozess), Zircaloy im großen Lichtbogenofen, Hafnium für Steuerstäbe
+- Reaktor als 5×5×5-Multiblock mit Punktkinetik, Nachzerfallswärme, Xenon, Reaktorschutz und Kernschmelze
+- Dampfturbine als Multiblock, Kondensat zurück zum Reaktor
+- Thorium-Brutstäbe erbrüten Uran-233
+- Strahlung: Dosis in Sievert, Abschirmung, Strahlenkrankheit, Geigerzähler
 
 ---
 

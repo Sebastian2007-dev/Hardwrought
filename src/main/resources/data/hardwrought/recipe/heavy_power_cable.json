@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": "hardwrought:copper_cable",
+    "R": "hardwrought:rubber"
+  },
+  "pattern": [
+    "CC",
+    "CC",
+    "RR"
+  ],
+  "result": {
+    "id": "hardwrought:heavy_power_cable"
+  }
+}

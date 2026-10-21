@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": "hardwrought:glass_tube",
+    "U": "hardwrought:uranium_dioxide",
+    "C": "hardwrought:capacitor",
+    "W": "hardwrought:copper_wire"
+  },
+  "pattern": [
+    " G ",
+    "UCU",
+    " W "
+  ],
+  "result": {
+    "id": "hardwrought:fission_chamber"
+  }
+}

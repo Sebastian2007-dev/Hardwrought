@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "L": "hardwrought:gas_line_iron",
+    "C": "hardwrought:engine_casing"
+  },
+  "pattern": [
+    " L ",
+    "LCL",
+    " L "
+  ],
+  "result": {
+    "id": "hardwrought:gas_port"
+  }
+}

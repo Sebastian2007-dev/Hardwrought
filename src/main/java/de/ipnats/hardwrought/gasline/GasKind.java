@@ -12,7 +12,16 @@ public enum GasKind implements StringRepresentable {
     /** Propane and butane off the top of a refinery column, or out of a cracker. */
     LPG("lpg"),
     /** Out of the electrolysis of salt: what silicone is made with. It does not burn, and it is poison. */
-    CHLORINE("chlorine");
+    CHLORINE("chlorine"),
+    /** Out of a reactor's boiling core, into a turbine. Water again once it has done its work. */
+    STEAM("steam"),
+    /**
+     * Uranium hexafluoride: uranium as a gas, the only form in which its isotopes can be spun apart.
+     * Natural, as the chemical reactor makes it out of yellowcake.
+     */
+    URANIUM_HEXAFLUORIDE("uranium_hexafluoride"),
+    /** The same, spun out of a centrifuge cascade with three to five parts in a hundred of uranium-235. */
+    ENRICHED_HEXAFLUORIDE("enriched_hexafluoride");
 
     private final String name;
 
@@ -20,9 +29,9 @@ public enum GasKind implements StringRepresentable {
         this.name = name;
     }
 
-    /** Whether it burns: in a burner, a burning stack, a furnace. Chlorine does not. */
+    /** Whether it burns: in a burner, a burning stack, a furnace. Only the fuel gases do. */
     public boolean burns() {
-        return this != CHLORINE;
+        return this == NATURAL_GAS || this == LPG;
     }
 
     public String translationKey() {

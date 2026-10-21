@@ -30,6 +30,8 @@ public class TransformerBlockEntity extends ElectricBlockEntity {
     public static final double RATIO = 4.0;
     public static final double OHMS = 1.0;
     public static final double RATED_AMPS = 4.0;
+    /** The power transformer's: sixty amperes on its high side, through a twentieth of the resistance. */
+    public static final double POWER_RATED_AMPS = 60.0, POWER_OHMS = 0.05;
     /** How much heat its windings stand, in the same measure as a wire's. */
     private static final float BURN_HEAT = 20.0f;
 
@@ -60,6 +62,16 @@ public class TransformerBlockEntity extends ElectricBlockEntity {
                 && level.getBlockEntity(at) instanceof ElectricBlockEntity coil ? coil : null;
     }
 
+    /** The current its high side is made for. */
+    public double ratedAmps() {
+        return getBlockState().getBlock() instanceof TransformerBlock block ? block.ratedAmps() : RATED_AMPS;
+    }
+
+    /** Its windings' resistance, referred to the high side. */
+    public double ohms() {
+        return getBlockState().getBlock() instanceof TransformerBlock block ? block.ohms() : OHMS;
+    }
+
     /** The current last drawn from its high side, as a share of what it is rated for. */
     public float load() {
         return load;
@@ -74,7 +86,7 @@ public class TransformerBlockEntity extends ElectricBlockEntity {
      * Told the current out of its high side and for how long. True where it burnt out just now.
      */
     public boolean carried(ServerLevel level, double amps, double seconds) {
-        load = (float) (Math.abs(amps) / RATED_AMPS);
+        load = (float) (Math.abs(amps) / ratedAmps());
         if (seconds <= 0.0 || burnt()) return false;
         heat = load > 1.0f ? heat + (load * load - 1.0f) * (float) seconds : Math.max(0.0f, heat - (float) seconds);
         if (heat > 1.0f && level.getRandom().nextInt(2) == 0) {

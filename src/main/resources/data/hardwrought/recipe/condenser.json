@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "T": "hardwrought:tube_section",
+    "P": "hardwrought:copper_plate",
+    "C": "hardwrought:cooling_coil"
+  },
+  "pattern": [
+    "TTT",
+    "PCP",
+    "TTT"
+  ],
+  "result": {
+    "id": "hardwrought:condenser"
+  }
+}

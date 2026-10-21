@@ -83,6 +83,9 @@
     },
     "metal=27": {
       "model": "hardwrought:block/molten/nichrome"
+    },
+    "metal=28": {
+      "model": "hardwrought:block/molten/zircaloy"
     }
   }
 }

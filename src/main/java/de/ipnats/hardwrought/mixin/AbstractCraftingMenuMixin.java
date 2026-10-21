@@ -66,6 +66,13 @@ public abstract class AbstractCraftingMenuMixin extends RecipeBookMenu implement
         if (choices.isEmpty()) {
             hardwrought$choiceIndex.set(0);
             hardwrought$selectedRecipe = null;
+            // Vanilla has put whatever matched into the result; where this bench may make none of it,
+            // it is taken out again. Section 71 holds for the only recipe as much as for one of several.
+            if (!result.getItem(0).isEmpty()) {
+                result.setItem(0, ItemStack.EMPTY);
+                setRemoteSlot(0, ItemStack.EMPTY);
+                player.connection.send(new ClientboundContainerSetSlotPacket(containerId, incrementStateId(), 0, ItemStack.EMPTY));
+            }
             return;
         }
 
@@ -91,6 +98,11 @@ public abstract class AbstractCraftingMenuMixin extends RecipeBookMenu implement
         hardwrought$applyChoice(player, resultSlots, choices, Math.floorMod(selected + 1, choices.size()));
         broadcastChanges();
         return true;
+    }
+
+    @Override
+    public int hardwrought$recipeChoiceIndex() {
+        return hardwrought$choiceIndex == null ? 0 : hardwrought$choiceIndex.get();
     }
 
     @Override

@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "M": "hardwrought:electric_motor",
+    "G": "hardwrought:reduction_gear",
+    "R": "hardwrought:control_rod",
+    "P": "hardwrought:steel_plate",
+    "C": "hardwrought:redstone_coil"
+  },
+  "pattern": [
+    " M ",
+    "GRG",
+    "PCP"
+  ],
+  "result": {
+    "id": "hardwrought:control_rod_drive"
+  }
+}
