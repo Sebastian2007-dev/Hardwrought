@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "B": "hardwrought:refractory_brick"
+  },
+  "pattern": [
+    "PPP",
+    "P P",
+    "BBB"
+  ],
+  "result": {
+    "id": "hardwrought:firebox"
+  }
+}

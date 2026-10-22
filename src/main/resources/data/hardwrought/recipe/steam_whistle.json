@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": "hardwrought:bronze_plate",
+    "L": "hardwrought:gas_line_iron"
+  },
+  "pattern": [
+    "B",
+    "B",
+    "L"
+  ],
+  "result": {
+    "id": "hardwrought:steam_whistle"
+  }
+}

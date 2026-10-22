@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "R": "hardwrought:iron_rod",
+    "L": "hardwrought:gas_line_iron",
+    "B": "hardwrought:bronze_plate"
+  },
+  "pattern": [
+    " R ",
+    "LBL"
+  ],
+  "result": {
+    "id": "hardwrought:gas_valve"
+  }
+}

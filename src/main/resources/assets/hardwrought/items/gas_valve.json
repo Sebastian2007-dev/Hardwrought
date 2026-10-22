@@ -1,0 +1,9 @@
+{
+  "model": {
+    "type": "minecraft:composite",
+    "models": [
+      { "type": "minecraft:model", "model": "hardwrought:block/gas_line_iron/item" },
+      { "type": "minecraft:model", "model": "hardwrought:block/gas_valve/wheel_open" }
+    ]
+  }
+}

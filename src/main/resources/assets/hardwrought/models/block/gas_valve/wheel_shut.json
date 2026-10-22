@@ -1,0 +1,17 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "stem": "minecraft:block/iron_block",
+    "wheel": "minecraft:block/red_concrete",
+    "particle": "minecraft:block/iron_block"
+  },
+  "elements": [
+    { "from": [7, 12.5, 7], "to": [9, 13.5, 9], "faces": { "north": { "texture": "#stem" }, "south": { "texture": "#stem" }, "east": { "texture": "#stem" }, "west": { "texture": "#stem" }, "up": { "texture": "#stem" }, "down": { "texture": "#stem" } } },
+    { "from": [3.5, 13, 3.5], "to": [12.5, 14, 4.5], "faces": { "north": { "texture": "#wheel" }, "south": { "texture": "#wheel" }, "east": { "texture": "#wheel" }, "west": { "texture": "#wheel" }, "up": { "texture": "#wheel" }, "down": { "texture": "#wheel" } } },
+    { "from": [3.5, 13, 11.5], "to": [12.5, 14, 12.5], "faces": { "north": { "texture": "#wheel" }, "south": { "texture": "#wheel" }, "east": { "texture": "#wheel" }, "west": { "texture": "#wheel" }, "up": { "texture": "#wheel" }, "down": { "texture": "#wheel" } } },
+    { "from": [3.5, 13, 4.5], "to": [4.5, 14, 11.5], "faces": { "north": { "texture": "#wheel" }, "south": { "texture": "#wheel" }, "east": { "texture": "#wheel" }, "west": { "texture": "#wheel" }, "up": { "texture": "#wheel" }, "down": { "texture": "#wheel" } } },
+    { "from": [11.5, 13, 4.5], "to": [12.5, 14, 11.5], "faces": { "north": { "texture": "#wheel" }, "south": { "texture": "#wheel" }, "east": { "texture": "#wheel" }, "west": { "texture": "#wheel" }, "up": { "texture": "#wheel" }, "down": { "texture": "#wheel" } } },
+    { "from": [4.5, 13.25, 7.5], "to": [11.5, 13.75, 8.5], "faces": { "north": { "texture": "#wheel" }, "south": { "texture": "#wheel" }, "east": { "texture": "#wheel" }, "west": { "texture": "#wheel" }, "up": { "texture": "#wheel" }, "down": { "texture": "#wheel" } } },
+    { "from": [7.5, 13.25, 4.5], "to": [8.5, 13.75, 11.5], "faces": { "north": { "texture": "#wheel" }, "south": { "texture": "#wheel" }, "east": { "texture": "#wheel" }, "west": { "texture": "#wheel" }, "up": { "texture": "#wheel" }, "down": { "texture": "#wheel" } } }
+  ]
+}

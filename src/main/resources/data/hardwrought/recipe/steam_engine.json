@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": "hardwrought:steam_cylinder",
+    "S": "hardwrought:shaft",
+    "W": "hardwrought:cogwheel",
+    "P": "hardwrought:iron_plate"
+  },
+  "pattern": [
+    "CSW",
+    "PPP"
+  ],
+  "result": {
+    "id": "hardwrought:steam_engine"
+  }
+}

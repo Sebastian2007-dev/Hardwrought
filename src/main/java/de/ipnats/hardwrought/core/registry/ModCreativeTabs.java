@@ -136,6 +136,7 @@ public final class ModCreativeTabs {
                 de.ipnats.hardwrought.carried.CarriedItems.items().forEach(output::accept);
                 de.ipnats.hardwrought.automation.AutomationBlocks.items().forEach(output::accept);
                 de.ipnats.hardwrought.tesla.TeslaBlocks.items().forEach(output::accept);
+                de.ipnats.hardwrought.steam.SteamBlocks.items().forEach(output::accept);
                 de.ipnats.hardwrought.power.PowerBlocks.items().forEach(output::accept);
                 de.ipnats.hardwrought.multiblock.BigMachines.items().forEach(output::accept);
                 de.ipnats.hardwrought.storage.StorageBlocks.items().forEach(output::accept);

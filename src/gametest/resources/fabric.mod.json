@@ -18,6 +18,7 @@
       "de.ipnats.hardwrought.test.PipeGameTests",
       "de.ipnats.hardwrought.test.RefineryGameTests",
       "de.ipnats.hardwrought.test.PowerGameTests",
+      "de.ipnats.hardwrought.test.SteamGameTests",
       "de.ipnats.hardwrought.test.MaterialGameTests",
       "de.ipnats.hardwrought.test.MultiblockGameTests",
       "de.ipnats.hardwrought.test.NuclearGameTests",

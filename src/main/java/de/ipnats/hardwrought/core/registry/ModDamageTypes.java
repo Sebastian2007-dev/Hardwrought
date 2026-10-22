@@ -62,6 +62,10 @@ public final class ModDamageTypes {
     public static final ResourceKey<DamageType> SPELL_STRIKE =
             ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("spell_strike"));
 
+    /** Live steam out of a burst line or a leaking boiler. Armour helps a little, a shield not at all. */
+    public static final ResourceKey<DamageType> SCALDING =
+            ResourceKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("scalding"));
+
     public static final TagKey<DamageType> IS_SUFFOCATING =
             TagKey.create(Registries.DAMAGE_TYPE, Hardwrought.id("is_suffocating"));
 

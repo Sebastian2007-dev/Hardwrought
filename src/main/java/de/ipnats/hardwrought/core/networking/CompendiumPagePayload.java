@@ -69,7 +69,7 @@ public record CompendiumPagePayload(int mode, Identifier subject, List<Entry> en
     /** How many alternatives one slot may cycle through, for an ingredient that is a whole tag. */
     public static final int MAX_OPTIONS = 16;
     /** The journal is a handwritten chain, not a registry dump; it never grows past this. */
-    public static final int MAX_NOTES = 64;
+    public static final int MAX_NOTES = 96;
     /** Pieces one thought may ask for together; as many as fit side by side on a page. */
     public static final int MAX_PARTS = 6;
 

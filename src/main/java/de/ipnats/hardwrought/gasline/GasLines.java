@@ -38,6 +38,10 @@ public final class GasLines {
         }
     }
 
+    /** A stop valve in iron line: shut by hand or by redstone, it parts a line in two. */
+    public static final GasValveBlock VALVE = block("gas_valve", GasValveBlock::new,
+            BlockBehaviour.Properties.of().strength(2.0f, 6.0f).requiresCorrectToolForDrops().sound(SoundType.COPPER).noOcclusion());
+
     public static final GasTankBlock TANK = block("gas_tank", GasTankBlock::new,
             BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(3.0f, 8.0f).requiresCorrectToolForDrops()
                     .sound(SoundType.METAL));
@@ -61,7 +65,7 @@ public final class GasLines {
     }
 
     public static final BlockEntityType<GasLineBlock.Entity> LINE_ENTITY = entity("gas_line",
-            new BlockEntityType<>(GasLineBlock.Entity::new, Set.copyOf(LINES.values())));
+            new BlockEntityType<>(GasLineBlock.Entity::new, lineBlocks()));
     public static final BlockEntityType<GasTankBlock.Entity> TANK_ENTITY = entity("gas_tank",
             new BlockEntityType<>(GasTankBlock.Entity::new, Set.of(TANK)));
     public static final BlockEntityType<GasPumpBlock.Entity> PUMP_ENTITY = entity("gas_pump",
@@ -70,6 +74,13 @@ public final class GasLines {
             new BlockEntityType<>(ElectricGasPumpBlock.Entity::new, Set.of(ELECTRIC_PUMP)));
 
     private GasLines() { }
+
+    /** Every block that is gas line: the five metals, and the valve. */
+    private static Set<Block> lineBlocks() {
+        Set<Block> blocks = new java.util.HashSet<>(LINES.values());
+        blocks.add(VALVE);
+        return Set.copyOf(blocks);
+    }
 
     /** Touching the class registers everything; then the blocks that hold gas are offered to the lines. */
     public static void initialize() {
@@ -98,6 +109,7 @@ public final class GasLines {
     public static List<Item> items() {
         List<Item> items = new ArrayList<>();
         for (GasLineBlock line : LINES.values()) items.add(line.asItem());
+        items.add(VALVE.asItem());
         items.add(TANK.asItem());
         items.add(PUMP.asItem());
         items.add(ELECTRIC_PUMP.asItem());

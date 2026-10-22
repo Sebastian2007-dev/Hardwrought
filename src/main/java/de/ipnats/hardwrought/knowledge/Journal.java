@@ -94,6 +94,12 @@ public final class Journal {
                     allOf("a_bath_of_metal", List.of(id("smeltery_controller"), id("smeltery_drain"), id("casting_table")),
                             List.of(id("refractory_brick"), id("fireclay"))),
                     entry("harder_than_iron", List.of(id("steel_pickaxe")), List.of(id("steel_ingot")))),
+            // Fire under a drum of water: the first power that is not wind, water or an arm.
+            chapter("steam",
+                    allOf("raising_steam", List.of(id("firebox"), id("boiler")), List.of(id("refractory_brick"), id("iron_plate"))),
+                    entry("the_safety_valve", List.of(id("safety_valve")), List.of(id("boiler"))),
+                    allOf("steam_at_work", List.of(id("steam_cylinder"), id("steam_engine")), List.of(id("boiler"))),
+                    entry("valves_and_whistles", List.of(id("gas_valve"), id("steam_whistle")), List.of(id("steam_engine")))),
             // Magic is the only thing the Witch King cannot walk through, and a golden wand is an offering.
             chapter("runes_and_wands",
                     entry("marks_in_old_stone", List.of(id("wooden_wand")), List.of(id("rune_stone"), id("pointed_stick"))),
@@ -253,6 +259,7 @@ public final class Journal {
             java.util.Map.entry("bench_and_bronze", List.of("bench_and_bronze_the_benches", "bench_and_bronze_the_water_bowl", "bench_and_bronze_crusher_and_crank", "bench_and_bronze_tin_and_bronze")),
             java.util.Map.entry("the_workshop", List.of("the_workshop_wounds_and_illness", "the_workshop_water_and_filters", "the_workshop_forge_and_temper", "the_workshop_shafts_and_strength")),
             java.util.Map.entry("smeltery_and_steel", List.of("smeltery_and_steel_building", "smeltery_and_steel_heat_and_melting", "smeltery_and_steel_casting_and_grinding", "smeltery_and_steel_steel")),
+            java.util.Map.entry("steam", List.of("steam_raising_steam", "steam_engines_and_valves", "steam_when_it_goes_wrong")),
             java.util.Map.entry("runes_and_wands", List.of("runes_and_wands_runes_and_grammar", "runes_and_wands_wand_and_judgement", "runes_and_wands_sigils", "runes_and_wands_rune_writing")),
             java.util.Map.entry("oil_and_current", List.of("oil_and_current_dynamo_and_line", "oil_and_current_machines_and_safety", "oil_and_current_pipes_and_pumps", "oil_and_current_well_and_column")),
             java.util.Map.entry("the_atom", List.of("the_atom_fuel_chain", "the_atom_running_a_reactor", "the_atom_radiation", "the_atom_when_it_goes_wrong")),

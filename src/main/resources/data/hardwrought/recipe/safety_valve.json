@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "N": "minecraft:iron_nugget",
+    "R": "hardwrought:iron_rod",
+    "B": "hardwrought:bronze_plate"
+  },
+  "pattern": [
+    "NRN",
+    " B "
+  ],
+  "result": {
+    "id": "hardwrought:safety_valve"
+  }
+}

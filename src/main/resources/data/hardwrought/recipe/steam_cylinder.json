@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "R": "hardwrought:iron_rod",
+    "B": "hardwrought:bronze_plate"
+  },
+  "pattern": [
+    "PPP",
+    "RBR",
+    "PPP"
+  ],
+  "result": {
+    "id": "hardwrought:steam_cylinder"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "hardwrought:block/firebox_front",
+    "side": "hardwrought:block/firebox",
+    "top": "hardwrought:block/firebox_top"
+  }
+}

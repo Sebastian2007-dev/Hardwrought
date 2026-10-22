@@ -1966,6 +1966,13 @@ Fehler können verursachen:
 - Ausfall
 - Explosionen
 
+Umgesetzt, siehe `docs/steam.md` (angelehnt an Creates Kessel und Dampfmaschine):
+
+- Feuerbüchse unter dem Dampfkessel; Kessel mit Wärmemodell, druckabhängigem Siedepunkt und Wasser per Rohr
+- Dampf per Gasleitung zur Dampfmaschine (Dampfzylinder, Fliehkraftregler), die eine Welle antreibt
+- Sicherheitsventil, Absperrventil (Handrad/Redstone), Dampfpfeife
+- Fehler: Kesselstein, Trockenlaufen, Lecks mit Verbrühung, geplatzte Leitungen, Kesselexplosion
+
 ---
 
 # PHASE 13 – Electricity

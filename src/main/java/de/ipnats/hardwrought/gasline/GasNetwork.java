@@ -28,6 +28,7 @@ import java.util.WeakHashMap;
  * <p>Gas goes from the store that stands highest to the one that stands lowest and will take it, as much
  * as the line carries for that difference — the narrowest pipe on it decides — but never so much that
  * the two cross over. That is repeated a few times a tick, so a line with several stores settles quickly.
+ * A shut {@link GasValveBlock} ends a line, so the pipes on either side of it are two lines.
  */
 public final class GasNetwork {
     private static final int LIMIT = 512;
@@ -108,8 +109,10 @@ public final class GasNetwork {
         level.setBlock(weakest, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
         GasKind kind = worst.kind();
         double escaped = worst.extract(BURST_RELEASE);
-        // What burns comes out as firedamp; chlorine has no gas of its own in the world and is simply lost.
+        // What burns comes out as firedamp; steam scalds whoever stands by; chlorine has no gas of its own
+        // in the world and is simply lost.
         if (kind == null || kind.burns()) Gases.emit(level, weakest, Gas.METHANE, (int) Math.ceil(escaped));
+        if (kind == GasKind.STEAM) de.ipnats.hardwrought.steam.Scalding.burst(level, weakest, escaped);
         level.playSound(null, weakest, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 1.0f, 0.5f);
         level.playSound(null, weakest, SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.4f, 1.8f);
         level.sendParticles(ParticleTypes.CLOUD, weakest.getX() + 0.5, weakest.getY() + 0.5, weakest.getZ() + 0.5, 20, 0.3, 0.3, 0.3, 0.1);
@@ -128,6 +131,8 @@ public final class GasNetwork {
             BlockPos at = queue.poll();
             BlockState state = level.getBlockState(at);
             if (!(state.getBlock() instanceof GasLineBlock)) continue;
+            // A shut valve is where the line ends, from whichever side it is reached.
+            if (state.getBlock() instanceof GasValveBlock && !GasValveBlock.passes(state)) continue;
             pipes.add(at);
             id = Math.min(id, at.asLong());
             for (Direction side : Direction.values()) {

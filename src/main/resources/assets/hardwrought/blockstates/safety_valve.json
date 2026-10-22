@@ -1,0 +1,9 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "hardwrought:block/safety_valve"
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "hardwrought:block/steam_engine",
+    "north": "hardwrought:block/steam_engine_front",
+    "south": "hardwrought:block/steam_engine",
+    "east": "hardwrought:block/steam_engine_side",
+    "west": "hardwrought:block/steam_engine_side",
+    "up": "hardwrought:block/steam_engine_top",
+    "down": "hardwrought:block/steam_engine"
+  }
+}

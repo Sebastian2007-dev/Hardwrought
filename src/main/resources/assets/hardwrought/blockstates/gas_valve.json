@@ -1,0 +1,69 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "hardwrought:block/gas_line_iron/core"
+      }
+    },
+    {
+      "when": {
+        "north": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_iron/arm_north"
+      }
+    },
+    {
+      "when": {
+        "south": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_iron/arm_south"
+      }
+    },
+    {
+      "when": {
+        "west": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_iron/arm_west"
+      }
+    },
+    {
+      "when": {
+        "east": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_iron/arm_east"
+      }
+    },
+    {
+      "when": {
+        "up": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_iron/arm_up"
+      }
+    },
+    {
+      "when": {
+        "down": "connected"
+      },
+      "apply": {
+        "model": "hardwrought:block/gas_line_iron/arm_down"
+      }
+    },
+    {
+      "when": { "open": "true", "powered": "false" },
+      "apply": { "model": "hardwrought:block/gas_valve/wheel_open" }
+    },
+    {
+      "when": { "open": "false" },
+      "apply": { "model": "hardwrought:block/gas_valve/wheel_shut" }
+    },
+    {
+      "when": { "open": "true", "powered": "true" },
+      "apply": { "model": "hardwrought:block/gas_valve/wheel_shut" }
+    }
+]
+}

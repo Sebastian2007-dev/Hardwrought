@@ -118,6 +118,7 @@ public class Hardwrought implements ModInitializer {
 		de.ipnats.hardwrought.parts.Parts.initialize();
 		de.ipnats.hardwrought.knowledge.FluidIcons.initialize();
 		de.ipnats.hardwrought.power.PowerBlocks.initialize();
+		de.ipnats.hardwrought.steam.SteamBlocks.initialize();
 		de.ipnats.hardwrought.materials.Materials.initialize();
 		de.ipnats.hardwrought.materials.MaterialBlocks.initialize();
 		de.ipnats.hardwrought.multiblock.BigMachines.initialize();

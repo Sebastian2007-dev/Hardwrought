@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "hardwrought:block/boiler_top",
+    "bottom": "hardwrought:block/boiler_bottom",
+    "side": "hardwrought:block/boiler"
+  }
+}

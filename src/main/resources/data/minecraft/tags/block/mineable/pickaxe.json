@@ -306,6 +306,12 @@
     "hardwrought:battery_bank_casing",
     "hardwrought:battery_bank_controller",
     "hardwrought:battery_cell_stack",
-    "hardwrought:power_transformer"
+    "hardwrought:power_transformer",
+    "hardwrought:boiler",
+    "hardwrought:firebox",
+    "hardwrought:gas_valve",
+    "hardwrought:safety_valve",
+    "hardwrought:steam_engine",
+    "hardwrought:steam_whistle"
   ]
 }

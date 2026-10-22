@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "hardwrought:iron_plate",
+    "G": "minecraft:glass_pane",
+    "C": "hardwrought:copper_plate",
+    "B": "minecraft:bucket"
+  },
+  "pattern": [
+    "PGP",
+    "CBC",
+    "PPP"
+  ],
+  "result": {
+    "id": "hardwrought:boiler"
+  }
+}

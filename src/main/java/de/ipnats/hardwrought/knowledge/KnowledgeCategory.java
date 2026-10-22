@@ -100,6 +100,7 @@ public enum KnowledgeCategory {
                 de.ipnats.hardwrought.core.registry.ModItems.FUEL_FRACTION, de.ipnats.hardwrought.core.registry.ModItems.HEAVY_OIL,
                 de.ipnats.hardwrought.core.registry.ModItems.BITUMEN, de.ipnats.hardwrought.core.registry.ModItems.RAW_SULFUR,
                 de.ipnats.hardwrought.core.registry.ModItems.SULFUR, de.ipnats.hardwrought.core.registry.ModItems.SALT));
+        put.accept(ENGINEERING, de.ipnats.hardwrought.steam.SteamBlocks.items());
         put.accept(ENGINEERING, de.ipnats.hardwrought.power.PowerBlocks.items());
         put.accept(ENGINEERING, de.ipnats.hardwrought.fluids.FluidBlocks.items());
         put.accept(ENGINEERING, de.ipnats.hardwrought.multiblock.BigMachines.items());
